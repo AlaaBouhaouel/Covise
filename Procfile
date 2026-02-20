@@ -1,0 +1,1 @@
+web: gunicorn covise.wsgi --log-file -
