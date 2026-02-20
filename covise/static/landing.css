@@ -633,12 +633,42 @@ body {
 }
 
 @media (max-width: 520px) {
+    .home-shot {
+        display: none;
+    }
+
+    .hero {
+        padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3) calc(var(--spacing) * 2);
+    }
+
+    .hero-cta {
+        gap: calc(var(--spacing) * 2);
+        margin-top: calc(var(--spacing) * 4);
+    }
+
+    .stats {
+        padding: calc(var(--spacing) * 5) calc(var(--spacing) * 3) calc(var(--spacing) * 6);
+    }
+
+    .logo img {
+        height: 18px;
+    }
+
     .hero h1 {
         font-size: 2rem;
     }
 
     .hero p {
-        font-size: 1rem;
+        font-size: 1.12rem;
+        line-height: 1.6;
+    }
+
+    .feature-desc,
+    .cta-text,
+    .footer-tagline,
+    .footer-bottom p {
+        font-size: 1.08rem;
+        line-height: 1.6;
     }
 
     .footer-form input {
