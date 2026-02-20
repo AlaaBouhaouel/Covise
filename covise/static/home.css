@@ -679,7 +679,45 @@ p {
 }
 
 @media (max-width: 520px) {
+    .main {
+        padding: calc(var(--spacing) * 3);
+    }
+
+    .sidebar {
+        gap: calc(var(--spacing) * 1.25);
+    }
+
+    .sidebar .sidebar-link {
+        width: 38px;
+        height: 38px;
+    }
+
+    .welcome h1 {
+        font-size: 1.8rem;
+    }
+
+    .welcome-copy p {
+        font-size: 1rem;
+    }
+
+    .map-cta {
+        width: fit-content;
+    }
+
     .project-list {
         grid-template-columns: 1fr;
+    }
+
+    .footer-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .footer-form input {
+        max-width: 100%;
+    }
+
+    .footer-form button {
+        width: 100%;
     }
 }

@@ -361,3 +361,22 @@ a {
         flex-direction: column;
     }
 }
+
+@media (max-width: 520px) {
+    .onboarding-shell {
+        padding: calc(var(--spacing) * 4);
+    }
+
+    .onboarding-head h1 {
+        font-size: 1.9rem;
+    }
+
+    .form-card {
+        padding: calc(var(--spacing) * 3);
+    }
+
+    .primary,
+    .ghost {
+        width: 100%;
+    }
+}

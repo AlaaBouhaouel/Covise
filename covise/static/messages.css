@@ -392,3 +392,37 @@ body {
     }
 }
 
+@media (max-width: 520px) {
+    .main {
+        padding: calc(var(--spacing) * 3);
+        gap: calc(var(--spacing) * 2);
+    }
+
+    .panel {
+        padding: calc(var(--spacing) * 2);
+    }
+
+    .chat-header {
+        flex-wrap: wrap;
+        gap: calc(var(--spacing) * 1.5);
+    }
+
+    .chat-input {
+        flex-direction: column;
+        padding-top: calc(var(--spacing) * 2);
+    }
+
+    .chat-input button {
+        width: 100%;
+    }
+
+    .message {
+        max-width: 100%;
+    }
+
+    .footer {
+        flex-direction: column;
+        gap: calc(var(--spacing) * 1.5);
+    }
+}
+

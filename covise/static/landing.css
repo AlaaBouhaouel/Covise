@@ -631,3 +631,21 @@ body {
         align-items: flex-start;
     }
 }
+
+@media (max-width: 520px) {
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .footer-form input {
+        max-width: 100%;
+    }
+
+    .footer-form button {
+        width: 100%;
+    }
+}

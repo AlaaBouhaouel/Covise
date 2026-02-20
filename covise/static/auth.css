@@ -293,3 +293,26 @@ a {
         align-items: flex-start;
     }
 }
+
+@media (max-width: 520px) {
+    .auth-shell {
+        padding: calc(var(--spacing) * 4);
+    }
+
+    .auth-card {
+        padding: calc(var(--spacing) * 3);
+    }
+
+    .auth-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .auth-button {
+        width: 100%;
+    }
+
+    .auth-footer {
+        padding: calc(var(--spacing) * 3);
+    }
+}

@@ -259,3 +259,29 @@ body {
     }
 }
 
+@media (max-width: 520px) {
+    .main {
+        padding: calc(var(--spacing) * 3);
+        gap: calc(var(--spacing) * 2);
+    }
+
+    .panel {
+        padding: calc(var(--spacing) * 2);
+    }
+
+    .profile {
+        gap: calc(var(--spacing) * 3);
+    }
+
+    .profile-info {
+        gap: calc(var(--spacing) * 2);
+    }
+
+    .primary-btn,
+    .legal-buttons button {
+        width: 100%;
+        max-width: 100%;
+        justify-content: center;
+    }
+}
+

@@ -228,3 +228,26 @@ body {
         max-width: 100%;
     }
 }
+
+@media (max-width: 520px) {
+    .main {
+        padding: calc(var(--spacing) * 3);
+    }
+
+    .chatbot-shell {
+        min-height: 400px;
+    }
+
+    .chat-stream {
+        padding: calc(var(--spacing) * 2);
+    }
+
+    .chat-input {
+        flex-direction: column;
+        padding: calc(var(--spacing) * 2);
+    }
+
+    .chat-input button {
+        width: 100%;
+    }
+}
