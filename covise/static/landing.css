@@ -633,6 +633,20 @@ body {
 }
 
 @media (max-width: 520px) {
+    .nav {
+        padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+        justify-content: space-between;
+        gap: calc(var(--spacing) * 3);
+    }
+
+    .logo {
+        font-size: 1.4rem;
+    }
+
+    .nav-links {
+        margin-left: auto;
+    }
+
     .home-shot {
         display: none;
     }
