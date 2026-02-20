@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Login</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'auth.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="auth-shell">
+        <section class="auth-main">
+            <header class="auth-top">
+                <a class="brand" href="/">
+                    <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                    <span>CoVise</span>
+                </a>
+                <a class="ghost-link" href="/signin/">Create account</a>
+            </header>
+
+            <div class="auth-card">
+                <div>
+                    <h1>Log in to your workspace</h1>
+                    <p>Find the right co-founder. Build with clarity.</p>
+                </div>
+
+                <form class="auth-form" action="#" method="post">
+                    <div class="auth-field">
+                        <label for="login-email">Email</label>
+                        <input id="login-email" name="email" type="email" placeholder="ala@covise.com" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="login-password">Password</label>
+                        <input id="login-password" name="password" type="password" placeholder="Enter your password" required>
+                    </div>
+                    <div class="auth-row">
+                        <label>
+                            <input type="checkbox" name="remember">
+                            Remember me
+                        </label>
+                        <a class="ghost-link" href="#">Forgot password?</a>
+                    </div>
+                    <button class="auth-button" type="submit">Log in</button>
+                </form>
+
+                <div class="auth-helper">
+                    New here? <a href="/signin/">Create your account</a>
+                </div>
+            </div>
+        </section>
+
+        <aside class="auth-aside">
+            <h2>Designed for momentum</h2>
+            <ul>
+                <li>Curated founder introductions</li>
+                <li>Verified profiles</li>
+                <li>Focused collaboration — no noise</li>
+            </ul>
+        </aside>
+    </main>
+    <footer class="auth-footer">
+        <p>Where serious founders align and build together.</p>
+    </footer>
+</body>
+</html>

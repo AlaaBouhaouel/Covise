@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Sign In</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'auth.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="auth-shell">
+        <section class="auth-main">
+            <header class="auth-top">
+                <a class="brand" href="/">
+                    <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                    <span>CoVise</span>
+                </a>
+                <a class="ghost-link" href="/login/">Log in</a>
+            </header>
+
+            <div class="auth-card">
+                <div>
+                    <h1>Create your account</h1>
+                    <p>Find the right co-founder. Build with clarity.</p>
+                </div>
+
+                <form class="auth-form" action="#" method="post">
+                    <div class="auth-field">
+                        <label for="signin-name">Full name</label>
+                        <input id="signin-name" name="name" type="text" placeholder="Ala Bo" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="signin-email">Email</label>
+                        <input id="signin-email" name="email" type="email" placeholder="ala@covise.com" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="signin-password">Password</label>
+                        <input id="signin-password" name="password" type="password" placeholder="Create a password" required>
+                    </div>
+                    <button class="auth-button" type="submit">Create account</button>
+                </form>
+
+                <div class="auth-helper">
+                    Already have access? <a href="/login/">Log in</a>
+                </div>
+            </div>
+        </section>
+
+        <aside class="auth-aside">
+            <h2>What you get</h2>
+            <ul>
+                <li>Private workspace tailored for builders.</li>
+                <li>Curated founder community and updates.</li>
+                <li>Tools that keep the signal high.</li>
+            </ul>
+        </aside>
+    </main>
+    <footer class="auth-footer">
+        <p>Where serious founders align and build together.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,242 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Onboarding</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'onboarding.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="onboarding-shell">
+        <form class="form-card" action="#" method="post">
+            <div class="onboarding-header">
+                <a class="brand" href="/">
+                    <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                    <span>CoVise</span>
+                </a>
+                <div class="intro-copy">
+                    <h1>Lets build your founder profile</h1>
+                    <p>We match based on complementary value. Complete the profile to unlock onboarding and activation.</p>
+                </div>
+                <div class="progress-card">
+                    <p class="progress-title">Onboarding flow</p>
+                    <ol class="progress-list">
+                        <li>Step 1: Build type</li>
+                        <li>Step 2: Commitment level</li>
+                        <li>Step 3: Profile essentials</li>
+                        <li>Step 4: Matching logic</li>
+                    </ol>
+                    <div class="progress-note">
+                        Profile completeness is required before activation.
+                    </div>
+                </div>
+            </div>
+
+            <section class="step-page" data-page="1">
+                <div class="form-header">
+                    <h2>Step 1 - Segment by Build Type</h2>
+                    <p>What are you bringing to the build?</p>
+                </div>
+                <div class="chip-grid" role="group" aria-label="Build type">
+                    <label class="chip"><input type="checkbox" name="build_type" value="capital">Capital investment</label>
+                    <label class="chip"><input type="checkbox" name="build_type" value="technical">Technical expertise</label>
+                    <label class="chip"><input type="checkbox" name="build_type" value="growth">Growth and marketing</label>
+                    <label class="chip"><input type="checkbox" name="build_type" value="operations">Operations</label>
+                    <label class="chip"><input type="checkbox" name="build_type" value="product">Product or design</label>
+                    <label class="chip"><input type="checkbox" name="build_type" value="advisory">Advisory only</label>
+                </div>
+
+                <div class="step-actions">
+                    <button class="primary" type="button" data-next disabled>Next</button>
+                </div>
+            </section>
+
+            <section class="step-page is-hidden" data-page="2">
+                <div class="form-header">
+                    <h2>Step 2 - Segment by Commitment Level</h2>
+                    <p>What level of commitment are you ready for?</p>
+                </div>
+                <div class="radio-grid" role="radiogroup" aria-label="Commitment level">
+                    <label class="radio"><input type="radio" name="commitment" value="exploring">Exploring opportunities</label>
+                    <label class="radio"><input type="radio" name="commitment" value="part_time">Part-time collaboration</label>
+                    <label class="radio"><input type="radio" name="commitment" value="full_time">Full-time co-founder</label>
+                    <label class="radio"><input type="radio" name="commitment" value="investment_active">Investment plus active involvement</label>
+                </div>
+
+                <div class="step-actions">
+                    <button class="ghost" type="button" data-back>Back</button>
+                    <button class="primary" type="button" data-next disabled>Next</button>
+                </div>
+            </section>
+
+            <section class="step-page is-hidden" data-page="3">
+                <div class="form-header">
+                    <h2>Step 3 - Profile Essentials</h2>
+                    <p>Required for matching and activation.</p>
+                </div>
+                <div class="field-grid">
+                    <div class="field">
+                        <label for="full-name">Full name</label>
+                        <input id="full-name" name="full_name" type="text" placeholder="Ala Bo" required>
+                    </div>
+                    <div class="field">
+                        <label for="email">University / Work / Business email</label>
+                        <input id="email" name="email" type="email" placeholder="ala@company.com" required>
+                    </div>
+                    <div class="field">
+                        <label for="linkedin">LinkedIn</label>
+                        <input id="linkedin" name="linkedin" type="url" placeholder="linkedin.com/in/username" required>
+                    </div>
+                    <div class="field">
+                        <label for="phone">Phone number</label>
+                        <input id="phone" name="phone" type="tel" placeholder="+1 000 000 0000" required>
+                    </div>
+                    <div class="field">
+                        <label for="nationality">Nationality / Nationalities</label>
+                        <input id="nationality" name="nationality" type="text" placeholder="Saudi, Canadian" required>
+                    </div>
+                    <div class="field">
+                        <label for="occupation">Occupation</label>
+                        <input id="occupation" name="occupation" type="text" placeholder="Founder, Product Lead" required>
+                    </div>
+                    <div class="field">
+                        <label for="primary-skill">Primary skill or idea</label>
+                        <input id="primary-skill" name="primary_skill" type="text" placeholder="AI product strategy" required>
+                    </div>
+                    <div class="field">
+                        <label for="experience-years">Years of experience (skill)</label>
+                        <select id="experience-years" name="experience_years" required>
+                            <option value="" disabled selected>Select range</option>
+                            <option>0-1</option>
+                            <option>2-4</option>
+                            <option>5-7</option>
+                            <option>8-10</option>
+                            <option>10+</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="tools">Tools you use</label>
+                        <input id="tools" name="tools" type="text" placeholder="Figma, Notion, GitHub" required>
+                    </div>
+                    <div class="field">
+                        <label for="proof">Proof of work (links)</label>
+                        <input id="proof" name="proof" type="url" placeholder="Portfolio, GitHub, case study">
+                    </div>
+                    <div class="field">
+                        <label for="previous-experience">Previous building experience</label>
+                        <select id="previous-experience" name="previous_experience" required>
+                            <option value="" disabled selected>Select one</option>
+                            <option>Startups</option>
+                            <option>Projects</option>
+                            <option>Freelancing</option>
+                            <option>None yet</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="capital">Capital (to invest or looking for)</label>
+                        <input id="capital" name="capital" type="text" placeholder="$50k looking for / $100k to invest" required>
+                    </div>
+                    <div class="field">
+                        <label for="timeline">Timeline (important)</label>
+                        <select id="timeline" name="timeline" required>
+                            <option value="" disabled selected>Select timeline</option>
+                            <option>Now (0-1 month)</option>
+                            <option>1-3 months</option>
+                            <option>3-6 months</option>
+                            <option>6-12 months</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button class="ghost" type="button" data-back>Back</button>
+                    <button class="primary" type="button" data-next disabled>Next</button>
+                </div>
+            </section>
+
+            <section class="step-page is-hidden" data-page="4">
+                <div class="form-header">
+                    <h2>Step 4 - Matching Logic</h2>
+                    <p>We match based on complementary value, not duplicates.</p>
+                </div>
+                <div class="logic-grid">
+                    <div class="logic-card">Capital + Technical</div>
+                    <div class="logic-card">Idea + Technical</div>
+                    <div class="logic-card">Growth + Product</div>
+                    <div class="logic-card">Operator + Visionary</div>
+                </div>
+                <div class="verify-card">
+                    <h3>Verified Capital</h3>
+                    <p>For users who confirm:</p>
+                    <ul>
+                        <li>Investment range</li>
+                        <li>Willingness to commit capital</li>
+                    </ul>
+                </div>
+
+                <div class="form-actions">
+                    <button class="ghost" type="button" data-back>Back</button>
+                    <button class="primary" type="submit" data-submit>Complete profile</button>
+                </div>
+                <button class="ghost text-link" type="button">Save and continue later</button>
+            </section>
+        </form>
+    </main>
+    <script>
+        const pages = Array.from(document.querySelectorAll('.step-page'));
+        const buildInputs = document.querySelectorAll('input[name="build_type"]');
+        const commitmentInputs = document.querySelectorAll('input[name="commitment"]');
+        const profileRequired = document.querySelector('[data-page="3"]').querySelectorAll('input[required], select[required]');
+
+        const isBuildTypeComplete = () => Array.from(buildInputs).some((input) => input.checked);
+        const isCommitmentComplete = () => Array.from(commitmentInputs).some((input) => input.checked);
+        const isProfileComplete = () =>
+            Array.from(profileRequired).every((field) => field.value && field.value.trim() !== '');
+
+        const validators = [isBuildTypeComplete, isCommitmentComplete, isProfileComplete, () => true];
+
+        const setPage = (index) => {
+            pages.forEach((page, idx) => {
+                page.classList.toggle('is-hidden', idx !== index);
+            });
+            updateButtons(index);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const updateButtons = (index) => {
+            const page = pages[index];
+            const nextBtn = page.querySelector('[data-next]');
+            if (nextBtn) {
+                nextBtn.disabled = !validators[index]();
+            }
+        };
+
+        pages.forEach((page, index) => {
+            const nextBtn = page.querySelector('[data-next]');
+            const backBtn = page.querySelector('[data-back]');
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    if (nextBtn.disabled) return;
+                    setPage(Math.min(index + 1, pages.length - 1));
+                });
+            }
+
+            if (backBtn) {
+                backBtn.addEventListener('click', () => {
+                    setPage(Math.max(index - 1, 0));
+                });
+            }
+        });
+
+        buildInputs.forEach((input) => input.addEventListener('change', () => updateButtons(0)));
+        commitmentInputs.forEach((input) => input.addEventListener('change', () => updateButtons(1)));
+        profileRequired.forEach((field) => field.addEventListener('input', () => updateButtons(2)));
+
+        setPage(0);
+    </script>
+</body>
+</html>

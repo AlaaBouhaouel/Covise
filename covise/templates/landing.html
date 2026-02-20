@@ -1,0 +1,165 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'landing.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="logo">
+                <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                <span>CoVise</span>
+            </div>
+            <div class="nav-links">
+                <a href="/signin/" class="nav-link">Register</a>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    BUILD YOUR<br>
+                    FUTURE
+                </h1>
+                <p class="hero-subtitle">
+                    Shared vision. Structured collaboration. Real execution.<br>
+                    Where serious founders align, connect, and execute.
+                </p>
+            </div>
+            
+            <div class="hero-cta">
+                <a href="/home/" class="btn-primary">START NOW</a>
+                <div class="scroll-indicator">
+                    <span>SCROLL</span>
+                    <div class="scroll-line"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats">
+            <div class="stat-item">
+                <div class="stat-number">1,247</div>
+                <div class="stat-label">Founders</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div class="stat-number">23</div>
+                <div class="stat-label">Active collaborations</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div class="stat-number">142</div>
+                <div class="stat-label">Successful matches</div>
+            </div>
+        </section>
+
+        <!-- Home Image -->
+        <section class="home-shot">
+            <img src="{% static 'images/index/homepic.png' %}" alt="Covise workspace preview">
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <div class="feature">
+                <div class="feature-number">01</div>
+                <h3 class="feature-title">CONNECT</h3>
+                <p class="feature-desc">Network with ambitious founders across the Middle East. Share ideas. Build together.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-number">02</div>
+                <h3 class="feature-title">COLLABORATE</h3>
+                <p class="feature-desc">Find co-founders, investors, and partners. Turn concepts into companies.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-number">03</div>
+                <h3 class="feature-title">EXECUTE</h3>
+                <p class="feature-desc">A focused platform designed for work, not scrolling. Get things done.</p>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="cta-content">
+                <h2 class="cta-title">READY TO BUILD?</h2>
+                <p class="cta-text">Join the region's most focused entrepreneur community.</p>
+                <a href="#" class="btn-primary">JOIN FOUNDERS</a>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+    <div class="footer-top">
+        <div class="footer-brand">
+            <div class="footer-brand-title">
+                <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                <span>CoVise</span>
+            </div>
+            <p class="footer-tagline">Where serious founders align and build together.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Product</h4>
+            <a href="#">Features</a>
+            <a href="#">Community</a>
+            <a href="#">Pricing</a>
+            <a href="#">Updates</a>
+        </div>
+        <div class="footer-col">
+            <h4>Resources</h4>
+            <a href="#">Guides</a>
+            <a href="#">Events</a>
+            <a href="#">Partners</a>
+            <a href="#">Support</a>
+        </div>
+        <div class="footer-col">
+            <h4>Company</h4>
+            <a href="#">About</a>
+            <a href="#">Careers</a>
+            <a href="#">Press</a>
+            <a href="#">Contact</a>
+        </div>
+        <div class="footer-col">
+            <h4>Stay in touch</h4>
+            <div class="footer-social">
+                <p style="padding-bottom: 1.5rem;">Email us at hello@covise.com</p>
+
+                <a href="#">LinkedIn</a>
+                <a href="#">X</a>
+                <a href="#">Instagram</a>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>- 2026 CoVise. All rights reserved.</p>
+        <div class="footer-legal">
+            <a href="#">Terms</a>
+            <a href="#">Privacy</a>
+            <a href="#">Security</a>
+        </div>
+    </div>
+</footer>
+    </div>
+    <script>
+        const nav = document.querySelector('.nav');
+        function onScroll() {
+            if (window.scrollY > 10) {
+                nav.classList.add('is-scrolled');
+            } else {
+                nav.classList.remove('is-scrolled');
+            }
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+    </script>
+</body>
+</html>
