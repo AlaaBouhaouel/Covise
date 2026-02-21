@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from .models import WaitlistEntry
 
 # Create your views here.
 def landing(request):
@@ -35,4 +36,38 @@ def onboarding(request):
     return render(request, 'onboarding.html')
 
 def waitlist(request):
-    return render(request, 'waitlist.html')
+    context = {}
+
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name', '').strip()
+        phone_number = request.POST.get('phone_number', '').strip()
+        email = request.POST.get('email', '').strip()
+        country = request.POST.get('country', '').strip()
+        non_gcc_business = request.POST.get('non_gcc_business') == 'on'
+        custom_country = request.POST.get('custom_country', '').strip()
+        linkedin = request.POST.get('linkedin', '').strip()
+
+        if not all([full_name, phone_number, email, linkedin]):
+            context['error_message'] = 'Please complete all required fields.'
+        elif non_gcc_business and not custom_country:
+            context['error_message'] = 'Please enter your country if you are outside the GCC.'
+        elif not non_gcc_business and not country:
+            context['error_message'] = 'Please select your country.'
+        else:
+            if non_gcc_business:
+                country = ''
+            else:
+                custom_country = ''
+
+            WaitlistEntry.objects.create(
+                full_name=full_name,
+                phone_number=phone_number,
+                email=email,
+                country=country,
+                non_gcc_business=non_gcc_business,
+                custom_country=custom_country,
+                linkedin=linkedin,
+            )
+            context['success_message'] = 'Thanks. Your information has been saved to our waitlist.'
+
+    return render(request, 'waitlist.html', context)

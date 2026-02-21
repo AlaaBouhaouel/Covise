@@ -676,6 +676,10 @@ body {
         padding: calc(var(--spacing) * 5) calc(var(--spacing) * 3) calc(var(--spacing) * 6);
     }
 
+    .footer {
+        padding: calc(var(--spacing) * 8) calc(var(--spacing) * 3);
+    }
+
     .logo img {
         height: 18px;
     }

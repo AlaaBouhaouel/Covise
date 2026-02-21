@@ -22,7 +22,8 @@
             <h1>Join the Waitlist</h1>
             <p class="intro">Share your info and we will reach out soon.</p>
 
-            <form class="waitlist-form" onsubmit="return false;">
+            <form class="waitlist-form" method="post">
+                {% csrf_token %}
                 <label for="full_name">Name</label>
                 <input id="full_name" name="full_name" type="text" placeholder="Your full name" required>
 
@@ -58,7 +59,13 @@
 
                 <button type="submit">Submit</button>
             </form>
-            <p class="notice">We'll notify you when you're ready to be onboarded.</p>
+            {% if success_message %}
+                <p class="notice">{{ success_message }}</p>
+            {% elif error_message %}
+                <p class="notice">{{ error_message }}</p>
+            {% else %}
+                <p class="notice">We'll notify you when you're ready to be onboarded.</p>
+            {% endif %}
         </section>
     </main>
 
