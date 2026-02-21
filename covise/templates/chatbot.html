@@ -18,7 +18,7 @@
                     <path d="M5 10.5V21h14V10.5"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Requests' %}" aria-label="Projects">
+            <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <rect x="3" y="4" width="7" height="7"></rect>
                     <rect x="14" y="4" width="7" height="7"></rect>
@@ -49,16 +49,12 @@
         </aside>
 
         <main class="main">
-            <header class="chatbot-head">
-                <h1>CoVise Assistant</h1>
-                <p>Ask about project status, team matching, and next actions.</p>
-            </header>
 
             <section class="chatbot-shell">
                 <div class="chat-stream" id="chatStream">
                     <div class="empty-state" id="emptyState" aria-live="polite">
                         <img src="{% static 'images/index/noBgLogo.png' %}" alt="" aria-hidden="true">
-                        <p>Hello Ala, do you need me to <span id="rollingPrompt">message someone?</span></p>
+                        <p>Hello User, do you need me to <span id="rollingPrompt">message someone?</span></p>
                     </div>
                 </div>
                 <form class="chat-input" id="chatForm">
@@ -67,54 +63,10 @@
                 </form>
             </section>
 
-            <footer class="footer">
-                <p>2026 CoVise. All rights reserved.</p>
-            </footer>
+            
         </main>
     </div>
 
-    <script>
-    const chatForm = document.getElementById('chatForm');
-    const chatText = document.getElementById('chatText');
-    const chatStream = document.getElementById('chatStream');
-    const emptyState = document.getElementById('emptyState');
-    const rollingPrompt = document.getElementById('rollingPrompt');
-    const rollingPhrases = [
-        'message someone?',
-        'find you a team?',
-        'help you write a proper reply?'
-    ];
-    let rollingIndex = 0;
 
-    if (rollingPrompt) {
-        setInterval(() => {
-            rollingIndex = (rollingIndex + 1) % rollingPhrases.length;
-            rollingPrompt.textContent = rollingPhrases[rollingIndex];
-        }, 2200);
-    }
-
-    function pushBubble(text, type) {
-        if (emptyState) {
-            emptyState.classList.add('is-hidden');
-        }
-        const article = document.createElement('article');
-        article.className = `bubble ${type}`;
-        article.innerHTML = `<p>${text}</p>`;
-        chatStream.appendChild(article);
-        chatStream.scrollTop = chatStream.scrollHeight;
-    }
-
-    chatForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const value = chatText.value.trim();
-        if (!value) return;
-        pushBubble(value, 'user');
-        chatText.value = '';
-
-        setTimeout(() => {
-            pushBubble('I noted that. I can generate a project summary or find matching skills next.', 'bot');
-        }, 350);
-    });
-    </script>
 </body>
 </html>

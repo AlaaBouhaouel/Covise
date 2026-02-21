@@ -130,6 +130,27 @@ body {
     font-family: var(--font-display);
     font-size: 2rem;
     font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 1);
+}
+
+.verified-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: rgba(120, 150, 255, 0.22);
+    color: #9ec1ff;
+    border: 1px solid rgba(120, 150, 255, 0.45);
+}
+
+.verified-badge svg {
+    width: 17px;
+    height: 17px;
+    stroke: currentColor;
 }
 
 .headline {
@@ -327,22 +348,35 @@ body {
 
 }
 
-@media (max-width: 720px) {
+@media (max-width: 1100px) {
     .layout {
         flex-direction: column;
     }
 
     .sidebar {
-        position: static;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
         width: 100%;
-        height: auto;
+        height: 72px;
         flex-direction: row;
         justify-content: center;
         padding: calc(var(--spacing) * 2);
+        border-right: none;
+        border-top: 1px solid var(--border);
+        z-index: 50;
+    }
+
+    .sidebar .sidebar-link[aria-label="Profile"] {
+        margin-top: 0;
     }
 
     .main {
+        height: auto;
+        min-height: 0;
         padding: calc(var(--spacing) * 4);
+        padding-bottom: calc(var(--spacing) * 12);
     }
 
     .social-cards {
@@ -353,6 +387,7 @@ body {
 @media (max-width: 520px) {
     .main {
         padding: calc(var(--spacing) * 3);
+        padding-bottom: calc(var(--spacing) * 12);
     }
 
     .profile-hero {
@@ -381,4 +416,6 @@ body {
         gap: calc(var(--spacing) * 1);
     }
 }
+
+
 

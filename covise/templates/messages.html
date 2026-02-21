@@ -18,7 +18,7 @@
                     <path d="M5 10.5V21h14V10.5"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Requests' %}" aria-label="Projects">
+            <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <rect x="3" y="4" width="7" height="7"></rect>
                     <rect x="14" y="4" width="7" height="7"></rect>
@@ -50,8 +50,16 @@
         </aside>
 
         <main class="main">
-            <section class="panel">
-                <h2>Contacts</h2>
+            <section class="panel contacts-panel" id="contactsPanel">
+                <div class="contacts-panel-head">
+                    <h2>Contacts</h2>
+                    <button type="button" class="contacts-close-btn" id="contactsCloseBtn" aria-label="Close contacts">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
+                            <path d="M18 6L6 18"></path>
+                            <path d="M6 6L18 18"></path>
+                        </svg>
+                    </button>
+                </div>
                 <div class="contact-list" id="contactList">
     <button class="contact is-active" type="button" data-contact="mariam">
         <div class="contact-avatar">MA</div>
@@ -91,8 +99,17 @@
 </div>
 </section>
 
+            <button type="button" class="contacts-overlay" id="contactsOverlay" aria-label="Close contacts"></button>
+
             <section class="panel chat">
     <div class="chat-header">
+        <button type="button" class="contacts-toggle-btn" id="contactsToggleBtn" aria-label="Open contacts">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
+                <path d="M3 6h18"></path>
+                <path d="M3 12h18"></path>
+                <path d="M3 18h18"></path>
+            </svg>
+        </button>
         <div>
             <div class="chat-title" id="messageHeader">Mariam</div>
             <div class="chat-subtitle" id="messageStatus">Active now</div>
@@ -124,10 +141,7 @@
 </button>
     </form>
 </section>
-     <!-- Footer -->
-        <footer class="footer">
-        <p> 2026 CoVise. All rights reserved.</p>
-        </footer>
+
 
         </main>
         
@@ -163,6 +177,16 @@
     const messageList = document.getElementById('messageList');
     const messageHeader = document.getElementById('messageHeader');
     const messageStatus = document.getElementById('messageStatus');
+    const contactsPanel = document.getElementById('contactsPanel');
+    const contactsToggleBtn = document.getElementById('contactsToggleBtn');
+    const contactsCloseBtn = document.getElementById('contactsCloseBtn');
+    const contactsOverlay = document.getElementById('contactsOverlay');
+    const mobileContactsMedia = window.matchMedia('(max-width: 520px)');
+
+    function setContactsOpen(isOpen) {
+        contactsPanel.classList.toggle('is-open', isOpen);
+        contactsOverlay.classList.toggle('is-open', isOpen);
+    }
 
     function renderMessages(contactKey, displayName) {
         messageHeader.textContent = displayName;
@@ -189,6 +213,18 @@
         button.classList.add('is-active');
         const name = button.querySelector('.contact-name').textContent.trim();
         renderMessages(button.dataset.contact, name.split(' ')[0]);
+        if (mobileContactsMedia.matches) {
+            setContactsOpen(false);
+        }
+    });
+
+    contactsToggleBtn.addEventListener('click', () => setContactsOpen(true));
+    contactsCloseBtn.addEventListener('click', () => setContactsOpen(false));
+    contactsOverlay.addEventListener('click', () => setContactsOpen(false));
+    mobileContactsMedia.addEventListener('change', (event) => {
+        if (!event.matches) {
+            setContactsOpen(false);
+        }
     });
 </script>
 </body>

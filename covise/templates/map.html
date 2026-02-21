@@ -19,7 +19,7 @@
                     <path d="M5 10.5V21h14V10.5"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Requests' %}" aria-label="Projects">
+            <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <rect x="3" y="4" width="7" height="7"></rect>
                     <rect x="14" y="4" width="7" height="7"></rect>
@@ -109,7 +109,13 @@
         ];
 
         locations.forEach((loc) => {
-            L.marker([loc.lat, loc.lng]).addTo(map).bindPopup(loc.name);
+            L.circleMarker([loc.lat, loc.lng], {
+                radius: 6,
+                color: '#ff4d4f',
+                fillColor: '#ff4d4f',
+                fillOpacity: 0.95,
+                weight: 1
+            }).addTo(map).bindPopup(loc.name);
         });
     }
     </script>

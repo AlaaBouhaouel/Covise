@@ -18,7 +18,7 @@
                     <path d="M5 10.5V21h14V10.5"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Requests' %}" aria-label="Projects">
+            <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <rect x="3" y="4" width="7" height="7"></rect>
                     <rect x="14" y="4" width="7" height="7"></rect>
@@ -64,129 +64,186 @@
             </section>
             <section class="welcome">
                 <div class="welcome-copy">
-                    <h1>Welcome back, Ala</h1>
-                    <p>Youe founder network is active. <br>Keep momentum on your active builds and track what ships next.</p>
-                    <form class="home-search" onsubmit="return false;">
-                        <input type="search" placeholder="Search projects by name or code..." aria-label="Search projects">
-                    </form>
+                    <h1>Welcome back, User</h1>
+                    <p>Your founder network is active. <br>Keep momentum on your active builds and track what ships next.</p>
                 </div>
-                <a class="map-cta" href="{% url 'Map' %}" aria-label="Go to map page">Go to map</a>
+            </section>
+
+            <section class="dashboard-grid" aria-label="Dashboard">
+                <article class="dashboard-card visits-card">
+                    <div class="card-head">
+                        <h2>Profile interactions</h2>
+                        <span>Last 7 days</span>
+                    </div>
+                    <div class="visits-total">1,284</div>
+                    <svg class="visits-curve" viewBox="0 0 420 140" role="img" aria-label="Profile interactions curve">
+                        <defs>
+                            <linearGradient id="visitLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#6c95ff" />
+                                <stop offset="100%" stop-color="#9ec1ff" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M10 120 C 60 100, 95 92, 130 95 C 170 100, 210 78, 245 70 C 280 62, 320 48, 360 30 C 385 18, 402 14, 410 16" fill="none" stroke="url(#visitLine)" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                    <div class="visits-meta">
+                        <span>Mon</span>
+                        <span>Wed</span>
+                        <span>Fri</span>
+                        <span>Sun</span>
+                    </div>
+                </article>
+
+                <div class="dashboard-right">
+                    <article class="dashboard-card thought-card">
+                        <div class="card-head">
+                            <h2>Share your thoughts</h2>
+                            <span>Post update</span>
+                        </div>
+                        <form class="thought-form" onsubmit="return false;">
+                            <textarea class="thought-input" placeholder="Share your thoughts..."></textarea>
+                            <div class="thought-actions">
+                                <label class="image-upload">
+                                    <input type="file" accept="image/*">
+                                    Add image
+                                </label>
+                                <button type="button" class="post-btn">Post</button>
+                            </div>
+                        </form>
+                    </article>
+
+                    <article class="dashboard-card search-card">
+                        <div class="card-head">
+                            <h2>Search projects</h2>
+                            <span>Quick find</span>
+                        </div>
+                        <form class="home-search dashboard-search" onsubmit="return false;">
+                            <input type="search" placeholder="Search projects by name or code..." aria-label="Search projects">
+                        </form>
+                    </article>
+                </div>
             </section>
 
 
 
-            <section class="projects">
-                <h2>Projects</h2>
-                <div class="project-list">
-                    <div class="project-card">
-                        <div class="project-title">Founders Hub MVP</div>
-                        <div class="project-code">Project code: CV-8321</div>
-                        <p class="project-desc">Landing flow, onboarding, and waitlist automation for early access.</p>
-                        <div class="project-details">
-                            <p><span>Positions:</span> Growth PM, Frontend Engineer</p>
-                            <p><span>Skills needed:</span> React, Product Analytics, CRO</p>
-                        </div>
-                        <div class="team-stepper" aria-label="Members still needed: 3 out of 6">
-                            <div class="team-stepper-head">
-                                <span>Members still needed</span>
-                                <span class="team-stepper-count">3/6</span>
-                            </div>
-                            <div class="team-stepper-track" aria-hidden="true">
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
-                            </div>
-                        </div>
-                        <div class="project-meta">Last updated - Feb 8, 2026</div>
-                        <a class="project-connect" href="#">Connect</a>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-title">Covise Workspace</div>
-                        <div class="project-code">Project code: CV-4176</div>
-                        <p class="project-desc">Core product shell with dashboards, metrics, and sidebar navigation.</p>
-                        <div class="project-details">
-                            <p><span>Positions:</span> Backend Engineer, UX Designer</p>
-                            <p><span>Skills needed:</span> Django, API Design, Figma</p>
-                        </div>
-                        <div class="team-stepper" aria-label="Members still needed: 2 out of 6">
-                            <div class="team-stepper-head">
-                                <span>Members still needed</span>
-                                <span class="team-stepper-count">2/6</span>
-                            </div>
-                            <div class="team-stepper-track" aria-hidden="true">
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
-                            </div>
-                        </div>
-                        <div class="project-meta">Last updated - Feb 6, 2026</div>
-                        <a class="project-connect" href="#">Connect</a>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-title">Investor Deck</div>
-                        <div class="project-code">Project code: CV-9054</div>
-                        <p class="project-desc">Tight narrative with market sizing, traction, and a clean vision arc.</p>
-                        <div class="project-details">
-                            <p><span>Positions:</span> Finance Analyst, Story Strategist</p>
-                            <p><span>Skills needed:</span> Fundraising, Market Research, Pitch Design</p>
-                        </div>
-                        <div class="project-meta">Last updated - Feb 2, 2026</div>
-                        <a class="project-connect" href="#">Connect</a>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-title">Community Ops</div>
-                        <div class="project-code">Project code: CV-2669</div>
-                        <p class="project-desc">Member pipeline, event cadence, and partnership outreach playbook.</p>
-                        <div class="project-details">
-                            <p><span>Positions:</span> Community Manager, Partnerships Lead</p>
-                            <p><span>Skills needed:</span> CRM, Outreach, Event Operations</p>
-                        </div>
-                        <div class="team-stepper" aria-label="Members still needed: 5 out of 6">
-                            <div class="team-stepper-head">
-                                <span>Members still needed</span>
-                                <span class="team-stepper-count">5/6</span>
-                            </div>
-                            <div class="team-stepper-track" aria-hidden="true">
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step"></span>
-                            </div>
-                        </div>
-                        <div class="project-meta">Last updated - Jan 28, 2026</div>
-                        <a class="project-connect" href="#">Connect</a>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-title">Product Roadmap</div>
-                        <div class="project-code">Project code: CV-5510</div>
-                        <p class="project-desc">Q1 priorities, feature sequencing, and resourcing plan.</p>
-                        <div class="project-details">
-                            <p><span>Positions:</span> Product Lead, Data Analyst</p>
-                            <p><span>Skills needed:</span> Prioritization, SQL, User Research</p>
-                        </div>
-                        <div class="project-meta">Last updated - Jan 20, 2026</div>
-                        <a class="project-connect" href="#">Connect</a>
-                    </div>
+            <header class="page-header">
+                <h1>Requests</h1>
+                <p>Track requests sent and accepted to and from your projects.</p>
+            </header>
+
+            <section class="metrics">
+                <div class="metric-card">
+                    <span>Sent</span>
+                    <strong>12</strong>
                 </div>
+                <div class="metric-card">
+                    <span>Received</span>
+                    <strong>9</strong>
+                </div>
+                <div class="metric-card">
+                    <span>Accepted</span>
+                    <strong>7</strong>
+                </div>
+                <div class="metric-card">
+                    <span>Pending</span>
+                    <strong>14</strong>
+                </div>
+            </section>
+
+            <section class="requests-grid">
+                <article class="panel">
+                    <h2>Requests Sent</h2>
+                    <div class="request-list">
+                        <div class="request-item">
+                            <div>
+                                <h3>Founders Hub MVP</h3>
+                                <p>Requested: Frontend Engineer support</p>
+                                <p class="request-skills">Skills: React, UI Architecture, TypeScript</p>
+                            </div>
+                            <div class="request-actions">
+                                <span class="status accepted">Accepted</span>
+                                <button class="send-btn" type="button" aria-label="Send">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="request-item">
+                            <div>
+                                <h3>Investor Deck</h3>
+                                <p>Requested: Story strategist collaboration</p>
+                                <p class="request-skills">Skills: Pitch Narrative, Market Sizing, Fundraising</p>
+                            </div>
+                            <div class="request-actions">
+                                <span class="status accepted">Accepted</span>
+                                <button class="send-btn" type="button" aria-label="Send">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="request-item">
+                            <div>
+                                <h3>Covise Workspace</h3>
+                                <p>Requested: API architecture review</p>
+                                <p class="request-skills">Skills: Django, REST APIs, System Design</p>
+                            </div>
+                            <div class="request-actions">
+                                <span class="status pending">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <h2>Requests Received</h2>
+                    <div class="request-list">
+                        <div class="request-item">
+                            <div>
+                                <h3>Product Roadmap</h3>
+                                <p>Incoming: Data analyst onboarding</p>
+                                <p class="request-skills">Skills: SQL, Product Analytics, Experiment Design</p>
+                            </div>
+                            <div class="request-actions">
+                                <span class="status accepted">Accepted</span>
+                                <button class="send-btn" type="button" aria-label="Send">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="request-item">
+                            <div>
+                                <h3>Community Ops</h3>
+                                <p>Incoming: Partnership lead request</p>
+                                <p class="request-skills">Skills: Outreach, Community Building, CRM</p>
+                            </div>
+                            <div class="request-actions">
+                                <span class="status pending">Pending</span>
+                            </div>
+                        </div>
+                        <div class="request-item">
+                            <div>
+                                <h3>Launch Sprint</h3>
+                                <p>Incoming: Product demo preparation</p>
+                                <p class="request-skills">Skills: Product Marketing, Demo Storytelling, UX Copy</p>
+                            </div>
+                            <div class="request-actions">
+                                <span class="status pending">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
             </section>
 
         <!-- Footer -->
-        <footer class="footer">
-        <p>Where serious founders align and build together.</p>
-        <div class="footer-legal">
-            <a href="#">Terms</a>
-            <a href="#">Privacy</a>
-            <a href="#">Security</a>
-        </div>
-        </footer>
+
     </div>
 
 </body>

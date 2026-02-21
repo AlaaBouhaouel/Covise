@@ -12,8 +12,8 @@ def home(request):
 def messages(request):
     return render(request, 'messages.html')
 
-def requests(request):
-    return render(request, 'requests.html')
+def projects(request):
+    return render(request, 'project.html')
 
 def profile(request):
     return render(request, 'profile.html')

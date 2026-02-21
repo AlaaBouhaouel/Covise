@@ -238,30 +238,64 @@ body {
     cursor: pointer;
 }
 
+.contact-text {
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.contact-link {
+    color: #a9c1ff;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(169, 193, 255, 0.45);
+}
+
+.contact-link:hover {
+    color: #d6e2ff;
+    border-bottom-color: rgba(214, 226, 255, 0.8);
+}
+
 @media (max-width: 960px) {
     .settings-grid {
         grid-template-columns: 1fr;
     }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 1100px) {
     .layout {
         flex-direction: column;
     }
 
     .sidebar {
-        position: static;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
         width: 100%;
-        height: auto;
+        height: 72px;
         flex-direction: row;
         justify-content: center;
         padding: calc(var(--spacing) * 2);
+        border-right: none;
+        border-top: 1px solid var(--border);
+        z-index: 50;
+    }
+
+    .sidebar .sidebar-link[aria-label="Profile"] {
+        margin-top: 0;
+    }
+
+    .main {
+        height: auto;
+        min-height: 0;
+        padding-bottom: calc(var(--spacing) * 12);
     }
 }
 
 @media (max-width: 520px) {
     .main {
         padding: calc(var(--spacing) * 3);
+        padding-bottom: calc(var(--spacing) * 12);
         gap: calc(var(--spacing) * 2);
     }
 
@@ -284,4 +318,6 @@ body {
         justify-content: center;
     }
 }
+
+
 
