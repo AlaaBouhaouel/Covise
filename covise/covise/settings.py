@@ -10,7 +10,8 @@ SECRET_KEY = config('SECRET_KEY', default='fallback-secret-key')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = ['covise.net', 'www.covise.net', '.up.railway.app', 'localhost', '127.0.0.1']
-CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -83,12 +84,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # HTTPS Security (only in production)
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = False  # Railway handles this
+    SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SESSION_COOKIE_SECURE = False  # temporarily disable
-    CSRF_COOKIE_SECURE = False     # temporarily disable
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_HTTPONLY = False
     CSRF_USE_SESSIONS = False
 if DEBUG:

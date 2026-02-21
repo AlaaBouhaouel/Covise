@@ -1,4 +1,5 @@
 from django.shortcuts import redirect, render
+from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import WaitlistEntry
 
 # Create your views here.
@@ -35,6 +36,7 @@ def signin(request):
 def onboarding(request):
     return render(request, 'onboarding.html')
 
+@ensure_csrf_cookie
 def waitlist(request):
     context = {}
 
