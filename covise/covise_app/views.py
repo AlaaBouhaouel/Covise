@@ -33,3 +33,6 @@ def signin(request):
 
 def onboarding(request):
     return render(request, 'onboarding.html')
+
+def waitlist(request):
+    return render(request, 'waitlist.html')

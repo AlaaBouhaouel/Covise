@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Waitlist</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'waitlist.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="waitlist-page">
+        <section class="waitlist-card">
+            <div class="waitlist-header">
+                <div class="brand">
+                    <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                    <span>CoVise</span>
+                </div>
+                <a class="back-link" href="/">Back</a>
+            </div>
+            <h1>Join the Waitlist</h1>
+            <p class="intro">Share your info and we will reach out soon.</p>
+
+            <form class="waitlist-form" onsubmit="return false;">
+                <label for="full_name">Name</label>
+                <input id="full_name" name="full_name" type="text" placeholder="Your full name" required>
+
+                <label for="phone_number">Phone number</label>
+                <input id="phone_number" name="phone_number" type="tel" placeholder="+1 555 123 4567" required>
+
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" required>
+
+                <label for="country">Country</label>
+                <select id="country" name="country" required>
+                    <option value="">Select your country</option>
+                    <option value="bahrain">Bahrain</option>
+                    <option value="kuwait">Kuwait</option>
+                    <option value="oman">Oman</option>
+                    <option value="qatar">Qatar</option>
+                    <option value="saudi_arabia">Saudi Arabia</option>
+                    <option value="united_arab_emirates">United Arab Emirates</option>
+                </select>
+
+                <label class="non-gcc-toggle" for="non_gcc_business">
+                    <input id="non_gcc_business" name="non_gcc_business" type="checkbox">
+                    Not based in the GCC, but looking to do business there.
+                </label>
+
+                <div id="custom-country-field" class="custom-country-field" hidden>
+                    <label for="custom_country">Enter your country</label>
+                    <input id="custom_country" name="custom_country" type="text" placeholder="Enter your country">
+                </div>
+
+                <label for="linkedin">LinkedIn</label>
+                <input id="linkedin" name="linkedin" type="url" placeholder="https://linkedin.com/in/username" required>
+
+                <button type="submit">Submit</button>
+            </form>
+            <p class="notice">We'll notify you when you're ready to be onboarded.</p>
+        </section>
+    </main>
+
+    <script>
+        const countrySelect = document.getElementById('country');
+        const nonGccCheckbox = document.getElementById('non_gcc_business');
+        const customCountryField = document.getElementById('custom-country-field');
+        const customCountryInput = document.getElementById('custom_country');
+
+        function syncCountryInputs() {
+            const hasSelectedGccCountry = countrySelect.value !== '';
+
+            if (hasSelectedGccCountry) {
+                nonGccCheckbox.checked = false;
+                nonGccCheckbox.disabled = true;
+                customCountryField.hidden = true;
+                customCountryInput.required = false;
+                customCountryInput.value = '';
+                countrySelect.required = true;
+                countrySelect.disabled = false;
+                return;
+            }
+
+            nonGccCheckbox.disabled = false;
+
+            if (nonGccCheckbox.checked) {
+                customCountryField.hidden = false;
+                customCountryInput.required = true;
+                countrySelect.required = false;
+                countrySelect.disabled = true;
+            } else {
+                customCountryField.hidden = true;
+                customCountryInput.required = false;
+                customCountryInput.value = '';
+                countrySelect.required = true;
+                countrySelect.disabled = false;
+            }
+        }
+
+        countrySelect.addEventListener('change', syncCountryInputs);
+        nonGccCheckbox.addEventListener('change', syncCountryInputs);
+        syncCountryInputs();
+    </script>
+</body>
+</html>

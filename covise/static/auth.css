@@ -13,9 +13,9 @@
     --accent: #1c2d6b;
     --border: rgba(255, 255, 255, 0.08);
     --spacing: 8px;
-    --font-primary: 'Darker Grotesque', sans-serif;
-    --font-secondary: 'Darker Grotesque', sans-serif;
-    --font-display: 'Syne', sans-serif;
+    --font-primary: sans-serif;
+    --font-secondary: sans-serif;
+    --font-display: sans-serif;
 }
 
 body {

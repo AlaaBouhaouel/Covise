@@ -1,0 +1,181 @@
+:root {
+    --bg: #03050c;
+    --panel: rgba(10, 14, 28, 0.92);
+    --border: rgba(255, 255, 255, 0.14);
+    --text: #edf3ff;
+    --muted: #a5b1cb;
+    --accent: #7ea4ff;
+    --spacing: 8px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: radial-gradient(900px 500px at 50% -10%, rgba(35, 70, 155, 0.35), transparent 70%), var(--bg);
+    color: var(--text);
+    font-family: sans-serif;
+    min-height: 100vh;
+}
+
+.waitlist-page {
+    min-height: 100vh;
+    padding: calc(var(--spacing) * 5) calc(var(--spacing) * 3);
+    display: grid;
+    place-items: center;
+}
+
+.waitlist-card {
+    width: min(560px, 100%);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: calc(var(--spacing) * 4);
+    display: grid;
+    gap: calc(var(--spacing) * 2);
+}
+
+.waitlist-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 2);
+}
+
+.back-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 1rem;
+    width: fit-content;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 1.25);
+    font-family: sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.brand img {
+    height: 20px;
+    width: auto;
+}
+
+h1 {
+    font-family: sans-serif;
+    font-size: clamp(1.7rem, 4vw, 2.3rem);
+}
+
+.intro {
+    color: var(--muted);
+    font-size: 1rem;
+}
+
+.waitlist-form {
+    margin-top: calc(var(--spacing) * 1);
+    display: grid;
+    gap: calc(var(--spacing) * 1.25);
+}
+
+.waitlist-form label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: #c3d0ef;
+}
+
+.waitlist-form input,
+.waitlist-form select {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    padding: calc(var(--spacing) * 1.5);
+    font-size: 1rem;
+    font-family: sans-serif;
+    margin-bottom: calc(var(--spacing) * 1);
+}
+
+.waitlist-form input:focus,
+.waitlist-form select:focus {
+    outline: none;
+    border-color: rgba(126, 164, 255, 0.6);
+    box-shadow: 0 0 0 3px rgba(126, 164, 255, 0.2);
+}
+
+.waitlist-form select option {
+    color: #edf3ff;
+    background: #0b1020;
+}
+
+.waitlist-form label.non-gcc-toggle {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 1);
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: 0.75rem;
+    color: var(--text);
+}
+
+.non-gcc-toggle input {
+    width: auto;
+    accent-color: var(--accent);
+}
+
+.custom-country-field {
+    display: grid;
+    gap: calc(var(--spacing) * 1.25);
+}
+
+.waitlist-form select:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.non-gcc-toggle input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.waitlist-form button {
+    margin-top: calc(var(--spacing) * 1);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2);
+    background: var(--accent);
+    color: #091224;
+    font-family: sans-serif;
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.notice {
+    margin-top: calc(var(--spacing) * 1.5);
+    color: #c9d6f7;
+    font-size: 1rem;
+    text-align: center;
+}
+
+@media (max-width: 520px) {
+    .waitlist-page {
+        padding: calc(var(--spacing) * 3);
+    }
+
+    .waitlist-card {
+        padding: calc(var(--spacing) * 3);
+    }
+
+    .waitlist-form button {
+        width: 100%;
+    }
+}

@@ -252,6 +252,11 @@ body {
 
 }
 
+.scroll-indicator a {
+    color: inherit;
+    text-decoration: none;
+}
+
 .scroll-line {
     width: 60px;
     height: 1px;
@@ -652,7 +657,14 @@ body {
     }
 
     .hero {
+        min-height: 70vh;
         padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3) calc(var(--spacing) * 2);
+    }
+
+    .hero::before {
+        bottom: -32vh;
+        width: 96vw;
+        height: 96vw;
     }
 
     .hero-cta {
