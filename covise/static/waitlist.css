@@ -122,6 +122,7 @@ h1 {
     letter-spacing: normal;
     font-size: 0.75rem;
     color: var(--text);
+    margin-bottom: calc(var(--spacing) * 1);
 }
 
 .non-gcc-toggle input {
@@ -132,6 +133,10 @@ h1 {
 .custom-country-field {
     display: grid;
     gap: calc(var(--spacing) * 1.25);
+}
+
+.custom-country-field[hidden] {
+    display: none !important;
 }
 
 .waitlist-form select:disabled {

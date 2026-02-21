@@ -22,7 +22,7 @@
             <h1>Join the Waitlist</h1>
             <p class="intro">Share your info and we will reach out soon.</p>
 
-            <form class="waitlist-form" method="post">
+            <form class="waitlist-form" method="post" action="">
                 {% csrf_token %}
                 <label for="full_name">Name</label>
                 <input id="full_name" name="full_name" type="text" placeholder="Your full name" required>
@@ -81,28 +81,20 @@
             if (hasSelectedGccCountry) {
                 nonGccCheckbox.checked = false;
                 nonGccCheckbox.disabled = true;
-                customCountryField.hidden = true;
-                customCountryInput.required = false;
-                customCountryInput.value = '';
-                countrySelect.required = true;
-                countrySelect.disabled = false;
-                return;
-            }
-
-            nonGccCheckbox.disabled = false;
-
-            if (nonGccCheckbox.checked) {
-                customCountryField.hidden = false;
-                customCountryInput.required = true;
-                countrySelect.required = false;
-                countrySelect.disabled = true;
             } else {
-                customCountryField.hidden = true;
-                customCountryInput.required = false;
-                customCountryInput.value = '';
-                countrySelect.required = true;
-                countrySelect.disabled = false;
+                nonGccCheckbox.disabled = false;
             }
+
+            const showCustomCountry = nonGccCheckbox.checked && !nonGccCheckbox.disabled;
+            customCountryField.hidden = !showCustomCountry;
+            customCountryInput.required = showCustomCountry;
+
+            if (!showCustomCountry) {
+                customCountryInput.value = '';
+            }
+
+            countrySelect.required = !showCustomCountry;
+            countrySelect.disabled = showCustomCountry;
         }
 
         countrySelect.addEventListener('change', syncCountryInputs);

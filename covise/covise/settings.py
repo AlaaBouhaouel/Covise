@@ -89,6 +89,8 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
     SESSION_COOKIE_SECURE = False  # temporarily disable
     CSRF_COOKIE_SECURE = False     # temporarily disable
+    CSRF_COOKIE_HTTPONLY = False
+    CSRF_USE_SESSIONS = False
 if DEBUG:
     STATICFILES_DIRS = [BASE_DIR / 'static']
 

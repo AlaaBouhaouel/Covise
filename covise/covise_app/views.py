@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from .models import WaitlistEntry
 
 # Create your views here.
@@ -68,6 +68,10 @@ def waitlist(request):
                 custom_country=custom_country,
                 linkedin=linkedin,
             )
-            context['success_message'] = 'Thanks. Your information has been saved to our waitlist.'
+            return redirect('Waitlist Success')
 
     return render(request, 'waitlist.html', context)
+
+
+def waitlist_success(request):
+    return render(request, 'waitlist_success.html')
