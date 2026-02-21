@@ -43,6 +43,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'covise.urls'
+CSRF_FAILURE_VIEW = 'covise_app.views.csrf_failure'
 
 TEMPLATES = [
     {

@@ -77,3 +77,8 @@ def waitlist(request):
 
 def waitlist_success(request):
     return render(request, 'waitlist_success.html')
+
+
+def csrf_failure(request, reason=""):
+    context = {"reason": reason}
+    return render(request, "csrf_error.html", context, status=403)

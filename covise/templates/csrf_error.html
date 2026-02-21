@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Submission Failed</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'waitlist.css' %}">
+</head>
+<body>
+    <main class="waitlist-page">
+        <section class="waitlist-card">
+            <div class="waitlist-header">
+                <div class="brand">
+                    <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                    <span>CoVise</span>
+                </div>
+                <a class="back-link" href="/waitlist/">Back to waitlist</a>
+            </div>
+            <h1>Submission failed</h1>
+            <p class="notice">
+                We could not verify your session security token. Please refresh the page and try again.
+                If it still fails, enable cookies for this site or try a different browser.
+            </p>
+        </section>
+    </main>
+</body>
+</html>
