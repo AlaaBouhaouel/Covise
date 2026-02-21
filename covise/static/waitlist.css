@@ -79,7 +79,7 @@ h1 {
 .waitlist-form {
     margin-top: calc(var(--spacing) * 1);
     display: grid;
-    gap: calc(var(--spacing) * 1.25);
+    gap: calc(var(--spacing) * 1.75);
 }
 
 .waitlist-form label {

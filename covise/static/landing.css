@@ -240,6 +240,10 @@ body {
     -webkit-backdrop-filter: blur(16px) saturate(140%);
 }
 
+.reserve-spot-btn {
+    font-family: 'Darker Grotesque', sans-serif;
+}
+
 .scroll-indicator {
     display: flex;
     align-items: center;
