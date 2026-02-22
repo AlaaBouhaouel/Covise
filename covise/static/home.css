@@ -1040,7 +1040,24 @@ p {
     }
 
     .metrics {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: calc(var(--spacing) * 1);
+        overflow: hidden;
+        padding-bottom: 0;
+    }
+
+    .metric-card {
+        padding: calc(var(--spacing) * 1.25);
+        gap: calc(var(--spacing) * 0.5);
+    }
+
+    .metric-card span {
+        font-size: 0.68rem;
+        letter-spacing: 0.05em;
+    }
+
+    .metric-card strong {
+        font-size: 1.05rem;
     }
 
     .request-item {
