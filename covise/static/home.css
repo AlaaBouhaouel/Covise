@@ -974,7 +974,7 @@ p {
     }
 
     .sidebar {
-
+        
         position: sticky;
         bottom: 0;
         top: auto;

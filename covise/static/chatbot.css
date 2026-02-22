@@ -186,14 +186,14 @@ body {
     padding: calc(var(--spacing) * 1.5);
     border-radius: 11px;
     border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.1);
     color: var(--text);
     font-size: 0.95rem;
 }
 
 .chat-input button {
     border: 1px solid rgba(120, 150, 255, 0.35);
-    background: rgba(120, 150, 255, 0.18);
+    background: rgba(160, 190, 255, 0.42);
     color: var(--text);
     width: 42px;
     height: 42px;
@@ -205,6 +205,12 @@ body {
     display: grid;
     place-items: center;
     cursor: pointer;
+}
+
+.chat-input button svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
 }
 
 
