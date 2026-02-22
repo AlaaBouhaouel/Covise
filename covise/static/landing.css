@@ -139,6 +139,7 @@ body {
 .hero-cta {
     position: relative;
     z-index: 1;
+
 }
 
 .hero-content {
@@ -148,6 +149,9 @@ body {
     text-align: center;
 }
 
+.hero-cta a{
+    font-family: sans-serif;
+}
 .hero-badge {
     font-family: 'Syne', sans-serif;
     font-size: clamp(1.6rem, 7.5vw, 6.5rem);
@@ -241,7 +245,7 @@ body {
 }
 
 .reserve-spot-btn {
-    font-family: 'Darker Grotesque', sans-serif;
+    font-family: sans-serif;
 }
 
 .scroll-indicator {

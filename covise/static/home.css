@@ -7,7 +7,7 @@
 :root {
     --bg: #05060b;
     --bg-deep: #02040a;
-    --panel: rgba(8, 12, 20, 0.85);
+    --panel: rgba(26, 36, 60, 0.9);
     --text: #e9edf5;
     --muted: #9aa6bd;
     --accent: #1c2d6b;
@@ -19,7 +19,7 @@
 }
 
 body {
-    background: radial-gradient(1200px 600px at 70% -10%, #0b1b3b 0%, #060a16 45%, var(--bg) 100%);
+    background: #050915;
     color: var(--text);
     font-family: var(--font-display);
     min-height: 100vh;
@@ -43,7 +43,7 @@ p {
     align-self: flex-start;
     width: 72px;
     height: 100vh;
-    background: rgba(4, 7, 14, 0.9);
+    background: rgba(20, 30, 52, 0.95);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -64,7 +64,7 @@ p {
     height: 44px;
     border-radius: 14px;
     border: 1px solid var(--border);
-    background: rgba(12, 18, 32, 0.8);
+    background: rgba(32, 46, 78, 0.92);
     color: var(--text);
     display: grid;
     place-items: center;
@@ -974,17 +974,21 @@ p {
     }
 
     .sidebar {
-        position: fixed;
-        left: 0;
-        right: 0;
+
+        position: sticky;
         bottom: 0;
+        top: auto;
         width: 100%;
         height: 72px;
         flex-direction: row;
         justify-content: center;
+        position: fixed;
         padding: calc(var(--spacing) * 2);
         border-right: none;
         border-top: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(16px) saturate(140%);
+        -webkit-backdrop-filter: blur(16px) saturate(140%);
         z-index: 50;
     }
 
