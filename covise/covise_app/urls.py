@@ -1,5 +1,14 @@
 from django.urls import path
 from . import views
+
+
+from django.contrib.sitemaps.views import sitemap
+from covise_app.sitemaps import StaticViewSitemap
+
+sitemaps = {
+    'static': StaticViewSitemap,
+}
+
 urlpatterns = [
     path('', views.landing, name='Landing Page'),
     path('home/', views.home, name='Home'),
@@ -14,5 +23,8 @@ urlpatterns = [
     path('onboarding/', views.onboarding, name='Onboarding'),
     path('waitlist/', views.waitlist, name='Waitlist'),
     path('waitlist/success/', views.waitlist_success, name='Waitlist Success'),
+
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+
 ]
 

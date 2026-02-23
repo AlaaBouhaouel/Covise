@@ -24,6 +24,7 @@ CSRF_TRUSTED_ORIGINS = [
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
+    'django.contrib.sitemaps',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -95,9 +96,6 @@ if not DEBUG:
     CSRF_USE_SESSIONS = False
 if DEBUG:
     STATICFILES_DIRS = [BASE_DIR / 'static']
-
-
-
 
 
 DATABASE_URL = config('DATABASE_URL', default=None)
