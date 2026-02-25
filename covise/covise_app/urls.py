@@ -35,10 +35,11 @@ urlpatterns = [
     path('login/', views.login_view, name='Login'),
     path('signin/', views.signin, name='Sign In'),
     path('onboarding/', views.onboarding, name='Onboarding'),
+    path('loading/', views.loading, name='Loading'),
+    path('pricing/', views.pricing, name='Pricing'),
     path('waitlist/', views.waitlist, name='Waitlist'),
     path('waitlist/success/', views.waitlist_success, name='Waitlist Success'),
 
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 
 ]
-

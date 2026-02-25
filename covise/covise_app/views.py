@@ -36,6 +36,12 @@ def signin(request):
 def onboarding(request):
     return render(request, 'onboarding.html')
 
+def loading(request):
+    return render(request, 'loading.html')
+
+def pricing(request):
+    return render(request, 'pricing.html')
+
 @ensure_csrf_cookie
 def waitlist(request):
     context = {}

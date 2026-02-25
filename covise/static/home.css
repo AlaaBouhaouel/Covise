@@ -1,4 +1,4 @@
-* {
+﻿* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -7,8 +7,8 @@
 :root {
     --bg: #05060b;
     --bg-deep: #02040a;
-    --panel: rgba(26, 36, 60, 0.9);
-    --text: #e9edf5;
+    --panel: rgba(16, 24, 40, 0.9);
+    --text: #cfd7e6;
     --muted: #9aa6bd;
     --accent: #1c2d6b;
     --border: rgba(255, 255, 255, 0.08);
@@ -43,7 +43,7 @@ p {
     align-self: flex-start;
     width: 72px;
     height: 100vh;
-    background: rgba(20, 30, 52, 0.95);
+    background: rgba(12, 18, 32, 0.95);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -1088,6 +1088,8 @@ p {
         width: 100%;
     }
 }
+
+
 
 
 

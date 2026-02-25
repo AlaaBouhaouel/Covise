@@ -1,4 +1,4 @@
-* {
+﻿* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -6,8 +6,8 @@
 
 :root {
     --bg: #05060b;
-    --panel: rgba(24, 36, 60, 0.9);
-    --text: #e9edf5;
+    --panel: rgba(16, 24, 40, 0.9);
+    --text: #cfd7e6;
     --muted: #9aa6bd;
     --accent: #1c4ed8;
     --border: rgba(255, 255, 255, 0.08);
@@ -33,7 +33,7 @@ body {
     align-self: flex-start;
     width: 72px;
     height: 100vh;
-    background: rgba(14, 22, 38, 0.95);
+    background: rgba(10, 16, 28, 0.95);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -47,7 +47,7 @@ body {
     height: 44px;
     border-radius: 14px;
     border: 1px solid var(--border);
-    background: rgba(24, 36, 60, 0.92);
+    background: rgba(16, 24, 40, 0.92);
     color: var(--text);
     display: grid;
     place-items: center;
@@ -334,6 +334,8 @@ body {
         justify-content: center;
     }
 }
+
+
 
 
 

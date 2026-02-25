@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Pricing</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'pricing.css' %}">
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-RDN1TCMRNR');
+</script>
+<body>
+    <main class="pricing-page">
+        <a class="back-link" href="/">Home</a>
+
+        <header class="pricing-header">
+            <h1>Plans</h1>
+            <p>Choose how you want to pay. Both plans include all CoVise features.</p>
+        </header>
+
+        <section class="plans" aria-label="Pricing plans">
+            <article class="plan-card plan-card-featured">
+                <h2>Monthly</h2>
+                <p class="price">29 SAR<span>/month</span></p>
+                <p class="plan-note">Flexible billing, cancel anytime.</p>
+                <ul class="feature-list">
+                    <li>All platform features included</li>
+                    <li>Founder matching and discovery</li>
+                    <li>Collaboration workspaces</li>
+                    <li>Messaging and project coordination</li>
+                    <li>Community updates and support</li>
+                </ul>
+                <a class="plan-cta" href="/waitlist/">Get Monthly</a>
+            </article>
+
+            <article class="plan-card ">
+                <h2>Yearly</h2>
+                <p class="price">25 SAR<span>/month (billed yearly)</span></p>
+                <p class="plan-note">Lower monthly cost with annual billing.</p>
+                <ul class="feature-list">
+                    <li>All platform features included</li>
+                    <li>Founder matching and discovery</li>
+                    <li>Collaboration workspaces</li>
+                    <li>Messaging and project coordination</li>
+                    <li>Community updates and support</li>
+                </ul>
+                <a class="plan-cta" href="/waitlist/">Get Yearly</a>
+            </article>
+        </section>
+    </main>
+</body>
+</html>
