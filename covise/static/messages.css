@@ -1,4 +1,4 @@
-﻿* {
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -496,12 +496,12 @@ body {
     }
 
     .sidebar {
-        gap: calc(var(--spacing) * 1.25);
+        gap: calc(var(--spacing) * 0.75);
     }
 
     .sidebar .sidebar-link {
-        width: 38px;
-        height: 38px;
+        width: 34px;
+        height: 34px;
     }
 
     .main > .chat {
