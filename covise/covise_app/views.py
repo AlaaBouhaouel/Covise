@@ -42,6 +42,9 @@ def loading(request):
 def pricing(request):
     return render(request, 'pricing.html')
 
+def workspace(request):
+    return render(request, 'workspace.html')
+
 @ensure_csrf_cookie
 def waitlist(request):
     context = {}

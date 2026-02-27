@@ -37,6 +37,7 @@ urlpatterns = [
     path('onboarding/', views.onboarding, name='Onboarding'),
     path('loading/', views.loading, name='Loading'),
     path('pricing/', views.pricing, name='Pricing'),
+    path('workspace/', views.workspace, name='Workspace'),
     path('waitlist/', views.waitlist, name='Waitlist'),
     path('waitlist/success/', views.waitlist_success, name='Waitlist Success'),
 
