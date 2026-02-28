@@ -106,7 +106,7 @@ body {
 .messages-lock {
     position: absolute;
     inset: 0;
-    z-index: 60;
+    z-index: 40;
     display: grid;
     place-items: center;
     background: rgba(5, 8, 16, 0.42);
@@ -115,6 +115,33 @@ body {
     pointer-events: auto;
     text-align: center;
     padding: calc(var(--spacing) * 3);
+}
+
+/* Keep app navigation fixed at the bottom without overlapping content. */
+.sidebar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    height: 72px;
+    flex-direction: row;
+    justify-content: center;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    z-index: 90;
+}
+
+.sidebar .sidebar-link[aria-label="Profile"] {
+    margin-top: 0;
+}
+
+.main {
+    padding-bottom: calc(var(--spacing) * 14);
 }
 
 .messages-lock p {
