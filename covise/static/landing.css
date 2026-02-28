@@ -253,7 +253,7 @@ body {
 }
 
 .reserve-spot-btn {
-    font-family: sans-serif;
+    font-family: sans-serif !important;
 }
 
 .scroll-indicator {
