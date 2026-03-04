@@ -233,6 +233,7 @@ body {
     gap: calc(var(--spacing) * 3);
 }
 
+
 .panel {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -429,6 +430,7 @@ body {
         flex-wrap: wrap;
         gap: calc(var(--spacing) * 1);
     }
+
 }
 
 

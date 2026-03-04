@@ -87,24 +87,77 @@
             <section class="dashboard-grid" aria-label="Dashboard">
                 <article class="dashboard-card visits-card">
                     <div class="card-head">
-                        <h2>Profile interactions</h2>
-                        <span>Last 7 days</span>
+                        <h2>Market Intel</h2>
+                        <span>Market Intel</span>
                     </div>
-                    <div class="visits-total">284</div>
-                    <svg class="visits-curve" viewBox="0 0 420 140" role="img" aria-label="Profile interactions curve">
-                        <defs>
-                            <linearGradient id="visitLine" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#6c95ff" />
-                                <stop offset="100%" stop-color="#9ec1ff" />
-                            </linearGradient>
-                        </defs>
-                        <path d="M10 120 C 60 100, 95 92, 130 95 C 170 100, 210 78, 245 70 C 280 62, 320 48, 360 30 C 385 18, 402 14, 410 16" fill="none" stroke="url(#visitLine)" stroke-width="4" stroke-linecap="round"/>
-                    </svg>
-                    <div class="visits-meta">
-                        <span>Mon</span>
-                        <span>Wed</span>
-                        <span>Fri</span>
-                        <span>Sun</span>
+                    <div class="intel-grid" aria-label="Founder market snapshot">
+                        <article class="intel-card">
+                            <div class="intel-scanline"></div>
+                            <div class="intel-head">
+                                <p>Brent Crude Oil</p>
+                                <span class="intel-tag is-live">Live</span>
+                            </div>
+                            <p class="intel-value">$84.72 <small>USD/bbl</small></p>
+                            <p class="intel-change is-up">+1.61%</p>
+                            <svg class="intel-curve is-up" viewBox="0 0 160 46" role="img" aria-label="Brent oil trend up">
+                                <path d="M4 37 C 20 33, 38 34, 54 30 C 74 25, 90 21, 108 17 C 126 13, 142 12, 156 8"></path>
+                            </svg>
+                            <div class="intel-foot">
+                                <span>Open 83.38</span>
+                                <span>High 85.10</span>
+                            </div>
+                        </article>
+
+                        <article class="intel-card">
+                            <div class="intel-scanline"></div>
+                            <div class="intel-head">
+                                <p>Tadawul (TASI)</p>
+                                <span class="intel-tag is-delay">15m Delay</span>
+                            </div>
+                            <p class="intel-value">11,847.32</p>
+                            <p class="intel-change is-down">-1.03%</p>
+                            <svg class="intel-curve is-down" viewBox="0 0 160 46" role="img" aria-label="TASI trend down">
+                                <path d="M4 9 C 22 10, 36 13, 52 16 C 72 20, 90 24, 108 28 C 124 31, 142 34, 156 38"></path>
+                            </svg>
+                            <div class="intel-foot">
+                                <span>Vol 412.3M</span>
+                                <span>AST 15:30</span>
+                            </div>
+                        </article>
+
+                        <article class="intel-card">
+                            <div class="intel-scanline"></div>
+                            <div class="intel-head">
+                                <p>USD / SAR</p>
+                                <span class="intel-tag is-live">Live</span>
+                            </div>
+                            <p class="intel-value">3.7503 <small>SAR</small></p>
+                            <p class="intel-change is-neutral">+0.003%</p>
+                            <svg class="intel-curve is-neutral" viewBox="0 0 160 46" role="img" aria-label="USD SAR peg trend">
+                                <path d="M4 23 C 22 22, 38 24, 56 23 C 74 22, 90 24, 108 23 C 126 22, 142 24, 156 23"></path>
+                            </svg>
+                            <div class="intel-foot">
+                                <span>Pegged</span>
+                                <span>UTC Live</span>
+                            </div>
+                        </article>
+
+                        <article class="intel-card">
+                            <div class="intel-scanline"></div>
+                            <div class="intel-head">
+                                <p>Latest GCC Funding</p>
+                                <span class="intel-tag is-curated">Curated</span>
+                            </div>
+                            <p class="intel-value">$67.5M <small>Series B</small></p>
+                            <p class="intel-change is-up">Lean Technologies</p>
+                            <svg class="intel-curve is-up" viewBox="0 0 160 46" role="img" aria-label="GCC funding momentum">
+                                <path d="M4 38 C 22 34, 38 30, 56 26 C 76 22, 90 18, 108 15 C 124 12, 142 9, 156 7"></path>
+                            </svg>
+                            <div class="intel-foot">
+                                <span>Saudi Arabia</span>
+                                <span>2d ago</span>
+                            </div>
+                        </article>
                     </div>
                 </article>
 

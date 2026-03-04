@@ -303,7 +303,7 @@ p {
 }
 
 .ticker-item span {
-    color: rgb(120, 150, 255);
+    color:  rgba(74, 214, 141, 0.35);
     font-weight: 600;
     margin-right: calc(var(--spacing) * 1.5);
 }
@@ -369,6 +369,188 @@ p {
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
+
+.visits-card {
+    position: relative;
+}
+
+.intel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--spacing) * 1.2);
+}
+
+.intel-card {
+    position: relative;
+    border: 1px solid rgba(120, 150, 255, 0.22);
+    border-radius: 8px;
+    padding: calc(var(--spacing) * 1.3);
+    background: linear-gradient(180deg, rgba(10, 16, 30, 0.9), rgba(8, 13, 25, 0.88));
+    overflow: hidden;
+}
+
+.intel-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(120, 150, 255, 0.65), transparent);
+    opacity: 0.55;
+}
+
+.intel-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(120, 150, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(120, 150, 255, 0.03) 1px, transparent 1px);
+    background-size: 22px 22px;
+    pointer-events: none;
+}
+
+.intel-scanline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -45%;
+    height: 45%;
+    background: linear-gradient(transparent, rgba(120, 150, 255, 0.06), transparent);
+    animation: intelScan 4.8s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.intel-head,
+.intel-value,
+.intel-change,
+.intel-curve,
+.intel-foot {
+    position: relative;
+    z-index: 2;
+}
+
+.intel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: calc(var(--spacing) * 1);
+}
+
+.intel-head p {
+    font-size: 0.62rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #8fa2c6;
+    line-height: 1.2;
+}
+
+.intel-tag {
+    font-size: 0.53rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 2px 5px;
+    white-space: nowrap;
+}
+
+.intel-tag.is-live {
+    color: #89ebbc;
+    border-color: rgba(74, 214, 141, 0.35);
+    background: rgba(74, 214, 141, 0.12);
+}
+
+.intel-tag.is-delay {
+    color: #9ec1ff;
+    border-color: rgba(120, 150, 255, 0.32);
+    background: rgba(120, 150, 255, 0.11);
+}
+
+.intel-tag.is-curated {
+    color: #ffd27f;
+    border-color: rgba(255, 207, 127, 0.3);
+    background: rgba(255, 207, 127, 0.1);
+}
+
+.intel-value {
+    margin-top: calc(var(--spacing) * 0.6);
+    font-size: 1.1rem;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    color: #d8e3fb;
+    font-weight: 700;
+}
+
+.intel-value small {
+    font-size: 0.64rem;
+    color: #96a8c7;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.intel-change {
+    margin-top: calc(var(--spacing) * 0.5);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.intel-change.is-up {
+    color: #8ce9bc;
+}
+
+.intel-change.is-down {
+    color: #ff94ab;
+}
+
+.intel-change.is-neutral {
+    color: #9dbbff;
+}
+
+.intel-curve {
+    width: 100%;
+    height: 36px;
+    margin-top: calc(var(--spacing) * 0.7);
+}
+
+.intel-curve path {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.intel-curve.is-up path {
+    stroke: #86e5b8;
+}
+
+.intel-curve.is-down path {
+    stroke: #ff8ea6;
+}
+
+.intel-curve.is-neutral path {
+    stroke: #9ab9ff;
+}
+
+.intel-foot {
+    margin-top: calc(var(--spacing) * 0.7);
+    padding-top: calc(var(--spacing) * 0.7);
+    border-top: 1px solid rgba(120, 150, 255, 0.16);
+    display: flex;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 1);
+}
+
+.intel-foot span {
+    font-size: 0.53rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8092b4;
+    line-height: 1.2;
+}
+
 
 .thought-form {
     display: grid;
@@ -617,6 +799,15 @@ p {
     }
     100% {
         transform: translateX(-50%);
+    }
+}
+
+@keyframes intelScan {
+    0% {
+        top: -45%;
+    }
+    100% {
+        top: 100%;
     }
 }
 
@@ -965,6 +1156,10 @@ p {
 
     .dashboard-right {
         grid-template-rows: auto auto;
+    }
+
+    .intel-grid {
+        grid-template-columns: 1fr;
     }
 }
 
