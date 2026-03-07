@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | About</title>
+    <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'about.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-RDN1TCMRNR');
+</script>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <div class="logo">
+                <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                <span>CoVise</span>
+            </div>
+            <div class="nav-links">
+                <a href="/about/" class="nav-link nav-link-active">ABOUT</a>
+                <a href="/features/" class="nav-link">FEATURES</a>
+                <a href="/home/" class="nav-link">DEMO</a>
+                <a href="/pricing/" class="nav-link">PRICING</a>
+            </div>
+        </nav>
+
+        <main class="about-page">
+            <div class="hero">
+                <div class="hero-eyebrow">Our Story</div>
+                <div class="hero-title">We built Covise because finding the right co-founder in the GCC shouldn't be left to luck.</div>
+            </div>
+
+            <div class="content">
+                <div class="story">
+                    <p>
+                        Finding a serious business partner in the Gulf is genuinely hard. There is no structured place to look, no way to verify who is truly committed, and no process to test compatibility before you go all in. Most partnerships don't fail because of bad ideas - <strong>they fail because of bad alignment.</strong>
+                    </p>
+                    <p>
+                        We watched talented founders across Saudi Arabia and the UAE either build alone out of frustration, or rush into the wrong partnerships because there was nowhere serious to meet people. LinkedIn wasn't built for this. Incubators only serve a small slice. And most platforms that claim to help are either too niche, too passive, or too focused on deep tech to be useful to the full spectrum of entrepreneurs in the region.
+                    </p>
+                    <p>
+                        <strong>Covise was built to fix that.</strong> <br> A verified, structured, AI-powered network where serious founders find each other - across every industry, every city in the Gulf, and across borders. Not just tech. Not just the well-funded. Everyone who is serious about building something real.
+                    </p>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="facts">
+                    <div class="fact">
+                        <div class="fact-label">Who We Serve</div>
+                        <div class="fact-value">GCC Founders &amp; Global Partners</div>
+                        <div class="fact-sub">Every industry. Every stage. Serious people only.</div>
+                    </div>
+                    <div class="fact">
+                        <div class="fact-label">Where We're Going</div>
+                        <div class="fact-value">The Region's Most Trusted Founder Network</div>
+                        <div class="fact-sub">Invite-only. Growing with intention.</div>
+                    </div>
+                </div>
+
+                <div class="divider2"></div>
+
+                <div class="founder-note">
+                    <div class="note-text">
+                        "The GCC has no shortage of ambition or capital. What it's missing is <strong>infrastructure for trust</strong> - a place where two people who've never met can figure out whether they're genuinely built to build together. That's what we're creating with Covise. Not another app to scroll through. A serious process that increases the odds of getting it right."
+                    </div>
+                    <div class="note-author">
+                        <div class="note-avatar">ZA</div>
+                        <div>
+                            <div class="note-name">Founders, CoVise</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cta-block">
+                    <div class="cta-title">Want to be part of the first cohort?</div>
+                    <div class="cta-sub">We're onboarding verified founders in batches. Apply for early access.</div>
+                    <a href="/waitlist/" class="cta-btn">Join the Waitlist <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="footer-brand-title">
+                        <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                        <span>CoVise</span>
+                    </div>
+                    <p class="footer-tagline">Where serious founders align and build together.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <a href="/features/">Features</a>
+                    <a href="/pricing/">Pricing</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <a href="/waitlist/">Events</a>
+                    <a href="mailto:support@covise.com">Support</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <a href="/about/">About</a>
+                    <a href="mailto:support@covise.com">Contact</a>
+                    <a href="mailto:donotreply@covise.net">donotreply@covise.net</a>
+                    <a href="https://www.linkedin.com/company/covise/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>- 2026 CoVise. All rights reserved.</p>
+                <div class="footer-legal">
+                    <a href="#">Terms</a>
+                    <a href="#">Privacy</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

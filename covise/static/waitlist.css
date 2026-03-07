@@ -102,6 +102,44 @@ h1 {
     margin-bottom: calc(var(--spacing) * 1);
 }
 
+#cv {
+    padding: calc(var(--spacing) * 1);
+}
+
+
+
+#cv::file-selector-button {
+    width: 28px;
+    height: 28px;
+    margin-right: calc(var(--spacing) * 1.25);
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+    background-image: url("/static/icon/arrow.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 13px 13px;
+    filter: invert(1);
+}
+
+#cv::-webkit-file-upload-button {
+    width: 28px;
+    height: 28px;
+    margin-right: calc(var(--spacing) * 1.25);
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+    background-image: url("/static/icon/arrow.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 13px 13px;
+    filter: invert(1);
+}
+
 .waitlist-form input:focus,
 .waitlist-form select:focus {
     outline: none;
@@ -150,19 +188,55 @@ h1 {
 }
 
 .waitlist-form button {
-    margin-top: calc(var(--spacing) * 1);
-    border: 1px solid transparent;
-    border-radius: 10px;
-    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2);
-    background: var(--accent);
-    color: #091224;
-    font-family: sans-serif;
-    font-size: 0.86rem;
+
+    justify-self: center;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: calc(var(--spacing)*2);
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
+    background: #edf3ff;
+    
+    color: #000;
+    text-decoration: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border: none;
+    border-radius: 20px;
     cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
 }
+
+.waitlist-form button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+}
+
+.waitlist-form button:hover::before {
+    width: 400px;
+    height: 400px;
+}
+
+.waitlist-form button:hover {
+    transform: scale(1.05);
+    color: var(--white);
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+
 
 .notice {
     margin-top: calc(var(--spacing) * 1.5);

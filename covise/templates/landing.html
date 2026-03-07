@@ -28,13 +28,19 @@
                 <span>CoVise</span>
             </div>
             <div class="nav-links">
+                <a href="/about/" class="nav-link">ABOUT</a>
+                <a href="/features/" class="nav-link">FEATURES</a>
+                <a href="/home/" class="nav-link">DEMO</a>
                 <a href="/pricing/" class="nav-link">PRICING</a>
-                <a href="/home" class="nav-link demo-link">DEMO</a>
             </div>
         </nav>
 
         <!-- Hero Section -->
         <section class="hero">
+            <div class="hero-globe-canvas-wrap" aria-hidden="true">
+                <canvas class="landing-globe-canvas" data-globe-canvas="hero"></canvas>
+            </div>
+
             <div class="hero-content">
                 <h1 class="hero-title">
                     BUILD YOUR<br>
@@ -101,10 +107,13 @@
 
         <!-- CTA Section -->
         <section id="cta-section" class="cta-section">
+            <div class="cta-globe-canvas-wrap" aria-hidden="true">
+                <canvas class="landing-globe-canvas" data-globe-canvas="cta"></canvas>
+            </div>
             <div class="cta-content">
                 <h2 class="cta-title">READY TO BUILD?</h2>
                 <p class="cta-text">Join the region's most focused entrepreneur community.</p>
-                <a href="/waitlist/" class="btn-primary">JOIN THE WAITLIST</a>
+                <a href="/waitlist/" class="btn-primary">JOIN THE WAITLIST <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
             </div>
         </section>
 
@@ -120,35 +129,20 @@
         </div>
         <div class="footer-col">
             <h4>Product</h4>
-            <a href="#">Features</a>
-            <a href="#">Community</a>
+            <a href="/features/">Features</a>
             <a href="/pricing/">Pricing</a>
-            <a href="#">Updates</a>
         </div>
         <div class="footer-col">
             <h4>Resources</h4>
-            <a href="#">Guides</a>
-            <a href="#">Events</a>
-            <a href="#">Partners</a>
-            <a href="#">Support</a>
+            <a href="/waitlist/">Events</a>
+            <a href="mailto:support@covise.com">Support</a>
         </div>
         <div class="footer-col">
             <h4>Company</h4>
-            <a href="#">About</a>
-            <a href="#">Careers</a>
-            <a href="#">Press</a>
-            <a href="#">Contact</a>
-        </div>
-        <div class="footer-col">
-            <h4>Stay in touch</h4>
-            <div class="footer-social">
-                <p style="padding-bottom: 1.5rem;">Email us at <a href="mailto:hello@covise.com">founders@covise.com</a></p>
-
-
-                <a href="#">LinkedIn</a>
-                <a href="#">X</a>
-                <a href="#">Instagram</a>
-            </div>
+            <a href="/about/">About</a>
+            <a href="mailto:support@covise.com">Contact</a>
+            <a href="mailto:donotreply@covise.net">donotreply@covise.net</a>
+            <a href="https://www.linkedin.com/company/covise/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         </div>
     </div>
     <div class="footer-bottom">
@@ -173,5 +167,6 @@
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
     </script>
+    <script src="{% static 'landing-globe.js' %}"></script>
 </body>
 </html>

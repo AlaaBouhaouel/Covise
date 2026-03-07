@@ -31,7 +31,7 @@
             <h1>Join the Waitlist</h1>
             <p class="intro">Share your info and we will reach out soon.</p>
 
-            <form class="waitlist-form" method="post" action="">
+            <form class="waitlist-form" method="post" action="" enctype="multipart/form-data">
                 {% csrf_token %}
                 <label for="full_name">Name</label>
                 <input id="full_name" name="full_name" type="text" placeholder="Your full name" required>
@@ -65,6 +65,9 @@
 
                 <label for="linkedin">LinkedIn</label>
                 <input id="linkedin" name="linkedin" type="url" placeholder="https://linkedin.com/in/username" required>
+
+                <label for="cv">CV</label>
+                <input id="cv" name="cv" type="file" accept=".pdf,.doc,.docx" required>
 
                 <button type="submit">Submit</button>
             </form>

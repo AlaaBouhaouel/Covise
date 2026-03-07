@@ -8,6 +8,7 @@ class WaitlistEntry(models.Model):
     non_gcc_business = models.BooleanField(default=False)
     custom_country = models.CharField(max_length=100, blank=True)
     linkedin = models.URLField(max_length=300)
+    cv = models.FileField(upload_to='cv_uploads/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

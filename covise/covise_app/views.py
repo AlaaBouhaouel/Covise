@@ -18,6 +18,9 @@ def projects(request):
 def profile(request):
     return render(request, 'profile.html')
 
+def profile_card(request):
+    return render(request, 'profile_card.html')
+
 def map_view(request):
     return render(request, 'map.html')
 
@@ -42,6 +45,12 @@ def loading(request):
 def pricing(request):
     return render(request, 'pricing.html')
 
+def features(request):
+    return render(request, 'features.html')
+
+def about(request):
+    return render(request, 'about.html')
+
 def workspace(request):
     return render(request, 'workspace.html')
 
@@ -57,8 +66,9 @@ def waitlist(request):
         non_gcc_business = request.POST.get('non_gcc_business') == 'on'
         custom_country = request.POST.get('custom_country', '').strip()
         linkedin = request.POST.get('linkedin', '').strip()
+        cv_file = request.FILES.get('cv')
 
-        if not all([full_name, phone_number, email, linkedin]):
+        if not all([full_name, phone_number, email, linkedin, cv_file]):
             context['error_message'] = 'Please complete all required fields.'
         elif non_gcc_business and not custom_country:
             context['error_message'] = 'Please enter your country if you are outside the GCC.'
@@ -78,6 +88,7 @@ def waitlist(request):
                 non_gcc_business=non_gcc_business,
                 custom_country=custom_country,
                 linkedin=linkedin,
+                cv=cv_file,
             )
             return redirect('Waitlist Success')
 

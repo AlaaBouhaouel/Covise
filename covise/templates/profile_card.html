@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Profile Card</title>
+    <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'profile-card-page.css' %}">
+</head>
+<body>
+    <main class="card-page">
+        <a class="back-link" href="{% url 'Profile' %}" aria-label="Back to profile">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back to Profile
+        </a>
+
+        <section class="card-shell">
+            <article class="profile-share-card" id="profile-share-card" aria-label="Profile card preview">
+                <div class="share-card-head">
+                    <div class="share-avatar" id="card-avatar">A</div>
+                    <div class="share-identity">
+                        <h3 id="card-name">Ahmed Al-Rashidi</h3>
+                        <p id="card-meta">OPERATIONS - RIYADH, KSA</p>
+                    </div>
+                    <span class="share-verified">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 3L14.78 5.22L18 6L18.78 9.22L21 12L18.78 14.78L18 18L14.78 18.78L12 21L9.22 18.78L6 18L5.22 14.78L3 12L5.22 9.22L6 6L9.22 5.22L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Verified
+                    </span>
+                </div>
+                <div class="share-card-body">
+                    <section class="share-score">
+                        <p class="share-label">Founder Conviction</p>
+                        <p class="share-score-value"><span id="card-score">84</span><small>/100</small></p>
+                        <div class="share-progress-track">
+                            <div class="share-progress-fill" id="card-score-fill" style="width:84%"></div>
+                        </div>
+                    </section>
+
+                    <section class="share-section">
+                        <p class="share-label">Skills</p>
+                        <div class="share-chip-group" id="card-skills">
+                            <span class="share-chip active">Operations</span>
+                            <span class="share-chip">Supply Chain</span>
+                            <span class="share-chip">Team Building</span>
+                            <span class="share-chip">Finance</span>
+                        </div>
+                    </section>
+
+                    <section class="share-section">
+                        <p class="share-label">Looking For</p>
+                        <div class="share-chip-group" id="card-looking-for">
+                            <span class="share-chip active">Tech Co-founder</span>
+                            <span class="share-chip">Product</span>
+                        </div>
+                    </section>
+
+                    <p class="share-about" id="card-about">Building a B2B logistics platform for SMEs in Saudi. 8 years in supply chain. Need a technical co-founder who can ship fast and own the product.</p>
+                </div>
+            </article>
+        </section>
+
+        <div class="card-actions">
+            <button id="downloadCardBtn" type="button" class="icon-btn" aria-label="Download profile card image">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 20H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Download
+            </button>
+            <button id="shareCardBtn" type="button" class="icon-btn" aria-label="Share profile card">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="2"/>
+                    <path d="M8.6 10.8L15.4 6.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M8.6 13.2L15.4 17.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Share
+            </button>
+        </div>
+
+        <p id="cardStatus" class="card-status" aria-live="polite"></p>
+    </main>
+
+    <script src="{% static 'profile-card-page.js' %}"></script>
+</body>
+</html>

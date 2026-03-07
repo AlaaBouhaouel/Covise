@@ -82,9 +82,31 @@ body {
 
 .main {
     flex: 1;
+    position: relative;
     padding: calc(var(--spacing) * 6) calc(var(--spacing) * 8);
     display: grid;
     gap: calc(var(--spacing) * 3);
+}
+
+.messages-lock {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: grid;
+    place-items: center;
+    background: rgba(5, 8, 16, 0.42);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    pointer-events: auto;
+    text-align: center;
+    padding: calc(var(--spacing) * 3);
+}
+
+.messages-lock p {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: #e7edf9;
+    letter-spacing: 0.04em;
 }
 
 .workspace-header {

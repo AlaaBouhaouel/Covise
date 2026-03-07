@@ -281,18 +281,26 @@ body {
     display: flex;
     flex-direction: row-reverse;
     align-items: center;
-    gap: calc(var(--spacing) * 0.7);
+    gap: calc(var(--spacing) * 0.8);
 }
 
 .alignment-value {
     color: #d7e3ff;
     font-weight: 700;
-    font-size: 1.15rem;
+    font-size: 1.5rem;
     line-height: 1;
 }
 
 .alignment-value.high {
     color: #6be28b;
+}
+
+.alignment-value.medium {
+    color: #ffcf7f;
+}
+
+.alignment-value.low {
+    color: #ff8da3;
 }
 
 .alignment-info {

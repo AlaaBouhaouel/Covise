@@ -82,13 +82,7 @@
                         <p class="headline">Founder at CoVise | Product and Venture Builder</p>
                         <p class="meta">Riyadh, KSA 500+ connections</p>
                         <div class="hero-actions">
-                            <button type="button">Connect</button>
-                            <button type="button" class="secondary icon-only" aria-label="Send">
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
+                            <a class="primary-action" href="{% url 'Profile Card' %}">Profile Card</a>
                         </div>
                     </div>
                     <div class="social-cards">
@@ -105,25 +99,103 @@
             </section>
 
             <section class="content-grid">
-                <article class="panel linkedin-style">
-                    <h2>Experience</h2>
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <h3>Founder of CoVise</h3>
-                            <p>2024 - Present</p>
-                            <p>Building a founder-collaboration workspace for projects, teams, and execution tracking.</p>
+                <article class="panel score-section">
+                    <h2>Founder Conviction</h2>
+                    <div class="score-main">
+                        <div class="score-circle">
+                            <div class="score-num">84</div>
+                            <div class="score-denom">/ 100</div>
                         </div>
-                        <div class="timeline-item">
-                            <h3>Product Lead @ Venture Studio</h3>
-                            <p>2022 - 2024</p>
-                            <p>Led 0-1 product validation and launched MVPs across SaaS and marketplace concepts.</p>
-                        </div>
-                        <div class="timeline-item">
-                            <h3>Growth Strategist @ Startup Lab</h3>
-                            <p>2020 - 2022</p>
-                            <p>Ran acquisition experiments, onboarding optimization, and investor reporting loops.</p>
+                        <div class="score-desc">
+                            <div class="score-title">Highly Committed Founder</div>
+                            <div class="score-sub">This founder demonstrates strong execution history, full-time availability, and high risk tolerance. Behaviorally aligned with serious, action-oriented partners.</div>
                         </div>
                     </div>
+                    <div class="score-bars">
+                        <div class="bar-row">
+                            <span class="bar-name">Commitment Level</span>
+                            <div class="bar-track"><div class="bar-fill green" style="width:95%"></div></div>
+                            <span class="bar-val">95</span>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-name">Risk Tolerance</span>
+                            <div class="bar-track"><div class="bar-fill blue" style="width:80%"></div></div>
+                            <span class="bar-val">80</span>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-name">Execution History</span>
+                            <div class="bar-track"><div class="bar-fill gold" style="width:78%"></div></div>
+                            <span class="bar-val">78</span>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-name">Leadership Style</span>
+                            <div class="bar-track"><div class="bar-fill red" style="width:85%"></div></div>
+                            <span class="bar-val">85</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="panel looking-section">
+                    <div class="looking-block">
+                        <h2>What I'm Building</h2>
+                        <p class="looking-text">A co-founder matching platform for serious founders across the GCC - verified profiles, AI alignment, and structured collaboration before commitment.</p>
+                        <div class="tags">
+                            <span class="tag blue">B2B SaaS</span>
+                            <span class="tag blue">Marketplace</span>
+                            <span class="tag blue">GCC</span>
+                        </div>
+                    </div>
+                    <div class="looking-block">
+                        <h2>Looking For</h2>
+                        <p class="looking-text">A technical co-founder who can own the product and ship fast. Full-time commitment required.</p>
+                        <div class="tags">
+                            <span class="tag green">Full-Time</span>
+                            <span class="tag pink">Technical Co-Founder</span>
+                            <span class="tag gold">Backend Systems</span>
+                            <span class="tag gold">Product</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="two-col">
+                    <section class="panel exp-section">
+                        <h2>Experience</h2>
+                        <div class="exp-items">
+                            <div class="exp-item">
+                                <div class="exp-title">Co-Founder of Maqam</div>
+                                <div class="exp-date">2024 - Present</div>
+                                <div class="exp-desc">Built and scaled a B2B procurement platform connecting SMEs with suppliers across Saudi Arabia.</div>
+                            </div>
+                            <div class="exp-item">
+                                <div class="exp-title">Product Lead @ Venture Studio</div>
+                                <div class="exp-date">2022 - 2024</div>
+                                <div class="exp-desc">Led 0-1 product validation and launched MVPs across SaaS and marketplace concepts.</div>
+                            </div>
+                            <div class="exp-item">
+                                <div class="exp-title">Growth Strategist @ Startup Lab</div>
+                                <div class="exp-date">2020 - 2022</div>
+                                <div class="exp-desc">Ran acquisition experiments, onboarding optimization, and investor reporting loops.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="panel projects-section">
+                        <h2>Active Projects</h2>
+                        <div class="project-card">
+                            <div class="project-top">
+                                <div class="project-name">Covise Platform</div>
+                                <div class="project-status active">Active</div>
+                            </div>
+                            <div class="project-desc">Co-founder matching platform for the GCC. Verified profiles, AI alignment scoring, Trial Build feature.</div>
+                        </div>
+                        <div class="project-card">
+                            <div class="project-top">
+                                <div class="project-name">GCC Founder Intelligence Tool</div>
+                                <div class="project-status seeking">Seeking Partner</div>
+                            </div>
+                            <div class="project-desc">Market research aggregator for early-stage founders in Saudi and UAE. Looking for a data engineer.</div>
+                        </div>
+                    </section>
                 </article>
             </section>
 

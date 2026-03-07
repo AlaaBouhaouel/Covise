@@ -1,0 +1,261 @@
+:root {
+    --bg: #05060b;
+    --panel: rgba(16, 24, 40, 0.9);
+    --text: #cfd7e6;
+    --muted: #9aa6bd;
+    --border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Syne", "Segoe UI", sans-serif;
+    background: radial-gradient(1200px 600px at 70% -10%, #0b1b3b 0%, #060a16 45%, var(--bg) 100%);
+    color: var(--text);
+}
+
+.card-page {
+    min-height: 100vh;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 18px;
+    padding: 28px;
+}
+
+.back-link {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #cbd8f1;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px;
+    background: rgba(16, 24, 40, 0.6);
+}
+
+.back-link svg {
+    width: 16px;
+    height: 16px;
+}
+
+.card-shell {
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    background: rgba(12, 17, 30, 0.7);
+    padding: 14px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    display: flex;
+}
+
+.profile-share-card {
+    width: 480px;
+    height: auto;
+    min-width: 480px;
+
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: rgba(9, 14, 26, 0.95);
+    display: grid;
+}
+
+.share-card-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, #06080f 0%, #0c1222 55%, #0f1a2f 100%);
+}
+
+.share-avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: linear-gradient(140deg, #f6d38a 0%, #c89e55 100%);
+    color: #141107;
+    font-size: 2rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    text-transform: uppercase;
+}
+
+.share-identity h3 {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1.1;
+    color: #edf3ff;
+}
+
+.share-identity p {
+    margin: 6px 0 0;
+    color: #9ba8c2;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.share-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    border: 1px solid rgba(216, 177, 100, 0.45);
+    background: rgba(216, 177, 100, 0.13);
+    color: #e7c88c;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.share-verified svg {
+    width: 14px;
+    height: 14px;
+}
+
+.share-card-body {
+    padding: 24px;
+    display: grid;
+    gap: 16px;
+}
+
+.share-score {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.share-label {
+    color: #9aa6bd;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.78rem;
+}
+
+.share-score-value {
+    margin: 8px 0 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f0f4fd;
+}
+
+.share-score-value small {
+    font-size: 1.2rem;
+    color: #9aa6bd;
+    font-weight: 500;
+    margin-left: 4px;
+}
+
+.share-progress-track {
+    margin-top: 10px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.share-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #4a8eff, #5ab5ff);
+}
+
+.share-section {
+    display: grid;
+    gap: 8px;
+}
+
+.share-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.share-chip {
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    color: #c4d0e5;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.share-chip.active {
+    border-color: rgba(120, 150, 255, 0.4);
+    background: rgba(120, 150, 255, 0.18);
+    color: #e2edff;
+}
+
+.share-about {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+    padding-top: 16px;
+    color: #c4cfdf;
+    line-height: 1.55;
+    font-size: 1rem;
+}
+
+.card-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(120, 150, 255, 0.4);
+    background: rgba(120, 150, 255, 0.18);
+    color: #dce9ff;
+    padding: 9px 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.icon-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.card-status {
+    min-height: 20px;
+    color: var(--muted);
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .card-page {
+        padding: 18px;
+    }
+
+    .card-shell {
+        width: 100%;
+    }
+
+    .share-card-head {
+        grid-template-columns: auto 1fr;
+    }
+
+    .share-verified {
+        grid-column: 1 / -1;
+        justify-self: start;
+    }
+
+    .share-identity h3 {
+        font-size: 1.25rem;
+    }
+}

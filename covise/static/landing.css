@@ -26,7 +26,7 @@ body {
 
 /* Navigation */
 .nav {
-    position: sticky;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -98,12 +98,8 @@ body {
     width: 100%;
 }
 
-.nav-link.demo-link::after {
+.nav-link-active::after {
     width: 100%;
-}
-
-.nav-link.demo-link:hover::after {
-    width: 0;
 }
 
 /* Hero Section */
@@ -113,34 +109,57 @@ body {
     flex-direction: column;
     justify-content: center;
     padding: calc(var(--spacing) * 6);
+    padding-top: calc(var(--spacing) * 25);
     position: relative;
     overflow: hidden;
+    background:
+        radial-gradient(600px 320px at 50% -20%, rgba(35, 90, 180, 0.35), rgba(0, 0, 0, 0) 70%),
+        radial-gradient(800px 400px at 80% 0%, rgba(20, 60, 140, 0.25), rgba(0, 0, 0, 0) 65%),
+        radial-gradient(700px 360px at 15% 40%, rgba(30, 80, 170, 0.3), rgba(0, 0, 0, 0) 70%),
+        linear-gradient(180deg, rgba(3, 8, 20, 0.3), rgba(0, 0, 0, 0));
+
 }
 
-.hero::before {
-    content: '';
+.hero::before,
+.cta-section::before {
+    content: none !important;
+    display: none !important;
+}
+
+.hero-globe-canvas-wrap,
+.cta-globe-canvas-wrap {
     position: absolute;
     left: 50%;
-    bottom: -75vh;
     transform: translateX(-50%);
     width: 70vw;
     height: 70vw;
     max-width: 900px;
     max-height: 900px;
-    border-radius: 50%;
-    background:
-        radial-gradient(circle at 30% 30%, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 62%, rgba(0, 0, 0, 0) 64%);
-    box-shadow:
-        0 -60px 100px rgba(2, 34, 94, 0.45),
-        0 -20px 200px rgba(6, 24, 70, 0.75),
-        0 0 320px rgba(25, 80, 160, 0.22),
-        inset 0 30px 100px rgba(255, 255, 255, 0.14),
-        inset 0 -60px 160px rgba(0, 0, 0, 0.65);
-    background-color: #000;
-    border: none;
-    filter: blur(1.2px);
     z-index: 0;
-    pointer-events: none;
+}
+
+.hero-globe-canvas-wrap {
+    bottom: -75vh;
+}
+
+.cta-globe-canvas-wrap {
+    bottom: 20vh;
+}
+
+.landing-globe-canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 132%;
+    height: 132%;
+    transform: translate(-50%, -50%);
+    display: block;
+    cursor: grab;
+    touch-action: none;
+}
+
+.landing-globe-canvas:active {
+    cursor: grabbing;
 }
 
 .hero-content,
@@ -225,6 +244,13 @@ body {
     overflow: hidden;
 }
 
+.waitlist-btn-icon {
+    width: 12px;
+    height: 12px;
+    margin-left: calc(var(--spacing) * 1);
+    vertical-align: middle;
+}
+
 .btn-primary::before {
     content: '';
     position: absolute;
@@ -246,10 +272,14 @@ body {
 .btn-primary:hover {
     transform: scale(1.05);
     color: var(--white);
-    background: rgba(0, 0, 0, 0.45);
+    background: #000;
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(16px) saturate(140%);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+
+.btn-primary:hover .waitlist-btn-icon {
+    filter: invert(1);
 }
 
 .reserve-spot-btn {
@@ -419,32 +449,6 @@ body {
         linear-gradient(180deg, rgba(3, 8, 20, 0.3), rgba(0, 0, 0, 0));
 }
 
-.cta-section::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    bottom: 20vh;
-    transform: translateX(-50%);
-    width: 70vw;
-    height: 70vw;
-    max-width: 900px;
-    max-height: 900px;
-    border-radius: 50%;
-    background:
-        radial-gradient(circle at 30% 30%, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 62%, rgba(0, 0, 0, 0) 64%);
-    box-shadow:
-        0 -60px 100px rgba(2, 34, 94, 0.45),
-        0 -20px 200px rgba(6, 24, 70, 0.75),
-        0 0 320px rgba(25, 80, 160, 0.22),
-        inset 0 30px 100px rgba(255, 255, 255, 0.14),
-        inset 0 -60px 160px rgba(0, 0, 0, 0.65);
-    background-color: #000;
-    border: none;
-    filter: blur(1.2px);
-    pointer-events: none;
-    z-index: 0;
-}
-
 .cta-content {
     position: relative;
     z-index: 1;
@@ -477,7 +481,7 @@ body {
 
 .footer-top {
     display: grid;
-    grid-template-columns: minmax(200px, 1.6fr) repeat(4, minmax(140px, 1fr));
+    grid-template-columns: minmax(200px, 1.6fr) repeat(3, minmax(140px, 1fr));
     margin-bottom: calc(var(--spacing) * 8);
 }
 
@@ -682,7 +686,7 @@ body {
         align-items: flex-start;
     }
 
-    .cta-section::before {
+    .cta-globe-canvas-wrap {
         bottom: -70vh;
         width: 88vw;
         height: 88vw;
@@ -711,12 +715,7 @@ body {
     .hero {
         min-height: 70vh;
         padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3) calc(var(--spacing) * 2);
-    }
-
-    .hero::before {
-        bottom: -32vh;
-        width: 96vw;
-        height: 96vw;
+        padding-top: calc(var(--spacing) * 11);
     }
 
     .hero-cta {
@@ -728,7 +727,13 @@ body {
         padding: calc(var(--spacing) * 5) calc(var(--spacing) * 3);
     }
 
-    .cta-section::before {
+    .hero-globe-canvas-wrap {
+        bottom: -32vh;
+        width: 96vw;
+        height: 96vw;
+    }
+
+    .cta-globe-canvas-wrap {
         bottom: -34vh;
         width: 96vw;
         height: 96vw;

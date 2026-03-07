@@ -12,7 +12,7 @@ body {
 .pricing-page {
     min-height: 100vh;
     padding: 48px 20px 64px;
-    max-width: 860px;
+    max-width: 1220px;
     margin: 0 auto;
 }
 
@@ -62,19 +62,20 @@ body {
 
 .plans {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
-    width: 85%;
+    width: 80%;
     margin: 0 auto;
+    align-items: stretch;
 }
 
 .plan-card {
     background: linear-gradient(180deg, rgba(21, 30, 52, 0.95), rgba(9, 13, 22, 0.96));
     border: 1px solid rgba(138, 166, 240, 0.3);
     border-radius: 20px;
-    max-width:350px ;
+    max-width: none;
     padding: 26px;
-    margin: 40px 5px;
+    margin: 24px 0;
 }
 
 .plan-card-featured {
