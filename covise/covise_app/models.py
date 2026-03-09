@@ -16,3 +16,24 @@ class WaitlistEntry(models.Model):
 
     def __str__(self):
         return f"{self.full_name} ({self.email})"
+
+
+class OnboardingResponse(models.Model):
+    waitlist_entry = models.ForeignKey(
+        WaitlistEntry,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="onboarding_responses",
+    )
+    email = models.EmailField(db_index=True)
+    flow_name = models.CharField(max_length=200, blank=True)
+    answers = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"OnboardingResponse<{self.email}>"

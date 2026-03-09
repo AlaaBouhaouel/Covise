@@ -84,7 +84,6 @@ h1 {
 
 .waitlist-form label {
     font-size: 0.85rem;
-    text-transform: uppercase;
     letter-spacing: 0.09em;
     color: #c3d0ef;
 }
@@ -109,35 +108,67 @@ h1 {
 
 
 #cv::file-selector-button {
-    width: 28px;
-    height: 28px;
+    width: 34px;
+    height: 34px;
     margin-right: calc(var(--spacing) * 1.25);
     border: none;
     border-radius: 0;
     background: transparent;
     color: transparent;
     cursor: pointer;
-    background-image: url("/static/icon/arrow.svg");
+    background-image: url("/static/icon/upload-document.svg");
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 13px 13px;
-    filter: invert(1);
+    background-size: 18px 18px;
+    filter: brightness(0) invert(1);
 }
 
 #cv::-webkit-file-upload-button {
-    width: 28px;
-    height: 28px;
+    width: 34px;
+    height: 34px;
     margin-right: calc(var(--spacing) * 1.25);
     border: none;
     border-radius: 0;
     background: transparent;
     color: transparent;
     cursor: pointer;
-    background-image: url("/static/icon/arrow.svg");
+    background-image: url("/static/icon/upload-document.svg");
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 13px 13px;
-    filter: invert(1);
+    background-size: 18px 18px;
+    filter: brightness(0) invert(1);
+}
+
+#cv:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.optional-tag {
+    color: var(--muted);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    margin-left: 4px;
+}
+
+#cv-label.warning {
+    color: #f28585;
+}
+
+#cv-label.warning .optional-tag {
+    color: #f28585;
+}
+
+.cv-notice {
+    margin-top: calc(var(--spacing) * -0.5);
+    margin-bottom: calc(var(--spacing) * 0.5);
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.35;
+}
+
+.cv-notice.warning {
+    color: #f28585;
 }
 
 .waitlist-form input:focus,

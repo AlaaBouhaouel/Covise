@@ -1,0 +1,270 @@
+{
+  "flow_name": "CoVise Waitlist Onboarding",
+  "estimated_time_minutes": 4,
+  "steps": [
+    {
+      "step_id": "S1",
+      "title": "Your goal on CoVise",
+      "fields": [
+        {
+          "id": "user_intent",
+          "type": "single_select",
+          "label": "Which best describes you?",
+          "required": true,
+          "options": [
+            "I have a running business and want to scale",
+            "I have an idea and need a cofounder",
+            "I want to join a startup as a cofounder",
+            "I’m exploring opportunities"
+          ]
+        },
+        {
+          "id": "current_role",
+          "type": "single_line_text",
+          "label": "Current role / title",
+          "required": true,
+          "placeholder": "Founder, Software Engineer, Product Manager..."
+        },
+        {
+          "id": "location",
+          "type": "single_line_text",
+          "label": "Where are you based? (City, Country)",
+          "required": true,
+          "placeholder": "Riyadh, Saudi Arabia"
+        },
+        {
+            "id": "email",
+            "type": "email",
+            "label": "Email address",
+            "required": true,
+            "placeholder": "you@example.com"
+        }
+      ]
+    },
+
+    {
+      "step_id": "S2",
+      "title": "What you’re building (only if you have a business/idea)",
+      "show_if": {
+        "any_of": [
+          { "field": "user_intent", "equals": "I have a running business and want to scale" },
+          { "field": "user_intent", "equals": "I have an idea and need a cofounder" }
+        ]
+      },
+      "fields": [
+        {
+          "id": "industry",
+          "type": "single_select_searchable",
+          "label": "Industry",
+          "required": true,
+          "options": [
+            "Food & Beverage",
+            "Real Estate / Proptech",
+            
+            "SaaS/B2B",
+            "Fintech",
+        
+            "E-commerce",
+            "AI/ML",
+            "Marketplace",
+            "Health / Medtech",
+            "Education / Edtech",
+            "Logistics / Supply Chain",
+            "Travel / Hospitality",
+            "Retail",
+            "Media / Content",
+            "Gaming",
+            "Cybersecurity",
+            "Hardware / IoT",
+            "Climate / Energy",
+            "Construction / Infrastructure",
+            "Legal / Regtech",
+            "HR / Future of Work",
+            "Agri / Foodtech",
+            "Consumer apps",
+            "Other"
+          ],
+          "allow_custom_option": true,
+          "custom_option_label": "Other (type it)"
+        },
+        {
+          "id": "stage",
+          "type": "single_select",
+          "label": "Stage",
+          "required": true,
+          "options": ["Idea", "MVP", "Revenue", "Profitable / scaling"]
+        },
+        {
+          "id": "target_market",
+          "type": "multi_select_searchable",
+          "label": "Target market",
+          "required": true,
+          "options": ["Saudi Arabia", "UAE", "Qatar", "Kuwait", "Bahrain", "Oman", "GCC-wide", "MENA-wide", "Global"],
+          "allow_custom_option": true,
+          "custom_option_label": "Other (type it)"
+        },
+        {
+          "id": "team_size",
+          "type": "single_select",
+          "label": "Current team size",
+          "required": true,
+          "options": ["Solo", "2–5", "6+"]
+        },
+        {
+          "id": "one_liner",
+          "type": "single_line_text",
+          "label": "One-line description",
+          "required": false,
+          "placeholder": "What you do in one sentence"
+        }
+      ]
+    },
+    {
+      "step_id": "S3",
+      "title": "What you bring",
+      "fields": [
+        {
+          "id": "skills",
+          "type": "multi_select_searchable",
+          "label": "Select your skills (pick up to 10)",
+          "required": true,
+          "max_selected": 10,
+          "options": [
+            "Software Engineering",
+            "Full-stack Development",
+            "Frontend (React/Next.js)",
+            "Backend (Node/Python/Java)",
+            "Mobile (iOS/Android/Flutter)",
+            "DevOps / Cloud",
+            "Data Engineering",
+            "AI/ML Engineering",
+            "Deep Learning",
+            "LLMs / Prompting",
+            "MLOps",
+            "Data Science",
+            "Computer Vision",
+            "NLP",
+            "Cybersecurity",
+            "Product Management",
+            "UX/UI Design",
+            "Growth Marketing",
+            "Performance Marketing",
+            "Branding",
+            "Sales",
+            "Business Development",
+            "Partnerships",
+            "Operations",
+            "Strategy",
+            "Finance",
+            "Fundraising",
+            "Legal / Compliance",
+            "HR / Hiring",
+            "Supply Chain",
+            "Customer Success",
+            "Community Building",
+            "Content / Copywriting",
+            "Industry Expertise",
+            "Leadership / Team Building",
+            "Other"
+          ],
+          "allow_custom_option": true,
+          "custom_option_label": "Other (type your skill)"
+        },
+        {
+          "id": "availability_hours",
+          "type": "single_select",
+          "label": "How much time can you commit weekly?",
+          "required": true,
+          "options": ["<5 hours", "5–10 hours", "10–20 hours", "Full-time"]
+        }
+      ]
+    },
+    {
+      "step_id": "S4",
+      "title": "What you’re looking for",
+      "fields": [
+        {
+          "id": "looking_for",
+          "type": "multi_select_searchable",
+          "label": "What kind of match do you want? (pick up to 8)",
+          "required": true,
+          "max_selected": 8,
+          "options": [
+            "Technical cofounder",
+            "AI/ML cofounder",
+            "Full-stack engineer",
+            "Frontend engineer",
+            "Backend engineer",
+            "Mobile engineer",
+            "Product cofounder",
+            "UX/UI designer",
+            "Growth/Marketing partner",
+            "Sales/BD partner",
+            "Operator / COO type",
+            "Finance / CFO type",
+            "Industry expert",
+            "Investor (strategic)",
+            "Mentor/advisor",
+            "Co-founder to scale existing business",
+            "Co-founder for a new idea",
+            "Other"
+          ],
+          "allow_custom_option": true,
+          "custom_option_label": "Other (type what you need)"
+        },
+        {
+          "id": "compensation_preference",
+          "type": "single_select",
+          "label": "Preferred collaboration",
+          "required": true,
+          "options": ["Equity-only", "Salary + equity", "Open"]
+        }
+      ]
+    },
+    {
+      "step_id": "S5",
+      "title": "Traction snapshot (only if running business)",
+      "show_if": {
+        "field": "user_intent",
+        "equals": "I have a running business and want to scale"
+      },
+      "fields": [
+        {
+          "id": "monthly_revenue_range",
+          "type": "single_select",
+          "label": "Monthly revenue",
+          "required": false,
+          "options": ["$0", "$1–$1k", "$1k–$10k", "$10k–$50k", "$50k+", "Prefer not to say"]
+        },
+        {
+          "id": "funding_status",
+          "type": "single_select",
+          "label": "Funding raised",
+          "required": false,
+          "options": ["None", "Angel", "VC", "Bootstrapped", "Prefer not to say"]
+        },
+        {
+          "id": "customers_range",
+          "type": "single_select",
+          "label": "Customers / users",
+          "required": false,
+          "options": ["0–10", "11–100", "101–1,000", "1,000+", "Prefer not to say"]
+        }
+      ]
+    },
+    {
+      "step_id": "S6",
+      "title": "Final commitment",
+      "fields": [
+        {
+          "id": "ready_next_3_months",
+          "type": "single_select",
+          "label": "Are you ready to actively build or expand in the next 3 months?",
+          "required": true,
+          "options": ["Yes", "No"]
+        }
+      ]
+    }
+  ],
+  "success_message": "You're in. We’ll notify you when your first matches are ready."
+}

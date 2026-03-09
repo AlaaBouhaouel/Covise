@@ -6,246 +6,684 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoVise | Onboarding</title>
     <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'onboarding.css' %}">
+    <link rel="stylesheet" href="{% static 'waitlist.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <style>
+        .onboarding-meta {
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin-top: calc(var(--spacing) * 0.25);
+        }
 
-  gtag('config', 'G-RDN1TCMRNR');
-</script>
+        .progress-line {
+            margin-top: calc(var(--spacing) * 0.8);
+            width: 100%;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            overflow: hidden;
+        }
+
+        .progress-line-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #7ea4ff 0%, #c4d6ff 100%);
+            transition: width 0.3s ease;
+        }
+
+        .step-title {
+            font-size: 1.35rem;
+            margin-top: calc(var(--spacing) * 0.8);
+        }
+
+        .step-fields {
+            margin-top: calc(var(--spacing) * 2);
+            display: grid;
+            gap: calc(var(--spacing) * 1.75);
+        }
+
+        .field-block {
+            display: grid;
+            gap: calc(var(--spacing) * 0.9);
+        }
+
+        .field-block > label {
+            font-size: 0.85rem;
+            letter-spacing: 0.09em;
+            color: #c3d0ef;
+        }
+
+        .option-list {
+            display: grid;
+            gap: calc(var(--spacing) * 0.9);
+        }
+
+        .option-list label {
+            display: flex;
+            align-items: flex-start;
+            gap: calc(var(--spacing) * 1);
+            font-size: 0.92rem;
+            color: var(--text);
+            text-transform: none;
+            letter-spacing: normal;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: calc(var(--spacing) * 1.15);
+        }
+
+        .option-list input {
+            width: auto;
+            margin: 0;
+            accent-color: var(--accent);
+        }
+
+        .multi-select-wrap {
+            display: grid;
+            gap: calc(var(--spacing) * 0.9);
+        }
+
+        .multi-search {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            padding: calc(var(--spacing) * 0.95) calc(var(--spacing) * 1.1);
+            font: inherit;
+        }
+
+        .multi-search::placeholder {
+            color: var(--muted);
+        }
+
+        .multi-search:focus {
+            outline: 0;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(126, 164, 255, 0.35);
+        }
+
+        .selected-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: calc(var(--spacing) * 0.6);
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: calc(var(--spacing) * 0.45);
+            border: 1px solid rgba(196, 214, 255, 0.45);
+            border-radius: 999px;
+            background: rgba(126, 164, 255, 0.2);
+            color: #e9f0ff;
+            font-size: 0.82rem;
+            padding: 0.36rem 0.62rem;
+        }
+
+        .chip button {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font-size: 0.95rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .helper-text {
+            color: var(--muted);
+            font-size: 0.82rem;
+            margin-top: calc(var(--spacing) * 0.25);
+        }
+
+        .custom-input {
+            margin-top: calc(var(--spacing) * 0.5);
+        }
+
+        .field-error {
+            color: #f28585;
+            font-size: 0.82rem;
+        }
+
+        .step-actions {
+            margin-top: calc(var(--spacing) * 2.5);
+            display: flex;
+            justify-content: space-between;
+            gap: calc(var(--spacing) * 1);
+        }
+
+        .step-actions .back-btn,
+        .step-actions .next-btn {
+            display: inline-block;
+            padding: calc(var(--spacing) * 1.4) calc(var(--spacing) * 2.8);
+            border-radius: 14px;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.86rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .step-actions .back-btn {
+            background: transparent;
+            color: var(--text);
+        }
+
+        .step-actions .next-btn {
+            background: #edf3ff;
+            color: #000;
+            border-color: #edf3ff;
+        }
+
+        .step-actions .next-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .completion-note {
+            margin-top: calc(var(--spacing) * 1);
+            color: var(--muted);
+            text-align: center;
+        }
+
+        @media (max-width: 520px) {
+            .step-actions {
+                flex-direction: column;
+            }
+
+            .step-actions .back-btn,
+            .step-actions .next-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
 <body>
-    <main class="onboarding-shell">
-        <form class="form-card" action="#" method="post">
-            <div class="onboarding-header">
-                <a class="brand" href="/">
-                    <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+    <main class="waitlist-page">
+        <section class="waitlist-card">
+            <div class="waitlist-header">
+                <div class="brand">
+                    <a href="{% url 'Home' %}"><img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"></a>
                     <span>CoVise</span>
-                </a>
-                <div class="intro-copy">
-                    <h1>Lets build your founder profile</h1>
-                    <p>We match based on complementary value. Complete the profile to unlock onboarding and activation.</p>
                 </div>
-                <div class="progress-card">
-                    <p class="progress-title">Onboarding flow</p>
-                    <ol class="progress-list">
-                        <li>Step 1: Build type</li>
-                        <li>Step 2: Commitment level</li>
-                        <li>Step 3: Profile essentials</li>
-                        <li>Step 4: Matching logic</li>
-                    </ol>
-                    <div class="progress-note">
-                        Profile completeness is required before activation.
-                    </div>
-                </div>
+                <a class="back-link" href="{% url 'Home' %}">Back</a>
             </div>
 
-            <section class="step-page" data-page="1">
-                <div class="form-header">
-                    <h2>Step 1 - Segment by Build Type</h2>
-                    <p>What are you bringing to the build?</p>
+            <h1 id="flow-name">Onboarding</h1>
+            <p class="intro" id="flow-intro">Complete your profile to unlock matching.</p>
+            <p class="onboarding-meta" id="flow-time"></p>
+
+            <form class="waitlist-form" id="onboarding-form" novalidate>
+                <div class="progress-line" aria-hidden="true">
+                    <div class="progress-line-fill" id="progress-line-fill"></div>
                 </div>
-                <div class="chip-grid" role="group" aria-label="Build type">
-                    <label class="chip"><input type="checkbox" name="build_type" value="capital">Capital investment</label>
-                    <label class="chip"><input type="checkbox" name="build_type" value="technical">Technical expertise</label>
-                    <label class="chip"><input type="checkbox" name="build_type" value="growth">Growth and marketing</label>
-                    <label class="chip"><input type="checkbox" name="build_type" value="operations">Operations</label>
-                    <label class="chip"><input type="checkbox" name="build_type" value="product">Product or design</label>
-                    <label class="chip"><input type="checkbox" name="build_type" value="advisory">Advisory only</label>
-                </div>
+                <h2 class="step-title" id="step-title"></h2>
+                <div class="step-fields" id="step-fields"></div>
 
                 <div class="step-actions">
-                    <button class="primary" type="button" data-next disabled>Next</button>
+                    <button type="button" class="back-btn" id="back-btn">Back</button>
+                    <button type="button" class="next-btn" id="next-btn">Next</button>
                 </div>
-            </section>
-
-            <section class="step-page is-hidden" data-page="2">
-                <div class="form-header">
-                    <h2>Step 2 - Segment by Commitment Level</h2>
-                    <p>What level of commitment are you ready for?</p>
-                </div>
-                <div class="radio-grid" role="radiogroup" aria-label="Commitment level">
-                    <label class="radio"><input type="radio" name="commitment" value="exploring">Exploring opportunities</label>
-                    <label class="radio"><input type="radio" name="commitment" value="part_time">Part-time collaboration</label>
-                    <label class="radio"><input type="radio" name="commitment" value="full_time">Full-time co-founder</label>
-                    <label class="radio"><input type="radio" name="commitment" value="investment_active">Investment plus active involvement</label>
-                </div>
-
-                <div class="step-actions">
-                    <button class="ghost" type="button" data-back>Back</button>
-                    <button class="primary" type="button" data-next disabled>Next</button>
-                </div>
-            </section>
-
-            <section class="step-page is-hidden" data-page="3">
-                <div class="form-header">
-                    <h2>Step 3 - Profile Essentials</h2>
-                    <p>Required for matching and activation.</p>
-                </div>
-                <div class="field-grid">
-                    <div class="field">
-                        <label for="full-name">Full name</label>
-                        <input id="full-name" name="full_name" type="text" placeholder="User Bo" required>
-                    </div>
-                    <div class="field">
-                        <label for="email">University / Work / Business email</label>
-                        <input id="email" name="email" type="email" placeholder="User@company.com" required>
-                    </div>
-                    <div class="field">
-                        <label for="linkedin">LinkedIn</label>
-                        <input id="linkedin" name="linkedin" type="url" placeholder="linkedin.com/in/username" required>
-                    </div>
-                    <div class="field">
-                        <label for="phone">Phone number</label>
-                        <input id="phone" name="phone" type="tel" placeholder="+1 000 000 0000" required>
-                    </div>
-                    <div class="field">
-                        <label for="nationality">Nationality / Nationalities</label>
-                        <input id="nationality" name="nationality" type="text" placeholder="Saudi, Canadian" required>
-                    </div>
-                    <div class="field">
-                        <label for="occupation">Occupation</label>
-                        <input id="occupation" name="occupation" type="text" placeholder="Founder, Product Lead" required>
-                    </div>
-                    <div class="field">
-                        <label for="primary-skill">Primary skill or idea</label>
-                        <input id="primary-skill" name="primary_skill" type="text" placeholder="AI product strategy" required>
-                    </div>
-                    <div class="field">
-                        <label for="experience-years">Years of experience (skill)</label>
-                        <select id="experience-years" name="experience_years" required>
-                            <option value="" disabled selected>Select range</option>
-                            <option>0-1</option>
-                            <option>2-4</option>
-                            <option>5-7</option>
-                            <option>8-10</option>
-                            <option>10+</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label for="tools">Tools you use</label>
-                        <input id="tools" name="tools" type="text" placeholder="Figma, Notion, GitHub" required>
-                    </div>
-                    <div class="field">
-                        <label for="proof">Proof of work (links)</label>
-                        <input id="proof" name="proof" type="url" placeholder="Portfolio, GitHub, case study">
-                    </div>
-                    <div class="field">
-                        <label for="previous-experience">Previous building experience</label>
-                        <select id="previous-experience" name="previous_experience" required>
-                            <option value="" disabled selected>Select one</option>
-                            <option>Startups</option>
-                            <option>Projects</option>
-                            <option>Freelancing</option>
-                            <option>None yet</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label for="capital">Capital (to invest or looking for)</label>
-                        <input id="capital" name="capital" type="text" placeholder="$50k looking for / $100k to invest" required>
-                    </div>
-                    <div class="field">
-                        <label for="timeline">Timeline (important)</label>
-                        <select id="timeline" name="timeline" required>
-                            <option value="" disabled selected>Select timeline</option>
-                            <option>Now (0-1 month)</option>
-                            <option>1-3 months</option>
-                            <option>3-6 months</option>
-                            <option>6-12 months</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="step-actions">
-                    <button class="ghost" type="button" data-back>Back</button>
-                    <button class="primary" type="button" data-next disabled>Next</button>
-                </div>
-            </section>
-
-            <section class="step-page is-hidden" data-page="4">
-                <div class="form-header">
-                    <h2>Step 4 - Matching Logic</h2>
-                    <p>We match based on complementary value, not duplicates.</p>
-                </div>
-                <div class="logic-grid">
-                    <div class="logic-card">Capital + Technical</div>
-                    <div class="logic-card">Idea + Technical</div>
-                    <div class="logic-card">Growth + Product</div>
-                    <div class="logic-card">Operator + Visionary</div>
-                </div>
-                <div class="verify-card">
-                    <h3>Verified Capital</h3>
-                    <p>For users who confirm:</p>
-                    <ul>
-                        <li>Investment range</li>
-                        <li>Willingness to commit capital</li>
-                    </ul>
-                </div>
-
-                <div class="form-actions">
-                    <button class="ghost" type="button" data-back>Back</button>
-                    <button class="primary" type="submit" data-submit>Complete profile</button>
-                </div>
-                <button class="ghost text-link" type="button">Save and continue later</button>
-            </section>
-        </form>
+            </form>
+            <p class="completion-note" id="completion-note"></p>
+        </section>
     </main>
+
+    {{ boarding_flow|json_script:"boarding-flow" }}
+    {{ onboarding_initial_answers|json_script:"onboarding-initial-answers" }}
     <script>
-        const pages = Array.from(document.querySelectorAll('.step-page'));
-        const buildInputs = document.querySelectorAll('input[name="build_type"]');
-        const commitmentInputs = document.querySelectorAll('input[name="commitment"]');
-        const profileRequired = document.querySelector('[data-page="3"]').querySelectorAll('input[required], select[required]');
+        const flow = JSON.parse(document.getElementById('boarding-flow').textContent);
+        const initialAnswers = JSON.parse(document.getElementById('onboarding-initial-answers').textContent);
 
-        const isBuildTypeComplete = () => Array.from(buildInputs).some((input) => input.checked);
-        const isCommitmentComplete = () => Array.from(commitmentInputs).some((input) => input.checked);
-        const isProfileComplete = () =>
-            Array.from(profileRequired).every((field) => field.value && field.value.trim() !== '');
+        const flowName = document.getElementById('flow-name');
+        const flowTime = document.getElementById('flow-time');
+        const progressLineFill = document.getElementById('progress-line-fill');
+        const stepTitle = document.getElementById('step-title');
+        const stepFields = document.getElementById('step-fields');
+        const backBtn = document.getElementById('back-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const completionNote = document.getElementById('completion-note');
 
-        const validators = [isBuildTypeComplete, isCommitmentComplete, isProfileComplete, () => true];
+        const answers = { ...initialAnswers };
+        let currentIndex = 0;
 
-        const setPage = (index) => {
-            pages.forEach((page, idx) => {
-                page.classList.toggle('is-hidden', idx !== index);
+        function normalizeText(text) {
+            return String(text || '')
+                .replaceAll('’', "'")
+                .replaceAll('–', '-')
+                .replaceAll('—', '-');
+        }
+
+        function evaluateShowIf(showIf) {
+            if (!showIf) return true;
+
+            if (showIf.any_of && Array.isArray(showIf.any_of)) {
+                return showIf.any_of.some((rule) => answers[rule.field] === rule.equals);
+            }
+
+            if (showIf.field) {
+                return answers[showIf.field] === showIf.equals;
+            }
+
+            return true;
+        }
+
+        function getVisibleSteps() {
+            return flow.steps.filter((step) => evaluateShowIf(step.show_if));
+        }
+
+        function ensureCurrentStepInBounds() {
+            const visibleSteps = getVisibleSteps();
+            if (currentIndex > visibleSteps.length - 1) {
+                currentIndex = Math.max(0, visibleSteps.length - 1);
+            }
+            return visibleSteps;
+        }
+
+        function makeInput(field) {
+            const input = document.createElement('input');
+            input.id = field.id;
+            input.name = field.id;
+            input.placeholder = normalizeText(field.placeholder || '');
+            input.required = !!field.required;
+            input.value = answers[field.id] || '';
+
+            if (field.type === 'url') {
+                input.type = 'url';
+            } else if (field.type === 'file_upload') {
+                input.type = 'file';
+                const constraints = field.constraints || {};
+                if (Array.isArray(constraints.file_types) && constraints.file_types.length) {
+                    input.accept = constraints.file_types.map((ext) => '.' + ext).join(',');
+                }
+                input.required = !!field.required;
+            } else {
+                input.type = 'text';
+            }
+
+            input.addEventListener('input', () => {
+                answers[field.id] = input.value.trim();
+                updateButtons();
             });
-            updateButtons(index);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
 
-        const updateButtons = (index) => {
-            const page = pages[index];
-            const nextBtn = page.querySelector('[data-next]');
-            if (nextBtn) {
-                nextBtn.disabled = !validators[index]();
-            }
-        };
-
-        pages.forEach((page, index) => {
-            const nextBtn = page.querySelector('[data-next]');
-            const backBtn = page.querySelector('[data-back]');
-
-            if (nextBtn) {
-                nextBtn.addEventListener('click', () => {
-                    if (nextBtn.disabled) return;
-                    setPage(Math.min(index + 1, pages.length - 1));
+            if (field.type === 'file_upload') {
+                input.addEventListener('change', () => {
+                    const file = input.files && input.files[0];
+                    answers[field.id] = file ? file.name : '';
+                    updateButtons();
                 });
             }
 
-            if (backBtn) {
-                backBtn.addEventListener('click', () => {
-                    setPage(Math.max(index - 1, 0));
+            return input;
+        }
+
+        function makeSingleSelect(field) {
+            const wrap = document.createElement('div');
+            wrap.className = 'option-list';
+            const options = (field.options || []).map((opt) => normalizeText(opt));
+            const optionSet = new Set(options);
+            const isSearchable = field.type === 'single_select_searchable';
+
+            if (isSearchable) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = field.id;
+                input.name = field.id;
+                input.className = 'multi-search';
+                input.required = !!field.required;
+                input.placeholder = field.allow_custom_option
+                    ? 'Type to search or add your own'
+                    : 'Type to search';
+
+                const listId = field.id + '_options';
+                input.setAttribute('list', listId);
+
+                const dataList = document.createElement('datalist');
+                dataList.id = listId;
+                options.forEach((opt) => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    dataList.appendChild(option);
+                });
+
+                if (answers[field.id]) {
+                    input.value = answers[field.id];
+                }
+
+                function syncSearchableValue() {
+                    const value = input.value.trim();
+                    if (!value) {
+                        answers[field.id] = '';
+                    } else if (optionSet.has(value) || field.allow_custom_option) {
+                        answers[field.id] = value;
+                    } else {
+                        answers[field.id] = '';
+                    }
+                    updateButtons();
+                }
+
+                input.addEventListener('input', syncSearchableValue);
+                input.addEventListener('change', syncSearchableValue);
+
+                wrap.appendChild(input);
+                wrap.appendChild(dataList);
+                return wrap;
+            }
+
+            const select = document.createElement('select');
+            select.id = field.id;
+            select.name = field.id;
+            select.required = !!field.required;
+
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Select an option';
+            select.appendChild(placeholder);
+
+            options.forEach((opt) => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                select.appendChild(option);
+            });
+
+            if (answers[field.id]) {
+                select.value = answers[field.id];
+            }
+
+            let customInput = null;
+            if (field.allow_custom_option) {
+                const customOpt = document.createElement('option');
+                customOpt.value = '__custom__';
+                customOpt.textContent = normalizeText(field.custom_option_label || 'Other');
+                select.appendChild(customOpt);
+
+                customInput = document.createElement('input');
+                customInput.type = 'text';
+                customInput.className = 'custom-input';
+                customInput.placeholder = normalizeText(field.custom_option_label || 'Type here');
+                customInput.hidden = true;
+                customInput.addEventListener('input', () => {
+                    answers[field.id] = customInput.value.trim();
+                    updateButtons();
+                });
+                wrap.appendChild(customInput);
+            }
+
+            select.addEventListener('change', () => {
+                if (select.value === '__custom__' && customInput) {
+                    customInput.hidden = false;
+                    answers[field.id] = customInput.value.trim();
+                } else {
+                    if (customInput) customInput.hidden = true;
+                    answers[field.id] = select.value;
+                }
+                updateButtons();
+            });
+
+            wrap.prepend(select);
+            return wrap;
+        }
+
+        function makeMultiSelect(field) {
+            const wrap = document.createElement('div');
+            wrap.className = 'multi-select-wrap';
+
+            const optionValues = new Set((field.options || []).map((opt) => normalizeText(opt)));
+            const initialValues = Array.isArray(answers[field.id]) ? answers[field.id] : [];
+            const selected = new Set(initialValues.filter((value) => optionValues.has(value)));
+            const customValues = new Set(
+                field.allow_custom_option
+                    ? initialValues.filter((value) => !optionValues.has(value))
+                    : []
+            );
+
+            const chipContainer = document.createElement('div');
+            chipContainer.className = 'selected-chips';
+            wrap.appendChild(chipContainer);
+
+            const search = document.createElement('input');
+            search.type = 'text';
+            search.className = 'multi-search';
+            search.placeholder = field.id === 'target_market'
+                ? 'Type to find target markets...'
+                : 'Type to search and select multiple...';
+            const listId = field.id + '_options';
+            search.setAttribute('list', listId);
+            wrap.appendChild(search);
+
+            const dataList = document.createElement('datalist');
+            dataList.id = listId;
+            wrap.appendChild(dataList);
+
+            function syncAnswer() {
+                answers[field.id] = Array.from(selected).concat(Array.from(customValues));
+            }
+
+            function renderSuggestions() {
+                dataList.innerHTML = '';
+                (field.options || []).forEach((opt) => {
+                    const value = normalizeText(opt);
+                    if (selected.has(value)) return;
+                    const option = document.createElement('option');
+                    option.value = value;
+                    dataList.appendChild(option);
                 });
             }
-        });
 
-        buildInputs.forEach((input) => input.addEventListener('change', () => updateButtons(0)));
-        commitmentInputs.forEach((input) => input.addEventListener('change', () => updateButtons(1)));
-        profileRequired.forEach((field) => field.addEventListener('input', () => updateButtons(2)));
+            function renderChips() {
+                chipContainer.innerHTML = '';
+                Array.from(selected).concat(Array.from(customValues)).forEach((value) => {
+                    const chip = document.createElement('span');
+                    chip.className = 'chip';
+                    chip.textContent = value;
 
-        setPage(0);
+                    const remove = document.createElement('button');
+                    remove.type = 'button';
+                    remove.setAttribute('aria-label', 'Remove ' + value);
+                    remove.textContent = 'x';
+                    remove.addEventListener('click', () => {
+                        if (selected.has(value)) {
+                            selected.delete(value);
+                        } else {
+                            customValues.delete(value);
+                        }
+                        syncAnswer();
+                        updateButtons();
+                        renderSuggestions();
+                        renderChips();
+                    });
+
+                    chip.appendChild(remove);
+                    chipContainer.appendChild(chip);
+                });
+            }
+
+            function addFromSearch() {
+                const value = search.value.trim();
+                if (!value) return;
+
+                const totalSelected = selected.size + customValues.size;
+                if (field.max_selected && totalSelected >= field.max_selected) {
+                    search.value = '';
+                    return;
+                }
+
+                if (optionValues.has(value)) {
+                    selected.add(value);
+                    customValues.delete(value);
+                } else if (field.allow_custom_option) {
+                    customValues.add(value);
+                } else {
+                    return;
+                }
+
+                search.value = '';
+                syncAnswer();
+                updateButtons();
+                renderSuggestions();
+                renderChips();
+            }
+
+            search.addEventListener('change', addFromSearch);
+            search.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addFromSearch();
+                }
+            });
+
+            syncAnswer();
+            renderSuggestions();
+            renderChips();
+            return wrap;
+        }
+        function validateStep(step) {
+            for (const field of step.fields || []) {
+                const value = answers[field.id];
+
+                if (!field.required) continue;
+
+                if (field.type === 'multi_select_searchable') {
+                    if (!Array.isArray(value) || value.length === 0) {
+                        return false;
+                    }
+                    continue;
+                }
+
+                if (field.type === 'file_upload') {
+                    if (!value) return false;
+                    continue;
+                }
+
+                if (!value || String(value).trim() === '') {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function renderStep() {
+            const visibleSteps = ensureCurrentStepInBounds();
+            const step = visibleSteps[currentIndex];
+
+            const progress = ((currentIndex + 1) / visibleSteps.length) * 100;
+            progressLineFill.style.width = progress + '%';
+            stepTitle.textContent = normalizeText(step.title);
+            stepFields.innerHTML = '';
+
+            (step.fields || []).forEach((field) => {
+                const block = document.createElement('div');
+                block.className = 'field-block';
+
+                const label = document.createElement('label');
+                label.htmlFor = field.id;
+                label.textContent = normalizeText(field.label) + (field.required ? '' : ' (Optional)');
+                block.appendChild(label);
+
+                let control;
+                if (field.type === 'single_select' || field.type === 'single_select_searchable') {
+                    control = makeSingleSelect(field);
+                } else if (field.type === 'multi_select_searchable') {
+                    control = makeMultiSelect(field);
+                    const helper = document.createElement('p');
+                    helper.className = 'helper-text';
+                    helper.textContent = 'Type to search, pick a suggestion or press Enter to add.';
+                    block.appendChild(helper);
+                    if (field.max_selected) {
+                        const maxHelper = document.createElement('p');
+                        maxHelper.className = 'helper-text';
+                        maxHelper.textContent = 'Max selections: ' + field.max_selected;
+                        block.appendChild(maxHelper);
+                    }
+                } else {
+                    control = makeInput(field);
+                }
+
+                block.appendChild(control);
+                stepFields.appendChild(block);
+            });
+
+            backBtn.style.visibility = currentIndex === 0 ? 'hidden' : 'visible';
+            nextBtn.textContent = currentIndex === visibleSteps.length - 1 ? 'Complete' : 'Next';
+            updateButtons();
+        }
+
+        function updateButtons() {
+            const visibleSteps = ensureCurrentStepInBounds();
+            const step = visibleSteps[currentIndex];
+            nextBtn.disabled = !validateStep(step);
+        }
+
+        function getCsrfToken() {
+            const cookie = document.cookie
+                .split('; ')
+                .find((row) => row.startsWith('csrftoken='));
+            return cookie ? decodeURIComponent(cookie.split('=')[1]) : '';
+        }
+
+        async function submitOnboarding() {
+            const response = await fetch("{% url 'Onboarding Submit' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({
+                    flow_name: flow.flow_name || 'Onboarding',
+                    answers,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save onboarding data.');
+            }
+        }
+
+        async function goNext() {
+            const visibleSteps = ensureCurrentStepInBounds();
+            if (currentIndex < visibleSteps.length - 1) {
+                currentIndex += 1;
+                renderStep();
+                return;
+            }
+
+            completionNote.textContent = normalizeText(flow.success_message || "You're in.");
+            nextBtn.disabled = true;
+
+            try {
+                await submitOnboarding();
+            } catch (error) {
+                completionNote.textContent = 'Could not save your onboarding answers. Please try again.';
+                nextBtn.disabled = false;
+                return;
+            }
+
+            window.setTimeout(() => {
+                window.location.href = "{% url 'Waitlist Success' %}";
+            }, 600);
+        }
+
+        function goBack() {
+            if (currentIndex > 0) {
+                currentIndex -= 1;
+                renderStep();
+            }
+        }
+
+        flowName.textContent = normalizeText(flow.flow_name || 'Onboarding');
+        flowTime.textContent = 'Estimated time: ' + (flow.estimated_time_minutes || 4) + ' minutes';
+
+        backBtn.addEventListener('click', goBack);
+        nextBtn.addEventListener('click', goNext);
+
+        renderStep();
     </script>
 </body>
 </html>
+

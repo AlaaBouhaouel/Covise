@@ -65,19 +65,18 @@
 
                 <label for="linkedin">LinkedIn</label>
                 <input id="linkedin" name="linkedin" type="url" placeholder="https://linkedin.com/in/username" required>
+                <label class="non-gcc-toggle linkedin-toggle" for="no_linkedin">
+                    <input id="no_linkedin" name="no_linkedin" type="checkbox">
+                    I do not have a LinkedIn
+                </label>
 
-                <label for="cv">CV</label>
-                <input id="cv" name="cv" type="file" accept=".pdf,.doc,.docx" required>
+                <label id="cv-label" for="cv">CV <span class="optional-tag">(Optional)</span></label>
+                <input id="cv" name="cv" type="file" accept=".pdf,.doc,.docx">
+                <p id="cv-notice" class="cv-notice">It is advised to upload your CV as it can help us find the best match for you.</p>
 
-                <button type="submit">Submit</button>
+                <button type="submit">Onboard</button>
             </form>
-            {% if success_message %}
-                <p class="notice">{{ success_message }}</p>
-            {% elif error_message %}
-                <p class="notice">{{ error_message }}</p>
-            {% else %}
-                <p class="notice">We'll notify you when you're ready to be onboarded.</p>
-            {% endif %}
+            
         </section>
     </main>
 
@@ -86,6 +85,12 @@
         const nonGccCheckbox = document.getElementById('non_gcc_business');
         const customCountryField = document.getElementById('custom-country-field');
         const customCountryInput = document.getElementById('custom_country');
+        const linkedinInput = document.getElementById('linkedin');
+        const noLinkedinCheckbox = document.getElementById('no_linkedin');
+        const cvInput = document.getElementById('cv');
+        const cvLabel = document.getElementById('cv-label');
+        const cvNotice = document.getElementById('cv-notice');
+        const optionalTag = cvLabel.querySelector('.optional-tag');
 
         function syncCountryInputs() {
             const hasSelectedGccCountry = countrySelect.value !== '';
@@ -109,9 +114,42 @@
             countrySelect.disabled = showCustomCountry;
         }
 
+        function syncCvInput() {
+            const noLinkedinChecked = noLinkedinCheckbox.checked;
+
+            if (noLinkedinChecked) {
+                cvInput.disabled = false;
+                cvInput.required = true;
+                cvLabel.classList.add('warning');
+                cvNotice.classList.add('warning');
+                optionalTag.textContent = '(Required)';
+                return;
+            }
+
+            cvInput.disabled = false;
+            cvInput.required = false;
+            cvLabel.classList.remove('warning');
+            cvNotice.classList.remove('warning');
+            optionalTag.textContent = '(Optional)';
+        }
+
+        function syncLinkedinInput() {
+            const noLinkedinChecked = noLinkedinCheckbox.checked;
+
+            linkedinInput.disabled = noLinkedinChecked;
+            linkedinInput.required = !noLinkedinChecked;
+            if (noLinkedinChecked) {
+                linkedinInput.value = '';
+            }
+
+            syncCvInput();
+        }
+
         countrySelect.addEventListener('change', syncCountryInputs);
         nonGccCheckbox.addEventListener('change', syncCountryInputs);
+        noLinkedinCheckbox.addEventListener('change', syncLinkedinInput);
         syncCountryInputs();
+        syncLinkedinInput();
     </script>
 </body>
 </html>

@@ -7,7 +7,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='fallback-secret-key')
 
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG_RAW = str(config('DEBUG', default='false')).strip().lower()
+DEBUG = DEBUG_RAW in {'1', 'true', 'yes', 'on', 'debug', 'local'}
 
 ALLOWED_HOSTS = ['covise.net', 'www.covise.net', '.up.railway.app', 'localhost', '127.0.0.1']
 CSRF_COOKIE_SAMESITE = 'Lax'
@@ -20,6 +21,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.covise.net',
     'https://*.up.railway.app',
 ]
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -98,11 +100,15 @@ if DEBUG:
     STATICFILES_DIRS = [BASE_DIR / 'static']
 
 
-DATABASE_URL = config('DATABASE_URL', default=None)
+DATABASE_URL = config('DATABASE_URL', default='')
 
 if DATABASE_URL:
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=not DEBUG,
+        )
     }
 else:
     DATABASES = {
