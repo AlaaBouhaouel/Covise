@@ -103,13 +103,26 @@ if DEBUG:
 DATABASE_URL = config('DATABASE_URL', default='')
 
 if DATABASE_URL:
+    db_ssl_require_raw = str(config('DB_SSL_REQUIRE', default='')).strip().lower()
+    if db_ssl_require_raw in {'1', 'true', 'yes', 'on'}:
+        db_ssl_require = True
+    elif db_ssl_require_raw in {'0', 'false', 'no', 'off'}:
+        db_ssl_require = False
+    else:
+        # Default to SSL for non-local PostgreSQL URLs (e.g., Railway) even in DEBUG.
+        db_ssl_require = 'postgres' in DATABASE_URL.lower() and not (
+            'localhost' in DATABASE_URL.lower() or '127.0.0.1' in DATABASE_URL.lower()
+        )
+
+    db_conn_max_age = 0 if DEBUG else 600
     DATABASES = {
         'default': dj_database_url.parse(
             DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=not DEBUG,
+            conn_max_age=db_conn_max_age,
+            ssl_require=db_ssl_require,
         )
     }
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 else:
     DATABASES = {
         'default': {

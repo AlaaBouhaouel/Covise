@@ -1,56 +1,31 @@
 import json
 import logging
 from pathlib import Path
-from functools import lru_cache
 from django.http import JsonResponse
+from django.db import OperationalError, close_old_connections
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import OnboardingResponse, WaitlistEntry
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_BOARDING_FLOW = {
-    "flow_name": "CoVise Waitlist Onboarding",
-    "estimated_time_minutes": 4,
-    "steps": [
-        {
-            "step_id": "S1",
-            "title": "Your goal on CoVise",
-            "fields": [
-                {
-                    "id": "user_intent",
-                    "type": "single_select",
-                    "label": "Which best describes you?",
-                    "required": True,
-                    "options": [
-                        "I have a running business and want to scale",
-                        "I have an idea and need a cofounder",
-                        "I want to join a startup as a cofounder",
-                        "I am exploring opportunities",
-                    ],
-                }
-            ],
-        }
-    ],
-    "success_message": "You're in. We'll notify you when your first matches are ready.",
-}
 
 
-@lru_cache(maxsize=1)
 def _load_boarding_flow():
     flow_path = Path(__file__).resolve().parent / "boarding.json"
     try:
-        with flow_path.open(encoding="utf-8") as f:
+        # Use utf-8-sig so a BOM in boarding.json does not break JSON parsing.
+        with flow_path.open(encoding="utf-8-sig") as f:
             flow = json.load(f)
     except (FileNotFoundError, OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
-        logger.exception("Failed to load boarding.json, using fallback flow: %s", exc)
-        return DEFAULT_BOARDING_FLOW
+        logger.exception("Failed to load boarding.json: %s", exc)
+        return None, "We are having trouble loading onboarding right now. Please try another time."
 
     if not isinstance(flow, dict) or not isinstance(flow.get("steps"), list):
-        logger.error("Invalid boarding.json structure, using fallback flow")
-        return DEFAULT_BOARDING_FLOW
+        logger.error("Invalid boarding.json structure")
+        return None, "We are having trouble loading onboarding right now. Please try another time."
 
-    return flow
+    return flow, None
 
 # Create your views here.
 def landing(request):
@@ -92,7 +67,8 @@ def onboarding_final(request):
 
 @ensure_csrf_cookie
 def onboarding(request):
-    flow = _load_boarding_flow()
+    flow, onboarding_error_message = _load_boarding_flow()
+    onboarding_unavailable = flow is None
     initial_answers = {}
     if request.session.get("waitlist_email"):
         initial_answers["email"] = request.session["waitlist_email"]
@@ -102,6 +78,8 @@ def onboarding(request):
         {
             'boarding_flow': flow,
             'onboarding_initial_answers': initial_answers,
+            'onboarding_unavailable': onboarding_unavailable,
+            'onboarding_error_message': onboarding_error_message,
         },
     )
 
@@ -187,16 +165,29 @@ def waitlist(request):
             else:
                 custom_country = ''
 
-            entry = WaitlistEntry.objects.create(
-                full_name=full_name,
-                phone_number=phone_number,
-                email=email,
-                country=country,
-                non_gcc_business=non_gcc_business,
-                custom_country=custom_country,
-                linkedin=linkedin,
-                cv=cv_file,
-            )
+            entry = None
+            for attempt in range(2):
+                try:
+                    entry = WaitlistEntry.objects.create(
+                        full_name=full_name,
+                        phone_number=phone_number,
+                        email=email,
+                        country=country,
+                        non_gcc_business=non_gcc_business,
+                        custom_country=custom_country,
+                        linkedin=linkedin,
+                        cv=cv_file,
+                    )
+                    break
+                except OperationalError:
+                    # Handle transient DB disconnects (e.g., SSL EOF) by refreshing the connection once.
+                    close_old_connections()
+                    if attempt == 1:
+                        logger.exception("Failed to create waitlist entry after retry for %s", email)
+                        context['error_message'] = 'Temporary database issue. Please try again in a moment.'
+
+            if entry is None:
+                return render(request, 'waitlist.html', context)
             request.session["waitlist_email"] = email
             request.session["waitlist_entry_id"] = entry.id
             return redirect('Onboarding')

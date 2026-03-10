@@ -857,12 +857,13 @@ p {
 }
 
 .feed-item {
-    display: grid;
+    display: flex;
     grid-template-columns: auto 1fr auto;
     gap: calc(var(--spacing) * 1);
     align-items: center;
     padding: calc(var(--spacing) * 1.15) calc(var(--spacing) * 1.25);
     border-bottom: 1px solid rgba(120, 150, 255, 0.12);
+    justify-content: space-between;
 }
 
 .feed-item:last-child {
@@ -873,19 +874,9 @@ p {
     width: 7px;
     height: 7px;
     border-radius: 50%;
+    background: #314669;
 }
-
-.feed-dot.green {
-    background: #6be1ae;
-}
-
-.feed-dot.blue {
-    background: #7ba7ff;
-}
-
-.feed-dot.gold {
-    background: #ffd27f;
-}
+.feed-text strong { color: #e8eaf0; font-weight: 700; }
 
 .feed-text {
     color: #c7d4ef;
@@ -894,9 +885,10 @@ p {
 }
 
 .feed-time {
-    color: #8ea3c8;
-    font-size: 0.64rem;
-    white-space: nowrap;
+    font-size: 11px; 
+    color: #2a3a55; 
+    letter-spacing: 0.04em; 
+    white-space: nowrap; 
 }
 
 .match-cards {

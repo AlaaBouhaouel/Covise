@@ -31,16 +31,16 @@
             <h1>Join the Waitlist</h1>
             <p class="intro">Share your info and we will reach out soon.</p>
 
-            <form class="waitlist-form" method="post" action="" enctype="multipart/form-data">
+            <form class="waitlist-form" method="post" action="{% url 'Waitlist' %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <label for="full_name">Name</label>
-                <input id="full_name" name="full_name" type="text" placeholder="Your full name" required>
+                <input id="full_name" name="full_name" type="text" required>
 
                 <label for="phone_number">Phone number</label>
-                <input id="phone_number" name="phone_number" type="tel" placeholder="+966 00 000 000" required>
+                <input id="phone_number" name="phone_number"   type="tel" required>
 
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" placeholder="you@example.com" required>
+                <input id="email" name="email" type="email"  required>
 
                 <label for="country">Country</label>
                 <select id="country" name="country" required>
@@ -60,7 +60,7 @@
 
                 <div id="custom-country-field" class="custom-country-field" hidden>
                     <label for="custom_country">Enter your country</label>
-                    <input id="custom_country" name="custom_country" type="text" placeholder="Enter your country">
+                    <input id="custom_country" name="custom_country" type="text" >
                 </div>
 
                 <label for="linkedin">LinkedIn</label>
@@ -72,7 +72,6 @@
 
                 <label id="cv-label" for="cv">CV <span class="optional-tag">(Optional)</span></label>
                 <input id="cv" name="cv" type="file" accept=".pdf,.doc,.docx">
-                <p id="cv-notice" class="cv-notice">It is advised to upload your CV as it can help us find the best match for you.</p>
 
                 <button type="submit">Onboard</button>
             </form>

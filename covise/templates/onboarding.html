@@ -9,16 +9,10 @@
     <link rel="stylesheet" href="{% static 'waitlist.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .onboarding-meta {
-            color: var(--muted);
-            font-size: 0.95rem;
-            margin-top: calc(var(--spacing) * 0.25);
-        }
-
         .progress-line {
             margin-top: calc(var(--spacing) * 0.8);
             width: 100%;
-            height: 6px;
+            height: 3px;
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.12);
             overflow: hidden;
@@ -37,10 +31,16 @@
             margin-top: calc(var(--spacing) * 0.8);
         }
 
+        .step-description {
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin-top: calc(var(--spacing) * 0.45);
+        }
+
         .step-fields {
             margin-top: calc(var(--spacing) * 2);
             display: grid;
-            gap: calc(var(--spacing) * 1.75);
+            gap: calc(var(--spacing) * 2);
         }
 
         .field-block {
@@ -71,12 +71,48 @@
             border-radius: 10px;
             background: rgba(255, 255, 255, 0.03);
             padding: calc(var(--spacing) * 1.15);
+            margin:calc(var(--spacing) * 0.9) 0 ;
         }
 
         .option-list input {
             width: auto;
             margin: 0;
             accent-color: var(--accent);
+        }
+
+        .card-option {
+            display: block;
+            cursor: pointer;
+            transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+        }
+
+        .card-option input[type="radio"] {
+            display: none;
+        }
+
+        .card-option.is-active {
+            background: #ffffff;
+            border-color: #ffffff;
+            color: #0f2f7a;
+        }
+
+        .card-option.is-active .card-description {
+            color: #244b98;
+        }
+
+        .card-copy {
+            display: grid;
+            gap: calc(var(--spacing) * 0.35);
+        }
+
+        .card-title {
+            font-weight: 700;
+        }
+
+        .card-description {
+            color: var(--muted);
+            font-size: 0.86rem;
+            line-height: 1.45;
         }
 
         .multi-select-wrap {
@@ -108,22 +144,24 @@
             display: flex;
             flex-wrap: wrap;
             gap: calc(var(--spacing) * 0.6);
+            justify-content: center;
         }
 
         .chip {
             display: inline-flex;
             align-items: center;
             gap: calc(var(--spacing) * 0.45);
-            border: 1px solid rgba(196, 214, 255, 0.45);
+            border: 1px solid #e7ecf7;
             border-radius: 999px;
-            background: rgba(126, 164, 255, 0.2);
-            color: #e9f0ff;
+            background: #ffffff;
+            color: #153c8a;
             font-size: 0.82rem;
             padding: 0.36rem 0.62rem;
         }
 
         .chip button {
             appearance: none;
+            display: block;
             border: 0;
             background: transparent;
             color: inherit;
@@ -131,6 +169,17 @@
             line-height: 1;
             cursor: pointer;
             padding: 0;
+            margin: auto 0;
+        }
+
+        textarea[id*="one_liner"] {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--muted);
+            padding: calc(var(--spacing) * 0.95) calc(var(--spacing) * 1.1);
+            font: inherit;
         }
 
         .helper-text {
@@ -190,6 +239,17 @@
             text-align: center;
         }
 
+        .onboarding-warning {
+            margin-top: calc(var(--spacing) * 1);
+            margin-bottom: calc(var(--spacing) * 1.2);
+            border: 1px solid rgba(242, 133, 133, 0.45);
+            background: rgba(242, 133, 133, 0.12);
+            color: #ffd9d9;
+            border-radius: 12px;
+            padding: calc(var(--spacing) * 1.15);
+            font-size: 0.95rem;
+        }
+
         @media (max-width: 520px) {
             .step-actions {
                 flex-direction: column;
@@ -214,14 +274,18 @@
             </div>
 
             <h1 id="flow-name">Onboarding</h1>
-            <p class="intro" id="flow-intro">Complete your profile to unlock matching.</p>
-            <p class="onboarding-meta" id="flow-time"></p>
+            <p class="intro" id="flow-intro">Complete your profile</p>
+            {% if onboarding_unavailable %}
+            <p class="onboarding-warning">{{ onboarding_error_message|default:"We are having trouble loading onboarding right now. Please try another time." }}</p>
+            {% endif %}
 
+            {% if not onboarding_unavailable %}
             <form class="waitlist-form" id="onboarding-form" novalidate>
                 <div class="progress-line" aria-hidden="true">
                     <div class="progress-line-fill" id="progress-line-fill"></div>
                 </div>
                 <h2 class="step-title" id="step-title"></h2>
+                <p class="step-description" id="step-description" hidden></p>
                 <div class="step-fields" id="step-fields"></div>
 
                 <div class="step-actions">
@@ -230,9 +294,11 @@
                 </div>
             </form>
             <p class="completion-note" id="completion-note"></p>
+            {% endif %}
         </section>
     </main>
 
+    {% if not onboarding_unavailable %}
     {{ boarding_flow|json_script:"boarding-flow" }}
     {{ onboarding_initial_answers|json_script:"onboarding-initial-answers" }}
     <script>
@@ -240,9 +306,9 @@
         const initialAnswers = JSON.parse(document.getElementById('onboarding-initial-answers').textContent);
 
         const flowName = document.getElementById('flow-name');
-        const flowTime = document.getElementById('flow-time');
         const progressLineFill = document.getElementById('progress-line-fill');
         const stepTitle = document.getElementById('step-title');
+        const stepDescription = document.getElementById('step-description');
         const stepFields = document.getElementById('step-fields');
         const backBtn = document.getElementById('back-btn');
         const nextBtn = document.getElementById('next-btn');
@@ -256,6 +322,20 @@
                 .replaceAll('’', "'")
                 .replaceAll('–', '-')
                 .replaceAll('—', '-');
+        }
+
+        function getSingleOptions(field) {
+            return (field.options || []).map((opt) => {
+                if (opt && typeof opt === 'object') {
+                    return {
+                        value: String(opt.value || opt.label || ''),
+                        label: normalizeText(opt.label || opt.value || ''),
+                        description: normalizeText(opt.description || ''),
+                    };
+                }
+                const label = normalizeText(opt);
+                return { value: label, label, description: '' };
+            }).filter((opt) => opt.value);
         }
 
         function evaluateShowIf(showIf) {
@@ -285,6 +365,23 @@
         }
 
         function makeInput(field) {
+            if (field.type === 'multi_line_text') {
+                const textarea = document.createElement('textarea');
+                textarea.id = field.id;
+                textarea.name = field.id;
+                textarea.placeholder = normalizeText(field.placeholder || '');
+                textarea.required = !!field.required;
+                textarea.value = answers[field.id] || '';
+                if (field.max_chars) {
+                    textarea.maxLength = Number(field.max_chars);
+                }
+                textarea.addEventListener('input', () => {
+                    answers[field.id] = textarea.value.trim();
+                    updateButtons();
+                });
+                return textarea;
+            }
+
             const input = document.createElement('input');
             input.id = field.id;
             input.name = field.id;
@@ -294,6 +391,8 @@
 
             if (field.type === 'url') {
                 input.type = 'url';
+            } else if (field.type === 'email') {
+                input.type = 'email';
             } else if (field.type === 'file_upload') {
                 input.type = 'file';
                 const constraints = field.constraints || {};
@@ -324,123 +423,107 @@
         function makeSingleSelect(field) {
             const wrap = document.createElement('div');
             wrap.className = 'option-list';
-            const options = (field.options || []).map((opt) => normalizeText(opt));
-            const optionSet = new Set(options);
-            const isSearchable = field.type === 'single_select_searchable';
+            const options = getSingleOptions(field);
 
-            if (isSearchable) {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.id = field.id;
-                input.name = field.id;
-                input.className = 'multi-search';
-                input.required = !!field.required;
-                input.placeholder = field.allow_custom_option
-                    ? 'Type to search or add your own'
-                    : 'Type to search';
+            if (field.type === 'single_select_card') {
+                const cardEntries = [];
+                function syncCardState() {
+                    cardEntries.forEach(({ label, radio }) => {
+                        label.classList.toggle('is-active', radio.checked);
+                    });
+                }
 
-                const listId = field.id + '_options';
-                input.setAttribute('list', listId);
-
-                const dataList = document.createElement('datalist');
-                dataList.id = listId;
                 options.forEach((opt) => {
-                    const option = document.createElement('option');
-                    option.value = opt;
-                    dataList.appendChild(option);
-                });
+                    const label = document.createElement('label');
+                    label.className = 'card-option';
 
-                if (answers[field.id]) {
-                    input.value = answers[field.id];
-                }
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = field.id;
+                    radio.value = opt.value;
+                    radio.checked = answers[field.id] === opt.value;
+                    radio.addEventListener('change', () => {
+                        answers[field.id] = radio.value;
+                        syncCardState();
+                        updateButtons();
+                    });
 
-                function syncSearchableValue() {
-                    const value = input.value.trim();
-                    if (!value) {
-                        answers[field.id] = '';
-                    } else if (optionSet.has(value) || field.allow_custom_option) {
-                        answers[field.id] = value;
-                    } else {
-                        answers[field.id] = '';
+                    const copy = document.createElement('span');
+                    copy.className = 'card-copy';
+                    const title = document.createElement('span');
+                    title.className = 'card-title';
+                    title.textContent = opt.label;
+                    copy.appendChild(title);
+                    if (opt.description) {
+                        const desc = document.createElement('span');
+                        desc.className = 'card-description';
+                        desc.textContent = opt.description;
+                        copy.appendChild(desc);
                     }
-                    updateButtons();
-                }
 
-                input.addEventListener('input', syncSearchableValue);
-                input.addEventListener('change', syncSearchableValue);
-
-                wrap.appendChild(input);
-                wrap.appendChild(dataList);
+                    label.appendChild(radio);
+                    label.appendChild(copy);
+                    wrap.appendChild(label);
+                    cardEntries.push({ label, radio });
+                });
+                syncCardState();
                 return wrap;
             }
 
-            const select = document.createElement('select');
-            select.id = field.id;
-            select.name = field.id;
-            select.required = !!field.required;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = field.id;
+            input.name = field.id;
+            input.className = 'multi-search';
+            input.required = !!field.required;
+            input.placeholder = 'Search and select one option';
 
-            const placeholder = document.createElement('option');
-            placeholder.value = '';
-            placeholder.textContent = 'Select an option';
-            select.appendChild(placeholder);
+            const listId = field.id + '_options';
+            input.setAttribute('list', listId);
 
+            const dataList = document.createElement('datalist');
+            dataList.id = listId;
             options.forEach((opt) => {
                 const option = document.createElement('option');
-                option.value = opt;
-                option.textContent = opt;
-                select.appendChild(option);
+                option.value = opt.label;
+                dataList.appendChild(option);
             });
 
-            if (answers[field.id]) {
-                select.value = answers[field.id];
+            const byLabel = new Map(options.map((opt) => [opt.label, opt.value]));
+            const byValue = new Map(options.map((opt) => [opt.value, opt.label]));
+
+            if (answers[field.id] && byValue.has(answers[field.id])) {
+                input.value = byValue.get(answers[field.id]);
             }
 
-            let customInput = null;
-            if (field.allow_custom_option) {
-                const customOpt = document.createElement('option');
-                customOpt.value = '__custom__';
-                customOpt.textContent = normalizeText(field.custom_option_label || 'Other');
-                select.appendChild(customOpt);
-
-                customInput = document.createElement('input');
-                customInput.type = 'text';
-                customInput.className = 'custom-input';
-                customInput.placeholder = normalizeText(field.custom_option_label || 'Type here');
-                customInput.hidden = true;
-                customInput.addEventListener('input', () => {
-                    answers[field.id] = customInput.value.trim();
-                    updateButtons();
-                });
-                wrap.appendChild(customInput);
-            }
-
-            select.addEventListener('change', () => {
-                if (select.value === '__custom__' && customInput) {
-                    customInput.hidden = false;
-                    answers[field.id] = customInput.value.trim();
-                } else {
-                    if (customInput) customInput.hidden = true;
-                    answers[field.id] = select.value;
-                }
+            function syncSearchableValue() {
+                const value = input.value.trim();
+                answers[field.id] = byLabel.get(value) || '';
                 updateButtons();
+            }
+
+            input.addEventListener('input', syncSearchableValue);
+            input.addEventListener('change', syncSearchableValue);
+            input.addEventListener('blur', () => {
+                if (!answers[field.id]) {
+                    input.value = '';
+                }
             });
 
-            wrap.prepend(select);
+            wrap.appendChild(input);
+            wrap.appendChild(dataList);
             return wrap;
         }
 
         function makeMultiSelect(field) {
             const wrap = document.createElement('div');
             wrap.className = 'multi-select-wrap';
-
-            const optionValues = new Set((field.options || []).map((opt) => normalizeText(opt)));
+            const options = getSingleOptions(field);
+            const byLabel = new Map(options.map((opt) => [opt.label, opt.value]));
+            const byValue = new Map(options.map((opt) => [opt.value, opt.label]));
+            const optionValues = new Set(options.map((opt) => opt.value));
             const initialValues = Array.isArray(answers[field.id]) ? answers[field.id] : [];
             const selected = new Set(initialValues.filter((value) => optionValues.has(value)));
-            const customValues = new Set(
-                field.allow_custom_option
-                    ? initialValues.filter((value) => !optionValues.has(value))
-                    : []
-            );
 
             const chipContainer = document.createElement('div');
             chipContainer.className = 'selected-chips';
@@ -449,9 +532,7 @@
             const search = document.createElement('input');
             search.type = 'text';
             search.className = 'multi-search';
-            search.placeholder = field.id === 'target_market'
-                ? 'Type to find target markets...'
-                : 'Type to search and select multiple...';
+            search.placeholder = 'Search and select multiple options...';
             const listId = field.id + '_options';
             search.setAttribute('list', listId);
             wrap.appendChild(search);
@@ -461,37 +542,32 @@
             wrap.appendChild(dataList);
 
             function syncAnswer() {
-                answers[field.id] = Array.from(selected).concat(Array.from(customValues));
+                answers[field.id] = Array.from(selected);
             }
 
             function renderSuggestions() {
                 dataList.innerHTML = '';
-                (field.options || []).forEach((opt) => {
-                    const value = normalizeText(opt);
-                    if (selected.has(value)) return;
+                options.forEach((opt) => {
+                    if (selected.has(opt.value)) return;
                     const option = document.createElement('option');
-                    option.value = value;
+                    option.value = opt.label;
                     dataList.appendChild(option);
                 });
             }
 
             function renderChips() {
                 chipContainer.innerHTML = '';
-                Array.from(selected).concat(Array.from(customValues)).forEach((value) => {
+                Array.from(selected).forEach((value) => {
                     const chip = document.createElement('span');
                     chip.className = 'chip';
-                    chip.textContent = value;
+                    chip.textContent = byValue.get(value) || value;
 
                     const remove = document.createElement('button');
                     remove.type = 'button';
-                    remove.setAttribute('aria-label', 'Remove ' + value);
+                    remove.setAttribute('aria-label', 'Remove ' + (byValue.get(value) || value));
                     remove.textContent = 'x';
                     remove.addEventListener('click', () => {
-                        if (selected.has(value)) {
-                            selected.delete(value);
-                        } else {
-                            customValues.delete(value);
-                        }
+                        selected.delete(value);
                         syncAnswer();
                         updateButtons();
                         renderSuggestions();
@@ -507,21 +583,19 @@
                 const value = search.value.trim();
                 if (!value) return;
 
-                const totalSelected = selected.size + customValues.size;
+                const totalSelected = selected.size;
                 if (field.max_selected && totalSelected >= field.max_selected) {
                     search.value = '';
                     return;
                 }
 
-                if (optionValues.has(value)) {
-                    selected.add(value);
-                    customValues.delete(value);
-                } else if (field.allow_custom_option) {
-                    customValues.add(value);
-                } else {
+                const selectedValue = byLabel.get(value);
+                if (!selectedValue) {
+                    search.value = '';
                     return;
                 }
 
+                selected.add(selectedValue);
                 search.value = '';
                 syncAnswer();
                 updateButtons();
@@ -548,7 +622,7 @@
 
                 if (!field.required) continue;
 
-                if (field.type === 'multi_select_searchable') {
+                if (field.type === 'multi_select' || field.type === 'multi_select_searchable') {
                     if (!Array.isArray(value) || value.length === 0) {
                         return false;
                     }
@@ -575,6 +649,14 @@
             const progress = ((currentIndex + 1) / visibleSteps.length) * 100;
             progressLineFill.style.width = progress + '%';
             stepTitle.textContent = normalizeText(step.title);
+            const descriptionText = normalizeText(step.description || '');
+            if (descriptionText) {
+                stepDescription.hidden = false;
+                stepDescription.textContent = descriptionText;
+            } else {
+                stepDescription.hidden = true;
+                stepDescription.textContent = '';
+            }
             stepFields.innerHTML = '';
 
             (step.fields || []).forEach((field) => {
@@ -587,14 +669,14 @@
                 block.appendChild(label);
 
                 let control;
-                if (field.type === 'single_select' || field.type === 'single_select_searchable') {
+                if (
+                    field.type === 'single_select' ||
+                    field.type === 'single_select_searchable' ||
+                    field.type === 'single_select_card'
+                ) {
                     control = makeSingleSelect(field);
-                } else if (field.type === 'multi_select_searchable') {
+                } else if (field.type === 'multi_select' || field.type === 'multi_select_searchable') {
                     control = makeMultiSelect(field);
-                    const helper = document.createElement('p');
-                    helper.className = 'helper-text';
-                    helper.textContent = 'Type to search, pick a suggestion or press Enter to add.';
-                    block.appendChild(helper);
                     if (field.max_selected) {
                         const maxHelper = document.createElement('p');
                         maxHelper.className = 'helper-text';
@@ -677,13 +759,12 @@
         }
 
         flowName.textContent = normalizeText(flow.flow_name || 'Onboarding');
-        flowTime.textContent = 'Estimated time: ' + (flow.estimated_time_minutes || 4) + ' minutes';
 
         backBtn.addEventListener('click', goBack);
         nextBtn.addEventListener('click', goNext);
 
         renderStep();
     </script>
+    {% endif %}
 </body>
 </html>
-
