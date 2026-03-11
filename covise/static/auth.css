@@ -316,3 +316,37 @@ a {
         padding: calc(var(--spacing) * 3);
     }
 }
+
+/* Light Theme Overrides */
+[data-theme="light"] {
+    --bg: #f0f4fc;
+    --panel: rgba(220, 232, 255, 0.9);
+    --text: #1a2140;
+    --muted: #4a5580;
+    --border: rgba(0, 20, 80, 0.12);
+    --accent: #3356b8;
+}
+
+[data-theme="light"] body {
+    background: radial-gradient(1000px 560px at 50% -10%, #dbe7ff 0%, #edf3ff 45%, var(--bg) 100%);
+    color: var(--text);
+}
+
+[data-theme="light"] .waitlist-card,
+[data-theme="light"] .auth-main,
+[data-theme="light"] .auth-aside,
+[data-theme="light"] .plan-card,
+[data-theme="light"] .profile-share-card,
+[data-theme="light"] .card-shell {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 20, 80, 0.12);
+    color: var(--text);
+}
+
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--text);
+    border-color: rgba(0, 20, 80, 0.18);
+}

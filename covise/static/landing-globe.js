@@ -189,6 +189,55 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
       dpr: 1
     };
 
+    function getPalette() {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        return {
+          arcTrail: 'rgba(70,125,210,0.18)',
+          arcTrailShadow: 'rgba(112,165,242,0.35)',
+          arcGradStart: 'rgba(88,142,226,0)',
+          arcGradMid: 'rgba(104,156,238,0.48)',
+          arcGradEnd: 'rgba(233,244,255,0.95)',
+          arcHeadOuter: 'rgba(104,156,238,0.24)',
+          arcHeadShadow: 'rgba(130,182,255,0.7)',
+          arcHeadInner: '#f4f9ff',
+          globeFill: '#e9f2ff',
+          connectionRgb: '72,127,210',
+          dotRgb: '86,136,216',
+          ambientMid: 'rgba(117,156,224,0.2)',
+          ambientOuter: 'rgba(138,171,230,0.06)',
+          ringOuter: 'rgba(115,166,245,0.4)',
+          ringShadow: 'rgba(120,165,230,0.35)',
+          ringInner: 'rgba(110,154,222,0.28)',
+          cityStroke: 'rgba(94,149,230,0.55)',
+          cityShadow: 'rgba(112,168,246,0.52)',
+          cityFill: 'rgba(239,248,255,0.95)'
+        };
+      }
+
+      return {
+        arcTrail: 'rgba(60,140,255,0.1)',
+        arcTrailShadow: 'rgba(80,160,255,0.5)',
+        arcGradStart: 'rgba(60,140,255,0)',
+        arcGradMid: 'rgba(140,200,255,0.6)',
+        arcGradEnd: 'rgba(255,255,255,1)',
+        arcHeadOuter: 'rgba(80,160,255,0.1)',
+        arcHeadShadow: 'rgba(150,210,255,1)',
+        arcHeadInner: '#fff',
+        globeFill: '#000',
+        connectionRgb: '35,90,170',
+        dotRgb: '45,105,190',
+        ambientMid: 'rgba(30, 25, 158, 0.26)',
+        ambientOuter: 'rgba(18, 16, 87, 0.06)',
+        ringOuter: 'rgba(86,152,255,0.34)',
+        ringShadow: 'rgba(40,118,240,0.62)',
+        ringInner: 'rgba(20,65,150,0.25)',
+        cityStroke: 'rgba(100,180,255,0.6)',
+        cityShadow: 'rgba(100,180,255,0.8)',
+        cityFill: 'rgba(200,230,255,0.95)'
+      };
+    }
+
     function updateCanvasSize() {
       const rect = canvas.getBoundingClientRect();
       const wrapperRect = canvas.parentElement ? canvas.parentElement.getBoundingClientRect() : rect;
@@ -226,7 +275,7 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
       return { x: state.cx + point.x, y: state.cy - point.y, z: point.z };
     }
 
-    function drawAnimatedArc(from, to, progress) {
+    function drawAnimatedArc(from, to, progress, palette) {
       const steps = 80;
       const points = [];
 
@@ -260,9 +309,9 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
           ctx.lineTo(points[i].x, points[i].y);
         }
       }
-      ctx.strokeStyle = 'rgba(60,140,255,0.1)';
+      ctx.strokeStyle = palette.arcTrail;
       ctx.lineWidth = 7;
-      ctx.shadowColor = 'rgba(80,160,255,0.5)';
+      ctx.shadowColor = palette.arcTrailShadow;
       ctx.shadowBlur = 16;
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -287,12 +336,12 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
         points[endIndex].x,
         points[endIndex].y
       );
-      gradient.addColorStop(0, 'rgba(60,140,255,0)');
-      gradient.addColorStop(0.5, 'rgba(140,200,255,0.6)');
-      gradient.addColorStop(1, 'rgba(255,255,255,1)');
+      gradient.addColorStop(0, palette.arcGradStart);
+      gradient.addColorStop(0.5, palette.arcGradMid);
+      gradient.addColorStop(1, palette.arcGradEnd);
       ctx.strokeStyle = gradient;
       ctx.lineWidth = 1.8;
-      ctx.shadowColor = 'rgba(200,230,255,1)';
+      ctx.shadowColor = palette.arcHeadShadow;
       ctx.shadowBlur = 8;
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -301,25 +350,26 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
       if (head && head.visible) {
         ctx.beginPath();
         ctx.arc(head.x, head.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(80,160,255,0.1)';
-        ctx.shadowColor = 'rgba(150,210,255,1)';
+        ctx.fillStyle = palette.arcHeadOuter;
+        ctx.shadowColor = palette.arcHeadShadow;
         ctx.shadowBlur = 14;
         ctx.fill();
 
         ctx.beginPath();
         ctx.arc(head.x, head.y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = palette.arcHeadInner;
         ctx.fill();
         ctx.shadowBlur = 0;
       }
     }
 
     function drawFrame() {
+      const palette = getPalette();
       ctx.clearRect(0, 0, state.width, state.height);
 
       ctx.beginPath();
       ctx.arc(state.cx, state.cy, state.radius, 0, Math.PI * 2);
-      ctx.fillStyle = '#000';
+      ctx.fillStyle = palette.globeFill;
       ctx.fill();
 
       ctx.save();
@@ -357,7 +407,7 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.quadraticCurveTo(mid.x, mid.y, b.x, b.y);
-        ctx.strokeStyle = `rgba(35,90,170,${alpha})`;
+        ctx.strokeStyle = `rgba(${palette.connectionRgb},${alpha})`;
         ctx.lineWidth = 0.5;
         ctx.stroke();
       });
@@ -374,7 +424,7 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, Math.min(brightness * 1.5, 1.9), 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(45,105,190,${brightness * 0.8})`;
+        ctx.fillStyle = `rgba(${palette.dotRgb},${brightness * 0.8})`;
         ctx.fill();
       });
 
@@ -389,8 +439,8 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
         state.radius * 1.28
       );
       ambientGlow.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      ambientGlow.addColorStop(0.58, 'rgba(30, 25, 158, 0.26)');
-      ambientGlow.addColorStop(0.82, 'rgba(18, 16, 87, 0.06)');
+      ambientGlow.addColorStop(0.58, palette.ambientMid);
+      ambientGlow.addColorStop(0.82, palette.ambientOuter);
       ctx.beginPath();
       ctx.arc(state.cx, state.cy, state.radius * 1.28, 0, Math.PI * 2);
       ctx.fillStyle = ambientGlow;
@@ -398,21 +448,21 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
 
       ctx.beginPath();
       ctx.arc(state.cx, state.cy, state.radius * 1.02, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(86,152,255,0.34)';
+      ctx.strokeStyle = palette.ringOuter;
       ctx.lineWidth = 2;
-      ctx.shadowColor = 'rgba(40,118,240,0.62)';
+      ctx.shadowColor = palette.ringShadow;
       ctx.shadowBlur = 34;
       ctx.stroke();
       ctx.shadowBlur = 0;
 
       ctx.beginPath();
       ctx.arc(state.cx, state.cy, state.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(20,65,150,0.25)';
+      ctx.strokeStyle = palette.ringInner;
       ctx.lineWidth = 1;
       ctx.stroke();
 
       ARC_ROUTES.forEach((route, i) => {
-        drawAnimatedArc(route.from, route.to, state.arcProgress[i]);
+        drawAnimatedArc(route.from, route.to, state.arcProgress[i], palette);
       });
 
       CITY_DOTS.forEach((city) => {
@@ -424,15 +474,15 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(100,180,255,0.6)';
+        ctx.strokeStyle = palette.cityStroke;
         ctx.lineWidth = 1;
-        ctx.shadowColor = 'rgba(100,180,255,0.8)';
+        ctx.shadowColor = palette.cityShadow;
         ctx.shadowBlur = 8;
         ctx.stroke();
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, 1.8, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(200,230,255,0.95)';
+        ctx.fillStyle = palette.cityFill;
         ctx.fill();
         ctx.shadowBlur = 0;
       });

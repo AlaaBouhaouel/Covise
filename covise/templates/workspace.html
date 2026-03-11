@@ -8,6 +8,12 @@
     <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'workspace.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
 </head>
 <body>
     <div class="layout">
@@ -39,7 +45,7 @@
                 </svg>
             </a>
             <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
-                <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
@@ -77,3 +83,4 @@
     </div>
 </body>
 </html>
+

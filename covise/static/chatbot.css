@@ -10,6 +10,15 @@
     --text: #cfd7e6;
     --muted: #9aa6bd;
     --border: rgba(255, 255, 255, 0.08);
+    --sidebar-bg: rgba(10, 16, 28, 0.95);
+    --sidebar-link-bg: rgba(16, 24, 40, 0.92);
+    --mobile-sidebar-bg: rgba(0, 0, 0, 0.6);
+    --empty-text: #95a4bf;
+    --rolling-text: #c5d9ff;
+    --bubble-bot-bg: rgba(10, 16, 30, 0.78);
+    --bubble-user-bg: rgba(36, 62, 130, 0.65);
+    --chat-input-bg: rgba(255, 255, 255, 0.1);
+    --send-btn-bg: rgba(160, 190, 255, 0.42);
     --spacing: 8px;
     --font-display: sans-serif;
 }
@@ -31,7 +40,7 @@ body {
     align-self: flex-start;
     width: 72px;
     height: 100vh;
-    background: rgba(10, 16, 28, 0.95);
+    background: var(--sidebar-bg);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -45,7 +54,7 @@ body {
     height: 44px;
     border-radius: 14px;
     border: 1px solid var(--border);
-    background: rgba(16, 24, 40, 0.92);
+    background: var(--sidebar-link-bg);
     color: var(--text);
     display: grid;
     place-items: center;
@@ -139,12 +148,12 @@ body {
 }
 
 .empty-state p {
-    color: #95a4bf;
+    color: var(--empty-text);
     font-size: 1.05rem;
 }
 
 #rollingPrompt {
-    color: #c5d9ff;
+    color: var(--rolling-text);
 }
 
 .empty-state.is-hidden {
@@ -160,12 +169,12 @@ body {
 }
 
 .bubble.bot {
-    background: rgba(10, 16, 30, 0.78);
+    background: var(--bubble-bot-bg);
 }
 
 .bubble.user {
     margin-left: auto;
-    background: rgba(36, 62, 130, 0.65);
+    background: var(--bubble-user-bg);
     border-color: rgba(120, 150, 255, 0.4);
 }
 
@@ -186,14 +195,14 @@ body {
     padding: calc(var(--spacing) * 1.5);
     border-radius: 11px;
     border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--chat-input-bg);
     color: var(--text);
     font-size: 0.95rem;
 }
 
 .chat-input button {
     border: 1px solid rgba(120, 150, 255, 0.35);
-    background: rgba(160, 190, 255, 0.42);
+    background: var(--send-btn-bg);
     color: var(--text);
     width: 42px;
     height: 42px;
@@ -233,7 +242,7 @@ body {
         padding: calc(var(--spacing) * 2);
         border-right: none;
         border-top: 1px solid var(--border);
-        background: rgba(0, 0, 0, 0.6);
+        background: var(--mobile-sidebar-bg);
         backdrop-filter: blur(16px) saturate(140%);
         -webkit-backdrop-filter: blur(16px) saturate(140%);
         z-index: 50;
@@ -289,3 +298,62 @@ body {
     }
 }
 
+
+/* Light Theme Overrides */
+[data-theme="light"] {
+    --bg: #f0f4fc;
+    --panel: rgba(220, 232, 255, 0.9);
+    --text: #1a2140;
+    --muted: #4a5580;
+    --border: rgba(0, 20, 80, 0.1);
+    --accent: #3356b8;
+    --sidebar-bg: rgba(220, 232, 255, 0.98);
+    --sidebar-link-bg: rgba(255, 255, 255, 0.92);
+    --mobile-sidebar-bg: rgba(233, 241, 255, 0.88);
+    --empty-text: #5c7098;
+    --rolling-text: #3f5f9d;
+    --bubble-bot-bg: rgba(255, 255, 255, 0.92);
+    --bubble-user-bg: rgba(95, 132, 205, 0.2);
+    --chat-input-bg: rgba(255, 255, 255, 0.94);
+    --send-btn-bg: rgba(95, 132, 205, 0.28);
+}
+
+[data-theme="light"] body {
+    background: radial-gradient(1200px 600px at 70% -10%, #dbe7ff 0%, #ecf3ff 45%, var(--bg) 100%);
+    color: var(--text);
+}
+
+[data-theme="light"] .sidebar .sidebar-link {
+    color: var(--text);
+    border-color: rgba(0, 20, 80, 0.12);
+}
+
+[data-theme="light"] .panel,
+[data-theme="light"] .widget,
+[data-theme="light"] .project-card,
+[data-theme="light"] .post-card,
+[data-theme="light"] .request-item,
+[data-theme="light"] .social-card,
+[data-theme="light"] .chat-window,
+[data-theme="light"] .chat-shell,
+[data-theme="light"] .message-item,
+[data-theme="light"] .conversation-item,
+[data-theme="light"] .settings-card,
+[data-theme="light"] .workspace-panel,
+[data-theme="light"] .map-panel {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 20, 80, 0.1);
+}
+
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--text);
+    border-color: rgba(0, 20, 80, 0.18);
+}
+
+/* Logo swap */
+.logo-light { display: none; }
+[data-theme="light"] .logo-dark { display: none; }
+[data-theme="light"] .logo-light { display: block; }

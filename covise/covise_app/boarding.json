@@ -200,7 +200,7 @@
         {
           "id": "investor_type",
           "type": "single_select",
-          "label": "How do you invest?",
+          "label": "What sectors do you invest in?",
           "required": true,
           "options": ["Angel investor", "Venture capital", "Family office", "Strategic investor", "Other"]
         },
@@ -559,7 +559,7 @@
           "id": "how_heard",
           "type": "single_select",
           "label": "How did you hear about CoVise?",
-          "required": false,
+          "required": true,
           "options": [
             "LinkedIn", "Twitter / X", "Reddit", "Friend / referral",
             "Google search", "Other"

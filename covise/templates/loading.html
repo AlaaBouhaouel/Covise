@@ -55,6 +55,12 @@
             }
         }
     </style>
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
 </head>
 <body>
     <main class="loader-wrap" aria-label="Loading">
@@ -63,3 +69,4 @@
     </main>
 </body>
 </html>
+

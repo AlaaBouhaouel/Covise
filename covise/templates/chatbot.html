@@ -8,6 +8,12 @@
     <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'chatbot.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
@@ -48,7 +54,7 @@
                 </svg>
             </a>
             <a class="sidebar-link" id="side_active" href="{% url 'Chatbot' %}" aria-label="Logo">
-                <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
@@ -69,7 +75,7 @@
             <section class="chatbot-shell">
                 <div class="chat-stream" id="chatStream">
                     <div class="empty-state" id="emptyState" aria-live="polite">
-                        <img src="{% static 'images/index/noBgLogo.png' %}" alt="" aria-hidden="true">
+                        <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="" aria-hidden="true"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="" aria-hidden="true">
                         <p>Hello User, do you need me to <span id="rollingPrompt">message someone?</span></p>
                     </div>
                 </div>
@@ -91,3 +97,4 @@
 
 </body>
 </html>
+

@@ -7,6 +7,12 @@
     <title>CoVise | Profile Card</title>
     <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'profile-card-page.css' %}">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
 </head>
 <body>
     <main class="card-page">
@@ -92,3 +98,4 @@
     <script src="{% static 'profile-card-page.js' %}"></script>
 </body>
 </html>
+

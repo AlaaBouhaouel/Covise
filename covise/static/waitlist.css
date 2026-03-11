@@ -5,6 +5,28 @@
     --text: #edf3ff;
     --muted: #a5b1cb;
     --accent: #7ea4ff;
+    --field-label: #c3d0ef;
+    --input-bg: rgba(255, 255, 255, 0.03);
+    --option-bg: #0b1020;
+    --option-text: #edf3ff;
+    --button-bg: #edf3ff;
+    --button-text: #000000;
+    --button-hover-bg: #000000;
+    --button-hover-text: #edf3ff;
+    --danger: #f28585;
+    --notice: #c9d6f7;
+    --progress-track: rgba(255, 255, 255, 0.12);
+    --progress-fill-start: #7ea4ff;
+    --progress-fill-end: #c4d6ff;
+    --card-active-bg: #ffffff;
+    --card-active-border: #244b98;
+    --card-active-text: #0f2f7a;
+    --chip-border: #e7ecf7;
+    --chip-bg: #ffffff;
+    --chip-text: #153c8a;
+    --warning-bg: rgba(242, 133, 133, 0.12);
+    --warning-border: rgba(242, 133, 133, 0.45);
+    --warning-text: #ffd9d9;
     --spacing: 8px;
 }
 
@@ -85,7 +107,7 @@ h1 {
 .waitlist-form label {
     font-size: 0.85rem;
     letter-spacing: 0.09em;
-    color: #c3d0ef;
+    color: var(--field-label);
 }
 
 .waitlist-form input,
@@ -93,7 +115,7 @@ h1 {
     width: 100%;
     border: 1px solid var(--border);
     border-radius: 10px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--input-bg);
     color: var(--text);
     padding: calc(var(--spacing) * 1.5);
     font-size: 1rem;
@@ -152,11 +174,11 @@ h1 {
 }
 
 #cv-label.warning {
-    color: #f28585;
+    color: var(--danger);
 }
 
 #cv-label.warning .optional-tag {
-    color: #f28585;
+    color: var(--danger);
 }
 
 .cv-notice {
@@ -168,7 +190,7 @@ h1 {
 }
 
 .cv-notice.warning {
-    color: #f28585;
+    color: var(--danger);
 }
 
 .waitlist-form input:focus,
@@ -179,8 +201,8 @@ h1 {
 }
 
 .waitlist-form select option {
-    color: #edf3ff;
-    background: #0b1020;
+    color: var(--option-text);
+    background: var(--option-bg);
 }
 
 .waitlist-form label.non-gcc-toggle {
@@ -225,9 +247,9 @@ h1 {
     display: inline-block;
     margin-top: calc(var(--spacing)*2);
     padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
-    background: #edf3ff;
+    background: var(--button-bg);
     
-    color: #000;
+    color: var(--button-text);
     text-decoration: none;
     font-family: 'Syne', sans-serif;
     font-size: 0.9rem;
@@ -261,8 +283,8 @@ h1 {
 
 .waitlist-form button:hover {
     transform: scale(1.05);
-    color: var(--white);
-    background: #000;
+    color: var(--button-hover-text);
+    background: var(--button-hover-bg);
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(16px) saturate(140%);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
@@ -271,7 +293,7 @@ h1 {
 
 .notice {
     margin-top: calc(var(--spacing) * 1.5);
-    color: #c9d6f7;
+    color: var(--notice);
     font-size: 1rem;
     text-align: center;
 }
@@ -288,4 +310,59 @@ h1 {
     .waitlist-form button {
         width: 100%;
     }
+}
+
+/* Light Theme Overrides */
+[data-theme="light"] {
+    --bg: #f0f4fc;
+    --panel: rgba(220, 232, 255, 0.9);
+    --text: #1a2140;
+    --muted: #4a5580;
+    --border: rgba(0, 20, 80, 0.12);
+    --accent: #3356b8;
+    --field-label: #314977;
+    --input-bg: rgba(255, 255, 255, 0.94);
+    --option-bg: #eef4ff;
+    --option-text: #1a2140;
+    --button-bg: #2f54a3;
+    --button-text: #ffffff;
+    --button-hover-bg: #223f7d;
+    --button-hover-text: #ffffff;
+    --notice: #3e5688;
+    --progress-track: rgba(49, 73, 119, 0.18);
+    --progress-fill-start: #4f72c4;
+    --progress-fill-end: #7f9ee0;
+    --card-active-bg: #eaf1ff;
+    --card-active-border: #5073c2;
+    --card-active-text: #223f7d;
+    --chip-border: #b8c9ec;
+    --chip-bg: #f4f8ff;
+    --chip-text: #2f4f90;
+    --warning-bg: rgba(212, 96, 96, 0.12);
+    --warning-border: rgba(212, 96, 96, 0.35);
+    --warning-text: #8f2b2b;
+}
+
+[data-theme="light"] body {
+    background: radial-gradient(1000px 560px at 50% -10%, #dbe7ff 0%, #edf3ff 45%, var(--bg) 100%);
+    color: var(--text);
+}
+
+[data-theme="light"] .waitlist-card,
+[data-theme="light"] .auth-main,
+[data-theme="light"] .auth-aside,
+[data-theme="light"] .plan-card,
+[data-theme="light"] .profile-share-card,
+[data-theme="light"] .card-shell {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 20, 80, 0.12);
+    color: var(--text);
+}
+
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--text);
+    border-color: rgba(0, 20, 80, 0.18);
 }

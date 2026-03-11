@@ -9,6 +9,12 @@
     <link rel="stylesheet" href="{% static 'map.css' %}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
@@ -49,7 +55,7 @@
                 </svg>
             </a>
             <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
-                <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
@@ -84,19 +90,29 @@
                     <h2>Mapped Projects</h2>
                     <div class="map-project-list">
                         <div class="map-project-item">
-                            <div class="item-title">Project Alpha</div>
-                            <div class="item-code">Code: 67542</div>
-                            <div class="item-location">Diriyah</div>
+                            <div class="item-title">NafathPay</div>
+                            <div class="item-code">Code: CV-1042</div>
+                            <div class="item-location">Riyadh, KSA</div>
                         </div>
                         <div class="map-project-item">
-                            <div class="item-title">Project Beta</div>
-                            <div class="item-code">Code: 76521</div>
-                            <div class="item-location">King Salman Park</div>
+                            <div class="item-title">Logiqo</div>
+                            <div class="item-code">Code: CV-1187</div>
+                            <div class="item-location">Riyadh, KSA</div>
                         </div>
                         <div class="map-project-item">
-                            <div class="item-title">Project Gamma</div>
-                            <div class="item-code">Code: 65271</div>
-                            <div class="item-location">Al Murabba</div>
+                            <div class="item-title">SoukLink</div>
+                            <div class="item-code">Code: CV-1253</div>
+                            <div class="item-location">Jeddah, KSA</div>
+                        </div>
+                        <div class="map-project-item">
+                            <div class="item-title">EdifyAI</div>
+                            <div class="item-code">Code: CV-1310</div>
+                            <div class="item-location">Riyadh, KSA</div>
+                        </div>
+                        <div class="map-project-item">
+                            <div class="item-title">RetailOS</div>
+                            <div class="item-code">Code: CV-1649</div>
+                            <div class="item-location">Riyadh, KSA</div>
                         </div>
                     </div>
                 </article>
@@ -112,16 +128,25 @@
     <script>
     const projectMapEl = document.getElementById('projectMap');
     if (projectMapEl && window.L) {
-        const map = L.map('projectMap').setView([24.7136, 46.6753], 12);
+        const map = L.map('projectMap').setView([24.5, 50.5], 6);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
         const locations = [
-            { lat: 24.7356, lng: 46.6352, name: 'Project Alpha - 67542' },
-            { lat: 24.6657, lng: 46.7312, name: 'Project Beta - 76521' },
-            { lat: 24.7029, lng: 46.6747, name: 'Project Gamma - 65271' }
+            { lat: 24.7741, lng: 46.7385, name: 'NafathPay', code: 'CV-1042', city: 'Riyadh, KSA' },
+            { lat: 24.6878, lng: 46.7218, name: 'Logiqo', code: 'CV-1187', city: 'Riyadh, KSA' },
+            { lat: 21.4858, lng: 39.1925, name: 'SoukLink', code: 'CV-1253', city: 'Jeddah, KSA' },
+            { lat: 24.7511, lng: 46.6602, name: 'EdifyAI', code: 'CV-1310', city: 'Riyadh, KSA' },
+            { lat: 25.2048, lng: 55.2708, name: 'Medunia', code: 'CV-1398', city: 'Dubai, UAE' },
+            { lat: 25.1165, lng: 55.2008, name: 'FreightWave GCC', code: 'CV-1421', city: 'Dubai, UAE' },
+            { lat: 24.4539, lng: 54.3773, name: 'GreenVault', code: 'CV-1465', city: 'Abu Dhabi, UAE' },
+            { lat: 25.2854, lng: 51.5310, name: 'QatarBuild', code: 'CV-1502', city: 'Doha, Qatar' },
+            { lat: 29.3759, lng: 47.9774, name: 'HireGCC', code: 'CV-1534', city: 'Kuwait City, Kuwait' },
+            { lat: 26.2235, lng: 50.5876, name: 'DataNest', code: 'CV-1578', city: 'Manama, Bahrain' },
+            { lat: 23.5880, lng: 58.3829, name: 'OmanFresh', code: 'CV-1612', city: 'Muscat, Oman' },
+            { lat: 24.8029, lng: 46.7849, name: 'RetailOS', code: 'CV-1649', city: 'Riyadh, KSA' }
         ];
 
         locations.forEach((loc) => {
@@ -131,9 +156,12 @@
                 fillColor: '#ff4d4f',
                 fillOpacity: 0.95,
                 weight: 1
-            }).addTo(map).bindPopup(loc.name);
+            }).addTo(map).bindPopup(
+                `<strong>${loc.name}</strong><br>${loc.code}<br>${loc.city}`
+            );
         });
     }
     </script>
 </body>
 </html>
+

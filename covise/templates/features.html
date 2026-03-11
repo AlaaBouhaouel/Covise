@@ -8,6 +8,12 @@
     <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'features.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
@@ -20,15 +26,18 @@
 <body>
     <div class="container">
         <nav class="nav">
-            <div class="logo">
-                <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+            <a href="/" class="logo">
+                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
                 <span>CoVise</span>
-            </div>
+            </a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
+                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
             <div class="nav-links">
                 <a href="/about/" class="nav-link">ABOUT</a>
                 <a href="/features/" class="nav-link nav-link-active">FEATURES</a>
-                <a href="/home/" class="nav-link">DEMO</a>
-                <a href="/pricing/" class="nav-link">PRICING</a>
+                <a href="/home/" class="nav-link nav-link-demo">DEMO</a>
             </div>
         </nav>
 
@@ -120,7 +129,7 @@
             <div class="footer-top">
                 <div class="footer-brand">
                     <div class="footer-brand-title">
-                        <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                        <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
                         <span>CoVise</span>
                     </div>
                     <p class="footer-tagline">Where serious founders align and build together.</p>
@@ -153,5 +162,24 @@
             </div>
         </footer>
     </div>
+<script>
+    (function() {
+        var btn = document.getElementById('themeToggle');
+        var html = document.documentElement;
+        function setTheme(theme) {
+            if (theme === 'light') {
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('covise-theme', 'light');
+            } else {
+                html.removeAttribute('data-theme');
+                localStorage.setItem('covise-theme', 'dark');
+            }
+        }
+        btn.addEventListener('click', function() {
+            var current = html.getAttribute('data-theme');
+            setTheme(current === 'light' ? 'dark' : 'light');
+        });
+    })();
+</script>
 </body>
 </html>

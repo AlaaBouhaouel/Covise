@@ -8,6 +8,12 @@
     <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'about.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
@@ -20,31 +26,35 @@
 <body>
     <div class="container">
         <nav class="nav">
-            <div class="logo">
-                <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+            <a href="/" class="logo">
+                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
                 <span>CoVise</span>
-            </div>
+            </a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
+                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
             <div class="nav-links">
                 <a href="/about/" class="nav-link nav-link-active">ABOUT</a>
                 <a href="/features/" class="nav-link">FEATURES</a>
-                <a href="/home/" class="nav-link">DEMO</a>
-                <a href="/pricing/" class="nav-link">PRICING</a>
+                <a href="/home/" class="nav-link nav-link-demo">DEMO</a>
             </div>
         </nav>
 
         <main class="about-page">
             <div class="hero">
                 <div class="hero-eyebrow">Our Story</div>
-                <div class="hero-title">We built Covise because finding the right co-founder in the GCC shouldn't be left to luck.</div>
             </div>
 
             <div class="content">
                 <div class="story">
+                    
                     <p>
+                        <strong>We built Covise because finding the right co-founder in the GCC shouldn't be left to luck.</strong><br
                         Finding a serious business partner in the Gulf is genuinely hard. There is no structured place to look, no way to verify who is truly committed, and no process to test compatibility before you go all in. Most partnerships don't fail because of bad ideas - <strong>they fail because of bad alignment.</strong>
                     </p>
                     <p>
-                        We watched talented founders across Saudi Arabia and the UAE either build alone out of frustration, or rush into the wrong partnerships because there was nowhere serious to meet people. LinkedIn wasn't built for this. Incubators only serve a small slice. And most platforms that claim to help are either too niche, too passive, or too focused on deep tech to be useful to the full spectrum of entrepreneurs in the region.
+                        We watched talented founders across the GCC either build alone out of frustration, or rush into the wrong partnerships because there was nowhere serious to meet people. LinkedIn wasn't built for this. Incubators only serve a small slice. And most platforms that claim to help are either too niche, too passive, or too focused on deep tech to be useful to the full spectrum of entrepreneurs in the region.
                     </p>
                     <p>
                         <strong>Covise was built to fix that.</strong> <br> A verified, structured, AI-powered network where serious founders find each other - across every industry, every city in the Gulf, and across borders. Not just tech. Not just the well-funded. Everyone who is serious about building something real.
@@ -92,7 +102,7 @@
             <div class="footer-top">
                 <div class="footer-brand">
                     <div class="footer-brand-title">
-                        <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                        <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
                         <span>CoVise</span>
                     </div>
                     <p class="footer-tagline">Where serious founders align and build together.</p>
@@ -125,5 +135,24 @@
             </div>
         </footer>
     </div>
+<script>
+    (function() {
+        var btn = document.getElementById('themeToggle');
+        var html = document.documentElement;
+        function setTheme(theme) {
+            if (theme === 'light') {
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('covise-theme', 'light');
+            } else {
+                html.removeAttribute('data-theme');
+                localStorage.setItem('covise-theme', 'dark');
+            }
+        }
+        btn.addEventListener('click', function() {
+            var current = html.getAttribute('data-theme');
+            setTheme(current === 'light' ? 'dark' : 'light');
+        });
+    })();
+</script>
 </body>
 </html>

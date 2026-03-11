@@ -14,7 +14,7 @@
             width: 100%;
             height: 3px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.12);
+            background: var(--progress-track);
             overflow: hidden;
         }
 
@@ -22,7 +22,7 @@
             width: 0%;
             height: 100%;
             border-radius: inherit;
-            background: linear-gradient(90deg, #7ea4ff 0%, #c4d6ff 100%);
+            background: linear-gradient(90deg, var(--progress-fill-start) 0%, var(--progress-fill-end) 100%);
             transition: width 0.3s ease;
         }
 
@@ -51,7 +51,7 @@
         .field-block > label {
             font-size: 0.85rem;
             letter-spacing: 0.09em;
-            color: #c3d0ef;
+            color: var(--field-label);
         }
 
         .option-list {
@@ -91,13 +91,13 @@
         }
 
         .card-option.is-active {
-            background: #ffffff;
-            border-color: #ffffff;
-            color: #0f2f7a;
+            background: var(--card-active-bg);
+            border: 1px solid var(--card-active-border);
+            color: var(--card-active-text);
         }
 
         .card-option.is-active .card-description {
-            color: #244b98;
+            color: var(--card-active-border);
         }
 
         .card-copy {
@@ -120,6 +120,23 @@
             gap: calc(var(--spacing) * 0.9);
         }
 
+        .chip-input {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: calc(var(--spacing) * 0.6) calc(var(--spacing) * 0.8);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: calc(var(--spacing) * 0.55);
+        }
+
+        .chip-input:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(126, 164, 255, 0.35);
+        }
+
         .multi-search {
             width: 100%;
             border: 1px solid var(--border);
@@ -140,21 +157,35 @@
             box-shadow: 0 0 0 1px rgba(126, 164, 255, 0.35);
         }
 
+        .chip-input .multi-search {
+            margin: 0;
+            width: auto;
+            flex: 1 1 220px;
+            min-width: 180px;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            padding: calc(var(--spacing) * 0.45) calc(var(--spacing) * 0.3);
+            color: var(--text);
+        }
+
+ 
+
         .selected-chips {
             display: flex;
             flex-wrap: wrap;
             gap: calc(var(--spacing) * 0.6);
-            justify-content: center;
+            justify-content: start;
         }
 
         .chip {
             display: inline-flex;
             align-items: center;
             gap: calc(var(--spacing) * 0.45);
-            border: 1px solid #e7ecf7;
+            border: 1px solid var(--chip-border);
             border-radius: 999px;
-            background: #ffffff;
-            color: #153c8a;
+            background: var(--chip-bg);
+            color: var(--chip-text);
             font-size: 0.82rem;
             padding: 0.36rem 0.62rem;
         }
@@ -193,7 +224,7 @@
         }
 
         .field-error {
-            color: #f28585;
+            color: var(--danger);
             font-size: 0.82rem;
         }
 
@@ -223,9 +254,9 @@
         }
 
         .step-actions .next-btn {
-            background: #edf3ff;
-            color: #000;
-            border-color: #edf3ff;
+            background: var(--button-bg);
+            color: var(--button-text);
+            border-color: var(--button-bg);
         }
 
         .step-actions .next-btn:disabled {
@@ -242,9 +273,9 @@
         .onboarding-warning {
             margin-top: calc(var(--spacing) * 1);
             margin-bottom: calc(var(--spacing) * 1.2);
-            border: 1px solid rgba(242, 133, 133, 0.45);
-            background: rgba(242, 133, 133, 0.12);
-            color: #ffd9d9;
+            border: 1px solid var(--warning-border);
+            background: var(--warning-bg);
+            color: var(--warning-text);
             border-radius: 12px;
             padding: calc(var(--spacing) * 1.15);
             font-size: 0.95rem;
@@ -261,6 +292,12 @@
             }
         }
     </style>
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
 </head>
 <body>
     <main class="waitlist-page">
@@ -501,7 +538,6 @@
                 answers[field.id] = byLabel.get(value) || '';
                 updateButtons();
             }
-
             input.addEventListener('input', syncSearchableValue);
             input.addEventListener('change', syncSearchableValue);
             input.addEventListener('blur', () => {
@@ -527,7 +563,9 @@
 
             const chipContainer = document.createElement('div');
             chipContainer.className = 'selected-chips';
-            wrap.appendChild(chipContainer);
+            const chipInput = document.createElement('div');
+            chipInput.className = 'chip-input';
+            chipInput.appendChild(chipContainer);
 
             const search = document.createElement('input');
             search.type = 'text';
@@ -535,7 +573,8 @@
             search.placeholder = 'Search and select multiple options...';
             const listId = field.id + '_options';
             search.setAttribute('list', listId);
-            wrap.appendChild(search);
+            chipInput.appendChild(search);
+            wrap.appendChild(chipInput);
 
             const dataList = document.createElement('datalist');
             dataList.id = listId;
@@ -768,3 +807,4 @@
     {% endif %}
 </body>
 </html>
+
