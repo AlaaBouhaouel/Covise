@@ -175,9 +175,9 @@ body {
 .hero-eyebrow {
     font-family: 'Syne', sans-serif;
     font-size: 2rem;
-    letter-spacing: 0.18em;
+    font-weight: 700;
     text-transform: uppercase;
-    color: var(--text-accent);
+    color: var(--white);
     margin-bottom: calc(var(--spacing));
 }
 
@@ -348,10 +348,18 @@ body {
     height: 12px;
     margin-left: calc(var(--spacing) * 1);
     vertical-align: middle;
-    filter: invert(1);
+    filter: invert(0);
 }
 
 .cta-btn:hover .waitlist-btn-icon {
+    filter: invert(1);
+}
+
+[data-theme="light"] .waitlist-btn-icon {
+    filter: invert(1);
+}
+
+[data-theme="light"] .cta-btn:hover .waitlist-btn-icon {
     filter: invert(0);
 }
 

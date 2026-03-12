@@ -13,6 +13,8 @@
     --sidebar-bg: rgba(10, 16, 28, 0.95);
     --sidebar-link-bg: rgba(16, 24, 40, 0.92);
     --mobile-sidebar-bg: rgba(0, 0, 0, 0.6);
+    --lock-overlay: rgba(5, 8, 16, 0.42);
+    --lock-text: #e7edf9;
     --empty-text: #95a4bf;
     --rolling-text: #c5d9ff;
     --bubble-bot-bg: rgba(10, 16, 30, 0.78);
@@ -90,14 +92,35 @@ body {
     width: 20px;
     height: 20px;
     object-fit: contain;
-    display: block;
 }
 
 .main {
     flex: 1;
+    position: relative;
     padding: calc(var(--spacing) * 7) calc(var(--spacing) * 10);
     display: grid;
     gap: calc(var(--spacing) * 3);
+}
+
+.messages-lock {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: grid;
+    place-items: center;
+    background: var(--lock-overlay);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    pointer-events: auto;
+    text-align: center;
+    padding: calc(var(--spacing) * 3);
+}
+
+.messages-lock p {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--lock-text);
+    letter-spacing: 0.04em;
 }
 
 .chatbot-head h1 {
@@ -143,8 +166,7 @@ body {
     width: 58px;
     height: 58px;
     object-fit: contain;
-    opacity: 0.2;
-    filter: saturate(0.7);
+    opacity: 0.62;
 }
 
 .empty-state p {
@@ -310,6 +332,8 @@ body {
     --sidebar-bg: rgba(220, 232, 255, 0.98);
     --sidebar-link-bg: rgba(255, 255, 255, 0.92);
     --mobile-sidebar-bg: rgba(233, 241, 255, 0.88);
+    --lock-overlay: rgba(228, 237, 252, 0.72);
+    --lock-text: #2d4068;
     --empty-text: #5c7098;
     --rolling-text: #3f5f9d;
     --bubble-bot-bg: rgba(255, 255, 255, 0.92);

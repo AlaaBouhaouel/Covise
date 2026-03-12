@@ -27,6 +27,18 @@
     --exp-date: #9fb0cf;
     --project-card-bg: rgba(10, 16, 31, 0.72);
     --project-name: #e7eeff;
+    --tag-blue-bg: rgba(68, 130, 250, 0.2);
+    --tag-blue-border: rgba(82, 152, 255, 0.45);
+    --tag-blue-text: #bedaff;
+    --tag-green-bg: rgba(36, 191, 130, 0.18);
+    --tag-green-border: rgba(54, 210, 148, 0.5);
+    --tag-green-text: #bdf4dc;
+    --tag-gold-bg: rgba(220, 164, 42, 0.2);
+    --tag-gold-border: rgba(233, 183, 76, 0.45);
+    --tag-gold-text: #f4deb0;
+    --tag-pink-bg: rgba(177, 87, 229, 0.2);
+    --tag-pink-border: rgba(205, 131, 246, 0.48);
+    --tag-pink-text: #e6c9ff;
     --post-card-bg: rgba(9, 14, 28, 0.7);
     --post-avatar-bg: #16234a;
     --post-body: #d2daea;
@@ -104,7 +116,6 @@ body {
     width: 20px;
     height: 20px;
     object-fit: contain;
-    display: block;
 }
 
 .main {
@@ -370,19 +381,19 @@ body {
 }
 
 .bar-fill.green {
-    background: rgba(18, 102, 68, 0.8);
+    background: rgba(26, 146, 96, 0.85);
 }
 
 .bar-fill.blue {
-    background: rgba(95, 102, 18, 0.8);
+    background: rgba(56, 118, 218, 0.85);
 }
 
 .bar-fill.gold {
-    background: rgba(220, 164, 42, 0.8);
+    background: rgba(224, 164, 48, 0.85);
 }
 
 .bar-fill.red {
-    background: rgba(229, 87, 87, 0.8);
+    background: rgba(210, 64, 78, 0.88);
 }
 
 .bar-val {
@@ -425,27 +436,27 @@ body {
 }
 
 .tag.blue {
-    background: rgba(68, 130, 250, 0.2);
-    border-color: rgba(82, 152, 255, 0.45);
-    color: #bedaff;
+    background: var(--tag-blue-bg);
+    border-color: var(--tag-blue-border);
+    color: var(--tag-blue-text);
 }
 
 .tag.green {
-    background: rgba(36, 191, 130, 0.18);
-    border-color: rgba(54, 210, 148, 0.5);
-    color: #bdf4dc;
+    background: var(--tag-green-bg);
+    border-color: var(--tag-green-border);
+    color: var(--tag-green-text);
 }
 
 .tag.gold {
-    background: rgba(220, 164, 42, 0.2);
-    border-color: rgba(233, 183, 76, 0.45);
-    color: #f4deb0;
+    background: var(--tag-gold-bg);
+    border-color: var(--tag-gold-border);
+    color: var(--tag-gold-text);
 }
 
 .tag.pink {
-    background: rgba(177, 87, 229, 0.2);
-    border-color: rgba(205, 131, 246, 0.48);
-    color: #e6c9ff;
+    background: var(--tag-pink-bg);
+    border-color: var(--tag-pink-border);
+    color: var(--tag-pink-text);
 }
 
 .two-col {
@@ -1013,6 +1024,18 @@ body {
     --exp-date: #5b729d;
     --project-card-bg: rgba(255, 255, 255, 0.9);
     --project-name: #223862;
+    --tag-blue-bg: rgba(106, 153, 246, 0.12);
+    --tag-blue-border: rgba(98, 145, 236, 0.28);
+    --tag-blue-text: #1f4b93;
+    --tag-green-bg: rgba(72, 187, 139, 0.12);
+    --tag-green-border: rgba(67, 170, 127, 0.28);
+    --tag-green-text: #1f6a4f;
+    --tag-gold-bg: rgba(220, 169, 55, 0.14);
+    --tag-gold-border: rgba(204, 153, 44, 0.3);
+    --tag-gold-text: #7f5812;
+    --tag-pink-bg: rgba(187, 112, 234, 0.13);
+    --tag-pink-border: rgba(170, 97, 215, 0.3);
+    --tag-pink-text: #6f3599;
     --post-card-bg: rgba(255, 255, 255, 0.9);
     --post-avatar-bg: #d9e6fb;
     --post-body: #314872;

@@ -53,9 +53,9 @@
                 </svg>
             </a>
             <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
-                <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
-            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
+            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile" data-demo="Open your personal profile card and founder summary." data-demo-pos="side">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="8" r="4"></circle>
                     <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
@@ -93,7 +93,7 @@
                         <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                         <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                     </button>
-                    <a class="notification-bell" href="#requests-received" aria-label="Go to requests received">
+                    <a class="notification-bell" href="#requests-received" aria-label="Go to requests received" data-demo="Notification bell jumps to incoming requests that need your action." data-demo-pos="left">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M15 17H9M18 17V11a6 6 0 1 0-12 0v6l-2 2h16l-2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                         </svg>
@@ -106,8 +106,8 @@
 
 
                 <div class="dashboard-right">
-                    <article class="dashboard-card post">
-                        <div class="widget post-widget">
+                    <article class="dashboard-card post" data-demo="Start a new project post to attract co-founders with the right skill set.">
+                        <div class="widget post-widget" >
                             <div class="widget-header">
                                 <div class="widget-title">Start a Project</div>
                             </div>
@@ -122,7 +122,7 @@
                         </div>
     
                     </article>
-                    <article class="dashboard-card widget">
+                    <article class="dashboard-card widget" data-demo="Top Matches shows your strongest profile fits based on goals and skill overlap.">
                         <div class="widget-header">
                             <div class="widget-title">Your Top Matches Today</div>
                             <div class="widget-action">See All</div>
@@ -160,7 +160,7 @@
                     </article>
                 </div>
 
-                                <article class="dashboard-card widget">
+                                <article class="dashboard-card widget" data-demo="Network Activity tracks live growth signals across founders, opportunities, and matches.">
                     <div class="widget-header">
                         <div class="widget-title">Network Activity</div>
                         <div class="widget-action">View All</div>
@@ -220,7 +220,7 @@
 
 
             <section class="requests-grid">
-                <article class="panel">
+                <article class="panel" data-demo="Requests Sent tracks outreach you've made to other founders and projects.">
                     <h2>Requests Sent</h2>
                     <div class="request-list">
                         <div class="request-item">
@@ -267,7 +267,7 @@
                     </div>
                 </article>
 
-                <article class="panel" id="requests-received">
+                <article class="panel" id="requests-received" data-demo="Requests Received are inbound collaboration asks you can accept or reject.">
                     <h2>Requests Received</h2>
                     <div class="match-cards request-match-cards">
                         <div class="match-card request-match-card">
@@ -375,6 +375,132 @@
             var current = html.getAttribute('data-theme');
             setTheme(current === 'light' ? 'dark' : 'light');
         });
+    })();
+</script>
+<script>
+    (function() {
+        var demoTargets = Array.prototype.slice.call(document.querySelectorAll('[data-demo]'));
+        if (!demoTargets.length) return;
+
+        var guide = document.createElement('div');
+        guide.className = 'demo-guide';
+        guide.setAttribute('role', 'status');
+        guide.setAttribute('aria-live', 'polite');
+        guide.innerHTML =
+            '<div class="demo-guide-text"></div>' +
+            '<div class="demo-guide-actions">' +
+                '<button type="button" class="demo-guide-next">Next</button>' +
+                '<button type="button" class="demo-guide-skip">Skip</button>' +
+            '</div>';
+        document.body.appendChild(guide);
+
+        var guideText = guide.querySelector('.demo-guide-text');
+        var nextBtn = guide.querySelector('.demo-guide-next');
+        var skipBtn = guide.querySelector('.demo-guide-skip');
+        var activeIndex = -1;
+        var activeTarget = null;
+
+        function clearFocus() {
+            if (activeTarget) activeTarget.classList.remove('demo-focus');
+        }
+
+        function hideGuide() {
+            clearFocus();
+            activeTarget = null;
+            activeIndex = -1;
+            guide.classList.remove('is-active', 'pos-left', 'pos-side', 'pos-bottom');
+        }
+
+        function positionGuide(target) {
+            var rect = target.getBoundingClientRect();
+            var pos = target.getAttribute('data-demo-pos') || 'bottom';
+            var margin = 12;
+            var top = rect.bottom + 12;
+            var left = rect.left + (rect.width / 2);
+            var transform = 'translateX(-50%)';
+
+            guide.classList.remove('pos-left', 'pos-side', 'pos-bottom');
+            if (pos === 'side') {
+                guide.classList.add('pos-side');
+                top = rect.top + (rect.height / 2);
+                left = rect.right + 12;
+                transform = 'translateY(-50%)';
+            } else if (pos === 'left') {
+                guide.classList.add('pos-left');
+                top = rect.bottom + 12;
+                left = rect.left;
+                transform = 'none';
+            } else {
+                guide.classList.add('pos-bottom');
+            }
+
+            var maxLeft = window.innerWidth - guide.offsetWidth - margin;
+            if (pos === 'side' && left > maxLeft) {
+                guide.classList.remove('pos-side');
+                guide.classList.add('pos-bottom');
+                top = rect.bottom + 12;
+                left = rect.left + (rect.width / 2);
+                transform = 'translateX(-50%)';
+                maxLeft = window.innerWidth - guide.offsetWidth - margin;
+            }
+            if (left > maxLeft) left = maxLeft;
+            if (left < margin) left = margin;
+            if (top < margin) top = margin;
+            if (top > window.innerHeight - guide.offsetHeight - margin) {
+                top = window.innerHeight - guide.offsetHeight - margin;
+            }
+
+            guide.style.top = top + 'px';
+            guide.style.left = left + 'px';
+            guide.style.transform = transform;
+        }
+
+        function showStep(index) {
+            if (index < 0 || index >= demoTargets.length) {
+                hideGuide();
+                return;
+            }
+
+            clearFocus();
+            activeIndex = index;
+            activeTarget = demoTargets[index];
+            activeTarget.classList.add('demo-focus');
+            guideText.textContent = activeTarget.getAttribute('data-demo') || '';
+            nextBtn.textContent = (activeIndex === demoTargets.length - 1) ? 'Finish' : 'Next';
+
+            guide.classList.add('is-active');
+            positionGuide(activeTarget);
+        }
+
+        function startTour() {
+            showStep(0);
+        }
+
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            showStep(activeIndex + 1);
+        });
+
+        skipBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            hideGuide();
+        });
+
+        window.addEventListener('resize', function() {
+            if (activeTarget && guide.classList.contains('is-active')) {
+                positionGuide(activeTarget);
+            }
+        });
+
+        window.addEventListener('scroll', function() {
+            if (activeTarget && guide.classList.contains('is-active')) {
+                positionGuide(activeTarget);
+            }
+        }, { passive: true });
+
+        startTour();
     })();
 </script>
 </body>

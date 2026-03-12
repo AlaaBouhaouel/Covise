@@ -54,7 +54,7 @@
                 </svg>
             </a>
             <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
-                <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
@@ -80,7 +80,25 @@
                         <h2>Projects</h2>
                         <p>Discover active builds and connect with teams where your skills are needed.</p>
                     </div>
-                    <a class="project-connect project-map-btn" href="{% url 'Map' %}">Look from map</a>
+                    <div class="projects-actions">
+                        <a class="project-connect project-map-btn" href="{% url 'Map' %}">Look from map</a>
+                        <button id="projectThemeToggle" class="theme-toggle" type="button" aria-label="Toggle theme" aria-pressed="false">
+                            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
 
@@ -91,7 +109,7 @@
                             <div>
                                 <div class="project-title-row">
     <div class="project-title">B2B Marketplace for Construction Materials</div>
-    <a class="project-eye" href="#" aria-label="Open venture preview">
+    <a class="project-eye" href="{% url 'Project Detail' 'cv-6631' %}" aria-label="Open venture preview">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
             <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
             <circle cx="12" cy="12" r="3"></circle>
@@ -138,7 +156,7 @@
                             <div>
                                 <div class="project-title-row">
     <div class="project-title">Women-Only Fitness Studio (Riyadh)</div>
-    <a class="project-eye" href="#" aria-label="Open venture preview">
+    <a class="project-eye" href="{% url 'Project Detail' 'cv-7784' %}" aria-label="Open venture preview">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
             <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
             <circle cx="12" cy="12" r="3"></circle>
@@ -184,7 +202,7 @@
                             <div>
                                 <div class="project-title-row">
     <div class="project-title">Digital Tender Platform for Contractors</div>
-    <a class="project-eye" href="#" aria-label="Open venture preview">
+    <a class="project-eye" href="{% url 'Project Detail' 'cv-8093' %}" aria-label="Open venture preview">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
             <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
             <circle cx="12" cy="12" r="3"></circle>
@@ -232,7 +250,7 @@
                             <div>
                                 <div class="project-title-row">
     <div class="project-title">Saudi Specialty Coffee Brand (D2C Model)</div>
-    <a class="project-eye" href="#" aria-label="Open venture preview">
+    <a class="project-eye" href="{% url 'Project Detail' 'cv-3314' %}" aria-label="Open venture preview">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
             <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
             <circle cx="12" cy="12" r="3"></circle>
@@ -279,7 +297,7 @@
                             <div>
                                 <div class="project-title-row">
     <div class="project-title">Performance Optimization App for GCC Professionals</div>
-    <a class="project-eye" href="#" aria-label="Open venture preview">
+    <a class="project-eye" href="{% url 'Project Detail' 'cv-9245' %}" aria-label="Open venture preview">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
             <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
             <circle cx="12" cy="12" r="3"></circle>
@@ -328,6 +346,32 @@
 
         </main>
     </div>
+    <script>
+        (function () {
+            var toggleButton = document.getElementById('projectThemeToggle');
+            if (!toggleButton) return;
+
+            function applyThemeState() {
+                var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                toggleButton.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+                toggleButton.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+                toggleButton.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+            }
+
+            toggleButton.addEventListener('click', function () {
+                var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                if (isLight) {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('covise-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('covise-theme', 'light');
+                }
+                applyThemeState();
+            });
+
+            applyThemeState();
+        })();
+    </script>
 </body>
 </html>
-

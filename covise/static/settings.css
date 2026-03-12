@@ -78,7 +78,6 @@ body {
     width: 20px;
     height: 20px;
     object-fit: contain;
-    display: block;
 }
 #side_active {
     border-color: rgba(120, 150, 255, 0.45);
@@ -392,3 +391,8 @@ body {
     color: var(--text);
     border-color: rgba(0, 20, 80, 0.18);
 }
+
+/* Logo swap */
+.logo-light { display: none; }
+[data-theme="light"] .logo-dark { display: none; }
+[data-theme="light"] .logo-light { display: block; }

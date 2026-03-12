@@ -1,0 +1,262 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | {{ project.code }} Details</title>
+    <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'requests.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar" aria-label="Primary">
+            <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <path d="M3 10.5L12 3l9 7.5"></path>
+                    <path d="M5 10.5V21h14V10.5"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" id="side_active" href="{% url 'Projects' %}" aria-label="Projects">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <rect x="3" y="4" width="7" height="7"></rect>
+                    <rect x="14" y="4" width="7" height="7"></rect>
+                    <rect x="3" y="15" width="7" height="7"></rect>
+                    <rect x="14" y="15" width="7" height="7"></rect>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Messages' %}" aria-label="Messages">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <path d="M4 6h16v10H7l-3 3V6z"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Workspace' %}" aria-label="Workspace">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <path d="M3 7h18v12H3z"></path>
+                    <path d="M9 7V5h6v2"></path>
+                    <path d="M3 12h18"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
+                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+            </a>
+            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <circle cx="12" cy="8" r="4"></circle>
+                    <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Settings' %}" aria-label="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </a>
+        </aside>
+
+        <main class="main">
+            <section class="projects project-detail-page">
+                <div class="projects-head">
+                    <div class="projects-copy">
+                        <h2>Project Details</h2>
+                        <p>Detailed snapshot and diligence summary for this venture.</p>
+                    </div>
+                    <div class="projects-actions">
+                        <a class="project-connect project-map-btn" href="{% url 'Map' %}">Look from map</a>
+                        <button id="projectThemeToggle" class="theme-toggle" type="button" aria-label="Toggle theme" aria-pressed="false">
+                            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <article class="project-card project-detail-card">
+                    <div class="detail-topbar">
+                        <a class="project-connect detail-back-btn" href="{% url 'Projects' %}">Back to projects</a>
+                        <div class="alignment-score" aria-label="Alignment Score {{ project.alignment_score }}%">
+                            <span class="alignment-label">Alignment Score</span>
+                            <span class="alignment-value {{ alignment_band }}">{{ project.alignment_score }}%</span>
+                        </div>
+                    </div>
+
+                    <div class="project-title-row detail-title-row">
+                        <h1 class="project-title detail-title">{{ project.title }}</h1>
+                    </div>
+                    <p class="project-code">Project code: {{ project.code }}</p>
+                    <p class="project-desc detail-tagline">{{ project.tagline }}</p>
+
+                    <div class="detail-grid detail-grid-meta">
+                        <div class="detail-item"><span>Sector</span><strong>{{ project.sector }}</strong></div>
+                        <div class="detail-item"><span>Location</span><strong>{{ project.city }}, {{ project.country }}</strong></div>
+                        <div class="detail-item"><span>Stage</span><strong>{{ project.stage }}</strong></div>
+                        <div class="detail-item"><span>Founder Commitment</span><strong>{{ project.founder_commitment }}</strong></div>
+                        <div class="detail-item"><span>Capital Status</span><strong>{{ project.capital_status }}</strong></div>
+                        <div class="detail-item"><span>Runway</span><strong>{{ project.runway }}</strong></div>
+                        <div class="detail-item"><span>Target Raise</span><strong>{{ project.target_raise }}</strong></div>
+                    </div>
+
+                    <section class="detail-section">
+                        <h3>Overview</h3>
+                        <p>{{ project.overview }}</p>
+                    </section>
+
+                    <div class="detail-grid">
+                        <section class="detail-section">
+                            <h3>Problem Statement</h3>
+                            <ul class="detail-list">
+                                {% for item in project.problem_points %}
+                                    <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </section>
+                        <section class="detail-section">
+                            <h3>Proposed Solution</h3>
+                            <ul class="detail-list">
+                                {% for item in project.solution_points %}
+                                    <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </section>
+                    </div>
+
+                    <div class="detail-grid">
+                        <section class="detail-section">
+                            <h3>Market Assumptions</h3>
+                            <div class="detail-kpi-list">
+                                {% for row in project.market_assumptions %}
+                                    <div class="detail-kpi-row">
+                                        <span>{{ row.label }}</span>
+                                        <strong>{{ row.value }}</strong>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+                        <section class="detail-section">
+                            <h3>Unit Economics</h3>
+                            <div class="detail-kpi-list">
+                                {% for row in project.unit_economics %}
+                                    <div class="detail-kpi-row">
+                                        <span>{{ row.metric }}</span>
+                                        <strong>{{ row.value }}</strong>
+                                        <small>{{ row.note }}</small>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="detail-grid">
+                        <section class="detail-section">
+                            <h3>Positions Needed</h3>
+                            <ul class="detail-list">
+                                {% for item in project.positions_needed %}
+                                    <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </section>
+                        <section class="detail-section">
+                            <h3>Skills Needed</h3>
+                            <ul class="detail-list">
+                                {% for item in project.skills_needed %}
+                                    <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </section>
+                    </div>
+
+                    <section class="detail-section">
+                        <h3>Go-To-Market Plan</h3>
+                        <ul class="detail-list">
+                            {% for item in project.go_to_market %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+
+                    <section class="detail-section">
+                        <h3>Milestones</h3>
+                        <div class="detail-table">
+                            {% for row in project.milestones %}
+                                <div class="detail-table-row">
+                                    <span>{{ row.name }}</span>
+                                    <span>{{ row.date }}</span>
+                                    <span>{{ row.status }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="detail-section">
+                        <h3>Risk Register</h3>
+                        <div class="detail-table">
+                            {% for row in project.risk_register %}
+                                <div class="detail-table-row detail-table-risk">
+                                    <span>{{ row.risk }}</span>
+                                    <span>{{ row.mitigation }}</span>
+                                    <span>{{ row.owner }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="detail-section">
+                        <h3>Diligence Documents</h3>
+                        <ul class="detail-list">
+                            {% for item in project.diligence_docs %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                </article>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            var toggleButton = document.getElementById('projectThemeToggle');
+            if (!toggleButton) return;
+
+            function applyThemeState() {
+                var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                toggleButton.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+                toggleButton.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+                toggleButton.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+            }
+
+            toggleButton.addEventListener('click', function () {
+                var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                if (isLight) {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('covise-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('covise-theme', 'light');
+                }
+                applyThemeState();
+            });
+
+            applyThemeState();
+        })();
+    </script>
+</body>
+</html>

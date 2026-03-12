@@ -53,12 +53,12 @@
 }
 
 [data-theme="light"] .collab-feature-list li::before {
-    background: #9db2d7;
+    background: #000000;
 }
 
 [data-theme="light"] .collab-feature-list li::after {
-    background: #6f93cc;
-    border: 2px solid #dae7fb;
+    background: #000000;
+    border: 2px solid #000000;
 }
 
 [data-theme="light"] .cta-section {
@@ -318,7 +318,7 @@ body {
     height: 12px;
     margin-left: calc(var(--spacing) * 1);
     vertical-align: middle;
-    filter: invert(1);
+    filter: invert(0);
 }
 
 .btn-primary::before {
@@ -349,6 +349,14 @@ body {
 }
 
 .btn-primary:hover .waitlist-btn-icon {
+    filter: invert(1);
+}
+
+[data-theme="light"] .waitlist-btn-icon {
+    filter: invert(1);
+}
+
+[data-theme="light"] .btn-primary:hover .waitlist-btn-icon {
     filter: invert(0);
 }
 
@@ -563,7 +571,7 @@ body {
   top: 12px;
   bottom: 0;
   width: 1px;
-  background: #334155;
+  background: #000000;
 }
 
 /* Dot */
@@ -572,16 +580,20 @@ body {
   position: absolute;
   left: 0;
   top: 4px;
-  width: 13px;
-  height: 13px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background:  rgb(15, 42, 84);
-  border: 2px solid #0f172a;
+  background: #000000;
+  border: 1px solid #000000;
 }
 
 /* Remove line from last item */
 .collab-feature-list li:last-child::before {
   display: none;
+}
+
+.collab-try-btn {
+    margin-top: calc(var(--spacing) * 2);
 }
 /* CTA Section */
 .cta-section {

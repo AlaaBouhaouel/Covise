@@ -8,6 +8,7 @@
     <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'waitlist.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -29,7 +30,8 @@
         <section class="waitlist-card">
             <div class="waitlist-header">
                 <div class="brand">
-                    <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
                     <span>CoVise</span>
                 </div>
                 <a class="back-link" href="/">Back</a>
@@ -43,7 +45,9 @@
                 <input id="full_name" name="full_name" type="text" required>
 
                 <label for="phone_number">Phone number</label>
-                <input id="phone_number" name="phone_number"   type="tel" required>
+                <div class="phone-wrapper">
+                    <input id="phone_number" name="phone_number" type="tel" required>
+                </div>
 
                 <label for="email">Email</label>
                 <input id="email" name="email" type="email"  required>
@@ -155,6 +159,20 @@
         noLinkedinCheckbox.addEventListener('change', syncLinkedinInput);
         syncCountryInputs();
         syncLinkedinInput();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
+    <script>
+        const phoneInput = document.getElementById('phone_number');
+        const iti = window.intlTelInput(phoneInput, {
+            initialCountry: 'sa',
+            loadUtils: () => import('https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js'),
+            separateDialCode: true,
+        });
+
+        document.querySelector('.waitlist-form').addEventListener('submit', function () {
+            phoneInput.value = iti.getNumber();
+        });
     </script>
 </body>
 </html>

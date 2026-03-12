@@ -278,7 +278,7 @@ body {
     height: 12px;
     margin-left: calc(var(--spacing) * 1);
     vertical-align: middle;
-    filter: invert(1);
+    filter: invert(0);
 }
 
 .btn-primary::before {
@@ -309,6 +309,14 @@ body {
 }
 
 .btn-primary:hover .waitlist-btn-icon {
+    filter: invert(1);
+}
+
+[data-theme="light"] .waitlist-btn-icon {
+    filter: invert(1);
+}
+
+[data-theme="light"] .btn-primary:hover .waitlist-btn-icon {
     filter: invert(0);
 }
 

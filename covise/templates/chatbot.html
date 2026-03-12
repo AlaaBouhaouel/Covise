@@ -76,7 +76,7 @@
                 <div class="chat-stream" id="chatStream">
                     <div class="empty-state" id="emptyState" aria-live="polite">
                         <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="" aria-hidden="true"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="" aria-hidden="true">
-                        <p>Hello User, do you need me to <span id="rollingPrompt">message someone?</span></p>
+                        <p>Ready when you are.</p>
                     </div>
                 </div>
                 <form class="chat-input" id="chatForm">
@@ -90,7 +90,9 @@
                 </form>
             </section>
 
-            
+            <div class="messages-lock" aria-live="polite">
+                <p>Your chatbot will be available soon</p>
+            </div>
         </main>
     </div>
 

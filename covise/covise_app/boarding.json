@@ -1,8 +1,6 @@
-﻿{
+{
   "flow_name": "CoVise Waitlist Onboarding",
-  
   "steps": [
-
     {
       "step_id": "S2",
       "title": "Your profile",
@@ -32,7 +30,7 @@
             {
               "value": "foreign_founder",
               "label": "Foreign Founder",
-              "description": "I'm based outside the GCC and seeking a local co-founder"
+              "description": "I'm based outside the GCC and seeking a local co-founder or partner"
             },
             {
               "value": "incubator",
@@ -43,12 +41,14 @@
         }
       ]
     },
-
     {
       "step_id": "S3_founder",
       "title": "Your venture",
-      "description": "Share core details about your startup and co-founder needs.",
-      "show_if": { "field": "user_type", "equals": "founder" },
+      "description": "Share the core details of your startup and what you need in a co-founder.",
+      "show_if": {
+        "field": "user_type",
+        "equals": "founder"
+      },
       "fields": [
         {
           "id": "industry",
@@ -56,71 +56,96 @@
           "label": "Industry",
           "required": true,
           "options": [
-            "SaaS / B2B Software", "Fintech", "E-commerce", "AI / ML",
-            "Marketplace", "Health / Medtech", "Education / Edtech",
-            "Logistics / Supply Chain", "Real Estate / Proptech",
-            "Food & Beverage", "Travel / Hospitality", "Retail / Fashion",
-            "Media / Content", "Gaming", "Cybersecurity", "Hardware / IoT",
-            "Climate / Energy", "Construction / Infrastructure",
-            "Legal / Regtech", "HR / Future of Work", "Agri / Foodtech",
-            "Consumer Apps", "Import / Export", "Other"
+            "SaaS / B2B Software",
+            "Fintech",
+            "E-commerce",
+            "AI / ML",
+            "Marketplace",
+            "Health / Medtech",
+            "Education / Edtech",
+            "Logistics / Supply Chain",
+            "Real Estate / Proptech",
+            "Food & Beverage",
+            "Travel / Hospitality",
+            "Retail / Fashion",
+            "Media / Content",
+            "Gaming",
+            "Cybersecurity",
+            "Hardware / IoT",
+            "Climate / Energy",
+            "Construction / Infrastructure",
+            "Legal / Regtech",
+            "HR / Future of Work",
+            "Agri / Foodtech",
+            "Consumer Apps",
+            "Import / Export",
+            "Other"
           ]
         },
         {
           "id": "stage",
           "type": "single_select",
-          "label": "What stage is your venture at?",
+          "label": "Current stage of your venture",
           "required": true,
-          "options": ["Idea", "MVP built", "Early revenue", "Profitable / Scaling"]
+          "options": [
+            "Idea",
+            "MVP built",
+            "Early revenue",
+            "Profitable / Scaling"
+          ]
         },
         {
           "id": "target_market",
           "type": "multi_select",
-          "label": "Target market",
+          "label": "Primary target market",
           "required": true,
           "options": [
-            "Saudi Arabia", "UAE", "Qatar", "Kuwait", "Bahrain", "Oman",
-            "GCC-wide", "MENA-wide", "Global"
+            "Saudi Arabia",
+            "UAE",
+            "Qatar",
+            "Kuwait",
+            "Bahrain",
+            "Oman",
+            "GCC-wide",
+            "MENA-wide",
+            "Global"
           ]
         },
         {
           "id": "team_size",
           "type": "single_select",
-          "label": "Current team size",
+          "label": "Current team size (excluding yourself)",
           "required": true,
-          "options": ["Solo", "2-5", "6+"]
+          "options": [
+            "Solo",
+            "1-2 others",
+            "3-5 others",
+            "6+"
+          ]
         },
         {
           "id": "one_liner",
           "type": "multi_line_text",
-          "label": "Describe your venture briefly",
+          "label": "Venture overview",
           "required": true,
-          "placeholder": "What you're building, who it's for, and what problem it solves",
+          "placeholder": "What you are building, who it is for, and what problem it solves",
           "max_chars": 300
-        },
-        {
-          "id": "founder_timeline",
-          "type": "single_select",
-          "label": "When are you looking to bring a co-founder on board?",
-          "required": true,
-          "options": [
-            "Immediately - I'm ready now",
-            "Within 1-3 months",
-            "Within 3-6 months",
-            "No fixed timeline"
-          ]
         },
         {
           "id": "cofounders_needed",
           "type": "single_select",
           "label": "How many co-founders are you looking for?",
           "required": true,
-          "options": ["Just 1", "2", "Open to discussion"]
+          "options": [
+            "1",
+            "2",
+            "Open to discussion"
+          ]
         },
         {
           "id": "looking_for_type",
           "type": "multi_select",
-          "label": "What are you looking for on CoVise?",
+          "label": "What type of co-founder or partner are you seeking?",
           "required": true,
           "max_selected": 3,
           "options": [
@@ -131,26 +156,47 @@
             "Strategic advisor",
             "Local GCC partner"
           ]
+        },
+        {
+          "id": "founder_timeline",
+          "type": "single_select",
+          "label": "How soon are you looking to bring a co-founder on board?",
+          "required": true,
+          "options": [
+            "Immediately",
+            "Within 1–3 months",
+            "Within 3–6 months",
+            "No fixed timeline"
+          ]
         }
       ]
     },
-
     {
       "step_id": "S3_specialist",
       "title": "Your background",
-      "description": "Tell us about your current role, experience, and interests.",
-      "show_if": { "field": "user_type", "equals": "specialist" },
+      "description": "Tell us about your expertise, the type of venture you want to build, and your availability.",
+      "show_if": {
+        "field": "user_type",
+        "equals": "specialist"
+      },
       "fields": [
         {
           "id": "current_role",
           "type": "single_select",
-          "label": "Current role",
+          "label": "Current or most recent role",
           "required": true,
           "options": [
-            "Software Engineer", "Product Manager", "UX / UI Designer",
-            "Data Scientist / AI Engineer", "Marketing Manager",
-            "Sales / Business Development", "Operations Manager",
-            "Finance / CFO", "Legal / Compliance", "Consultant", "Other"
+            "Software Engineer",
+            "Product Manager",
+            "UX / UI Designer",
+            "Data Scientist / AI Engineer",
+            "Marketing Manager",
+            "Sales / Business Development",
+            "Operations Manager",
+            "Finance / CFO",
+            "Legal / Compliance",
+            "Consultant",
+            "Other"
           ]
         },
         {
@@ -158,7 +204,12 @@
           "type": "single_select",
           "label": "Years of professional experience",
           "required": true,
-          "options": ["0-2 years", "3-5 years", "6-10 years", "10+ years"]
+          "options": [
+            "0–2 years",
+            "3–5 years",
+            "6–10 years",
+            "10+ years"
+          ]
         },
         {
           "id": "industries_interested",
@@ -167,56 +218,135 @@
           "required": true,
           "max_selected": 5,
           "options": [
-            "SaaS / B2B Software", "Fintech", "E-commerce", "AI / ML",
-            "Marketplace", "Health / Medtech", "Education / Edtech",
-            "Logistics / Supply Chain", "Real Estate / Proptech",
-            "Food & Beverage", "Travel / Hospitality", "Retail / Fashion",
-            "Media / Content", "Gaming", "Cybersecurity", "Hardware / IoT",
-            "Climate / Energy", "Construction", "Legal / Regtech",
-            "HR / Future of Work", "Consumer Apps", "Open to anything"
+            "SaaS / B2B Software",
+            "Fintech",
+            "E-commerce",
+            "AI / ML",
+            "Marketplace",
+            "Health / Medtech",
+            "Education / Edtech",
+            "Logistics / Supply Chain",
+            "Real Estate / Proptech",
+            "Food & Beverage",
+            "Travel / Hospitality",
+            "Retail / Fashion",
+            "Media / Content",
+            "Gaming",
+            "Cybersecurity",
+            "Hardware / IoT",
+            "Climate / Energy",
+            "Construction",
+            "Legal / Regtech",
+            "HR / Future of Work",
+            "Consumer Apps",
+            "Open to any industry"
+          ]
+        },
+        {
+          "id": "venture_stage_preference",
+          "type": "multi_select",
+          "label": "What stage of venture do you want to join?",
+          "required": true,
+          "options": [
+            "Idea stage",
+            "MVP built",
+            "Early revenue",
+            "Any stage"
+          ]
+        },
+        {
+          "id": "founder_type_preference",
+          "type": "multi_select",
+          "label": "What type of founder are you looking to work with?",
+          "required": true,
+          "max_selected": 3,
+          "options": [
+            "Technical founder looking for business co-founder",
+            "Business founder looking for technical co-founder",
+            "Domain expert founder",
+            "Foreign founder entering GCC",
+            "Open to any founder profile"
           ]
         },
         {
           "id": "specialist_timeline",
           "type": "single_select",
-          "label": "When are you ready to commit to a venture?",
+          "label": "How soon are you ready to commit to a venture?",
           "required": true,
           "options": [
-            "Immediately - I'm ready now",
-            "Within 1-3 months",
-            "Within 3-6 months",
+            "Immediately",
+            "Within 1–3 months",
+            "Within 3–6 months",
             "No fixed timeline"
           ]
         }
       ]
     },
-
     {
       "step_id": "S3_investor",
       "title": "Your investment profile",
-      "description": "Define your investment focus, ticket size, and timeline.",
-      "show_if": { "field": "user_type", "equals": "investor" },
+      "description": "Define your investment focus, geography, ticket size, and current deployment status.",
+      "show_if": {
+        "field": "user_type",
+        "equals": "investor"
+      },
       "fields": [
         {
           "id": "investor_type",
           "type": "single_select",
-          "label": "What sectors do you invest in?",
+          "label": "Investor type",
           "required": true,
-          "options": ["Angel investor", "Venture capital", "Family office", "Strategic investor", "Other"]
+          "options": [
+            "Angel investor",
+            "Venture capital",
+            "Family office",
+            "Strategic investor",
+            "Other"
+          ]
+        },
+        {
+          "id": "investment_geography",
+          "type": "multi_select",
+          "label": "Geographies you actively invest in",
+          "required": true,
+          "options": [
+            "Saudi Arabia",
+            "UAE",
+            "Qatar",
+            "Kuwait",
+            "Bahrain",
+            "Oman",
+            "GCC-wide",
+            "MENA-wide",
+            "Global"
+          ]
         },
         {
           "id": "ticket_size",
           "type": "single_select",
-          "label": "Typical ticket size",
+          "label": "Typical ticket size (USD)",
           "required": true,
-          "options": ["Under $25k", "$25k-$100k", "$100k-$500k", "$500k+", "Prefer not to say"]
+          "options": [
+            "Under $25K",
+            "$25K – $100K",
+            "$100K – $500K",
+            "$500K – $2M",
+            "$2M+",
+            "Prefer not to say"
+          ]
         },
         {
           "id": "investment_stage",
           "type": "multi_select",
           "label": "Stages you invest in",
           "required": true,
-          "options": ["Pre-idea", "MVP", "Early revenue", "Series A+"]
+          "options": [
+            "Pre-seed",
+            "Seed",
+            "Series A",
+            "Series B+",
+            "All stages"
+          ]
         },
         {
           "id": "investment_industries",
@@ -225,349 +355,681 @@
           "required": true,
           "max_selected": 6,
           "options": [
-            "SaaS / B2B Software", "Fintech", "E-commerce", "AI / ML",
-            "Marketplace", "Health / Medtech", "Education / Edtech",
-            "Logistics / Supply Chain", "Real Estate / Proptech",
-            "Food & Beverage", "Retail", "Media / Content",
-            "Climate / Energy", "Consumer Apps", "Open to anything"
+            "SaaS / B2B Software",
+            "Fintech",
+            "E-commerce",
+            "AI / ML",
+            "Marketplace",
+            "Health / Medtech",
+            "Education / Edtech",
+            "Logistics / Supply Chain",
+            "Real Estate / Proptech",
+            "Food & Beverage",
+            "Retail",
+            "Media / Content",
+            "Climate / Energy",
+            "Consumer Apps",
+            "Industry agnostic"
+          ]
+        },
+        {
+          "id": "investor_value_add",
+          "type": "multi_select",
+          "label": "Beyond capital, what do you offer portfolio founders?",
+          "required": true,
+          "max_selected": 4,
+          "options": [
+            "Strategic advisory",
+            "Hiring / team building",
+            "Business development",
+            "Follow-on funding",
+            "Regulatory / legal guidance",
+            "Market access",
+            "Media / PR exposure",
+            "Technical expertise"
           ]
         },
         {
           "id": "investor_looking_for",
           "type": "single_select",
-          "label": "What are you primarily looking for on CoVise?",
+          "label": "Primary objective on CoVise",
           "required": true,
           "options": [
-            "Deal flow - find startups to invest in",
+            "Source deal flow",
             "Co-invest with other investors",
-            "Support founders as a mentor",
+            "Mentor and support founders",
             "All of the above"
           ]
         },
         {
           "id": "investor_timeline",
           "type": "single_select",
-          "label": "When are you actively looking to deploy capital?",
+          "label": "Current deployment status",
           "required": true,
           "options": [
-            "Actively deploying now",
-            "Within 1-3 months",
-            "Within 3-6 months",
-            "Exploring - no fixed timeline"
+            "Actively deploying capital now",
+            "Deploying within 1–3 months",
+            "Deploying within 3–6 months",
+            "Exploring — no fixed timeline"
           ]
         }
       ]
     },
-
     {
       "step_id": "S3_foreign_founder",
-      "title": "Your venture & GCC goals",
-      "description": "Help us understand your company and GCC expansion plans.",
-      "show_if": { "field": "user_type", "equals": "foreign_founder" },
+      "title": "Your venture & GCC expansion",
+      "description": "Help us understand your company and what you need from a local partner.",
+      "show_if": {
+        "field": "user_type",
+        "equals": "foreign_founder"
+      },
       "fields": [
         {
           "id": "home_country",
           "type": "single_select_searchable",
-          "label": "Where are you based?",
+          "label": "Country of residence",
           "required": true,
           "options": [
-            "United Kingdom", "United States", "Germany", "France",
-            "India", "Pakistan", "Turkey", "Egypt", "Jordan",
-            "Singapore", "Malaysia", "Nigeria", "Kenya", "Other"
+            "United States",
+            "United Kingdom",
+            "Germany",
+            "France",
+            "Netherlands",
+            "Sweden",
+            "Spain",
+            "Italy",
+            "Canada",
+            "Australia",
+            "India",
+            "Pakistan",
+            "Bangladesh",
+            "Sri Lanka",
+            "Turkey",
+            "Egypt",
+            "Jordan",
+            "Lebanon",
+            "Morocco",
+            "Tunisia",
+            "Nigeria",
+            "Kenya",
+            "Ghana",
+            "South Africa",
+            "Ethiopia",
+            "Singapore",
+            "Malaysia",
+            "Indonesia",
+            "Philippines",
+            "Vietnam",
+            "China",
+            "South Korea",
+            "Japan",
+            "Brazil",
+            "Mexico",
+            "Other"
           ]
         },
         {
           "id": "target_gcc_market",
           "type": "multi_select",
-          "label": "Which GCC market are you targeting?",
+          "label": "Target GCC market(s)",
           "required": true,
-          "options": ["Saudi Arabia", "UAE", "Qatar", "Kuwait", "Bahrain", "Oman", "GCC-wide"]
+          "options": [
+            "Saudi Arabia",
+            "UAE",
+            "Qatar",
+            "Kuwait",
+            "Bahrain",
+            "Oman",
+            "GCC-wide"
+          ]
         },
         {
           "id": "foreign_industry",
           "type": "single_select_searchable",
           "label": "Industry",
-            "required": true,
+          "required": true,
           "options": [
-            "SaaS / B2B Software", "Fintech", "E-commerce", "AI / ML",
-            "Marketplace", "Health / Medtech", "Education / Edtech",
-            "Logistics / Supply Chain", "Real Estate / Proptech",
-            "Food & Beverage", "Travel / Hospitality", "Retail / Fashion",
-            "Media / Content", "Climate / Energy", "Other"
+            "SaaS / B2B Software",
+            "Fintech",
+            "E-commerce",
+            "AI / ML",
+            "Marketplace",
+            "Health / Medtech",
+            "Education / Edtech",
+            "Logistics / Supply Chain",
+            "Real Estate / Proptech",
+            "Food & Beverage",
+            "Travel / Hospitality",
+            "Retail / Fashion",
+            "Media / Content",
+            "Climate / Energy",
+            "Other"
           ]
         },
         {
           "id": "foreign_stage",
           "type": "single_select",
-          "label": "Stage of your venture",
+          "label": "Current stage of your venture",
           "required": true,
-          "options": ["Idea", "MVP built", "Early revenue", "Profitable / Scaling"]
+          "options": [
+            "Idea",
+            "MVP built",
+            "Early revenue",
+            "Profitable / Scaling"
+          ]
         },
         {
           "id": "foreign_one_liner",
           "type": "multi_line_text",
-          "label": "Describe your venture briefly",
+          "label": "Venture overview",
           "required": true,
-          "placeholder": "What you're building, who it's for, and what problem it solves",
+          "placeholder": "What you are building, who it is for, and what problem it solves",
           "max_chars": 300
         },
         {
           "id": "local_partner_need",
-          "type": "single_select",
-          "label": "What do you need from a local GCC co-founder?",
+          "type": "multi_select",
+          "label": "What do you need from a local GCC co-founder or partner?",
           "required": true,
+          "max_selected": 3,
           "options": [
-            "Market access & relationships",
-            "Local operations & setup",
+            "Market access & local relationships",
+            "Entity setup & local operations",
             "Sales & business development",
             "Regulatory & legal navigation",
-            "Funding connections",
-            "All of the above"
+            "Investor & funding connections",
+            "Cultural & language bridge"
           ]
         },
         {
           "id": "foreign_timeline",
           "type": "single_select",
-          "label": "When are you planning to enter the GCC market?",
+          "label": "Planned timeline for GCC market entry",
           "required": true,
           "options": [
             "Already in process",
-            "Within 1-3 months",
-            "Within 3-6 months",
+            "Within 1–3 months",
+            "Within 3–6 months",
             "No fixed timeline"
           ]
         }
       ]
     },
-
     {
       "step_id": "S3_incubator",
       "title": "Your program",
-      "description": "Describe your program, founder support model, and intake timing.",
-      "show_if": { "field": "user_type", "equals": "incubator" },
+      "description": "Describe your program model, focus, and what you are looking for on CoVise.",
+      "show_if": {
+        "field": "user_type",
+        "equals": "incubator"
+      },
       "fields": [
         {
           "id": "program_type",
           "type": "single_select",
-          "label": "What type of program do you run?",
+          "label": "Program type",
           "required": true,
           "options": [
-            "Incubator", "Accelerator", "Venture studio",
-            "University program", "Government initiative", "Other"
+            "Incubator",
+            "Accelerator",
+            "Venture studio",
+            "University program",
+            "Government initiative",
+            "Other"
           ]
         },
         {
           "id": "program_location",
           "type": "multi_select",
-          "label": "Where is your program based?",
+          "label": "Program location(s)",
           "required": true,
           "options": [
-            "Saudi Arabia", "UAE", "Qatar", "Kuwait",
-            "Bahrain", "Oman", "Other"
+            "Saudi Arabia",
+            "UAE",
+            "Qatar",
+            "Kuwait",
+            "Bahrain",
+            "Oman",
+            "Other"
           ]
         },
         {
           "id": "program_stage_focus",
           "type": "multi_select",
-          "label": "What stage do you typically support?",
+          "label": "Venture stages supported",
           "required": true,
-          "options": ["Pre-idea", "MVP", "Early revenue", "Series A+", "All stages"]
+          "options": [
+            "Pre-seed",
+            "Seed",
+            "Early revenue",
+            "Series A+",
+            "All stages"
+          ]
         },
         {
           "id": "program_industries",
           "type": "multi_select_searchable",
-          "label": "Industries your program focuses on",
+          "label": "Industry focus",
           "required": true,
           "max_selected": 6,
           "options": [
-            "SaaS / B2B Software", "Fintech", "E-commerce", "AI / ML",
-            "Health / Medtech", "Education / Edtech", "Logistics",
-            "Real Estate / Proptech", "Climate / Energy",
-            "Food & Beverage", "Retail", "Media / Content",
+            "SaaS / B2B Software",
+            "Fintech",
+            "E-commerce",
+            "AI / ML",
+            "Health / Medtech",
+            "Education / Edtech",
+            "Logistics",
+            "Real Estate / Proptech",
+            "Climate / Energy",
+            "Food & Beverage",
+            "Retail",
+            "Media / Content",
             "Industry agnostic"
           ]
         },
         {
           "id": "cohort_size",
           "type": "single_select",
-          "label": "Average cohort size",
+          "label": "Average cohort or intake size",
           "required": true,
-          "options": ["1-5", "6-15", "16-30", "30+"]
+          "options": [
+            "1–5",
+            "6–15",
+            "16–30",
+            "30+"
+          ]
         },
         {
           "id": "program_offering",
           "type": "multi_select",
-          "label": "What do you offer founders?",
+          "label": "Support offered to portfolio companies",
           "required": true,
           "options": [
-            "Funding / grants", "Mentorship", "Office space",
-            "Legal support", "Investor access", "Co-founder matching",
-            "Market access", "Technical resources"
+            "Funding / grants",
+            "Mentorship",
+            "Office space",
+            "Legal support",
+            "Investor access",
+            "Co-founder matching",
+            "Market access",
+            "Technical resources"
           ]
         },
         {
           "id": "incubator_looking_for",
           "type": "single_select",
-          "label": "What are you primarily looking for on CoVise?",
+          "label": "Primary objective on CoVise",
           "required": true,
           "options": [
             "Source founders for our program",
-            "Help our founders find co-founders",
-            "Partner with other programs",
-            "All of the above"          ]
+            "Help our portfolio founders find co-founders",
+            "Partner with other programs and ecosystems",
+            "All of the above"
+          ]
         },
         {
           "id": "incubator_timeline",
           "type": "single_select",
-          "label": "When does your next cohort or intake open?",
+          "label": "Next cohort or intake opening",
           "required": true,
           "options": [
             "Currently open",
-            "Within 1-3 months",
-            "Within 3-6 months",
+            "Within 1–3 months",
+            "Within 3–6 months",
             "No fixed schedule"
           ]
         }
       ]
     },
-
     {
       "step_id": "S4",
       "title": "What you bring",
-      "description": "Select the strongest skills you contribute to a startup team.",
+      "description": "Select the skills you contribute to a venture team.",
       "show_if": {
         "any_of": [
-          { "field": "user_type", "equals": "founder" },
-          { "field": "user_type", "equals": "specialist" },
-          { "field": "user_type", "equals": "foreign_founder" }
+          {
+            "field": "user_type",
+            "equals": "founder"
+          },
+          {
+            "field": "user_type",
+            "equals": "specialist"
+          },
+          {
+            "field": "user_type",
+            "equals": "foreign_founder"
+          }
         ]
       },
       "fields": [
         {
           "id": "skills",
           "type": "multi_select_searchable",
-          "label": "Select your top skills",
+          "label": "Your top skills",
           "required": true,
           "max_selected": 8,
           "options": [
-            "Software Engineering", "Full-stack Development",
-            "Frontend (React / Next.js)", "Backend (Node / Python / Java)",
-            "Mobile (iOS / Android / Flutter)", "DevOps / Cloud",
-            "Data Engineering", "AI / ML Engineering", "LLMs / Prompting",
-            "Data Science", "Cybersecurity",
-            "Product Management", "UX / UI Design",
-            "Growth Marketing", "Performance Marketing", "Branding",
-            "Sales", "Business Development", "Partnerships",
-            "Operations", "Strategy", "Finance", "Fundraising",
-            "Legal / Compliance", "HR / Hiring", "Supply Chain",
-            "Customer Success", "Community Building",
-            "Content / Copywriting", "Industry Expertise", "Other"
+            "Software Engineering",
+            "Full-stack Development",
+            "Frontend (React / Next.js)",
+            "Backend (Node / Python / Java)",
+            "Mobile (iOS / Android / Flutter)",
+            "DevOps / Cloud",
+            "Data Engineering",
+            "AI / ML Engineering",
+            "LLMs / Prompting",
+            "Data Science",
+            "Cybersecurity",
+            "Product Management",
+            "UX / UI Design",
+            "Growth Marketing",
+            "Performance Marketing",
+            "Branding",
+            "Sales",
+            "Business Development",
+            "Partnerships",
+            "Operations",
+            "Strategy",
+            "Finance",
+            "Fundraising",
+            "Legal / Compliance",
+            "HR / Hiring",
+            "Supply Chain",
+            "Customer Success",
+            "Community Building",
+            "Content / Copywriting",
+            "Industry Expertise",
+            "Other"
           ]
         },
         {
           "id": "availability",
           "type": "single_select",
-          "label": "Weekly time commitment",
+          "label": "Weekly time commitment to a new venture",
           "required": true,
-          "options": ["Less than 5 hours", "5-10 hours", "10-20 hours", "Full-time"]
+          "options": [
+            "Under 5 hours per week",
+            "5–10 hours per week",
+            "10–20 hours per week",
+            "Full-time"
+          ]
+        },
+        {
+          "id": "capital_contribution",
+          "type": "single_select",
+          "label": "Are you able to contribute capital to the venture?",
+          "required": true,
+          "options": [
+            "No",
+            "Yes — under $10K",
+            "Yes — $10K to $50K",
+            "Yes — $50K+",
+            "Prefer to discuss"
+          ]
         }
       ]
     },
-
     {
       "step_id": "S5",
-      "title": "Who you're looking for",
-      "description": "Define the skills and commitment you need in a co-founder.",
+      "title": "Who you are looking for",
+      "description": "Define the profile, skills, and commitment level you need in a co-founder.",
       "show_if": {
         "any_of": [
-          { "field": "user_type", "equals": "founder" },
-          { "field": "user_type", "equals": "foreign_founder" }
+          {
+            "field": "user_type",
+            "equals": "founder"
+          },
+          {
+            "field": "user_type",
+            "equals": "foreign_founder"
+          }
         ]
       },
       "fields": [
         {
           "id": "looking_for_skills",
           "type": "multi_select_searchable",
-          "label": "What skills should your co-founder bring?",
+          "label": "Skills your co-founder must bring",
           "required": true,
           "max_selected": 6,
           "options": [
-            "Software Engineering", "Full-stack Development",
-            "Mobile Development", "AI / ML Engineering",
-            "DevOps / Cloud", "Data Science",
-            "Product Management", "UX / UI Design",
-            "Growth Marketing", "Performance Marketing",
-            "Sales", "Business Development",
-            "Operations / COO", "Finance / CFO",
-            "Fundraising", "Legal / Compliance",
-            "Industry Expertise", "Other"
+            "Software Engineering",
+            "Full-stack Development",
+            "Mobile Development",
+            "AI / ML Engineering",
+            "DevOps / Cloud",
+            "Data Science",
+            "Product Management",
+            "UX / UI Design",
+            "Growth Marketing",
+            "Performance Marketing",
+            "Sales",
+            "Business Development",
+            "Operations / COO",
+            "Finance / CFO",
+            "Fundraising",
+            "Legal / Compliance",
+            "Industry Expertise",
+            "Other"
           ]
         },
         {
           "id": "cofounder_commitment",
           "type": "single_select",
-          "label": "Required commitment from your co-founder",
+          "label": "Required commitment level from your co-founder",
           "required": true,
-          "options": ["Full-time only", "Part-time okay", "Flexible"]
+          "options": [
+            "Full-time only",
+            "Part-time acceptable",
+            "Flexible"
+          ]
         },
         {
           "id": "compensation",
           "type": "single_select",
-          "label": "Preferred compensation structure",
+          "label": "Equity and compensation structure",
           "required": true,
-          "options": ["Equity only", "Salary + equity", "Open to discussion"]
+          "options": [
+            "Equity only",
+            "Salary + equity",
+            "Open to discussion"
+          ]
+        },
+        {
+          "id": "cofounder_location_pref",
+          "type": "single_select",
+          "label": "Location preference for your co-founder",
+          "required": true,
+          "options": [
+            "Must be GCC-based",
+            "GCC preferred but open to remote",
+            "Location is not a factor"
+          ]
         }
       ]
     },
-
     {
       "step_id": "S6",
       "title": "Traction snapshot",
-      "description": "Provide a quick snapshot of current traction metrics.",
-      "show_if": { "field": "stage", "equals": "Early revenue" },
+      "description": "A quick snapshot of your current business metrics. All fields are optional.",
+      "show_if": {
+        "any_of": [
+          {
+            "field": "stage",
+            "equals": "Early revenue"
+          },
+          {
+            "field": "stage",
+            "equals": "Profitable / Scaling"
+          },
+          {
+            "field": "foreign_stage",
+            "equals": "Early revenue"
+          },
+          {
+            "field": "foreign_stage",
+            "equals": "Profitable / Scaling"
+          }
+        ]
+      },
       "fields": [
         {
           "id": "monthly_revenue",
           "type": "single_select",
-          "label": "Monthly revenue",
+          "label": "Monthly recurring revenue (USD)",
           "required": false,
-          "options": ["$0", "$1-$1k", "$1k-$10k", "$10k-$50k", "$50k+", "Prefer not to say"]
+          "options": [
+            "Under $1K",
+            "$1K – $10K",
+            "$10K – $50K",
+            "$50K – $200K",
+            "$200K+",
+            "Prefer not to say"
+          ]
         },
         {
           "id": "funding_status",
           "type": "single_select",
-          "label": "Funding raised",
+          "label": "Funding raised to date",
           "required": false,
-          "options": ["None / Bootstrapped", "Angel round", "VC backed", "Prefer not to say"]
+          "options": [
+            "Bootstrapped",
+            "Friends & family round",
+            "Angel round",
+            "Pre-seed",
+            "Seed",
+            "Series A+",
+            "Prefer not to say"
+          ]
         },
         {
           "id": "customer_count",
           "type": "single_select",
-          "label": "Customers / active users",
+          "label": "Active customers or paying users",
           "required": false,
-          "options": ["0-10", "11-100", "101-1,000", "1,000+", "Prefer not to say"]
+          "options": [
+            "1–10",
+            "11–100",
+            "101–1,000",
+            "1,000–10,000",
+            "10,000+",
+            "Prefer not to say"
+          ]
         }
       ]
     },
-
     {
       "step_id": "S7",
-      "title": "Final check",
-      "description": "One last detail before we complete your onboarding.",
+      "title": "Your commitment level",
+      "description": "This information is used to calculate your Founder Conviction score, which is visible on your profile.",
+      "show_if": {
+        "any_of": [
+          {
+            "field": "user_type",
+            "equals": "founder"
+          },
+          {
+            "field": "user_type",
+            "equals": "specialist"
+          },
+          {
+            "field": "user_type",
+            "equals": "foreign_founder"
+          }
+        ]
+      },
+      "fields": [
+        {
+          "id": "commitment_level",
+          "type": "single_select",
+          "label": "How would you describe your current level of commitment to building a venture?",
+          "required": true,
+          "options": [
+            "Fully committed — this is my primary focus",
+            "Serious — actively dedicating significant time alongside other commitments",
+            "Exploring — evaluating the opportunity before committing",
+            "Early stage — still defining my direction"
+          ]
+        },
+        {
+          "id": "risk_tolerance",
+          "type": "single_select",
+          "label": "How do you approach financial risk in a venture?",
+          "required": true,
+          "options": [
+            "High — I am prepared to invest personal capital and work without salary",
+            "Medium — I can take calculated risks with a financial runway in place",
+            "Conservative — I need income stability while building",
+            "Prefer to discuss with potential co-founder"
+          ]
+        },
+        {
+          "id": "execution_history",
+          "type": "single_select",
+          "label": "Have you previously built or operated a venture?",
+          "required": true,
+          "options": [
+            "Yes — I have successfully exited or scaled a venture",
+            "Yes — I have built a venture with meaningful traction",
+            "Yes — I have started a venture that did not scale",
+            "No — this is my first venture"
+          ]
+        },
+        {
+          "id": "leadership_style",
+          "type": "single_select",
+          "label": "How do you lead within a team?",
+          "required": true,
+          "options": [
+            "Visionary — I set direction and inspire the team",
+            "Executor — I focus on delivery and operational excellence",
+            "Collaborative — I build consensus and lead through alignment",
+            "Adaptive — my style depends on the team and context"
+          ]
+        }
+      ]
+    },
+    {
+      "step_id": "S8",
+      "title": "Final step",
+      "description": "One last detail before we complete your application.",
       "fields": [
         {
           "id": "how_heard",
           "type": "single_select",
           "label": "How did you hear about CoVise?",
+          "required": false,
+          "options": [
+            "LinkedIn",
+            "Twitter / X",
+            "Instagram",
+            "Friend or colleague referral",
+            "Google search",
+            "Event or conference",
+            "Other"
+          ]
+        },
+        {
+          "id": "referral_code",
+          "type": "short_text",
+          "label": "Referral code (if you have one)",
+          "required": false,
+          "placeholder": "e.g. COVISE-2026"
+        },
+        {
+          "id": "profile_visibility_consent",
+          "type": "single_select",
+          "label": "Profile visibility",
           "required": true,
           "options": [
-            "LinkedIn", "Twitter / X", "Reddit", "Friend / referral",
-            "Google search", "Other"
+            "Visible to all CoVise members",
+            "Visible to curated matches only",
+            "Visible to CoVise team only until I approve"
           ]
         }
       ]
     }
   ],
-
-  "success_message": "You're on the list. We'll notify you when your first matches are ready."
+  "success_message": "Your application is in. Our team reviews every profile manually — you will hear from us within 48 hours with your first curated matches."
 }
