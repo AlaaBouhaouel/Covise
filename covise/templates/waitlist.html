@@ -173,8 +173,37 @@
             separateDialCode: true,
         });
 
+        function normalizePhoneWithCountryCode(rawValue) {
+            const typedPhone = (rawValue || '').trim();
+            if (!typedPhone) return '';
+
+            // If user already entered an international number, keep it.
+            if (typedPhone.startsWith('+')) {
+                return '+' + typedPhone.slice(1).replace(/[^\d]/g, '');
+            }
+
+            const selectedCountry = iti.getSelectedCountryData();
+            const dialCode = selectedCountry && selectedCountry.dialCode
+                ? String(selectedCountry.dialCode).replace(/[^\d]/g, '')
+                : '';
+            const localDigits = typedPhone.replace(/[^\d]/g, '');
+
+            if (!localDigits) return '';
+            if (!dialCode) return '+' + localDigits;
+            if (localDigits.startsWith(dialCode)) return '+' + localDigits;
+            return '+' + dialCode + localDigits;
+        }
+
         document.querySelector('.waitlist-form').addEventListener('submit', function () {
-            phoneInput.value = iti.getNumber();
+            let formattedPhone = '';
+            try {
+                formattedPhone = (iti.getNumber() || '').trim();
+            } catch (err) {
+                formattedPhone = '';
+            }
+
+            // Save with explicit country code from selected country when formatter is empty.
+            phoneInput.value = formattedPhone || normalizePhoneWithCountryCode(phoneInput.value);
         });
     </script>
 </body>

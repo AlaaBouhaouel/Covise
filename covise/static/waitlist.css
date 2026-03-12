@@ -30,6 +30,12 @@
     --error-bg: rgba(242, 133, 133, 0.12);
     --error-border: rgba(242, 133, 133, 0.38);
     --error-text: #ffd9d9;
+    --success-chip-bg: rgba(126, 164, 255, 0.18);
+    --success-chip-border: rgba(126, 164, 255, 0.45);
+    --success-chip-text: #dbe6ff;
+    --success-icon-bg: rgba(126, 164, 255, 0.22);
+    --success-panel-bg: rgba(255, 255, 255, 0.03);
+    --success-panel-border: rgba(255, 255, 255, 0.1);
     --spacing: 8px;
 }
 
@@ -428,6 +434,85 @@ h1 {
     text-align: center;
 }
 
+.success-note {
+    margin-top: calc(var(--spacing) * 0.5);
+}
+
+.success-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 1);
+    border: 1px solid var(--success-chip-border);
+    background: var(--success-chip-bg);
+    color: var(--success-chip-text);
+    border-radius: 999px;
+    padding: calc(var(--spacing) * 0.85) calc(var(--spacing) * 1.5);
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.success-badge svg {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--success-icon-bg);
+    stroke: currentColor;
+    stroke-width: 1.9;
+}
+
+.success-panel {
+    margin-top: calc(var(--spacing) * 1);
+    border: 1px solid var(--success-panel-border);
+    background: var(--success-panel-bg);
+    border-radius: 12px;
+    padding: calc(var(--spacing) * 2);
+}
+
+.success-panel h2 {
+    font-size: 1.02rem;
+    font-weight: 700;
+    margin-bottom: calc(var(--spacing) * 1.5);
+}
+
+.success-list {
+    list-style: disc;
+    padding-left: calc(var(--spacing) * 2.5);
+    color: var(--muted);
+    display: grid;
+    gap: calc(var(--spacing) * 0.75);
+    line-height: 1.4;
+}
+
+.success-actions {
+    margin-top: calc(var(--spacing) * 1);
+    display: flex;
+    gap: calc(var(--spacing) * 1.25);
+    flex-wrap: wrap;
+}
+
+.success-btn {
+    border-radius: 999px;
+    padding: calc(var(--spacing) * 1.2) calc(var(--spacing) * 2.2);
+    font-size: 0.9rem;
+    text-decoration: none;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.success-btn.primary {
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid transparent;
+}
+
+.success-btn.secondary {
+    color: var(--text);
+    border: 1px solid var(--border);
+    background: transparent;
+}
+
 @media (max-width: 520px) {
     .waitlist-page {
         padding: calc(var(--spacing) * 3);
@@ -474,6 +559,12 @@ h1 {
     --error-bg: rgba(212, 96, 96, 0.1);
     --error-border: rgba(212, 96, 96, 0.28);
     --error-text: #8f2b2b;
+    --success-chip-bg: rgba(51, 86, 184, 0.1);
+    --success-chip-border: rgba(51, 86, 184, 0.26);
+    --success-chip-text: #2a4d9f;
+    --success-icon-bg: rgba(51, 86, 184, 0.14);
+    --success-panel-bg: rgba(255, 255, 255, 0.94);
+    --success-panel-border: rgba(0, 20, 80, 0.14);
 }
 
 [data-theme="light"] body {
