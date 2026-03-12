@@ -125,18 +125,79 @@ def onboarding_submit(request):
     if not email:
         return JsonResponse({"error": "Email is required to save onboarding."}, status=400)
 
-    waitlist_entry = None
     waitlist_id = request.session.get("waitlist_entry_id")
-    if waitlist_id:
-        waitlist_entry = WaitlistEntry.objects.filter(pk=waitlist_id).first()
+    waitlist_entry = WaitlistEntry.objects.filter(pk=waitlist_id).first() if waitlist_id else None
     if waitlist_entry is None:
-        waitlist_entry = WaitlistEntry.objects.filter(email=email).order_by("-created_at").first()
+        return JsonResponse(
+            {"error": "Waitlist session expired or missing. Please restart from the waitlist form."},
+            status=400,
+        )
+
+    onboarding_field_ids = [
+        "user_type",
+        "industry",
+        "stage",
+        "target_market",
+        "team_size",
+        "one_liner",
+        "cofounders_needed",
+        "looking_for_type",
+        "founder_timeline",
+        "current_role",
+        "years_experience",
+        "industries_interested",
+        "venture_stage_preference",
+        "founder_type_preference",
+        "specialist_timeline",
+        "investor_type",
+        "investment_geography",
+        "ticket_size",
+        "investment_stage",
+        "investment_industries",
+        "investor_value_add",
+        "investor_looking_for",
+        "investor_timeline",
+        "home_country",
+        "target_gcc_market",
+        "foreign_industry",
+        "foreign_stage",
+        "foreign_one_liner",
+        "local_partner_need",
+        "foreign_timeline",
+        "program_type",
+        "program_location",
+        "program_stage_focus",
+        "program_industries",
+        "cohort_size",
+        "program_offering",
+        "incubator_looking_for",
+        "incubator_timeline",
+        "skills",
+        "availability",
+        "capital_contribution",
+        "looking_for_skills",
+        "cofounder_commitment",
+        "compensation",
+        "cofounder_location_pref",
+        "monthly_revenue",
+        "funding_status",
+        "customer_count",
+        "commitment_level",
+        "risk_tolerance",
+        "execution_history",
+        "leadership_style",
+        "how_heard",
+        "referral_code",
+        "profile_visibility_consent",
+    ]
+    onboarding_defaults = {field_id: answers.get(field_id) for field_id in onboarding_field_ids}
 
     OnboardingResponse.objects.update_or_create(
-        email=email,
+        waitlist_entry=waitlist_entry,
         defaults={
-            "waitlist_entry": waitlist_entry,
+            "email": waitlist_entry.email or email,
             "flow_name": flow_name[:200],
+            **onboarding_defaults,
             "answers": answers,
         },
     )
