@@ -1032,3 +1032,7 @@ body {
         width: 100%;
     }
 }
+
+.logo-light { display: none; }
+[data-theme="light"] .logo-dark { display: none!important; }
+[data-theme="light"] .logo-light { display: block; }
