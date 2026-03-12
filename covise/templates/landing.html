@@ -102,19 +102,19 @@
 
          Features Section -->
         <section class="features">
-            <div class="feature">
+            <div class="feature reveal-up" style="--reveal-delay: 0ms;">
                 <div class="feature-number">01</div>
                 <h3 class="feature-title">CONNECT</h3>
                 <p class="feature-desc">Network with ambitious founders across the Middle East. Share ideas. Build together.</p>
             </div>
             
-            <div class="feature">
+            <div class="feature reveal-up" style="--reveal-delay: 120ms;">
                 <div class="feature-number">02</div>
                 <h3 class="feature-title">COLLABORATE</h3>
                 <p class="feature-desc">Find co-founders, investors, and partners. Turn concepts into companies.</p>
             </div>
             
-            <div class="feature">
+            <div class="feature reveal-up" style="--reveal-delay: 240ms;">
                 <div class="feature-number">03</div>
                 <h3 class="feature-title">EXECUTE</h3>
                 <p class="feature-desc">A focused platform designed for work, not scrolling. Get things done.</p>
@@ -122,10 +122,10 @@
         </section>
 
         <section class="collab-showcase">
-            <div class="collab-showcase-media">
+            <div class="collab-showcase-media reveal-up" style="--reveal-delay: 0ms;">
                 <img src="{% static 'images/index/homepic.png' %}" alt="Covise collaboration workspace preview">
             </div>
-            <div class="collab-showcase-content">
+            <div class="collab-showcase-content reveal-up" style="--reveal-delay: 140ms;">
                 <h2>Everything You Need<br> To Build Faster</h2>
                 <p>Built for serious founder collaboration from first match to launch.</p>
                 <ul class="collab-feature-list">
@@ -143,7 +143,7 @@
             <div class="cta-globe-canvas-wrap" aria-hidden="true">
                 <canvas class="landing-globe-canvas" data-globe-canvas="cta"></canvas>
             </div>
-            <div class="cta-content">
+            <div class="cta-content reveal-up" style="--reveal-delay: 0ms;">
                 <h2 class="cta-title">READY TO BUILD?</h2>
                 <p class="cta-text">Join the region's most focused entrepreneur community.</p>
                 <a href="/waitlist/" class="btn-primary">JOIN THE WAITLIST <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
@@ -152,7 +152,7 @@
 
         <!-- Footer -->
         <footer class="footer">
-    <div class="footer-top">
+    <div class="footer-top reveal-up" style="--reveal-delay: 0ms;">
         <div class="footer-brand">
             <div class="footer-brand-title">
                 <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
@@ -178,7 +178,7 @@
             <a href="https://www.linkedin.com/company/covise/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         </div>
     </div>
-    <div class="footer-bottom">
+    <div class="footer-bottom reveal-up" style="--reveal-delay: 100ms;">
         <p>- 2026 CoVise. All rights reserved.</p>
         <div class="footer-legal">
             <a href="#">Terms</a>
@@ -199,6 +199,28 @@
         }
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
+    </script>
+    <script>
+        (function() {
+            var revealItems = document.querySelectorAll('.reveal-up');
+            if (!('IntersectionObserver' in window) || revealItems.length === 0) {
+                revealItems.forEach(function(item) { item.classList.add('is-visible'); });
+                return;
+            }
+
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+
+            revealItems.forEach(function(item) {
+                observer.observe(item);
+            });
+        })();
     </script>
     <script>
         (function() {

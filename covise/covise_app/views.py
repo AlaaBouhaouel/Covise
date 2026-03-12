@@ -508,15 +508,29 @@ def waitlist(request):
         linkedin = request.POST.get('linkedin', '').strip()
         cv_file = request.FILES.get('cv')
 
+        print(
+            f"[waitlist] POST received email={email!r} country={country!r} "
+            f"non_gcc_business={non_gcc_business} no_linkedin={no_linkedin} "
+            f"has_cv={bool(cv_file)}"
+        )
+
         linkedin_missing_when_required = (not no_linkedin) and (not linkedin)
         cv_missing_when_required = no_linkedin and (not cv_file)
 
         if not all([full_name, phone_number, email]) or linkedin_missing_when_required or cv_missing_when_required:
             context['error_message'] = 'Please complete all required fields.'
+            print(
+                "[waitlist] validation failed: required fields missing "
+                f"(full_name={bool(full_name)} phone_number={bool(phone_number)} "
+                f"email={bool(email)} linkedin_required_missing={linkedin_missing_when_required} "
+                f"cv_required_missing={cv_missing_when_required})"
+            )
         elif non_gcc_business and not custom_country:
             context['error_message'] = 'Please enter your country if you are outside the GCC.'
+            print("[waitlist] validation failed: non-GCC checked but custom_country is empty")
         elif not non_gcc_business and not country:
             context['error_message'] = 'Please select your country.'
+            print("[waitlist] validation failed: GCC country not selected")
         else:
             if non_gcc_business:
                 country = ''
@@ -540,14 +554,17 @@ def waitlist(request):
                 except OperationalError:
                     # Handle transient DB disconnects (e.g., SSL EOF) by refreshing the connection once.
                     close_old_connections()
+                    print(f"[waitlist] db OperationalError on attempt={attempt + 1} for email={email!r}")
                     if attempt == 1:
                         logger.exception("Failed to create waitlist entry after retry for %s", email)
                         context['error_message'] = 'Temporary database issue. Please try again in a moment.'
 
             if entry is None:
+                print(f"[waitlist] render waitlist again after db failure for email={email!r}")
                 return render(request, 'waitlist.html', context)
             request.session["waitlist_email"] = email
             request.session["waitlist_entry_id"] = entry.id
+            print(f"[waitlist] success: redirecting to onboarding for email={email!r} entry_id={entry.id}")
             return redirect('Onboarding')
 
     return render(request, 'waitlist.html', context)
