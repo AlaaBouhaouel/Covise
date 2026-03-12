@@ -38,6 +38,9 @@
             </div>
             <h1>Join the Waitlist</h1>
             <p class="intro">Share your info and we will reach out soon.</p>
+            {% if error_message %}
+            <p class="form-error" role="alert">{{ error_message }}</p>
+            {% endif %}
 
             <form class="waitlist-form" method="post" action="{% url 'Waitlist' %}" enctype="multipart/form-data">
                 {% csrf_token %}
@@ -176,4 +179,3 @@
     </script>
 </body>
 </html>
-

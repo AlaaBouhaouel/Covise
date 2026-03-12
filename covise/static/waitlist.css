@@ -27,6 +27,9 @@
     --warning-bg: rgba(242, 133, 133, 0.12);
     --warning-border: rgba(242, 133, 133, 0.45);
     --warning-text: #ffd9d9;
+    --error-bg: rgba(242, 133, 133, 0.12);
+    --error-border: rgba(242, 133, 133, 0.38);
+    --error-text: #ffd9d9;
     --spacing: 8px;
 }
 
@@ -100,6 +103,17 @@ h1 {
 .intro {
     color: var(--muted);
     font-size: 1rem;
+}
+
+.form-error {
+    margin-top: calc(var(--spacing) * 1);
+    border: 1px solid var(--error-border);
+    background: var(--error-bg);
+    color: var(--error-text);
+    border-radius: 10px;
+    padding: calc(var(--spacing) * 1.25) calc(var(--spacing) * 1.5);
+    font-size: 0.95rem;
+    line-height: 1.35;
 }
 
 .waitlist-form {
@@ -457,6 +471,9 @@ h1 {
     --warning-bg: rgba(212, 96, 96, 0.12);
     --warning-border: rgba(212, 96, 96, 0.35);
     --warning-text: #8f2b2b;
+    --error-bg: rgba(212, 96, 96, 0.1);
+    --error-border: rgba(212, 96, 96, 0.28);
+    --error-text: #8f2b2b;
 }
 
 [data-theme="light"] body {
