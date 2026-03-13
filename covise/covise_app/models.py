@@ -3,7 +3,7 @@ from django.db import models
 class WaitlistEntry(models.Model):
     full_name = models.CharField(max_length=150)
     phone_number = models.CharField(max_length=30)
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
     country = models.CharField(max_length=100, blank=True)
     non_gcc_business = models.BooleanField(default=False)
     custom_country = models.CharField(max_length=100, blank=True)

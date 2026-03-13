@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoVise | Waitlist</title>
-    <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'waitlist.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
@@ -34,7 +34,7 @@
                     <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
                     <span>CoVise</span>
                 </div>
-                <a class="back-link" href="/">Back</a>
+                <a class="back-link" href="{% url 'Landing Page' %}">Back</a>
             </div>
             <h1>Join the Waitlist</h1>
             <p class="intro">Share your info and we will reach out soon.</p>
@@ -86,7 +86,10 @@
                 <label id="cv-label" for="cv">CV <span class="optional-tag">(Optional)</span></label>
                 <input id="cv" name="cv" type="file" accept=".pdf,.doc,.docx">
 
-                <button type="submit">Onboard</button>
+                <button class="process" type="submit" id="onboard-btn">
+                    <span class="btn-label">Onboard</span>
+                    <span class="btn-spinner" aria-hidden="true"></span>
+                </button>
             </form>
             
         </section>
@@ -194,7 +197,11 @@
             return '+' + dialCode + localDigits;
         }
 
-        document.querySelector('.waitlist-form').addEventListener('submit', function () {
+        const waitlistForm = document.querySelector('.waitlist-form');
+        const onboardBtn = document.getElementById('onboard-btn');
+        const onboardBtnLabel = onboardBtn ? onboardBtn.querySelector('.btn-label') : null;
+
+        waitlistForm.addEventListener('submit', function () {
             let formattedPhone = '';
             try {
                 formattedPhone = (iti.getNumber() || '').trim();
@@ -204,7 +211,16 @@
 
             // Save with explicit country code from selected country when formatter is empty.
             phoneInput.value = formattedPhone || normalizePhoneWithCountryCode(phoneInput.value);
+
+            if (onboardBtn) {
+                onboardBtn.disabled = true;
+                onboardBtn.classList.add('is-loading');
+            }
+            if (onboardBtnLabel) {
+                onboardBtnLabel.textContent = 'Processing...';
+            }
         });
     </script>
 </body>
 </html>
+

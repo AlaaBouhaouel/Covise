@@ -2,7 +2,7 @@ import json
 import logging
 from pathlib import Path
 from django.http import Http404, JsonResponse
-from django.db import OperationalError, close_old_connections
+from django.db import IntegrityError, OperationalError, close_old_connections
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import OnboardingResponse, WaitlistEntry
@@ -263,6 +263,11 @@ def waitlist(request):
             else:
                 custom_country = ''
 
+            if WaitlistEntry.objects.filter(email=email).exists():
+                context['error_message'] = 'This email is already registered on CoVise.'
+                print(f"[waitlist] duplicate email blocked before create for email={email!r}")
+                return render(request, 'waitlist.html', context)
+
             entry = None
             for attempt in range(2):
                 try:
@@ -284,6 +289,10 @@ def waitlist(request):
                         cv_s3_key=cv_s3_key,
                     )
                     break
+                except IntegrityError:
+                    context['error_message'] = 'This email is already registered on CoVise.'
+                    print(f"[waitlist] duplicate email blocked by IntegrityError for email={email!r}")
+                    return render(request, 'waitlist.html', context)
                 except OperationalError:
                     # Handle transient DB disconnects (e.g., SSL EOF) by refreshing the connection once.
                     close_old_connections()
