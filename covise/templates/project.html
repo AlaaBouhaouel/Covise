@@ -15,15 +15,6 @@
         })();
     </script>
 </head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-RDN1TCMRNR');
-</script>
 <body>
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
@@ -72,280 +63,502 @@
         </aside>
 
         <main class="main">
-
+            <header class="home-header" aria-label="Projects top bar">
+                <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
+                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
+                    <span>CoVise</span>
+                </a>
+                <div class="home-header-actions">
+                    <button class="theme-toggle" id="projectThemeToggle" aria-label="Toggle light/dark mode" aria-pressed="false">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <div class="notif-wrap">
+                        <button class="notification-bell" id="notifBell" aria-label="Toggle notifications" type="button">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M15 17H9M18 17V11a6 6 0 1 0-12 0v6l-2 2h16l-2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            <span class="notification-badge" aria-hidden="true">4</span>
+                        </button>
+                        <div id="notifPanel" class="notif-panel">
+                            <div class="notif-panel-head">
+                                <span class="notif-panel-title">Network Activity</span>
+                                <span class="notif-panel-meta">4 new</span>
+                            </div>
+                            <div class="activity-feed activity-feed-plain">
+                                <div class="feed-item">
+                                    <div class="feed-text"><strong>Ahmed K.</strong><br>joined from Riyadh - looking for a tech co-founder</div>
+                                    <div class="feed-time">2h ago</div>
+                                </div>
+                                <div class="feed-item">
+                                    <div class="feed-text"><strong>New project posted</strong><br>B2B logistics platform, UAE expansion</div>
+                                    <div class="feed-time">4h ago</div>
+                                </div>
+                                <div class="feed-item">
+                                    <div class="feed-text"><strong>Sara M. &amp; Faisal A.</strong><br>started a Trial Build together</div>
+                                    <div class="feed-time">6h ago</div>
+                                </div>
+                                <div class="feed-item">
+                                    <div class="feed-text"><strong>Nora H.</strong><br>joined from Dubai - open to cross-border partnerships</div>
+                                    <div class="feed-time">9h ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
+                        </svg>
+                    </a>
+                </div>
+            </header>
 
             <section class="projects">
                 <div class="projects-head">
-                    <div class="projects-copy">
-                        <h2>Projects</h2>
-                        <p>Discover active builds and connect with teams where your skills are needed.</p>
+                    <div class="right-panel dashboard-card widget">
+                        <div class="projects-copy">
+                            <h2>Projects</h2>
+                            <p>Discover active builds and connect with teams where your skills are needed.</p>
+                        </div>
+                        <div class="projects-controls">
+                                <div style="position: relative; width: 100%;">
+                                    <input class="post-input" id="advisorInput" type="text" name="prompt" placeholder="Find what you are looking for..." style="padding-right: 44px;">
+                                    <button type="submit" aria-label="search" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(120,150,255,0.35); background: rgba(120,150,255,0.14); color: var(--text); display: grid; place-items: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;" onmouseover="this.style.borderColor='rgba(120,150,255,0.6)';this.style.background='rgba(120,150,255,0.26)';" onmouseout="this.style.borderColor='rgba(120,150,255,0.35)';this.style.background='rgba(120,150,255,0.14)';">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                            <div class="projects-filter-row">
+                                <div class="filter-pills" role="tablist" aria-label="Project filters">
+                                    <button class="filter-pill is-active" type="button" data-filter="all" aria-pressed="true">All</button>
+                                    <button class="filter-pill" type="button" data-filter="seeking-co-founder" aria-pressed="false">Seeking Co-founder</button>
+                                    <button class="filter-pill" type="button" data-filter="seeking-investor" aria-pressed="false">Seeking Investor</button>
+                                    <button class="filter-pill" type="button" data-filter="seeking-operator" aria-pressed="false">Seeking Operator</button>
+                                    <button class="filter-pill" type="button" data-filter="early-stage" aria-pressed="false">Early Stage</button>
+                                    <button class="filter-pill" type="button" data-filter="revenue-stage" aria-pressed="false">Revenue Stage</button>
+                                </div>
+     
+                            </div>
+                        </div>
                     </div>
-                    <div class="projects-actions">
-                        <a class="project-connect project-map-btn" href="{% url 'Map' %}">Look from map</a>
-                        <button id="projectThemeToggle" class="theme-toggle" type="button" aria-label="Toggle theme" aria-pressed="false">
-                            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
-                                <circle cx="12" cy="12" r="5"></circle>
-                                <line x1="12" y1="1" x2="12" y2="3"></line>
-                                <line x1="12" y1="21" x2="12" y2="23"></line>
-                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                                <line x1="1" y1="12" x2="3" y2="12"></line>
-                                <line x1="21" y1="12" x2="23" y2="12"></line>
-                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                            </svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                            </svg>
-                        </button>
+                    <div class="left-panel">
+                        <article class="dashboard-card widget" data-demo="Network Activity tracks live growth signals across founders, opportunities, and matches.">
+                            <div class="widget-header">
+                                <div class="widget-title">Network Activity</div>
+                                <div class="widget-action">View All</div>
+                            </div>
+
+                            <div class="activity-grid">
+                                <div class="stat-card">
+                                    <div class="stat-value">247</div>
+                                    <div class="stat-label">Verified Founders</div>
+                                    <div class="stat-delta">+ 14 this week</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">42</div>
+                                    <div class="stat-label">Open Opportunities</div>
+                                    <div class="stat-delta">+ 6 today</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">18</div>
+                                    <div class="stat-label">Matches This Week</div>
+                                    <div class="stat-delta">+ 3 yesterday</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">91%</div>
+                                    <div class="stat-label">Avg Match Score</div>
+                                    <div class="stat-delta">Across active pairs</div>
+                                </div>
+                            </div>
+                        </article>
                     </div>
                 </div>
 
+                <div class="project-list" id="projectList">
+                    <article class="project-card" data-filters="seeking-co-founder early-stage" data-search="b2b marketplace for construction materials cv-6631 ahmed alharbi riyadh saudi arabia construction tech marketplace architecture backend systems bootstrapped technical co-founder">
+                        <div class="founder-row">
+                            <div class="founder-meta">
+                                <span class="founder-avatar">AH</span>
+                                <span>Posted by Ahmed Alharbi</span>
+                            </div>
 
-
-                <div class="project-list">
-                    <div class="project-card">
-                        <div class="project-head">
-                            <div>
+                            <div class="founder-meta" style="gap: calc(var(--spacing)*1.5);">
+                                <span>Riyadh, Saudi Arabia, </span>
+                                <span>3 days ago</span>
+                            </div>
+                        </div>
+                        <div class="project-card-top">
+                            <div class="project-title-block">
                                 <div class="project-title-row">
-    <div class="project-title">B2B Marketplace for Construction Materials</div>
-    <a class="project-eye" href="{% url 'Project Detail' 'cv-6631' %}" aria-label="Open venture preview">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
-            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-    </a>
-</div>
-    <div class="project-code">Project code: CV-6631</div>
-    </div>
-    <div class="alignment-score" aria-label="Alignment Score 91%">
-    <span class="alignment-label">Alignment Score</span>
-    <div class="alignment-meta">
-        <span class="alignment-value high">91%</span>
-        <span class="alignment-info" tabindex="0" aria-label="Know more">
-            i
-            <span class="alignment-tooltip">This Allignment score indicates how well your profile alligns with this venture.</span>
-        </span>
-    </div>
-</div>
-                        </div>
-                        <p class="project-desc">A digital marketplace helping contractors source building materials at transparent prices.</p>
-                        <div class="project-details">
-                            <p><span>Stage:</span> Supplier relationships established</p>
-                            <p><span>Founder Commitment:</span> Full-Time</p>
-                            <p><span>Capital Status:</span> Bootstrapped</p>
-                            <p><span>Positions Needed:</span> Technical Co-Founder</p>
-                            <p><span>Skills Needed:</span> Marketplace Architecture, Backend Systems</p>
-                        </div>
-                        <div class="team-stepper" aria-label="Members still needed: 1 out of 3">
-                            <div class="team-stepper-head">
-                                <span>Members still needed</span>
-                                <span class="team-stepper-count">1/3</span>
+                                    <a class="project-title-link" href="{% url 'Project Detail' 'cv-6631' %}">
+                                        <h2 class="project-title">B2B Marketplace for Construction Materials</h2>
+                                    </a>
+                                    <span class="project-code">CV-6631</span>
+                                </div>
                             </div>
-                            <div class="team-stepper-track" aria-hidden="true">
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
+                            <div class="alignment-score" aria-label="Alignment Score 91 percent" data-align='{"aspects":[{"icon":"🎯","label":"Skills Complement","score":"95%"},{"icon":"📍","label":"Location Match","score":"90%"},{"icon":"⏱","label":"Commitment Level","score":"88%"},{"icon":"💼","label":"Industry Overlap","score":"94%"},{"icon":"🚀","label":"Venture Stage Fit","score":"87%"},{"icon":"💰","label":"Capital Contribution","score":"85%"}],"summary":"This project needs a Technical Co-Founder with backend experience in marketplace architecture. Your skills in backend systems and your full-time commitment align strongly with what this team is looking for. Both parties are based in the GCC and targeting the same market."}'>
+                                <div class="alignment-score-top">
+                                    <button class="align-eye-btn" type="button" aria-label="See why you match">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </button>
+                                    <span class="alignment-value">91%</span>
+                                </div>
+                                <span class="alignment-label">Match</span>
                             </div>
                         </div>
-                        <a class="project-connect" href="#">Request</a>
-                    </div>
+                        <p class="project-desc">A digital marketplace helping contractors source building materials at transparent prices, with supplier onboarding already underway and demand validation from active buyers.</p>
+                        <div class="tag-row">
+                            <span class="tag-pill"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Early Stage</span></span>
+                            <span class="tag-pill"><i class="fa-solid fa-building" aria-hidden="true"></i><span>Construction Tech</span></span>
+                            <span class="tag-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>Full-Time</span></span>
+                            <span class="tag-pill"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>Bootstrapped</span></span>
+                        </div>
+                        <div class="looking-for-block">
+                            <div class="label-row">
+                                <span class="section-label">Looking for:</span>
+                                <div class="role-pill-list">
+                                    <span class="role-pill">Technical Co-Founder</span>
+                                </div>
+                            </div>
+                            <div class="label-row">
+                                <span class="section-label">Skills needed:</span>
+                                <div class="skill-pill-list">
+                                    <span class="skill-pill">Marketplace Architecture</span>
+                                    <span class="skill-pill">Backend Systems</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="team-progress" style="--team-progress: 67%;">
+                            <div class="team-progress-head">
+                                <span>Team: 2 of 3 positions filled</span>
+                                <strong>67%</strong>
+                            </div>
+                            <div class="team-progress-track" aria-hidden="true">
+                                <span class="team-progress-fill"></span>
+                            </div>
+                        </div>
+                        <div class="project-footer">
 
-                    <div class="project-card">
-                        <div class="project-head">
-                            <div>
-                                <div class="project-title-row">
-    <div class="project-title">Women-Only Fitness Studio (Riyadh)</div>
-    <a class="project-eye" href="{% url 'Project Detail' 'cv-7784' %}" aria-label="Open venture preview">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
-            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-    </a>
-</div>
-                                <div class="project-code">Project code: CV-7784</div>
-                            </div>
-                            <div class="alignment-score" aria-label="Alignment Score 87%">
-    <span class="alignment-label">Alignment Score</span>
-    <div class="alignment-meta">
-        <span class="alignment-value high">87%</span>
-        <span class="alignment-info" tabindex="0" aria-label="Know more">
-            i
-            <span class="alignment-tooltip">This Allignment score indicates your profiles alignment with this project based on skills, interest and level of commitment</span>
-        </span>
-    </div>
-</div>
-                        </div>
-                        <p class="project-desc">Opening a boutique fitness studio offering small-group strength and conditioning programs.</p>
-                        <div class="project-details">
-                            <p><span>Stage:</span> Location shortlisted</p>
-                            <p><span>Founder Commitment:</span> Full-Time</p>
-                            <p><span>Capital Status:</span> 250,000 SAR Committed</p>
-                            <p><span>Positions Needed:</span> Business &amp; Operations Partner</p>
-                            <p><span>Skills Needed:</span> Budgeting, Hiring, Membership Strategy</p>
-                        </div>
-                        <div class="team-stepper" aria-label="Members still needed: 1 out of 2">
-                            <div class="team-stepper-head">
-                                <span>Members still needed</span>
-                                <span class="team-stepper-count">1/2</span>
-                            </div>
-                            <div class="team-stepper-track" aria-hidden="true">
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step"></span>
+                            <div class="project-actions">
+                                <a class="outline-btn action-btn" href="{% url 'Project Detail' 'cv-6631' %}">View Project</a>
+                                <button class="primary-btn action-btn" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>Request to Join</button>
                             </div>
                         </div>
-                        <a class="project-connect" href="#">Request</a>
-                    </div>
+                    </article>
 
-                    <div class="project-card">
-                        <div class="project-head">
-                            <div>
-                                <div class="project-title-row">
-    <div class="project-title">Digital Tender Platform for Contractors</div>
-    <a class="project-eye" href="{% url 'Project Detail' 'cv-8093' %}" aria-label="Open venture preview">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
-            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-    </a>
-</div>
-                                <div class="project-code">Project code: CV-8093</div>
+                    <article class="project-card" data-filters="seeking-operator early-stage" data-search="women-only fitness studio riyadh cv-7784 nora alsaud riyadh saudi arabia fitness wellness budgeting hiring membership strategy business operations partner">
+                        <div class="founder-row">
+                            <div class="founder-meta">
+                                <span class="founder-avatar">NA</span>
+                                <span>Posted by Nora Alsaud</span>
                             </div>
-                            <div class="alignment-score" aria-label="Alignment Score 90%">
-    <span class="alignment-label">Alignment Score</span>
-    <div class="alignment-meta">
-        <span class="alignment-value high">90%</span>
-        <span class="alignment-info" tabindex="0" aria-label="Know more">
-            i
-            <span class="alignment-tooltip">This Allignment score indicates your profiles alignment with this project based on skills, interest and level of commitment</span>
-        </span>
-    </div>
-</div>
-                        </div>
-                        <p class="project-desc">Digitizing bid submissions and contractor selection for mid-sized construction firms in Saudi Arabia.</p>
-                        <div class="project-details">
-                            <p><span>Stage:</span> Industry Validation Complete</p>
-                            <p><span>Founder Commitment:</span> Full-Time</p>
-                            <p><span>Capital Status:</span> 100,000 SAR Committed</p>
-                            <p><span>Positions Needed:</span> Full-Stack Technical Co-Founder</p>
-                            <p><span>Skills Needed:</span> SaaS Architecture, Enterprise Systems, Cloud Infrastructure</p>
-                        </div>
-                        <div class="team-stepper" aria-label="Members still needed: 1 out of 4">
-                            <div class="team-stepper-head">
-                                <span>Members still needed</span>
-                                <span class="team-stepper-count">1/4</span>
-                            </div>
-                            <div class="team-stepper-track" aria-hidden="true">
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
-                            </div>
-                        </div>
-                        <a class="project-connect" href="#">Request</a>
-                    </div>
 
-                    <div class="project-card">
-                        <div class="project-head">
-                            <div>
+                            <div class="founder-meta" style="gap: calc(var(--spacing)*1.5);">
+                                <span>Riyadh, Saudi Arabia, </span>
+                                <span>5 days ago</span>
+                            </div>
+                        </div>
+                        <div class="project-card-top">
+                            <div class="project-title-block">
                                 <div class="project-title-row">
-    <div class="project-title">Saudi Specialty Coffee Brand (D2C Model)</div>
-    <a class="project-eye" href="{% url 'Project Detail' 'cv-3314' %}" aria-label="Open venture preview">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
-            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-    </a>
-</div>
-                                <div class="project-code">Project code: CV-3314</div>
-                            </div>
-                            <div class="alignment-score" aria-label="Alignment Score 74%">
-    <span class="alignment-label">Alignment Score</span>
-    <div class="alignment-meta">
-        <span class="alignment-value medium">74%</span>
-        <span class="alignment-info" tabindex="0" aria-label="Know more">
-            i
-            <span class="alignment-tooltip">This Allignment score indicates your profiles alignment with this project based on skills, interest and level of commitment</span>
-        </span>
-    </div>
-</div>
-                        </div>
-                        <p class="project-desc">Launching a premium coffee brand focused on online subscriptions and curated retail partnerships across KSA.</p>
-                        <div class="project-details">
-                            <p><span>Stage:</span> Brand &amp; supplier secured</p>
-                            <p><span>Founder Commitment:</span> Full-Time</p>
-                            <p><span>Capital Status:</span> 200,000 SAR Committed</p>
-                            <p><span>Positions Needed:</span> Operations &amp; Supply Chain Partner</p>
-                            <p><span>Skills Needed:</span> Vendor Management, Logistics, Inventory Planning</p>
-                        </div>
-                        <div class="team-stepper" aria-label="Members still needed: 1 out of 3">
-                            <div class="team-stepper-head">
-                                <span>Members still needed</span>
-                                <span class="team-stepper-count">1/3</span>
-                            </div>
-                            <div class="team-stepper-track" aria-hidden="true">
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
-                            </div>
-                        </div>
-                        <a class="project-connect" href="#">Request</a>
-                    </div>
+                                    <a class="project-title-link" href="{% url 'Project Detail' 'cv-7784' %}">
+                                        <h2 class="project-title">Women-Only Fitness Studio (Riyadh)</h2>
+                                    </a>
+                                    <span class="project-code">CV-7784</span>
+                                </div>
 
-                    <div class="project-card">
-                        <div class="project-head">
-                            <div>
+                            </div>
+                            <div class="alignment-score" aria-label="Alignment Score 87 percent" data-align='{"aspects":[{"icon":"🎯","label":"Skills Complement","score":"82%"},{"icon":"📍","label":"Location Match","score":"95%"},{"icon":"⏱","label":"Commitment Level","score":"90%"},{"icon":"💼","label":"Industry Overlap","score":"78%"},{"icon":"🚀","label":"Venture Stage Fit","score":"88%"},{"icon":"💰","label":"Capital Contribution","score":"89%"}],"summary":"You share the same commitment level and location as this founder. The fitness and wellness sector partially overlaps with your background, though skills alignment is a moderate fit."}'>
+                                <div class="alignment-score-top">
+                                    <button class="align-eye-btn" type="button" aria-label="See why you match">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </button>
+                                    <span class="alignment-value">87%</span>
+                                </div>
+                                <span class="alignment-label">Match</span>
+                            </div>
+                        </div>
+                        <p class="project-desc">Opening a boutique fitness studio offering small-group strength and conditioning programs, with the location shortlisted and launch planning already in motion.</p>
+                        <div class="tag-row">
+                            <span class="tag-pill"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Early Stage</span></span>
+                            <span class="tag-pill"><i class="fa-solid fa-building" aria-hidden="true"></i><span>Fitness &amp; Wellness</span></span>
+                            <span class="tag-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>Full-Time</span></span>
+                            <span class="tag-pill"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>SAR 250k Committed</span></span>
+                        </div>
+                        <div class="looking-for-block">
+                            <div class="label-row">
+                                <span class="section-label">Looking for:</span>
+                                <div class="role-pill-list">
+                                    <span class="role-pill">Business Partner</span>
+                                    <span class="role-pill">Operations Lead</span>
+                                </div>
+                            </div>
+                            <div class="label-row">
+                                <span class="section-label">Skills needed:</span>
+                                <div class="skill-pill-list">
+                                    <span class="skill-pill">Budgeting</span>
+                                    <span class="skill-pill">Hiring</span>
+                                    <span class="skill-pill">Membership Strategy</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="team-progress" style="--team-progress: 50%;">
+                            <div class="team-progress-head">
+                                <span>Team: 1 of 2 positions filled</span>
+                                <strong>50%</strong>
+                            </div>
+                            <div class="team-progress-track" aria-hidden="true">
+                                <span class="team-progress-fill"></span>
+                            </div>
+                        </div>
+                        <div class="project-footer">
+                            <div class="project-actions">
+                                <a class="outline-btn action-btn" href="{% url 'Project Detail' 'cv-7784' %}">View Project</a>
+                                <button class="primary-btn action-btn" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>Request to Join</button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="project-card" data-filters="seeking-co-founder revenue-stage" data-search="digital tender platform for contractors cv-8093 faisal alotaibi jeddah saudi arabia construction saas saas architecture enterprise systems cloud infrastructure full-stack technical co-founder revenue stage">
+                        <div class="founder-row">
+                            <div class="founder-meta">
+                                <span class="founder-avatar">FA</span>
+                                <span>Posted by Faisal Alotaibi</span>
+                            </div>
+
+                            <div class="founder-meta" style="gap: calc(var(--spacing)*1.5);">
+                                <span>Jeddah, Saudi Arabia, </span>
+                                <span>1 week ago</span>
+                            </div>
+                        </div>
+                        <div class="project-card-top">
+                            <div class="project-title-block">
                                 <div class="project-title-row">
-    <div class="project-title">Performance Optimization App for GCC Professionals</div>
-    <a class="project-eye" href="{% url 'Project Detail' 'cv-9245' %}" aria-label="Open venture preview">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
-            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-    </a>
-</div>
-                                <div class="project-code">Project code: CV-9245</div>
+                                    <a class="project-title-link" href="{% url 'Project Detail' 'cv-8093' %}">
+                                        <h2 class="project-title">Digital Tender Platform for Contractors</h2>
+                                    </a>
+                                    <span class="project-code">CV-8093</span>
+                                </div>
                             </div>
-                            <div class="alignment-score" aria-label="Alignment Score 58%">
-    <span class="alignment-label">Alignment Score</span>
-    <div class="alignment-meta">
-        <span class="alignment-value low">58%</span>
-        <span class="alignment-info" tabindex="0" aria-label="Know more">
-            i
-            <span class="alignment-tooltip">This Allignment score indicates your profiles alignment with this project based on skills, interest and level of commitment</span>
-        </span>
-    </div>
-</div>
-                        </div>
-                        <p class="project-desc">A mobile platform combining fitness tracking, productivity metrics, and performance coaching for working professionals.</p>
-                        <div class="project-details">
-                            <p><span>Stage:</span> UI Prototype Completed</p>
-                            <p><span>Founder Commitment:</span> Part-Time -> Full-Time in 6 Months</p>
-                            <p><span>Capital Status:</span> Self-Funded</p>
-                            <p><span>Positions Needed:</span> Mobile App Developer</p>
-                            <p><span>Skills Needed:</span> Flutter/React Native, API Integration, UX Optimization</p>
-                        </div>
-                        <div class="team-stepper" aria-label="Members still needed: 1 out of 5">
-                            <div class="team-stepper-head">
-                                <span>Members still needed</span>
-                                <span class="team-stepper-count">1/5</span>
-                            </div>
-                            <div class="team-stepper-track" aria-hidden="true">
-                                <span class="team-step is-needed"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
-                                <span class="team-step"></span>
+                            <div class="alignment-score" aria-label="Alignment Score 90 percent" data-align='{"aspects":[{"icon":"🎯","label":"Skills Complement","score":"92%"},{"icon":"📍","label":"Location Match","score":"85%"},{"icon":"⏱","label":"Commitment Level","score":"90%"},{"icon":"💼","label":"Industry Overlap","score":"91%"},{"icon":"🚀","label":"Venture Stage Fit","score":"93%"},{"icon":"💰","label":"Capital Contribution","score":"88%"}],"summary":"Your technical background in SaaS and enterprise systems is a strong fit for this revenue-stage platform. Both parties are full-time and based in Saudi Arabia, making collaboration highly practical."}'>
+                                <div class="alignment-score-top">
+                                    <button class="align-eye-btn" type="button" aria-label="See why you match">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </button>
+                                    <span class="alignment-value">90%</span>
+                                </div>
+                                <span class="alignment-label">Match</span>
                             </div>
                         </div>
-                        <a class="project-connect" href="#">Request</a>
-                    </div>
+                        <p class="project-desc">Digitizing bid submissions and contractor selection for mid-sized construction firms in Saudi Arabia, with industry validation complete and pilot revenue conversations in progress.</p>
+                        <div class="tag-row">
+                            <span class="tag-pill"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Revenue Stage</span></span>
+                            <span class="tag-pill"><i class="fa-solid fa-building" aria-hidden="true"></i><span>Construction SaaS</span></span>
+                            <span class="tag-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>Full-Time</span></span>
+                            <span class="tag-pill"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>SAR 100k Committed</span></span>
+                        </div>
+                        <div class="looking-for-block">
+                            <div class="label-row">
+                                <span class="section-label">Looking for:</span>
+                                <div class="role-pill-list">
+                                    <span class="role-pill">Full-Stack Technical Co-Founder</span>
+                                </div>
+                            </div>
+                            <div class="label-row">
+                                <span class="section-label">Skills needed:</span>
+                                <div class="skill-pill-list">
+                                    <span class="skill-pill">SaaS Architecture</span>
+                                    <span class="skill-pill">Enterprise Systems</span>
+                                    <span class="skill-pill">Cloud Infrastructure</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="team-progress" style="--team-progress: 75%;">
+                            <div class="team-progress-head">
+                                <span>Team: 3 of 4 positions filled</span>
+                                <strong>75%</strong>
+                            </div>
+                            <div class="team-progress-track" aria-hidden="true">
+                                <span class="team-progress-fill"></span>
+                            </div>
+                        </div>
+                        <div class="project-footer">
+                            <div class="project-actions">
+                                <a class="outline-btn action-btn" href="{% url 'Project Detail' 'cv-8093' %}">View Project</a>
+                                <button class="primary-btn action-btn" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>Request to Join</button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="project-card" data-filters="seeking-investor early-stage" data-search="saudi specialty coffee brand d2c model cv-3314 lama alqahtani khobar saudi arabia consumer brands ecommerce vendor management logistics inventory planning investor early stage">
+                        <div class="founder-row">
+                            <div class="founder-meta">
+                                <span class="founder-avatar">NA</span>
+                                <span>Posted by Lama Alqahtani</span>
+                            </div>
+
+                            <div class="founder-meta" style="gap: calc(var(--spacing)*1.5);">
+                                <span>Jeddah, Saudi Arabia, </span>
+                                <span>12 days ago</span>
+                            </div>
+                        </div>
+                        <div class="project-card-top">
+                            <div class="project-title-block">
+                                <div class="project-title-row">
+                                    <a class="project-title-link" href="{% url 'Project Detail' 'cv-3314' %}">
+                                        <h2 class="project-title">Saudi Specialty Coffee Brand (D2C Model)</h2>
+                                    </a>
+                                    <span class="project-code">CV-3314</span>
+                                </div>
+                            </div>
+                            <div class="alignment-score" aria-label="Alignment Score 74 percent" data-align='{"aspects":[{"icon":"🎯","label":"Skills Complement","score":"60%"},{"icon":"📍","label":"Location Match","score":"88%"},{"icon":"⏱","label":"Commitment Level","score":"75%"},{"icon":"💼","label":"Industry Overlap","score":"70%"},{"icon":"🚀","label":"Venture Stage Fit","score":"78%"},{"icon":"💰","label":"Capital Contribution","score":"72%"}],"summary":"Your profile partially matches what this founder is seeking. The consumer brand space differs from your core expertise, but your location and stage preference are compatible."}'>
+                                <div class="alignment-score-top">
+                                    <button class="align-eye-btn" type="button" aria-label="See why you match">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </button>
+                                    <span class="alignment-value">74%</span>
+                                </div>
+                                <span class="alignment-label">Match</span>
+                            </div>
+                        </div>
+                        <p class="project-desc">Launching a premium coffee brand focused on online subscriptions and curated retail partnerships across KSA, with brand, supply, and initial customer positioning already secured.</p>
+                        <div class="tag-row">
+                            <span class="tag-pill"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Early Stage</span></span>
+                            <span class="tag-pill"><i class="fa-solid fa-building" aria-hidden="true"></i><span>Consumer Brand</span></span>
+                            <span class="tag-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>Full-Time</span></span>
+                            <span class="tag-pill"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>SAR 200k Committed</span></span>
+                        </div>
+                        <div class="looking-for-block">
+                            <div class="label-row">
+                                <span class="section-label">Looking for:</span>
+                                <div class="role-pill-list">
+                                    <span class="role-pill">Lead Investor</span>
+                                    <span class="role-pill">Supply Chain Partner</span>
+                                </div>
+                            </div>
+                            <div class="label-row">
+                                <span class="section-label">Skills needed:</span>
+                                <div class="skill-pill-list">
+                                    <span class="skill-pill">Vendor Management</span>
+                                    <span class="skill-pill">Logistics</span>
+                                    <span class="skill-pill">Inventory Planning</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="team-progress" style="--team-progress: 67%;">
+                            <div class="team-progress-head">
+                                <span>Team: 2 of 3 positions filled</span>
+                                <strong>67%</strong>
+                            </div>
+                            <div class="team-progress-track" aria-hidden="true">
+                                <span class="team-progress-fill"></span>
+                            </div>
+                        </div>
+                        <div class="project-footer">
+                            <div class="project-actions">
+                                <a class="outline-btn action-btn" href="{% url 'Project Detail' 'cv-3314' %}">View Project</a>
+                                <button class="primary-btn action-btn" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>Request to Join</button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="project-card" data-filters="seeking-co-founder seeking-investor revenue-stage" data-search="performance optimization app for gcc professionals cv-9245 sara mansour dubai uae mobile healthtech react native flutter api integration ux optimization mobile app developer investor revenue stage">
+                        <div class="founder-row">
+                            <div class="founder-meta">
+                                <span class="founder-avatar">SM</span>
+                                <span>Posted by Sara Mansour</span>
+                            </div>
+
+                            <div class="founder-meta" style="gap: calc(var(--spacing)*1.5);">
+                                <span>Dubai, UAE, </span>
+                                <span>4 days ago</span>
+                            </div>
+                        </div>
+                        <div class="project-card-top">
+                            <div class="project-title-block">
+                                <div class="project-title-row">
+                                    <a class="project-title-link" href="{% url 'Project Detail' 'cv-9245' %}">
+                                        <h2 class="project-title">Performance Optimization App for GCC Professionals</h2>
+                                    </a>
+                                    <span class="project-code">CV-9245</span>
+                                </div>
+                            </div>
+                            <div class="alignment-score" aria-label="Alignment Score 58 percent" data-align='{"aspects":[{"icon":"🎯","label":"Skills Complement","score":"48%"},{"icon":"📍","label":"Location Match","score":"72%"},{"icon":"⏱","label":"Commitment Level","score":"55%"},{"icon":"💼","label":"Industry Overlap","score":"52%"},{"icon":"🚀","label":"Venture Stage Fit","score":"65%"},{"icon":"💰","label":"Capital Contribution","score":"58%"}],"summary":"This is a partial match. The mobile HealthTech focus and part-time to full-time commitment requirement diverge from your current profile, but location compatibility remains."}'>
+                                <div class="alignment-score-top">
+                                    <button class="align-eye-btn" type="button" aria-label="See why you match">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </button>
+                                    <span class="alignment-value">58%</span>
+                                </div>
+                                <span class="alignment-label">Match</span>
+                            </div>
+                        </div>
+                        <p class="project-desc">A mobile platform combining fitness tracking, productivity metrics, and performance coaching for working professionals, with an interactive prototype ready for launch partners.</p>
+                        <div class="tag-row">
+                            <span class="tag-pill"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Revenue Stage</span></span>
+                            <span class="tag-pill"><i class="fa-solid fa-building" aria-hidden="true"></i><span>HealthTech Mobile</span></span>
+                            <span class="tag-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>Part-Time to Full-Time</span></span>
+                            <span class="tag-pill"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>Self-Funded</span></span>
+                        </div>
+                        <div class="looking-for-block">
+                            <div class="label-row">
+                                <span class="section-label">Looking for:</span>
+                                <div class="role-pill-list">
+                                    <span class="role-pill">Mobile App Developer</span>
+                                    <span class="role-pill">Strategic Investor</span>
+                                </div>
+                            </div>
+                            <div class="label-row">
+                                <span class="section-label">Skills needed:</span>
+                                <div class="skill-pill-list">
+                                    <span class="skill-pill">Flutter / React Native</span>
+                                    <span class="skill-pill">API Integration</span>
+                                    <span class="skill-pill">UX Optimization</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="team-progress" style="--team-progress: 80%;">
+                            <div class="team-progress-head">
+                                <span>Team: 4 of 5 positions filled</span>
+                                <strong>80%</strong>
+                            </div>
+                            <div class="team-progress-track" aria-hidden="true">
+                                <span class="team-progress-fill"></span>
+                            </div>
+                        </div>
+                        <div class="project-footer">
+                            <div class="project-actions">
+                                <a class="outline-btn action-btn" href="{% url 'Project Detail' 'cv-9245' %}">View Project</a>
+                                <button class="primary-btn action-btn" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>Request to Join</button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="empty-state" id="projectEmptyState" hidden>
+                    <strong>No matching projects found.</strong>
+                    <span>Try a different keyword or switch back to the All filter.</span>
                 </div>
             </section>
-
-
         </main>
     </div>
+
+    <div class="align-popup" id="alignPopup">
+        <div class="align-popup-header">
+            <span class="align-popup-title">Why you're a strong match</span>
+            <button class="align-popup-close" id="alignPopupClose" aria-label="Close alignment details" type="button">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="align-popup-table" id="alignPopupTable"></div>
+        <div class="align-popup-summary" id="alignPopupSummary"></div>
+    </div>
+
     <script>
         (function () {
             var toggleButton = document.getElementById('projectThemeToggle');
@@ -373,6 +586,141 @@
             applyThemeState();
         })();
     </script>
+    <script>
+        (function () {
+            var form = document.querySelector('.projects-search');
+            var searchInput = document.getElementById('projectSearch');
+            var cards = Array.prototype.slice.call(document.querySelectorAll('.project-card'));
+            var filterButtons = Array.prototype.slice.call(document.querySelectorAll('.filter-pill'));
+            var emptyState = document.getElementById('projectEmptyState');
+            var activeFilter = 'all';
+
+            if (!searchInput || !cards.length || !filterButtons.length || !emptyState) return;
+
+            function updateCards() {
+                var query = searchInput.value.trim().toLowerCase();
+                var visibleCount = 0;
+
+                cards.forEach(function (card) {
+                    var cardFilters = (card.getAttribute('data-filters') || '').split(/\s+/);
+                    var cardSearch = (card.getAttribute('data-search') || '').toLowerCase();
+                    var matchesFilter = activeFilter === 'all' || cardFilters.indexOf(activeFilter) !== -1;
+                    var matchesQuery = !query || cardSearch.indexOf(query) !== -1;
+                    var shouldShow = matchesFilter && matchesQuery;
+
+                    card.hidden = !shouldShow;
+                    if (shouldShow) visibleCount += 1;
+                });
+
+                emptyState.hidden = visibleCount !== 0;
+            }
+
+            filterButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    activeFilter = button.getAttribute('data-filter') || 'all';
+                    filterButtons.forEach(function (item) {
+                        var isActive = item === button;
+                        item.classList.toggle('is-active', isActive);
+                        item.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                    });
+                    updateCards();
+                });
+            });
+
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    updateCards();
+                });
+            }
+
+            searchInput.addEventListener('input', updateCards);
+            updateCards();
+        })();
+    </script>
+    <script>
+        (function () {
+            var popup = document.getElementById('alignPopup');
+            var tableEl = document.getElementById('alignPopupTable');
+            var summaryEl = document.getElementById('alignPopupSummary');
+            var closeBtn = document.getElementById('alignPopupClose');
+            var activeBtn = null;
+
+            function isOpen() {
+                return popup.classList.contains('is-open');
+            }
+
+            function openPopup(btn, data) {
+                activeBtn = btn;
+                tableEl.innerHTML = data.aspects.map(function (a) {
+                    var val = parseInt(a.score, 10);
+                    var cls = val >= 85 ? 'high' : val >= 70 ? 'medium' : 'low';
+                    return '<div class="align-popup-row"><span class="align-popup-aspect"><span class="align-popup-icon">' + a.icon + '</span>' + a.label + '</span><span class="align-popup-score ' + cls + '">' + a.score + '</span></div>';
+                }).join('');
+                summaryEl.textContent = data.summary;
+                popup.classList.add('is-open');
+                positionPopup(btn);
+            }
+
+            function positionPopup(btn) {
+                var rect = btn.getBoundingClientRect();
+                var popupW = 300;
+                var left = rect.right + 10 + window.scrollX;
+                if (left + popupW > window.innerWidth - 12) {
+                    left = rect.left - popupW - 10 + window.scrollX;
+                }
+                var top = rect.top + window.scrollY;
+                popup.style.left = Math.max(8, left) + 'px';
+                popup.style.top = top + 'px';
+            }
+
+            function closePopup() {
+                popup.classList.remove('is-open');
+                activeBtn = null;
+            }
+
+            document.querySelectorAll('.align-eye-btn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (isOpen() && activeBtn === btn) { closePopup(); return; }
+                    var scoreEl = btn.closest('.alignment-score');
+                    var raw = scoreEl && scoreEl.getAttribute('data-align');
+                    if (!raw) return;
+                    try { openPopup(btn, JSON.parse(raw)); } catch (err) {}
+                });
+            });
+
+            closeBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                closePopup();
+            });
+
+            document.addEventListener('click', function (e) {
+                if (isOpen() && !popup.contains(e.target)) closePopup();
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closePopup();
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            var bell = document.getElementById('notifBell');
+            var panel = document.getElementById('notifPanel');
+            if (!bell || !panel) return;
+
+            bell.addEventListener('click', function (event) {
+                event.stopPropagation();
+                panel.classList.toggle('is-open');
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!panel.contains(event.target) && !bell.contains(event.target)) {
+                    panel.classList.remove('is-open');
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
-

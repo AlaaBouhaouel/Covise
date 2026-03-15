@@ -71,8 +71,47 @@
         </aside>
 
         <main class="main">
-            <section class="profile-hero">
-                <div class="cover"></div>
+            <header class="home-header" aria-label="Profile top bar">
+                <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
+                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
+                    <span>CoVise</span>
+                </a>
+                <div class="home-header-actions">
+                    <button class="theme-toggle" id="profileThemeToggle" aria-label="Toggle light/dark mode" aria-pressed="false" type="button">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <div class="notif-wrap">
+                        <button class="notification-bell" id="notifBell" aria-label="Toggle notifications" type="button">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M15 17H9M18 17V11a6 6 0 1 0-12 0v6l-2 2h16l-2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            <span class="notification-badge" aria-hidden="true">4</span>
+                        </button>
+                        <div id="notifPanel" class="notif-panel">
+                            <div class="notif-panel-head">
+                                <span class="notif-panel-title">Network Activity</span>
+                                <span class="notif-panel-meta">4 new</span>
+                            </div>
+                            <div class="activity-feed activity-feed-plain">
+                                <div class="feed-item"><div class="feed-text"><strong>Ahmed K.</strong><br>joined from Riyadh - looking for a tech co-founder</div><div class="feed-time">2h ago</div></div>
+                                <div class="feed-item"><div class="feed-text"><strong>New project posted</strong><br>B2B logistics platform, UAE expansion</div><div class="feed-time">4h ago</div></div>
+                                <div class="feed-item"><div class="feed-text"><strong>Sara M. &amp; Faisal A.</strong><br>started a Trial Build together</div><div class="feed-time">6h ago</div></div>
+                                <div class="feed-item"><div class="feed-text"><strong>Nora H.</strong><br>joined from Dubai - open to cross-border partnerships</div><div class="feed-time">9h ago</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
+                        </svg>
+                    </a>
+                </div>
+            </header>
+
+            <section class="profile-hero panel">
                 <div class="hero-body">
                     <div class="avatar">AA</div>
                     <div class="hero-main">
@@ -258,13 +297,53 @@
                     </article>
                 </div>
             </section>
-
-            <footer class="footer">
-                <p>2026 CoVise. All rights reserved.</p>
-            </footer>
         </main>
     </div>
+    <script>
+        (function () {
+            var toggleButton = document.getElementById('profileThemeToggle');
+            if (!toggleButton) return;
+
+            function applyThemeState() {
+                var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                toggleButton.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+                toggleButton.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+                toggleButton.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+            }
+
+            toggleButton.addEventListener('click', function () {
+                var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                if (isLight) {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('covise-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('covise-theme', 'light');
+                }
+                applyThemeState();
+            });
+
+            applyThemeState();
+        })();
+    </script>
+    <script>
+        (function () {
+            var bell = document.getElementById('notifBell');
+            var panel = document.getElementById('notifPanel');
+            if (!bell || !panel) return;
+
+            bell.addEventListener('click', function (event) {
+                event.stopPropagation();
+                panel.classList.toggle('is-open');
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!panel.contains(event.target) && !bell.contains(event.target)) {
+                    panel.classList.remove('is-open');
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
-
 

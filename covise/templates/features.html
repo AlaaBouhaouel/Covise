@@ -30,6 +30,17 @@
                 <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
                 <span>CoVise</span>
             </a>
+            <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNavMenu">
+                <svg class="mobile-nav-icon mobile-nav-icon-menu" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <rect x="2" y="4" width="16" height="2" rx="1" fill="currentColor"/>
+                    <rect x="2" y="9" width="16" height="2" rx="1" fill="currentColor"/>
+                    <rect x="2" y="14" width="16" height="2" rx="1" fill="currentColor"/>
+                </svg>
+                <svg class="mobile-nav-icon mobile-nav-icon-close" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <line x1="4" y1="4" x2="16" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="16" y1="4" x2="4" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
             <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
                 <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -38,6 +49,21 @@
                 <a href="/about/" class="nav-link">ABOUT</a>
                 <a href="/features/" class="nav-link nav-link-active">FEATURES</a>
                 <a href="/home/" class="nav-link nav-link-demo">DEMO</a>
+            </div>
+            <div class="mobile-nav-menu" id="mobileNavMenu" hidden>
+                <a href="/about/" class="mobile-nav-link">ABOUT</a>
+                <a href="/features/" class="mobile-nav-link mobile-nav-link-active">FEATURES</a>
+                <a href="/home/" class="mobile-nav-link mobile-nav-link-demo">DEMO</a>
+                <button class="mobile-nav-link mobile-theme-link" id="mobileThemeToggle" type="button">
+                    <svg class="mobile-theme-icon mobile-theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                    </svg>
+                    <svg class="mobile-theme-icon mobile-theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <span class="mobile-theme-label">LIGHT MODE</span>
+                </button>
             </div>
         </nav>
 
@@ -164,21 +190,65 @@
     </div>
 <script>
     (function() {
+        var nav = document.querySelector('.nav');
+        var navToggle = document.getElementById('mobileNavToggle');
+        var navMenu = document.getElementById('mobileNavMenu');
+        if (!nav || !navToggle || !navMenu) return;
+
+        function closeMenu() {
+            navMenu.hidden = true;
+            navToggle.setAttribute('aria-expanded', 'false');
+            nav.classList.remove('is-menu-open');
+        }
+
+        navToggle.addEventListener('click', function() {
+            var isOpen = navToggle.getAttribute('aria-expanded') === 'true';
+            if (isOpen) {
+                closeMenu();
+                return;
+            }
+            navToggle.setAttribute('aria-expanded', 'true');
+            navMenu.hidden = false;
+            nav.classList.add('is-menu-open');
+        });
+
+        navMenu.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', closeMenu);
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!nav.contains(event.target)) closeMenu();
+        });
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) closeMenu();
+        });
+    })();
+</script>
+<script>
+    (function() {
         var btn = document.getElementById('themeToggle');
+        var mobileBtn = document.getElementById('mobileThemeToggle');
+        var mobileBtnLabel = mobileBtn ? mobileBtn.querySelector('.mobile-theme-label') : null;
         var html = document.documentElement;
         function setTheme(theme) {
             if (theme === 'light') {
                 html.setAttribute('data-theme', 'light');
                 localStorage.setItem('covise-theme', 'light');
+                if (mobileBtnLabel) mobileBtnLabel.textContent = 'DARK MODE';
             } else {
                 html.removeAttribute('data-theme');
                 localStorage.setItem('covise-theme', 'dark');
+                if (mobileBtnLabel) mobileBtnLabel.textContent = 'LIGHT MODE';
             }
         }
-        btn.addEventListener('click', function() {
+        function toggleTheme() {
             var current = html.getAttribute('data-theme');
             setTheme(current === 'light' ? 'dark' : 'light');
-        });
+        }
+        if (btn) btn.addEventListener('click', toggleTheme);
+        if (mobileBtn) mobileBtn.addEventListener('click', toggleTheme);
+        setTheme(html.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
     })();
 </script>
 </body>

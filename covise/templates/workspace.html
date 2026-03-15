@@ -7,7 +7,7 @@
     <title>CoVise | Workspace</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'workspace.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -16,42 +16,25 @@
     </script>
 </head>
 <body>
-    <div class="layout">
+    <div class="workspace-app" id="workspaceApp">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
-                    <path d="M3 10.5L12 3l9 7.5"></path>
-                    <path d="M5 10.5V21h14V10.5"></path>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 10.5L12 3l9 7.5"></path><path d="M5 10.5V21h14V10.5"></path></svg>
             </a>
             <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
-                    <rect x="3" y="4" width="7" height="7"></rect>
-                    <rect x="14" y="4" width="7" height="7"></rect>
-                    <rect x="3" y="15" width="7" height="7"></rect>
-                    <rect x="14" y="15" width="7" height="7"></rect>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="4" width="7" height="7"></rect><rect x="14" y="4" width="7" height="7"></rect><rect x="3" y="15" width="7" height="7"></rect><rect x="14" y="15" width="7" height="7"></rect></svg>
             </a>
             <a class="sidebar-link" href="{% url 'Messages' %}" aria-label="Messages">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
-                    <path d="M4 6h16v10H7l-3 3V6z"></path>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 6h16v10H7l-3 3V6z"></path></svg>
             </a>
             <a class="sidebar-link" id="side_active" href="{% url 'Workspace' %}" aria-label="Workspace">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
-                    <path d="M3 7h18v12H3z"></path>
-                    <path d="M9 7V5h6v2"></path>
-                    <path d="M3 12h18"></path>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 7h18v12H3z"></path><path d="M9 7V5h6v2"></path><path d="M3 12h18"></path></svg>
             </a>
             <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
                 <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
-                    <circle cx="12" cy="8" r="4"></circle>
-                    <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path></svg>
             </a>
             <a class="sidebar-link" href="{% url 'Settings' %}" aria-label="Settings">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
@@ -62,26 +45,540 @@
             </a>
         </aside>
 
-        <main class="main">
-            <header class="workspace-header">
-                <div>
-                    <h1>Your workspace</h1>
-                    <p>Brainstorm and collaborate in real-time</p>
+        <aside class="workspace-nav" aria-label="Workspace navigation">
+            <div class="workspace-nav-top">
+                <div style="display: flex; justify-content: space-between;">
+                    <h1 style="font-size: 1.3rem;">Workspace</h1>
                 </div>
-                <a class="back-link" href="{% url 'Home' %}">Back to Home</a>
-            </header>
-
-            <section class="workspace-shell">
-                <div class="board-wrap">
+                <div class="workspace-toggle">
+                    <button class="toggle-pill is-active" type="button">Personal</button>
+                    <button class="toggle-pill" type="button">Team</button>
                 </div>
-            </section>
-
-            <div class="messages-lock" aria-live="polite">
-                <p>Your workspace will be available soon</p>
             </div>
-        </main>
+            <nav class="workspace-links" style="margin-top: calc(var(--spacing)*3);">
+                <button class="workspace-link is-active" type="button" data-section="overview"><i class="fa-solid fa-house"></i><span>Overview</span></button>
+                <button class="workspace-link" type="button" data-section="milestones"><i class="fa-solid fa-flag"></i><span>Milestones</span></button>
+                <button class="workspace-link" type="button" data-section="tasks"><i class="fa-solid fa-list-check"></i><span>Tasks</span></button>
+                <button class="workspace-link" type="button" data-section="documents"><i class="fa-solid fa-file"></i><span>Documents</span></button>
+                <button class="workspace-link" type="button" data-section="financials"><i class="fa-solid fa-chart-line"></i><span>Financials</span></button>
+                <button class="workspace-link" type="button" data-section="notes"><i class="fa-solid fa-note-sticky"></i><span>Notes</span></button>
+            </nav>
+            <div class="workspace-nav-bottom">
+                <div class="workspace-divider"></div>
+                <div class="members-summary">
+                    <div class="member-stack"><span class="member-stack-avatar a">A</span><span class="member-stack-avatar b">S</span></div>
+                    <span>2 members</span>
+                </div>
+                <button class="outline-btn full-btn" type="button">Invite</button>
+            </div>
+        </aside>
+        <section class="workspace-content">
+            <header class="content-topbar">
+                <div class="topbar-copy">
+                    <h2 id="sectionTitle">Overview</h2>
+                    <p id="sectionSubtitle">Track venture progress, activity, and where the team needs support next.</p>
+                </div>
+                <div class="topbar-actions">
+                    <div class="overall-progress">
+                        <div class="mini-progress"><span style="width: 65%;"></span></div>
+                        <span>65% complete</span>
+                    </div>
+                    <button class="icon-btn" id="contentNotifButton" type="button" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="mini-badge">3</span></button>
+                    <button class="advisor-header-btn" type="button" data-open-advisor aria-label="Open CoVise Advisor"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path><path d="M18.5 3.5l.6 1.9 1.9.6-1.9.6-.6 1.9-.6-1.9-1.9-.6 1.9-.6.6-1.9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path><path d="M5.5 15.5l.6 1.9 1.9.6-1.9.6-.6 1.9-.6-1.9-1.9-.6 1.9-.6.6-1.9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg></button>
+                </div>
+            </header>
+            <div class="content-scroll">
+                <section class="workspace-section is-active" data-section="overview">
+                    <div class="overview-grid">
+                        <div class="overview-main">
+                            <article class="panel-card">
+                                <div class="panel-head">
+                                    <div style="width: 80%;"><h3>Cofounder - Ahmed Alqahtani</h3><p>Connecting GCC founders with the right co-founders and resources to build successful ventures.</p></div>
+                                </div>
+                                <div class="pill-row" ><span class="stage-pill" style="padding: 6px 10px;">Building Stage</span><span class="meta-pill" style="padding: 6px 10px;">SaaS</span><span class="meta-pill" style="padding: 6px 10px;">GCC</span></div>
+                            </article>
+                            <article class="panel-card">
+                                <div class="panel-head"><div><h3>Build Progress</h3><p>Phase-level progress across the venture lifecycle.</p></div></div>
+                                <div class="phase-list">
+                                    <div class="phase-row"><div class="phase-meta"><strong>Validate</strong><span>3/3 milestones</span></div><div class="phase-bar success"><span style="width: 100%;"></span></div><div class="phase-stats"><strong>100%</strong><span>3/3 milestones</span></div></div>
+                                    <div class="phase-row"><div class="phase-meta"><strong>Build</strong><span>4/6 milestones</span></div><div class="phase-bar primary"><span style="width: 65%;"></span></div><div class="phase-stats"><strong>65%</strong><span>4/6 milestones</span></div></div>
+                                    <div class="phase-row"><div class="phase-meta"><strong>Launch</strong><span>0/4 milestones</span></div><div class="phase-bar neutral"><span style="width: 0%;"></span></div><div class="phase-stats"><strong>0%</strong><span>0/4 milestones</span></div></div>
+                                    <div class="phase-row"><div class="phase-meta"><strong>Scale</strong><span>0/3 milestones</span></div><div class="phase-bar neutral"><span style="width: 0%;"></span></div><div class="phase-stats"><strong>0%</strong><span>0/3 milestones</span></div></div>
+                                </div>
+                            </article>
+                            <article class="panel-card">
+                                <div class="panel-head"><div><h3>Recent Activity</h3><p>Recent updates across the workspace.</p></div></div>
+                                <div class="activity-list">
+                                    <div class="activity-row"><span class="activity-avatar a">A</span><div class="activity-copy"><strong>Ahmed</strong><span>added task: Draft investor outreach email</span></div><span class="activity-time">2h ago</span></div>
+                                    <div class="activity-row"><span class="activity-avatar b">S</span><div class="activity-copy"><strong>Sara</strong><span>updated financial model</span></div><span class="activity-time">4h ago</span></div>
+                                    <div class="activity-row"><span class="activity-avatar c">Y</span><div class="activity-copy"><strong>You</strong><span>completed milestone: Validate problem with 10 users</span></div><span class="activity-time">Yesterday</span></div>
+                                    <div class="activity-row"><span class="activity-avatar a">A</span><div class="activity-copy"><strong>Ahmed</strong><span>created document: Pitch Deck v2</span></div><span class="activity-time">Yesterday</span></div>
+                                    <div class="activity-row"><span class="activity-avatar b">S</span><div class="activity-copy"><strong>Sara</strong><span>left a note: Legal review needed before DIFC setup</span></div><span class="activity-time">2d ago</span></div>
+                                    <div class="activity-row"><span class="activity-avatar c">Y</span><div class="activity-copy"><strong>You</strong><span>added milestone: Launch beta to 50 users</span></div><span class="activity-time">3d ago</span></div>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="overview-side">
+                            <article class="panel-card"><div class="panel-head compact"><div><h3>Quick Stats</h3></div></div><div class="stats-grid"><div class="stat-box"><strong>12</strong><span>Tasks Completed</span></div><div class="stat-box"><strong>5</strong><span>Documents Created</span></div><div class="stat-box"><strong>23</strong><span>Days Active</span></div><div class="stat-box"><strong>4/11</strong><span>Milestones Done</span></div></div></article>
+                            <article class="panel-card">
+                                <div class="panel-head compact">
+                                    <div>
+                                        <div class="advisor-title">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                            <h3>CoVise Advisor</h3>
+                                        </div>
+                                        <p>Your AI chief of staff</p>
+                                    </div>
+                                </div>
+                                <div class="advisor-input-shell">
+                                    <input id="overviewAdvisorInput" class="advisor-input" type="text" placeholder="Ask your advisor anything...">
+                                    <button class="advisor-send" type="button" data-open-advisor>
+                                        <a>
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                            </svg>
+                                        </a>
+                                    </button>
+                                </div>
+                                <div class="chip-row">
+                                    <button class="quick-chip" type="button" data-open-advisor data-prompt="Generate milestone plan">Generate milestone plan</button><button class="quick-chip" type="button" data-open-advisor data-prompt="Review our progress">Review our progress</button><button class="quick-chip" type="button" data-open-advisor data-prompt="What are our biggest risks?">What are our biggest risks?</button></div></article>
+                            <article class="panel-card"><div class="panel-head compact"><div><h3>Your Team</h3></div></div><div class="team-list"><div class="team-row"><span class="team-avatar a">A</span><div class="team-copy"><strong>Ahmed Al-Dosari</strong><span>Technical Lead</span></div><span class="status-dot online"></span></div><div class="team-row"><span class="team-avatar b">S</span><div class="team-copy"><strong>Sara Al-Sabah</strong><span>Product Lead</span></div><span class="status-dot offline"></span></div></div><button class="outline-btn full-btn" type="button">Invite Co-founder</button></article>
+                        </div>
+                    </div>
+                </section>
+                <section class="workspace-section" data-section="milestones">
+                    <div class="section-toolbar"><div><h3>Milestone Tracker</h3></div><div class="toolbar-actions"><button class="outline-btn" type="button">Add Milestone</button><button class="primary-btn" type="button" data-open-modal="milestoneModal">AI Generate Plan</button></div></div>
+                    <div class="accordion-list">
+                        <article class="accordion-card"><button class="accordion-head is-open success" type="button"><span class="accordion-left"><span class="phase-dot success"></span><strong>VALIDATE</strong></span><span class="phase-badge success">3/3 complete</span><i class="fa-solid fa-chevron-down"></i></button><div class="accordion-body is-open"><div class="milestone-row completed"><label><input type="checkbox" checked><span>Define the problem statement</span></label><span class="status-badge done">Done</span><span class="assignee-chip">Ahmed</span><span class="due-date">Mar 1</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-row completed"><label><input type="checkbox" checked><span>Conduct 10 user interviews</span></label><span class="status-badge done">Done</span><span class="assignee-chip">Sara</span><span class="due-date">Mar 5</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-row completed"><label><input type="checkbox" checked><span>Validate willingness to pay</span></label><span class="status-badge done">Done</span><span class="assignee-chip">Ahmed</span><span class="due-date">Mar 8</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div></div></article>
+                        <article class="accordion-card"><button class="accordion-head is-open primary" type="button"><span class="accordion-left"><span class="phase-dot primary"></span><strong>BUILD</strong></span><span class="phase-badge primary">2/6 complete</span><i class="fa-solid fa-chevron-down"></i></button><div class="accordion-body is-open"><div class="milestone-row completed"><label><input type="checkbox" checked><span>Build MVP wireframes</span></label><span class="status-badge done">Done</span><span class="assignee-chip">Sara</span><span class="due-date">Mar 10</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-row completed"><label><input type="checkbox" checked><span>Define core feature set</span></label><span class="status-badge done">Done</span><span class="assignee-chip">Ahmed</span><span class="due-date">Mar 12</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-group"><div class="milestone-row in-progress"><label><input type="checkbox"><span>Develop authentication module</span></label><span class="status-badge progress">In Progress</span><span class="assignee-chip">Ahmed</span><span class="due-date">Mar 25</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-detail"><div class="subtask-list"><label><input type="checkbox" checked><span>Define auth flows</span></label><label><input type="checkbox"><span>Implement session handling</span></label><label><input type="checkbox"><span>Run QA on edge cases</span></label></div><textarea class="inline-notes" placeholder="Add milestone notes...">Waiting on final QA checklist before shipping.</textarea></div></div><div class="milestone-group"><div class="milestone-row not-started"><label><input type="checkbox"><span>Internal testing</span></label><span class="status-badge neutral">Not Started</span><span class="assignee-chip">Sara</span><span class="due-date">Apr 1</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-detail"><div class="subtask-list"><label><input type="checkbox"><span>Create QA checklist</span></label><label><input type="checkbox"><span>Recruit internal testers</span></label></div><textarea class="inline-notes" placeholder="Add milestone notes..."></textarea></div></div><div class="milestone-group"><div class="milestone-row not-started"><label><input type="checkbox"><span>Iterate on feedback</span></label><span class="status-badge neutral">Not Started</span><span class="assignee-chip">Ahmed</span><span class="due-date">Apr 10</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-detail"><div class="subtask-list"><label><input type="checkbox"><span>Review top issues</span></label><label><input type="checkbox"><span>Prioritize fixes</span></label></div><textarea class="inline-notes" placeholder="Add milestone notes..."></textarea></div></div><div class="milestone-group"><div class="milestone-row not-started"><label><input type="checkbox"><span>Beta preparation</span></label><span class="status-badge neutral">Not Started</span><span class="assignee-chip">Sara</span><span class="due-date">Apr 15</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-detail"><div class="subtask-list"><label><input type="checkbox"><span>Finalize beta cohort list</span></label><label><input type="checkbox"><span>Prepare onboarding guide</span></label></div><textarea class="inline-notes" placeholder="Add milestone notes..."></textarea></div></div></div></article>
+                        <article class="accordion-card"><button class="accordion-head neutral" type="button"><span class="accordion-left"><span class="phase-dot neutral"></span><strong>LAUNCH</strong></span><span class="phase-badge neutral">0/4 complete</span><i class="fa-solid fa-chevron-down"></i></button><div class="accordion-body"><div class="milestone-row not-started"><label><input type="checkbox"><span>Soft launch to waitlist</span></label><span class="status-badge neutral">Not Started</span><span class="assignee-chip">-</span><span class="due-date">Apr 20</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-row not-started"><label><input type="checkbox"><span>PR and founder story</span></label><span class="status-badge neutral">Not Started</span><span class="assignee-chip">-</span><span class="due-date">May 1</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-row not-started"><label><input type="checkbox"><span>Onboard first 50 users</span></label><span class="status-badge neutral">Not Started</span><span class="assignee-chip">-</span><span class="due-date">May 15</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-row not-started"><label><input type="checkbox"><span>Partnership outreach</span></label><span class="status-badge neutral">Not Started</span><span class="assignee-chip">-</span><span class="due-date">May 25</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div></div></article>
+                        <article class="accordion-card"><button class="accordion-head neutral" type="button"><span class="accordion-left"><span class="phase-dot neutral"></span><strong>SCALE</strong></span><span class="phase-badge neutral">0/3 complete</span><i class="fa-solid fa-chevron-down"></i></button><div class="accordion-body"><div class="milestone-row not-started"><label><input type="checkbox"><span>Raise pre-seed round</span></label><span class="status-badge neutral">Not Started</span><span class="assignee-chip">-</span><span class="due-date">Jun 1</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-row not-started"><label><input type="checkbox"><span>Expand to second GCC market</span></label><span class="status-badge neutral">Not Started</span><span class="assignee-chip">-</span><span class="due-date">Aug 1</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div><div class="milestone-row not-started"><label><input type="checkbox"><span>Build investor relations pipeline</span></label><span class="status-badge neutral">Not Started</span><span class="assignee-chip">-</span><span class="due-date">Sep 1</span><button class="expand-btn" type="button"><i class="fa-solid fa-chevron-down"></i></button></div></div></article>
+                    </div>
+                </section>
+                <section class="workspace-section" data-section="tasks">
+                    <div class="section-toolbar"><div><h3>Task Board</h3></div><div class="toolbar-filters"><div class="pill-filter-group" data-filter-group="assignee"><button class="mini-pill is-active" type="button" data-value="all">All</button><button class="mini-pill" type="button" data-value="Ahmed">Ahmed</button><button class="mini-pill" type="button" data-value="Sara">Sara</button><button class="mini-pill" type="button" data-value="Mine">Mine</button></div><div class="pill-filter-group" data-filter-group="priority"><button class="mini-pill is-active" type="button" data-value="all">All</button><button class="mini-pill" type="button" data-value="High">High</button><button class="mini-pill" type="button" data-value="Medium">Medium</button><button class="mini-pill" type="button" data-value="Low">Low</button></div><button class="primary-btn" type="button">+ Add Task</button></div></div>
+                    <div class="kanban-board" id="kanbanBoard"></div>
+                </section>
+                <section class="workspace-section" data-section="documents">
+                    <div class="section-toolbar"><div><h3>Documents</h3></div><div class="toolbar-actions"><button class="primary-btn" type="button" data-open-modal="documentModal">Create Document</button></div></div>
+                    <div class="document-grid"></div>
+                </section>
+                <section class="workspace-section" data-section="financials">
+                    <div class="section-toolbar"><div><h3>Financial Model</h3></div><div class="toolbar-actions"><button class="outline-btn" type="button">Export Excel</button><button class="primary-btn" type="button" data-open-advisor data-prompt="AI Fill Assumptions">AI Fill Assumptions</button></div></div>
+                    <div class="finance-summary-grid"><article class="stat-card"><strong>SAR 0</strong><span>Monthly Revenue</span><small>Pre-revenue</small></article><article class="stat-card"><strong>SAR 45,000</strong><span>Monthly Burn</span><small>Current run rate</small></article><article class="stat-card"><strong>8 months</strong><span>Runway</span><small>At current burn</small></article><article class="stat-card"><strong>Month 14</strong><span>Break-even</span><small>Projected</small></article></div>
+                    <article class="panel-card"><div class="table-section-head"><h4>Revenue Assumptions</h4></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Item</th><th>Unit</th><th>Price (SAR)</th><th>Monthly Units</th><th>Monthly Revenue</th></tr></thead><tbody><tr><td contenteditable="true">SaaS Subscription</td><td contenteditable="true">per user</td><td contenteditable="true">299</td><td contenteditable="true">0</td><td contenteditable="true">0</td></tr><tr><td contenteditable="true">Premium Plan</td><td contenteditable="true">per user</td><td contenteditable="true">799</td><td contenteditable="true">0</td><td contenteditable="true">0</td></tr><tr><td contenteditable="true">Enterprise License</td><td contenteditable="true">per company</td><td contenteditable="true">4,999</td><td contenteditable="true">0</td><td contenteditable="true">0</td></tr></tbody></table></div><button class="text-link" type="button">+ Add Revenue Stream</button></article>
+                    <article class="panel-card"><div class="table-section-head"><h4>Cost Structure</h4></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Item</th><th>Category</th><th>Monthly Cost (SAR)</th></tr></thead><tbody><tr><td contenteditable="true">Salaries</td><td contenteditable="true">People</td><td contenteditable="true">30,000</td></tr><tr><td contenteditable="true">Cloud Infrastructure</td><td contenteditable="true">Tech</td><td contenteditable="true">3,500</td></tr><tr><td contenteditable="true">Office / Co-working</td><td contenteditable="true">Operations</td><td contenteditable="true">5,000</td></tr><tr><td contenteditable="true">Marketing</td><td contenteditable="true">Growth</td><td contenteditable="true">4,000</td></tr><tr><td contenteditable="true">Legal &amp; Compliance</td><td contenteditable="true">Admin</td><td contenteditable="true">2,500</td></tr></tbody></table></div><button class="text-link" type="button">+ Add Cost Item</button></article>
+                    <article class="panel-card"><div class="table-section-head"><h4>12-Month Projections</h4></div><div class="table-scroll"><table class="data-table projection-table"><thead><tr><th>Month</th><th>Revenue</th><th>Costs</th><th>Net</th><th>Cumulative</th></tr></thead><tbody><tr><td>Month 1</td><td>0</td><td>45,000</td><td>-45,000</td><td>-45,000</td></tr><tr><td>Month 2</td><td>0</td><td>45,000</td><td>-45,000</td><td>-90,000</td></tr><tr><td>Month 3</td><td>12,000</td><td>46,000</td><td>-34,000</td><td>-124,000</td></tr><tr><td>Month 4</td><td>20,000</td><td>46,500</td><td>-26,500</td><td>-150,500</td></tr><tr><td>Month 5</td><td>28,000</td><td>47,000</td><td>-19,000</td><td>-169,500</td></tr><tr><td>Month 6</td><td>36,000</td><td>47,500</td><td>-11,500</td><td>-181,000</td></tr><tr><td>Month 7</td><td>44,000</td><td>48,000</td><td>-4,000</td><td>-185,000</td></tr><tr><td>Month 8</td><td>52,000</td><td>48,500</td><td>3,500</td><td>-181,500</td></tr><tr><td>Month 9</td><td>60,000</td><td>49,000</td><td>11,000</td><td>-170,500</td></tr><tr><td>Month 10</td><td>68,000</td><td>49,500</td><td>18,500</td><td>-152,000</td></tr><tr><td>Month 11</td><td>76,000</td><td>50,000</td><td>26,000</td><td>-126,000</td></tr><tr><td>Month 12</td><td>84,000</td><td>50,500</td><td>33,500</td><td>-92,500</td></tr><tr class="break-even-row"><td>Month 14</td><td>102,000</td><td>51,500</td><td>50,500</td><td>8,000</td></tr></tbody></table></div><p class="table-note">Break-even projected at Month 14</p></article>
+                </section>
+                <section class="workspace-section" data-section="notes">
+                    <div class="section-toolbar"><div><h3>Notes</h3></div><div class="toolbar-actions"><button class="primary-btn" id="addNoteButton" type="button">Add Note</button></div></div>
+                    <div class="toolbar-filters"><div class="pill-filter-group"><button class="mini-pill is-active" type="button">All</button><button class="mini-pill" type="button">Mine</button><button class="mini-pill" type="button">Pinned</button><button class="mini-pill" type="button">Private</button></div></div>
+                    <div class="note-composer" id="noteComposer" hidden><input class="composer-title" type="text" placeholder="Note title"><textarea class="composer-body" placeholder="Write your note..."></textarea><div class="composer-toolbar"><button type="button">B</button><button type="button">I</button><button type="button">&bull;</button></div><div class="composer-footer"><label class="private-toggle"><input type="checkbox"><i class="fa-solid fa-lock"></i><span>Private note</span></label><div class="composer-actions"><button class="text-link" id="cancelNoteButton" type="button">Cancel</button><button class="primary-btn" type="button">Post Note</button></div></div></div>
+                    <div class="notes-list"><article class="note-card"><div class="note-head"><div class="note-author"><span class="team-avatar b">S</span><div><strong>Sara Al-Sabah</strong><span>Mar 11</span></div></div><span class="pin-badge"><i class="fa-solid fa-thumbtack"></i></span></div><h4>Legal checklist before DIFC setup</h4><p>DIFC free zone requirements, minimum capital SAR 150k, visa quota 3 per license.</p><div class="note-foot"><div class="note-icons"><i class="fa-solid fa-thumbtack"></i></div><button class="icon-btn mini-icon" type="button"><i class="fa-solid fa-ellipsis"></i></button></div></article><article class="note-card private"><div class="note-head"><div class="note-author"><span class="team-avatar c">Y</span><div><strong>You</strong><span>Mar 13</span></div></div><span class="private-badge"><i class="fa-solid fa-lock"></i></span></div><h4>Personal thoughts on equity split</h4><p>This note is private and only visible to you in the workspace.</p><div class="note-foot"><div class="note-icons"><i class="fa-solid fa-lock"></i></div><button class="icon-btn mini-icon" type="button"><i class="fa-solid fa-ellipsis"></i></button></div></article><article class="note-card"><div class="note-head"><div class="note-author"><span class="team-avatar a">A</span><div><strong>Ahmed</strong><span>Mar 10</span></div></div></div><h4>Investor feedback from Wamda meeting</h4><p>Key takeaways from GCC VC meeting and where the story still feels too early.</p><div class="note-foot"><div class="note-icons"></div><button class="icon-btn mini-icon" type="button"><i class="fa-solid fa-ellipsis"></i></button></div></article><article class="note-card"><div class="note-head"><div class="note-author"><span class="team-avatar c">Y</span><div><strong>You</strong><span>Mar 9</span></div></div></div><h4>MVP feature prioritization</h4><p>MoSCoW framework applied to keep launch scope tight and avoid overbuilding.</p><div class="note-foot"><div class="note-icons"></div><button class="icon-btn mini-icon" type="button"><i class="fa-solid fa-ellipsis"></i></button></div></article><article class="note-card"><div class="note-head"><div class="note-author"><span class="team-avatar b">S</span><div><strong>Sara</strong><span>Mar 7</span></div></div></div><h4>Competitor analysis summary</h4><p>Three competitors mapped, with key positioning notes and gaps in founder support.</p><div class="note-foot"><div class="note-icons"></div><button class="icon-btn mini-icon" type="button"><i class="fa-solid fa-ellipsis"></i></button></div></article></div>
+                </section>
+            </div>
+        </section>
     </div>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+    <aside class="task-drawer" id="taskDrawer" aria-hidden="true"><div class="drawer-head"><h3 id="taskDrawerTitle" contenteditable="true" spellcheck="false">Task Details</h3><button class="icon-btn" id="closeTaskDrawer" type="button"><i class="fa-solid fa-xmark"></i></button></div><div class="drawer-body"><label class="field-label">Description<textarea>Finalize scope, review edge cases, and align implementation with current sprint priorities.</textarea></label><div class="drawer-grid"><label class="field-label">Assignee<select><option>Ahmed</option><option>Sara</option><option>Mine</option></select></label><label class="field-label">Due date<input type="date" value="2026-03-25"></label></div><div class="field-label">Priority<div class="pill-filter-group"><button class="mini-pill is-active" type="button">High</button><button class="mini-pill" type="button">Medium</button><button class="mini-pill" type="button">Low</button></div></div><div class="field-label">Status<div class="pill-filter-group"><button class="mini-pill" type="button">Backlog</button><button class="mini-pill is-active" type="button">In Progress</button><button class="mini-pill" type="button">Review</button><button class="mini-pill" type="button">Done</button></div></div><div class="field-label">Subtasks<div class="subtask-list"><label><input type="checkbox" checked><span>Finalize auth flow</span></label><label><input type="checkbox"><span>Connect session middleware</span></label><label><input type="checkbox"><span>Document QA steps</span></label></div><div class="subtask-add"><input type="text" placeholder="Add subtask"><button class="outline-btn small-btn" type="button">Add</button></div></div><div class="field-label">Comments<div class="comment-list"><div class="comment-row"><span class="team-avatar b">S</span><div><strong>Sara</strong><p>Let's keep the scope limited to email + Google auth for beta.</p></div></div><div class="comment-row"><span class="team-avatar a">A</span><div><strong>Ahmed</strong><p>I can ship the first pass after QA signs off on the acceptance criteria.</p></div></div></div></div></div><div class="drawer-foot"><button class="delete-link" type="button">Delete Task</button></div></aside>
+    <aside class="advisor-drawer" id="advisorDrawer" aria-hidden="true"><div class="drawer-head"><div><div class="advisor-title"><i class="fa-solid fa-wand-magic-sparkles"></i><h3>CoVise Advisor</h3></div><p id="advisorContext">I can see your venture progress. What do you need?</p></div><button class="icon-btn" id="closeAdvisorDrawer" type="button"><i class="fa-solid fa-xmark"></i></button></div><div class="drawer-body chat-body" id="advisorChatBody"><div class="chat-message advisor"><p>Your build phase is moving, but the biggest gap is shipping the remaining milestones with enough user feedback loops.</p></div><div class="chat-message user"><p>What should we focus on next?</p></div><div class="chat-message advisor"><p>CoVise Advisor is being trained. Full AI capabilities launching soon. You'll be the first to know.</p></div></div><div class="drawer-foot chat-foot"><div class="chip-row" id="advisorQuickPrompts"><button class="quick-chip" type="button">Generate milestone plan</button><button class="quick-chip" type="button">Review our progress</button><button class="quick-chip" type="button">What are our biggest risks?</button></div><div class="advisor-input-shell"><input class="advisor-input" id="advisorChatInput" type="text" placeholder="Ask CoVise Advisor anything..."><button class="advisor-send" id="advisorSendButton" type="button"><i class="fa-solid fa-paper-plane"></i></button></div></div></aside>
+    <div class="modal" id="milestoneModal" hidden><div class="modal-card"><div class="modal-head"><h3>Generate Milestone Plan</h3><button class="icon-btn modal-close" type="button"><i class="fa-solid fa-xmark"></i></button></div><p>CoVise Advisor will generate a milestone plan tailored to your venture type, industry, and current stage.</p><div class="modal-actions"><button class="primary-btn" id="generatePlanButton" type="button">Generate Plan</button></div><div class="modal-feedback" id="milestoneFeedback"></div></div></div>
+    <div class="modal" id="documentModal" hidden><div class="modal-card large"><div class="modal-head"><h3>What would you like to create?</h3><button class="icon-btn modal-close" type="button"><i class="fa-solid fa-xmark"></i></button></div><div class="creation-grid"><button class="creation-card" type="button" data-doc-type="Pitch Deck"><i class="fa-solid fa-presentation-screen"></i><strong>Pitch Deck</strong><span>AI-generated investor deck</span></button><button class="creation-card" type="button" data-doc-type="MVP Plan"><i class="fa-solid fa-list-check"></i><strong>MVP Plan</strong><span>Structured 90-day build plan</span></button><button class="creation-card" type="button" data-doc-type="Co-founder Agreement"><i class="fa-solid fa-handshake"></i><strong>Co-founder Agreement</strong><span>Legal checklist &amp; terms</span></button><button class="creation-card" type="button" data-doc-type="Financial Model"><i class="fa-solid fa-chart-line"></i><strong>Financial Model</strong><span>Revenue &amp; cost projections</span></button><button class="creation-card" type="button" data-doc-type="One-Pager"><i class="fa-solid fa-file-lines"></i><strong>One-Pager</strong><span>Single page executive summary</span></button><button class="creation-card" type="button" data-doc-type="Free Document"><i class="fa-solid fa-pen"></i><strong>Free Document</strong><span>Blank document, your format</span></button></div><div class="modal-feedback" id="documentFeedback"></div></div></div>
+
+    <script>
+        (function () {
+            var sectionMeta = {
+                overview: {
+                    title: 'Overview',
+                    subtitle: 'Track venture progress, activity, and where the team needs support next.',
+                    context: 'I can see your venture progress. What do you need?',
+                    prompts: ['Generate milestone plan', 'Review our progress', 'What are our biggest risks?']
+                },
+                milestones: {
+                    title: 'Milestones',
+                    subtitle: 'Review your current phase plan and what still needs to ship.',
+                    context: 'I can generate or review your milestone plan.',
+                    prompts: ['Generate milestone plan', 'Audit phase gaps', 'What should we ship first?']
+                },
+                tasks: {
+                    title: 'Tasks',
+                    subtitle: 'Manage work across backlog, in progress, review, and done.',
+                    context: 'I can prioritize your task board.',
+                    prompts: ['Prioritize the board', 'Who is overloaded?', 'What is blocking launch?']
+                },
+                documents: {
+                    title: 'Documents',
+                    subtitle: 'Keep your venture materials organized and ready to share.',
+                    context: 'I can generate any document for your venture.',
+                    prompts: ['Create a pitch deck', 'Draft a one-pager', 'What document is missing?']
+                },
+                financials: {
+                    title: 'Financials',
+                    subtitle: 'Review assumptions, costs, and projected break-even timing.',
+                    context: 'I can review your financial assumptions.',
+                    prompts: ['Review assumptions', 'Where is burn too high?', 'What drives break-even?']
+                },
+                notes: {
+                    title: 'Notes',
+                    subtitle: 'Capture internal thinking, investor feedback, and decision logs.',
+                    context: 'I can summarize your notes on demand.',
+                    prompts: ['Summarize notes', 'What themes are repeating?', 'Pull investor feedback']
+                }
+            };
+
+            var taskColumns = {
+                backlog: [
+                    { title: 'Research DIFC licensing', priority: 'Medium', assignee: 'Sara', avatar: 'S', avatarClass: 'b', due: 'Apr 5' },
+                    { title: 'Draft investor outreach email', priority: 'High', assignee: 'Ahmed', avatar: 'A', avatarClass: 'a', due: 'Mar 30' },
+                    { title: 'Design beta onboarding flow', priority: 'Medium', assignee: 'Sara', avatar: 'S', avatarClass: 'b', due: 'Apr 8' }
+                ],
+                'in-progress': [
+                    { title: 'Develop authentication module', priority: 'High', assignee: 'Ahmed', avatar: 'A', avatarClass: 'a', due: 'Mar 25' },
+                    { title: 'Create pitch deck v3', priority: 'High', assignee: 'Sara', avatar: 'S', avatarClass: 'b', due: 'Mar 28' },
+                    { title: 'Set up analytics', priority: 'Medium', assignee: 'Ahmed', avatar: 'A', avatarClass: 'a', due: 'Apr 1' }
+                ],
+                review: [
+                    { title: 'Financial model assumptions', priority: 'High', assignee: 'Ahmed', avatar: 'A', avatarClass: 'a', due: 'Mar 22' },
+                    { title: 'Landing page copy', priority: 'Low', assignee: 'Sara', avatar: 'S', avatarClass: 'b', due: 'Mar 20' }
+                ],
+                done: [
+                    { title: 'User interview synthesis', priority: 'Medium', assignee: 'Ahmed', avatar: 'A', avatarClass: 'a', due: 'Mar 10' },
+                    { title: 'Competitive analysis', priority: 'Medium', assignee: 'Sara', avatar: 'S', avatarClass: 'b', due: 'Mar 8' },
+                    { title: 'Define MVP scope', priority: 'High', assignee: 'Ahmed', avatar: 'A', avatarClass: 'a', due: 'Mar 5' }
+                ]
+            };
+
+            var documents = [
+                { icon: 'fa-presentation-screen', iconClass: 'deck', title: 'CoVise Pitch Deck v2', type: 'Pitch Deck', status: 'Final', statusClass: 'done', author: 'Sara', avatar: 'S', avatarClass: 'b', edited: 'Mar 10' },
+                { icon: 'fa-list-check', iconClass: 'plan', title: '90-Day MVP Plan', type: 'MVP Plan', status: 'Final', statusClass: 'done', author: 'Ahmed', avatar: 'A', avatarClass: 'a', edited: 'Mar 8' },
+                { icon: 'fa-chart-line', iconClass: 'finance', title: 'Financial Projections 2026', type: 'Financial Model', status: 'Draft', statusClass: 'warning', author: 'Ahmed', avatar: 'A', avatarClass: 'a', edited: 'Mar 15' },
+                { icon: 'fa-handshake', iconClass: 'agreement', title: 'Co-founder Agreement Draft', type: 'Agreement', status: 'Draft', statusClass: 'warning', author: 'Sara', avatar: 'S', avatarClass: 'b', edited: 'Mar 18' },
+                { icon: 'fa-file-lines', iconClass: 'pager', title: 'Executive One-Pager', type: 'One-Pager', status: 'Final', statusClass: 'done', author: 'Ahmed', avatar: 'A', avatarClass: 'a', edited: 'Mar 12' }
+            ];
+
+            var kanbanBoard = document.getElementById('kanbanBoard');
+            var documentGrid = document.querySelector('.document-grid');
+            var sectionButtons = Array.prototype.slice.call(document.querySelectorAll('.workspace-link'));
+            var sections = Array.prototype.slice.call(document.querySelectorAll('.workspace-section'));
+            var sectionTitle = document.getElementById('sectionTitle');
+            var sectionSubtitle = document.getElementById('sectionSubtitle');
+            var advisorContext = document.getElementById('advisorContext');
+            var backdrop = document.getElementById('backdrop');
+            var taskDrawer = document.getElementById('taskDrawer');
+            var advisorDrawer = document.getElementById('advisorDrawer');
+            var taskDrawerTitle = document.getElementById('taskDrawerTitle');
+            var noteComposer = document.getElementById('noteComposer');
+            var addNoteButton = document.getElementById('addNoteButton');
+            var cancelNoteButton = document.getElementById('cancelNoteButton');
+            var milestoneFeedback = document.getElementById('milestoneFeedback');
+            var documentFeedback = document.getElementById('documentFeedback');
+            var currentSection = 'overview';
+            var draggedCard = null;
+            var taskFilters = { assignee: 'all', priority: 'all' };
+
+            function renderKanban() {
+                if (!kanbanBoard) return;
+                var labels = {
+                    backlog: 'Backlog',
+                    'in-progress': 'In Progress',
+                    review: 'Review',
+                    done: 'Done'
+                };
+                kanbanBoard.innerHTML = Object.keys(taskColumns).map(function (key) {
+                    var cards = taskColumns[key];
+                    return '<div class="kanban-column" data-column="' + key + '"><div class="kanban-head"><strong>' + labels[key] + '</strong><span class="mini-pill count-pill">' + cards.length + '</span></div><div class="kanban-dropzone">' + cards.map(function (card) {
+                        return '<article class="task-card" draggable="true" data-assignee="' + card.assignee + '" data-priority="' + card.priority + '" data-status="' + labels[key] + '" data-title="' + card.title + '" data-date="' + card.due + '"><span class="drag-handle"><i class="fa-solid fa-grip-lines"></i></span><h4>' + card.title + '</h4><span class="priority-pill ' + card.priority.toLowerCase() + '">' + card.priority + '</span><div class="task-meta"><span class="task-avatar ' + card.avatarClass + '">' + card.avatar + '</span><span>' + card.due + '</span></div></article>';
+                    }).join('') + '</div></div>';
+                }).join('');
+                bindTaskEvents();
+            }
+
+            function renderDocuments() {
+                if (!documentGrid) return;
+                documentGrid.innerHTML = documents.map(function (doc) {
+                    return '<article class="doc-card"><div class="doc-icon ' + doc.iconClass + '"><i class="fa-solid ' + doc.icon + '"></i></div><h4>' + doc.title + '</h4><span class="doc-type">' + doc.type + '</span><div class="doc-meta-row"><span>Last edited</span><strong>' + doc.edited + '</strong></div><div class="doc-meta-row"><span>Created by</span><div class="doc-author"><span class="task-avatar ' + doc.avatarClass + '">' + doc.avatar + '</span><strong>' + doc.author + '</strong></div></div><span class="status-badge ' + doc.statusClass + '">' + doc.status + '</span><div class="doc-actions"><button class="outline-btn small-btn" type="button">View</button><button class="outline-btn small-btn" type="button">Download</button><button class="icon-btn mini-icon danger" type="button"><i class="fa-regular fa-trash-can"></i></button></div></article>';
+                }).join('');
+            }
+
+            function setSection(section) {
+                currentSection = section;
+                sectionButtons.forEach(function (button) {
+                    button.classList.toggle('is-active', button.getAttribute('data-section') === section);
+                });
+                sections.forEach(function (panel) {
+                    panel.classList.toggle('is-active', panel.getAttribute('data-section') === section);
+                });
+                sectionTitle.textContent = sectionMeta[section].title;
+                sectionSubtitle.textContent = sectionMeta[section].subtitle;
+                advisorContext.textContent = sectionMeta[section].context;
+                Array.prototype.slice.call(document.querySelectorAll('#advisorQuickPrompts .quick-chip')).forEach(function (chip, index) {
+                    chip.textContent = sectionMeta[section].prompts[index] || chip.textContent;
+                });
+            }
+
+            function openSurface(surface) {
+                backdrop.hidden = false;
+                surface.classList.add('is-open');
+                surface.setAttribute('aria-hidden', 'false');
+            }
+
+            function closeSurface(surface) {
+                surface.classList.remove('is-open');
+                surface.setAttribute('aria-hidden', 'true');
+                var anyModalOpen = Array.prototype.slice.call(document.querySelectorAll('.modal')).some(function (modal) {
+                    return !modal.hidden;
+                });
+                if (!taskDrawer.classList.contains('is-open') && !advisorDrawer.classList.contains('is-open') && !anyModalOpen) {
+                    backdrop.hidden = true;
+                }
+            }
+
+            function openAdvisorWithPrompt(prompt, shouldSend) {
+                openSurface(advisorDrawer);
+                if (!prompt) return;
+                var input = document.getElementById('advisorChatInput');
+                input.value = prompt;
+                input.focus();
+                if (shouldSend) {
+                    sendAdvisorMessage(prompt);
+                    input.value = '';
+                }
+            }
+
+            function applyTaskFilters() {
+                Array.prototype.slice.call(document.querySelectorAll('.task-card')).forEach(function (card) {
+                    var matchesAssignee = taskFilters.assignee === 'all' || card.getAttribute('data-assignee') === taskFilters.assignee || (taskFilters.assignee === 'Mine' && card.getAttribute('data-assignee') === 'Ahmed');
+                    var matchesPriority = taskFilters.priority === 'all' || card.getAttribute('data-priority') === taskFilters.priority;
+                    card.hidden = !(matchesAssignee && matchesPriority);
+                });
+                Array.prototype.slice.call(document.querySelectorAll('.kanban-column')).forEach(function (column) {
+                    column.querySelector('.count-pill').textContent = column.querySelectorAll('.task-card:not([hidden])').length;
+                });
+            }
+
+            function bindTaskEvents() {
+                Array.prototype.slice.call(document.querySelectorAll('.task-card')).forEach(function (card) {
+                    card.addEventListener('click', function () {
+                        taskDrawerTitle.textContent = card.getAttribute('data-title');
+                        openSurface(taskDrawer);
+                    });
+                    card.addEventListener('dragstart', function () {
+                        draggedCard = card;
+                        card.classList.add('is-dragging');
+                    });
+                    card.addEventListener('dragend', function () {
+                        draggedCard = null;
+                        card.classList.remove('is-dragging');
+                    });
+                });
+                Array.prototype.slice.call(document.querySelectorAll('.kanban-dropzone')).forEach(function (zone) {
+                    zone.addEventListener('dragover', function (event) {
+                        event.preventDefault();
+                        zone.classList.add('is-over');
+                    });
+                    zone.addEventListener('dragleave', function () {
+                        zone.classList.remove('is-over');
+                    });
+                    zone.addEventListener('drop', function (event) {
+                        event.preventDefault();
+                        zone.classList.remove('is-over');
+                        if (!draggedCard) return;
+                        zone.appendChild(draggedCard);
+                        var counts = zone.closest('.kanban-column').querySelector('.count-pill');
+                        void counts;
+                        Array.prototype.slice.call(document.querySelectorAll('.kanban-column')).forEach(function (column) {
+                            column.querySelector('.count-pill').textContent = column.querySelectorAll('.task-card').length;
+                        });
+                    });
+                });
+            }
+
+            renderKanban();
+            renderDocuments();
+            setSection('overview');
+            applyTaskFilters();
+
+            sectionButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    setSection(button.getAttribute('data-section'));
+                });
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('.pill-filter-group[data-filter-group] .mini-pill')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var group = button.closest('.pill-filter-group').getAttribute('data-filter-group');
+                    button.parentElement.querySelectorAll('.mini-pill').forEach(function (pill) {
+                        pill.classList.toggle('is-active', pill === button);
+                    });
+                    taskFilters[group] = button.getAttribute('data-value');
+                    applyTaskFilters();
+                });
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('.accordion-head')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    button.classList.toggle('is-open');
+                    button.nextElementSibling.classList.toggle('is-open');
+                });
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('.milestone-group .expand-btn')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var group = button.closest('.milestone-group');
+                    group.classList.toggle('is-open');
+                });
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('.milestone-row input[type="checkbox"]')).forEach(function (input) {
+                input.addEventListener('change', function () {
+                    var row = input.closest('.milestone-row');
+                    var badge = row.querySelector('.status-badge');
+                    if (input.checked) {
+                        row.classList.remove('not-started', 'in-progress');
+                        row.classList.add('completed');
+                        badge.className = 'status-badge done';
+                        badge.textContent = 'Done';
+                    } else {
+                        row.classList.remove('completed');
+                        row.classList.add('not-started');
+                        badge.className = 'status-badge neutral';
+                        badge.textContent = 'Not Started';
+                    }
+                });
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('[data-open-advisor]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var shellInput = button.parentElement && button.parentElement.querySelector('input');
+                    var prompt = button.getAttribute('data-prompt') || (shellInput ? shellInput.value.trim() : '');
+                    openAdvisorWithPrompt(prompt, !!prompt);
+                    if (shellInput) shellInput.value = '';
+                });
+            });
+
+            document.getElementById('closeAdvisorDrawer').addEventListener('click', function () {
+                closeSurface(advisorDrawer);
+            });
+
+            document.getElementById('closeTaskDrawer').addEventListener('click', function () {
+                closeSurface(taskDrawer);
+            });
+
+            backdrop.addEventListener('click', function () {
+                closeSurface(taskDrawer);
+                closeSurface(advisorDrawer);
+                Array.prototype.slice.call(document.querySelectorAll('.modal')).forEach(function (modal) {
+                    modal.hidden = true;
+                });
+                backdrop.hidden = true;
+            });
+
+            if (addNoteButton && cancelNoteButton && noteComposer) {
+                addNoteButton.addEventListener('click', function () {
+                    noteComposer.hidden = false;
+                });
+                cancelNoteButton.addEventListener('click', function () {
+                    noteComposer.hidden = true;
+                });
+            }
+
+            Array.prototype.slice.call(document.querySelectorAll('[data-open-modal]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var modal = document.getElementById(button.getAttribute('data-open-modal'));
+                    if (!modal) return;
+                    modal.hidden = false;
+                    backdrop.hidden = false;
+                });
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('.modal-close')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    button.closest('.modal').hidden = true;
+                    if (!taskDrawer.classList.contains('is-open') && !advisorDrawer.classList.contains('is-open')) {
+                        backdrop.hidden = true;
+                    }
+                });
+            });
+
+            document.getElementById('generatePlanButton').addEventListener('click', function () {
+                milestoneFeedback.textContent = 'Generating plan...';
+                setTimeout(function () {
+                    milestoneFeedback.textContent = 'Coming Soon - AI milestone generation will be available when CoVise Advisor launches.';
+                }, 700);
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('.creation-card')).forEach(function (card) {
+                card.addEventListener('click', function () {
+                    documentFeedback.textContent = 'Generating your ' + card.getAttribute('data-doc-type') + '... Coming Soon.';
+                });
+            });
+
+            if (document.getElementById('overviewAdvisorInput')) {
+                document.getElementById('overviewAdvisorInput').addEventListener('keydown', function (event) {
+                    if (event.key !== 'Enter') return;
+                    event.preventDefault();
+                    if (!event.target.value.trim()) return;
+                    openAdvisorWithPrompt(event.target.value.trim(), true);
+                    event.target.value = '';
+                });
+            }
+
+            function sendAdvisorMessage(text) {
+                var chatBody = document.getElementById('advisorChatBody');
+                var typing = document.createElement('div');
+                chatBody.insertAdjacentHTML('beforeend', '<div class="chat-message user"><p>' + text + '</p></div>');
+                typing.className = 'chat-message advisor typing';
+                typing.innerHTML = '<p><span></span><span></span><span></span></p>';
+                chatBody.appendChild(typing);
+                chatBody.scrollTop = chatBody.scrollHeight;
+                setTimeout(function () {
+                    typing.outerHTML = '<div class="chat-message advisor"><p>CoVise Advisor is being trained. Full AI capabilities launching soon. You\\'ll be the first to know.</p></div>';
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }, 900);
+            }
+
+            Array.prototype.slice.call(document.querySelectorAll('#advisorQuickPrompts .quick-chip')).forEach(function (chip) {
+                chip.addEventListener('click', function () {
+                    sendAdvisorMessage(chip.textContent);
+                });
+            });
+
+            document.getElementById('advisorSendButton').addEventListener('click', function () {
+                var input = document.getElementById('advisorChatInput');
+                if (!input.value.trim()) return;
+                sendAdvisorMessage(input.value.trim());
+                input.value = '';
+            });
+
+            document.getElementById('advisorChatInput').addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter') return;
+                event.preventDefault();
+                document.getElementById('advisorSendButton').click();
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('.note-card .mini-icon')).forEach(function (button, index) {
+                var wrap = document.createElement('div');
+                wrap.className = 'note-menu';
+                wrap.innerHTML = '<button type="button">Edit</button><button type="button">Delete</button><button type="button">Copy link</button><button type="button">' + (index === 0 ? 'Unpin' : 'Pin') + '</button>';
+                button.parentElement.appendChild(wrap);
+                button.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    Array.prototype.slice.call(document.querySelectorAll('.note-menu')).forEach(function (menu) {
+                        menu.classList.toggle('is-open', menu === wrap && !menu.classList.contains('is-open'));
+                    });
+                });
+            });
+
+            document.addEventListener('click', function (event) {
+                if (event.target.closest('.note-foot')) return;
+                Array.prototype.slice.call(document.querySelectorAll('.note-menu')).forEach(function (menu) {
+                    menu.classList.remove('is-open');
+                });
+            });
+        })();
+    </script>
 </body>
 </html>
-
 

@@ -6,12 +6,12 @@
 
 :root {
     --bg: #05060b;
-    --panel: rgba(6, 10, 18, 0.9);
+    --panel: #060a12e6;
     --text: #cfd7e6;
     --muted: #9aa6bd;
     --border: rgba(255, 255, 255, 0.08);
     --sidebar-bg: rgba(10, 16, 28, 0.95);
-    --sidebar-link-bg: rgba(16, 24, 40, 0.92);
+    --sidebar-link-bg: rgba(32, 46, 78, 0.92);
     --mobile-sidebar-bg: rgba(0, 0, 0, 0.6);
     --lock-overlay: rgba(5, 8, 16, 0.42);
     --lock-text: #e7edf9;
@@ -37,24 +37,25 @@ body {
     min-height: 100vh;
 }
 .sidebar {
-    position: sticky;
+    position: fixed;
     top: 0;
-    align-self: flex-start;
-    width: 72px;
+    left: 0;
+    width: 68px;
     height: 100vh;
     background: var(--sidebar-bg);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: calc(var(--spacing) * 4) 0;
-    gap: calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 3.5) 0;
+    gap: calc(var(--spacing) * 2.25);
+    z-index: 200;
 }
 
 .sidebar .sidebar-link {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     border: 1px solid var(--border);
     background: var(--sidebar-link-bg);
     color: var(--text);
@@ -83,20 +84,21 @@ body {
 }
 
 .sidebar svg {
-    width: 18px;
-    height: 18px;
+    width: 17px;
+    height: 17px;
     stroke: currentColor;
 }
 
 .sidebar .sidebar-link img {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     object-fit: contain;
 }
 
 .main {
     flex: 1;
     position: relative;
+    margin-left: 68px;
     padding: calc(var(--spacing) * 7) calc(var(--spacing) * 10);
     display: grid;
     gap: calc(var(--spacing) * 3);
@@ -274,6 +276,7 @@ body {
     }
 
     .main {
+        margin-left: 0;
         height: auto;
         min-height: 0;
         padding: calc(var(--spacing) * 4);
@@ -292,12 +295,22 @@ body {
     }
 
     .sidebar {
+        justify-content: space-around;
         gap: calc(var(--spacing) * 0.75);
     }
 
+    .sidebar .sidebar-link[aria-label="Profile"],
+    .sidebar .sidebar-link[aria-label="Logo"],
+    .sidebar .sidebar-link[aria-label="Landing Page"] {
+        display: none;
+    }
+
     .sidebar .sidebar-link {
-        width: 34px;
-        height: 34px;
+        width: auto;
+        height: auto;
+        background: transparent;
+        border: none;
+        padding: calc(var(--spacing) * 0.75);
     }
 
     .chatbot-shell {
@@ -348,8 +361,13 @@ body {
 }
 
 [data-theme="light"] .sidebar .sidebar-link {
-    color: var(--text);
-    border-color: rgba(0, 20, 80, 0.12);
+    background: rgba(255, 255, 255, 0.9);
+    color: #2b3f6c;
+    border-color: rgba(72, 108, 175, 0.2);
+}
+
+[data-theme="light"] .sidebar .sidebar-link#side_active {
+    border: 1px solid var(--accent);
 }
 
 [data-theme="light"] .panel,

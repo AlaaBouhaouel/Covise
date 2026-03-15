@@ -7,7 +7,8 @@
     <title>CoVise | Messages</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'messages.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -15,19 +16,9 @@
         })();
     </script>
 </head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-RDN1TCMRNR');
-</script>
-
 <body>
-    <div class="layout">
+    <div class="messages-app" id="messagesApp">
+
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
@@ -43,7 +34,7 @@
                     <rect x="14" y="15" width="7" height="7"></rect>
                 </svg>
             </a>
-            <a class="sidebar-link" id="side_active" href="{% url 'Messages' %}" aria-label="Messages">
+            <a class="sidebar-link" id="side_active"  href="{% url 'Messages' %}" aria-label="Messages">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <path d="M4 6h16v10H7l-3 3V6z"></path>
                 </svg>
@@ -58,7 +49,7 @@
             <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
                 <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
-            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
+            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile" data-demo="Open your personal profile card and founder summary." data-demo-pos="side">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="8" r="4"></circle>
                     <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
@@ -73,188 +64,136 @@
             </a>
         </aside>
 
-        <main class="main">
-            <section class="panel contacts-panel" id="contactsPanel">
-                <div class="contacts-panel-head">
-                    <h2>Contacts</h2>
-                    <button type="button" class="contacts-close-btn" id="contactsCloseBtn" aria-label="Close contacts">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
-                            <path d="M18 6L6 18"></path>
-                            <path d="M6 6L18 18"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="contact-list" id="contactList">
-    <button class="contact is-active" type="button" data-contact="mariam">
-        <div class="contact-avatar">MA</div>
-        <div class="contact-info">
-            <div class="contact-name">Mariam Al</div>
-            <div class="contact-meta">Investor 2 new</div>
-        </div>
-    </button>
-    <button class="contact" type="button" data-contact="sami">
-        <div class="contact-avatar">SK</div>
-        <div class="contact-info">
-            <div class="contact-name">Sami K.</div>
-            <div class="contact-meta">Product Waiting</div>
-        </div>
-    </button>
-    <button class="contact" type="button" data-contact="leen">
-        <div class="contact-avatar">LN</div>
-        <div class="contact-info">
-            <div class="contact-name">Leen Noor</div>
-            <div class="contact-meta">Design 1 new</div>
-        </div>
-    </button>
-    <button class="contact" type="button" data-contact="hadi">
-        <div class="contact-avatar">HA</div>
-        <div class="contact-info">
-            <div class="contact-name">Hadi A.</div>
-            <div class="contact-meta">Ops Active</div>
-        </div>
-    </button>
-    <button class="contact" type="button" data-contact="rana">
-        <div class="contact-avatar">RN</div>
-        <div class="contact-info">
-            <div class="contact-name">Rana N.</div>
-            <div class="contact-meta">Founder 3 new</div>
-        </div>
-    </button>
-</div>
-</section>
-
-            <button type="button" class="contacts-overlay" id="contactsOverlay" aria-label="Close contacts"></button>
-
-            <section class="panel chat">
-    <div class="chat-header">
-        <button type="button" class="contacts-toggle-btn" id="contactsToggleBtn" aria-label="Open contacts">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
-                <path d="M3 6h18"></path>
-                <path d="M3 12h18"></path>
-                <path d="M3 18h18"></path>
-            </svg>
-        </button>
-        <div>
-            <div class="chat-title" id="messageHeader">Mariam</div>
-            <div class="chat-subtitle" id="messageStatus">Active now</div>
-        </div>
-        <div class="chat-actions">
-            <button type="button" class="icon-action" aria-label="Call">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
-                    <path d="M22 16.92v2a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 3.2 2 2 0 0 1 4.11 1h2a2 2 0 0 1 2 1.72c.12.88.35 1.74.68 2.56a2 2 0 0 1-.45 2.11L7.19 8.54a16 16 0 0 0 8.27 8.27l1.15-1.15a2 2 0 0 1 2.11-.45c.82.33 1.68.56 2.56.68A2 2 0 0 1 22 16.92Z"></path>
-                </svg>
-            </button>
-            <button type="button" class="icon-action" aria-label="Files">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <path d="M14 2v6h6"></path>
-                    <path d="M16 13H8"></path>
-                    <path d="M16 17H8"></path>
-                </svg>
-            </button>
-        </div>
-    </div>
-    <div class="messages chat-body" id="messageList"></div>
-    <form class="chat-input" onsubmit="return false;">
-        <input type="text" placeholder="Write a message...">
-        <button type="button">  
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-</button>
-    </form>
-</section>
-            <div class="messages-lock" aria-live="polite">
-                <p>Your messages will be available soon</p>
+        <section class="conversation-panel">
+            <div class="conv-top">
+                <h1>Messages</h1>
+                <button class="mobile-close-chat" id="mobileCloseChat" type="button"><i class="fa-solid fa-arrow-left"></i></button>
             </div>
+            <div class="request-wrap">
+                <button class="requests-toggle" id="requestsToggle" type="button">
+                    <span>2 Message Requests</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="requests-list" id="requestsList">
+                    <article class="request-item">
+                        <div><h3>Rashed Al-Harbi</h3><p>Interested in joining your logistics SaaS venture.</p></div>
+                        <div class="request-actions"><button class="accept" type="button">Accept</button><button class="decline" type="button">Decline</button></div>
+                    </article>
+                    <article class="request-item">
+                        <div><h3>Noura Al-Mutairi</h3><p>Wants to discuss growth partnership in KSA/UAE.</p></div>
+                        <div class="request-actions"><button class="accept" type="button">Accept</button><button class="decline" type="button">Decline</button></div>
+                    </article>
+                </div>
+            </div>
+            <div class="conv-search"><i class="fa-solid fa-magnifying-glass"></i><input id="conversationSearch" type="text" placeholder="Search conversations..."></div>
+            <div class="conv-tabs">
+                <button class="tab-btn is-active" id="directTabBtn" data-tab="direct">Direct</button>
+                <button class="tab-btn" id="groupsTabBtn" data-tab="groups">Groups</button>
+            </div>
+            <div class="conv-list-wrap">
+                <div class="conversation-list" id="directList"></div>
+                <div class="conversation-list is-hidden" id="groupsList"></div>
+            </div>
+        </section>
 
-
+        <main class="chat-panel">
+            <header class="chat-header">
+                <button class="mobile-back-btn" id="mobileBackBtn" type="button"><i class="fa-solid fa-arrow-left"></i></button>
+                <div class="chat-contact">
+                    <div class="avatar avatar-lg" id="chatAvatar">L</div>
+                    <div>
+                        <h2 id="chatName">Leena Al-Sabah</h2>
+                        <p id="chatStatus"><span class="chat-status-dot" id="chatStatusDot" aria-hidden="true"></span>Active now</p>
+                    </div>
+                </div>
+                <span class="match-pill" id="chatMatchPill">Tech Co-founder Match</span>
+                <div class="chat-actions">
+                    <button class="icon-btn" type="button" data-tooltip="Search in chat"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <button class="icon-btn" type="button" data-tooltip="Attach file"><i class="fa-solid fa-paperclip"></i></button>
+                    <button class="icon-btn is-disabled" id="videoCallBtn" type="button" data-tooltip="Video Call - Coming Soon"><i class="fa-solid fa-video"></i></button>
+                    <button class="icon-btn" id="toggleDetailsBtn" type="button" data-tooltip="Details"><i class="fa-solid fa-circle-info"></i></button>
+                    <div class="menu-wrap">
+                        <button class="icon-btn" id="moreMenuBtn" type="button" data-tooltip="More"><i class="fa-solid fa-ellipsis"></i></button>
+                        <div class="more-menu" id="moreMenu">
+                            <button type="button" data-action="contract"><i class="fa-regular fa-file-lines"></i><span>Create Contract</span></button>
+                            <button type="button" data-action="summary"><i class="fa-solid fa-sparkles"></i><span>Summarize with AI</span></button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="chat-body">
+                <div class="pinned-banner"><i class="fa-solid fa-thumbtack"></i><span id="pinnedText"></span></div>
+                <div class="messages-stream" id="messagesStream"></div>
+            </div>
+            <form class="chat-input-bar" id="chatInputBar" onsubmit="return false;">
+                <button class="input-icon-btn" type="button"><i class="fa-solid fa-paperclip"></i></button>
+                <input id="chatInput" type="text" placeholder="Type a message...">
+                <button class="input-icon-btn" type="button"><i class="fa-regular fa-face-smile"></i></button>
+                <button class="send-btn" id="sendBtn" type="submit" disabled><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
         </main>
-        
-         <!-- Footer -->
 
+        <aside class="details-panel" id="detailsPanel">
+            <div class="details-header">
+                <h3 id="detailsName">Leena Al-Sabah</h3>
+                <button class="icon-btn" id="closeDetailsBtn" type="button"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="details-tabs">
+                <button class="details-tab is-active" data-details-tab="info">Info</button>
+                <button class="details-tab" data-details-tab="files">Files</button>
+                <button class="details-tab" data-details-tab="agreements">Agreements</button>
+                <button class="details-tab" data-details-tab="settings">Settings</button>
+            </div>
+            <div class="details-content">
+                <section class="details-pane is-active" data-pane="info">
+                    <div class="details-profile">
+                        <div class="avatar avatar-xl" id="detailsAvatar">L</div>
+                        <h4 id="detailsPersonName">Leena Al-Sabah</h4>
+                        <span class="match-pill" id="detailsMatchPill">Tech Co-founder Match</span>
+                        <p class="meta-row"><strong>Matched on:</strong> <span id="detailsMatchedOn">March 8, 2026</span></p>
+                        <p class="meta-row"><strong>User type:</strong> <span id="detailsUserType">Specialist / Operator</span></p>
+                        <p class="meta-row"><strong>Industry:</strong> <span id="detailsIndustry">Fintech / B2B SaaS</span></p>
+                        <p class="meta-row"><strong>Venture stage:</strong> <span id="detailsStage">MVP built</span></p>
+                        <div class="score-wrap">
+                            <div class="score-head"><span>Founder Conviction Score</span><span id="convictionValue">84/100</span></div>
+                            <div class="score-track"><div class="score-fill" id="convictionFill"></div></div>
+                        </div>
+                        <p class="meta-row"><strong>Mutual connections:</strong> <span id="detailsMutual">7</span></p>
+                        <button class="panel-btn" type="button">View Full Profile</button>
+                    </div>
+                </section>
+                <section class="details-pane" data-pane="files">
+                    <article class="file-item"><i class="fa-regular fa-file-pdf"></i><div><h4>Market_Validation_Deck.pdf</h4><p>2.1 MB • March 12, 2026</p></div><button type="button">Download</button></article>
+                    <article class="file-item"><i class="fa-regular fa-file-word"></i><div><h4>GTM_Plan_Draft.docx</h4><p>684 KB • March 11, 2026</p></div><button type="button">Download</button></article>
+                    <article class="file-item"><i class="fa-regular fa-file-image"></i><div><h4>Prototype_Screen.png</h4><p>1.4 MB • March 10, 2026</p></div><button type="button">Download</button></article>
+                    <p class="muted-note">No more files</p>
+                </section>
+                <section class="details-pane" data-pane="agreements">
+                    <article class="agreement-item"><div class="agreement-head"><i class="fa-regular fa-file-lines"></i><h4>Founders Collaboration MoU</h4></div><p>Created: March 9, 2026</p><span class="status-pill pending">Pending</span></article>
+                    <article class="agreement-item"><div class="agreement-head"><i class="fa-regular fa-file-signature"></i><h4>NDA for Product Roadmap</h4></div><p>Created: March 8, 2026</p><span class="status-pill signed">Signed</span></article>
+                    <button class="panel-btn" id="createAgreementBtn" type="button">Create New Agreement</button>
+                </section>
+                <section class="details-pane" data-pane="settings">
+                    <label class="toggle-row"><span>Mute notifications</span><input type="checkbox"><span class="toggle-slider"></span></label>
+                    <label class="toggle-row"><span>Pin conversation</span><input type="checkbox"><span class="toggle-slider"></span></label>
+                    <div class="settings-actions">
+                        <button class="text-btn danger" id="blockUserBtn" type="button">Block User</button>
+                        <button class="text-btn" id="reportUserBtn" type="button">Report User</button>
+                        <button class="text-btn" id="clearChatBtn" type="button">Clear Chat History</button>
+                    </div>
+                </section>
+            </div>
+        </aside>
     </div>
 
-    <script>
-    const messagesByContact = {
-        mariam: [
-            { from: "them", text: "Can you share the latest metrics for Q1? We want to align the next check-in.", time: "09:20" },
-            { from: "me", text: "Yes, I'll send the updated dashboard and the deck by end of day.", time: "09:22" },
-            { from: "them", text: "Perfect. Also share the runway assumptions if you can.", time: "09:23" }
-        ],
-        sami: [
-            { from: "them", text: "We should validate the onboarding flow before shipping analytics. Thoughts?", time: "11:04" },
-            { from: "me", text: "Agree. I'll run a quick test this week and share results.", time: "11:07" }
-        ],
-        leen: [
-            { from: "them", text: "Sent over the revised onboarding flow. The CTA placement tests better now.", time: "15:18" },
-            { from: "me", text: "Looks great. Can you also mock the pricing screen?", time: "15:22" }
-        ],
-        hadi: [
-            { from: "them", text: "We still need the security review and a final test pass on the dashboard.", time: "10:31" }
-        ],
-        rana: [
-            { from: "them", text: "Let's sync on the partnership terms. I have Tuesday and Thursday open.", time: "13:05" },
-            { from: "me", text: "Thursday works. Also great news on the new founders.", time: "13:08" }
-        ]
-    };
+    <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal-card">
+            <div class="modal-head"><h3 id="modalTitle">Modal</h3><button class="icon-btn" id="closeModalBtn" type="button"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-foot" id="modalFoot"></div>
+        </div>
+    </div>
 
-    const contactList = document.getElementById('contactList');
-    const messageList = document.getElementById('messageList');
-    const messageHeader = document.getElementById('messageHeader');
-    const messageStatus = document.getElementById('messageStatus');
-    const contactsPanel = document.getElementById('contactsPanel');
-    const contactsToggleBtn = document.getElementById('contactsToggleBtn');
-    const contactsCloseBtn = document.getElementById('contactsCloseBtn');
-    const contactsOverlay = document.getElementById('contactsOverlay');
-    const mobileContactsMedia = window.matchMedia('(max-width: 520px)');
-
-    function setContactsOpen(isOpen) {
-        contactsPanel.classList.toggle('is-open', isOpen);
-        contactsOverlay.classList.toggle('is-open', isOpen);
-    }
-
-    function renderMessages(contactKey, displayName) {
-        messageHeader.textContent = displayName;
-        messageStatus.textContent = 'Active now';
-        messageList.innerHTML = '';
-        (messagesByContact[contactKey] || []).forEach((item) => {
-            const card = document.createElement('div');
-            card.className = `message bubble ${item.from === 'me' ? 'from-me' : 'from-them'}`;
-            card.innerHTML = `
-                <div class="message-body">${item.text}</div>
-                <div class="message-meta">${item.time}</div>
-            `;
-            messageList.appendChild(card);
-        });
-        messageList.scrollTop = messageList.scrollHeight;
-    }
-
-    renderMessages('mariam', 'Mariam');
-
-    contactList.addEventListener('click', (event) => {
-        const button = event.target.closest('.contact');
-        if (!button) return;
-        contactList.querySelectorAll('.contact').forEach((el) => el.classList.remove('is-active'));
-        button.classList.add('is-active');
-        const name = button.querySelector('.contact-name').textContent.trim();
-        renderMessages(button.dataset.contact, name.split(' ')[0]);
-        if (mobileContactsMedia.matches) {
-            setContactsOpen(false);
-        }
-    });
-
-    contactsToggleBtn.addEventListener('click', () => setContactsOpen(true));
-    contactsCloseBtn.addEventListener('click', () => setContactsOpen(false));
-    contactsOverlay.addEventListener('click', () => setContactsOpen(false));
-    mobileContactsMedia.addEventListener('change', (event) => {
-        if (!event.matches) {
-            setContactsOpen(false);
-        }
-    });
-</script>
+    <script src="{% static 'messages.js' %}"></script>
 </body>
 </html>
-
-

@@ -15,63 +15,68 @@
         })();
     </script>
 </head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-RDN1TCMRNR');
-</script>
 <body>
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
-                    <path d="M3 10.5L12 3l9 7.5"></path>
-                    <path d="M5 10.5V21h14V10.5"></path>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 10.5L12 3l9 7.5"></path><path d="M5 10.5V21h14V10.5"></path></svg>
             </a>
             <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
-                    <rect x="3" y="4" width="7" height="7"></rect>
-                    <rect x="14" y="4" width="7" height="7"></rect>
-                    <rect x="3" y="15" width="7" height="7"></rect>
-                    <rect x="14" y="15" width="7" height="7"></rect>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="4" width="7" height="7"></rect><rect x="14" y="4" width="7" height="7"></rect><rect x="3" y="15" width="7" height="7"></rect><rect x="14" y="15" width="7" height="7"></rect></svg>
             </a>
             <a class="sidebar-link" href="{% url 'Messages' %}" aria-label="Messages">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
-                    <path d="M4 6h16v10H7l-3 3V6z"></path>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 6h16v10H7l-3 3V6z"></path></svg>
             </a>
             <a class="sidebar-link" href="{% url 'Workspace' %}" aria-label="Workspace">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
-                    <path d="M3 7h18v12H3z"></path>
-                    <path d="M9 7V5h6v2"></path>
-                    <path d="M3 12h18"></path>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 7h18v12H3z"></path><path d="M9 7V5h6v2"></path><path d="M3 12h18"></path></svg>
             </a>
             <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
                 <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
-                    <circle cx="12" cy="8" r="4"></circle>
-                    <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path></svg>
             </a>
             <a class="sidebar-link" id="side_active" href="{% url 'Settings' %}" aria-label="Settings">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2"/>
                     <path d="M19.4 15C19.2669 15.3016 19.2272 15.6362 19.286 15.9606C19.3448 16.285 19.4995 16.5843 19.73 16.82L19.79 16.88C19.976 17.0657 20.1235 17.2863 20.2241 17.5291C20.3248 17.7719 20.3766 18.0322 20.3766 18.295C20.3766 18.5578 20.3248 18.8181 20.2241 19.0609C20.1235 19.3037 19.976 19.5243 19.79 19.71C19.6043 19.896 19.3837 20.0435 19.1409 20.1441C18.8981 20.2448 18.6378 20.2966 18.375 20.2966C18.1122 20.2966 17.8519 20.2448 17.6091 20.1441C17.3663 20.0435 17.1457 19.896 16.96 19.71L16.9 19.65C16.6643 19.4195 16.365 19.2648 16.0406 19.206C15.7162 19.1472 15.3816 19.1869 15.08 19.32C14.7842 19.4468 14.532 19.6572 14.3543 19.9255C14.1766 20.1938 14.0813 20.5082 14.08 20.83V21C14.08 21.5304 13.8693 22.0391 13.4942 22.4142C13.1191 22.7893 12.6104 23 12.08 23C11.5496 23 11.0409 22.7893 10.6658 22.4142C10.2907 22.0391 10.08 21.5304 10.08 21V20.91C10.0723 20.579 9.96512 20.258 9.77251 19.9887C9.5799 19.7194 9.31074 19.5143 9 19.4C8.69838 19.2669 8.36381 19.2272 8.03941 19.286C7.71502 19.3448 7.41568 19.4995 7.18 19.73L7.12 19.79C6.93425 19.976 6.71368 20.1235 6.47088 20.2241C6.22808 20.3248 5.96783 20.3766 5.705 20.3766C5.44217 20.3766 5.18192 20.3248 4.93912 20.2241C4.69632 20.1235 4.47575 19.976 4.29 19.79C4.10405 19.6043 3.95653 19.3837 3.85588 19.1409C3.75523 18.8981 3.70343 18.6378 3.70343 18.375C3.70343 18.1122 3.75523 17.8519 3.85588 17.6091C3.95653 17.3663 4.10405 17.1457 4.29 16.96L4.35 16.9C4.58054 16.6643 4.73519 16.365 4.794 16.0406C4.85282 15.7162 4.81312 15.3816 4.68 15.08C4.55324 14.7842 4.34276 14.532 4.07447 14.3543C3.80618 14.1766 3.49179 14.0813 3.17 14.08H3C2.46957 14.08 1.96086 13.8693 1.58579 13.4942C1.21071 13.1191 1 12.6104 1 12.08C1 11.5496 1.21071 11.0409 1.58579 10.6658C1.96086 10.2907 2.46957 10.08 3 10.08H3.09C3.42099 10.0723 3.742 9.96512 4.0113 9.77251C4.28059 9.5799 4.48572 9.31074 4.6 9C4.73312 8.69838 4.77282 8.36381 4.714 8.03941C4.65519 7.71502 4.50054 7.41568 4.27 7.18L4.21 7.12C4.02405 6.93425 3.87653 6.71368 3.77588 6.47088C3.67523 6.22808 3.62343 5.96783 3.62343 5.705C3.62343 5.44217 3.67523 5.18192 3.77588 4.93912C3.87653 4.69632 4.02405 4.47575 4.21 4.29C4.39575 4.10405 4.61632 3.95653 4.85912 3.85588C5.10192 3.75523 5.36217 3.70343 5.625 3.70343C5.88783 3.70343 6.14808 3.75523 6.39088 3.85588C6.63368 3.95653 6.85425 4.10405 7.04 4.29L7.1 4.35C7.33568 4.58054 7.63502 4.73519 7.95941 4.794C8.28381 4.85282 8.61838 4.81312 8.92 4.68H9C9.29577 4.55324 9.54802 4.34276 9.72569 4.07447C9.90337 3.80618 9.99872 3.49179 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0013 3.41179 14.0966 3.72618 14.2743 3.99447C14.452 4.26276 14.7042 4.47324 15 4.6C15.3016 4.73312 15.6362 4.77282 15.9606 4.714C16.285 4.65519 16.5843 4.50054 16.82 4.27L16.88 4.21C17.0657 4.02405 17.2863 3.87653 17.5291 3.77588C17.7719 3.67523 18.0322 3.62343 18.295 3.62343C18.5578 3.62343 18.8181 3.67523 19.0609 3.77588C19.3037 3.87653 19.5243 4.02405 19.71 4.21C19.896 4.39575 20.0435 4.61632 20.1441 4.85912C20.2448 5.10192 20.2966 5.36217 20.2966 5.625C20.2966 5.88783 20.2448 6.14808 20.1441 6.39088C20.0435 6.63368 19.896 6.85425 19.71 7.04L19.65 7.1C19.4195 7.33568 19.2648 7.63502 19.206 7.95941C19.1472 8.28381 19.1869 8.61838 19.32 8.92V9C19.4468 9.29577 19.6572 9.54802 19.9255 9.72569C20.1938 9.90337 20.5082 9.99872 20.83 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.5882 14.0013 20.2738 14.0966 20.0055 14.2743C19.7372 14.452 19.5268 14.7042 19.4 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </a>
         </aside>
 
         <main class="main">
+            <header class="home-header" aria-label="Settings top bar">
+                <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
+                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
+                    <span>CoVise</span>
+                </a>
+                <div class="home-header-actions">
+                    <button class="theme-toggle" id="settingsThemeToggle" aria-label="Toggle light dark mode" aria-pressed="false" type="button">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <div class="notif-wrap">
+                        <button class="notification-bell" id="notifBell" aria-label="Toggle notifications" type="button">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 17H9M18 17V11a6 6 0 1 0-12 0v6l-2 2h16l-2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                            <span class="notification-badge" aria-hidden="true">4</span>
+                        </button>
+                        <div id="notifPanel" class="notif-panel">
+                            <div class="notif-panel-head"><span class="notif-panel-title">Network Activity</span><span class="notif-panel-meta">4 new</span></div>
+                            <div class="activity-feed">
+                                <div class="feed-item"><div class="feed-text"><strong>Ahmed K.</strong><br>joined from Riyadh - looking for a tech co-founder</div><div class="feed-time">2h ago</div></div>
+                                <div class="feed-item"><div class="feed-text"><strong>New project posted</strong><br>B2B logistics platform, UAE expansion</div><div class="feed-time">4h ago</div></div>
+                                <div class="feed-item"><div class="feed-text"><strong>Sara M. &amp; Faisal A.</strong><br>started a Trial Build together</div><div class="feed-time">6h ago</div></div>
+                                <div class="feed-item"><div class="feed-text"><strong>Nora H.</strong><br>joined from Dubai - open to cross-border partnerships</div><div class="feed-time">9h ago</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path></svg>
+                    </a>
+                </div>
+            </header>
+
             <header class="page-header">
                 <h1>Settings</h1>
                 <p>Manage your profile and workspace preferences.</p>
@@ -79,89 +84,309 @@
 
             <section class="panel profile">
                 <div class="profile-left">
-                    <div class="avatar">AA</div>
+                    <div class="avatar">AG</div>
                     <div>
-                        <div class="profile-name">User Albo</div>
-                        <div class="profile-role">Founder · CoVise</div>
+                        <div class="profile-name">Ahmed Ghamdi</div>
+                        <div class="profile-role">Founder - CoVise</div>
                     </div>
                 </div>
                 <div class="profile-info">
-                    <div>
-                        <span>Email</span>
-                        <strong>User@covise.io</strong>
+                    <div><span>Email</span><strong>ahmed@covise.io</strong></div>
+                    <div><span>Location</span><strong>Riyadh, KSA</strong></div>
+                    <div><span>Plan</span><strong>Founder Pro</strong></div>
+                </div>
+            </section>
+
+            <section class="panel settings-section notifications-section">
+                <div class="section-top"><h2>ACCOUNT</h2></div>
+                <div class="settings-stack">
+                    <div class="settings-row"><div class="row-copy"><strong>Full Name</strong></div><div class="row-control input-action"><input type="text" value="User Albo"><button class="primary-btn" type="button">Save</button></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Email</strong><span>Changing your email requires verification.</span></div><div class="row-control input-action"><input type="text" value="user@covise.io"><button class="primary-btn" type="button">Save</button></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Phone Number</strong></div><div class="row-control input-action"><input type="text" value="+966 55 123 4567"><button class="primary-btn" type="button">Save</button></div></div>
+                    <div class="settings-row settings-row-block">
+                        <div class="row-copy">
+                            <strong>Password</strong>
+                        </div>
+                        <div class="row-control password-shell">
+                            <div class="inline-action">
+                                <span class="password-mask">••••••••</span>
+                                <button class="outline-btn" id="togglePasswordFields" type="button">Change Password</button>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <span>Location</span>
-                        <strong>Riyadh, KSA</strong>
+                    <div class="settings-row"><div class="row-copy"><strong>Profile Photo</strong></div><div class="row-control photo-row"><span class="avatar small-avatar">AA</span><button class="outline-btn" type="button">Upload Photo</button><button class="text-link danger-link" type="button">Remove</button></div></div>
+                </div>
+            </section>
+
+            <section class="panel settings-section">
+                <div class="section-top"><h2>PROFILE VISIBILITY</h2></div>
+                <div class="settings-stack">
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Who can see your profile</strong></div><div class="row-control"><div class="selector-group single-select" data-group="profile-visibility"><button class="selector-pill is-active" type="button">Everyone</button><button class="selector-pill" type="button">Matched users only</button><button class="selector-pill" type="button">Nobody</button></div></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Show Founder Conviction Score on profile</strong><span>Other users will see your conviction score when viewing your profile.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Show CV to matches</strong><span>Your CV will be visible to users you are matched with.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Show LinkedIn to matches</strong><span>Your LinkedIn profile link will be shown to your matches.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Appear in search results</strong><span>Turn this off to become invisible in platform search.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Pause matching</strong><span>Temporarily stop appearing in other users' match lists. Your existing matches are unaffected.</span></div><button class="toggle-switch" id="pauseMatchingToggle" type="button" aria-pressed="false"></button></div>
+                    <div class="warning-banner" id="pauseMatchingBanner" hidden>You are currently paused. You will not appear in new match results.</div>
+                </div>
+            </section>
+
+            <section class="panel settings-section">
+                <div class="section-top"><h2>COVISE AI AGENT</h2></div>
+                <div class="info-banner">CoVise Advisor is your AI chief of staff. You control exactly what it can and cannot do on your behalf.</div>
+                <div class="settings-stack">
+                    <div class="settings-row"><div class="row-copy"><strong>Enable CoVise AI Agent</strong><span>Turn off to disable all AI features across the platform.</span></div><button class="toggle-switch active" id="aiMasterToggle" type="button" aria-pressed="true"></button></div>
+                </div>
+                <div class="permission-shell" id="aiPermissionShell">
+                    <div class="permission-group-head"><span>READ ONLY PERMISSIONS</span></div>
+                    <div class="settings-stack">
+                        <div class="settings-row"><div class="row-copy"><strong>Read my profile and venture data</strong><span>Required for the AI to give personalized advice.</span></div><button class="toggle-switch active locked" type="button" aria-pressed="true" disabled></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Read my messages (summaries only)</strong><span>The AI reads conversation context to give better match and communication advice. It never stores message content.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Read workspace content</strong><span>Allows the AI to review your milestones, tasks, and documents.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
                     </div>
-                    <div>
-                        <span>Plan</span>
-                        <strong>Founder Pro</strong>
+                    <div class="permission-group-head"><span>ACTION PERMISSIONS</span><small>All actions are logged and can be reversed.</small></div>
+                    <div class="warning-note">Warning: These permissions allow the AI to act on your behalf. All actions are logged and can be reversed.</div>
+                    <div class="settings-stack">
+                        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Post updates on my behalf</strong><span>The AI can post venture updates to your feed. You will be notified before each post.</span></div><button class="toggle-switch" id="aiPostToggle" type="button" aria-pressed="false"></button></div>
+                        <div class="warning-banner" id="aiPostBanner" hidden>The AI will draft posts for your approval before publishing. You can review in AI Activity Log.</div>
+                        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Send messages to matches</strong><span>The AI can send initial outreach messages to your top matches. You approve each message first.</span></div><button class="toggle-switch" id="aiMessageToggle" type="button" aria-pressed="false"></button></div>
+                        <div class="warning-banner" id="aiMessageBanner" hidden>Messages will be drafted for your review before sending.</div>
+                        <div class="settings-row"><div class="row-copy"><strong>Edit workspace content</strong><span>The AI can update tasks, milestones, and notes in your workspace.</span></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Schedule and manage milestones</strong><span>The AI can suggest and create milestone plans in your workspace based on your venture stage.</span></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
+                    </div>
+                </div>
+                <div class="section-footer start"><button class="text-link icon-link" data-open-modal="aiActivityModal" type="button"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>View AI Activity Log</span></button></div>
+            </section>
+
+            <section class="panel settings-section">
+                <div class="section-top"><h2>NOTIFICATIONS</h2></div>
+                <div class="two-panel-grid">
+                    <div class="inner-panel">
+                        <h3>Email Notifications</h3>
+                        <div class="settings-stack compact-stack">
+                            <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
+                        </div>
+                    </div>
+                    <div class="inner-panel">
+                        <h3>In-App Notifications</h3>
+                        <div class="settings-stack compact-stack">
+                            <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-row settings-row-block"><div class="row-copy"><strong>Notification frequency</strong><span>Applies to email notifications only.</span></div><div class="row-control"><div class="selector-group single-select" data-group="email-frequency"><button class="selector-pill is-active" type="button">Instant</button><button class="selector-pill" type="button">Daily Digest</button><button class="selector-pill" type="button">Weekly Digest</button></div></div></div>
+            </section>
+
+            <section class="panel settings-section">
+                <div class="section-top"><h2>MATCHING PREFERENCES</h2></div>
+                <div class="settings-stack">
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred co-founder type</strong></div><div class="pill-grid multi-select"><button class="selector-pill is-active" type="button">Technical</button><button class="selector-pill" type="button">Business</button><button class="selector-pill" type="button">Operations</button><button class="selector-pill" type="button">Sales</button><button class="selector-pill" type="button">Marketing</button><button class="selector-pill" type="button">Finance</button><button class="selector-pill" type="button">Legal</button><button class="selector-pill" type="button">Design</button></div></div>
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred industries</strong></div><div class="pill-grid multi-select"><button class="selector-pill is-active" type="button">Fintech</button><button class="selector-pill" type="button">Healthtech</button><button class="selector-pill is-active" type="button">Logistics</button><button class="selector-pill" type="button">E-commerce</button><button class="selector-pill" type="button">EdTech</button><button class="selector-pill" type="button">PropTech</button><button class="selector-pill" type="button">FoodTech</button><button class="selector-pill" type="button">Energy</button><button class="selector-pill" type="button">Retail</button><button class="selector-pill is-active" type="button">SaaS</button></div></div>
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred GCC markets</strong></div><div class="pill-grid multi-select"><button class="selector-pill is-active" type="button">Saudi Arabia</button><button class="selector-pill is-active" type="button">UAE</button><button class="selector-pill" type="button">Kuwait</button><button class="selector-pill" type="button">Qatar</button><button class="selector-pill" type="button">Bahrain</button><button class="selector-pill" type="button">Oman</button></div></div>
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Minimum commitment level</strong></div><div class="selector-group single-select" data-group="commitment"><button class="selector-pill" type="button">Part-time</button><button class="selector-pill" type="button">Full-time</button><button class="selector-pill is-active" type="button">Either</button></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Open to foreign founders</strong><span>Include founders from outside the GCC in your matches.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                </div>
+                <div class="section-footer full-width"><button class="primary-btn wide-btn" type="button">Save Preferences</button></div>
+            </section>
+
+            <section class="panel settings-section">
+                <div class="section-top"><h2>SECURITY</h2></div>
+                <div class="settings-stack">
+                    <div class="settings-row"><div class="row-copy"><strong>Two-Factor Authentication</strong><span>Add an extra layer of security to your account.</span></div><div class="row-inline-actions"><span class="status-badge amber">Not enabled</span><button class="outline-btn" data-open-modal="comingSoonModal" type="button">Enable 2FA</button></div></div>
+                </div>
+                <div class="inner-panel">
+                    <h3>Active Sessions</h3>
+                    <div class="session-list">
+                        <div class="session-row"><div class="session-copy with-icon"><i class="fa-solid fa-laptop" aria-hidden="true"></i><div><strong>Chrome - Windows</strong><span>Riyadh, SA - Active now</span></div></div><button class="text-link danger-link" type="button">Log out</button></div>
+                        <div class="session-row"><div class="session-copy with-icon"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><div><strong>Safari - iPhone</strong><span>Riyadh, SA - 2 days ago</span></div></div><button class="text-link danger-link" type="button">Log out</button></div>
+                    </div>
+                    <button class="text-link danger-link start-link" type="button">Log out all other sessions</button>
+                </div>
+                <div class="inner-panel">
+                    <h3>Login History</h3>
+                    <div class="table-wrap">
+                        <table class="settings-table">
+                            <thead><tr><th>Date</th><th>Device</th><th>Location</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <tr><td>Mar 15, 2026</td><td>Chrome - Windows</td><td>Riyadh, SA</td><td class="success">Success</td></tr>
+                                <tr><td>Mar 14, 2026</td><td>Safari - iPhone</td><td>Riyadh, SA</td><td class="success">Success</td></tr>
+                                <tr><td>Mar 13, 2026</td><td>Chrome - Windows</td><td>Riyadh, SA</td><td class="success">Success</td></tr>
+                                <tr><td>Mar 11, 2026</td><td>Edge - Windows</td><td>Riyadh, SA</td><td class="danger">Failed attempt</td></tr>
+                                <tr><td>Mar 10, 2026</td><td>Safari - iPhone</td><td>Riyadh, SA</td><td class="success">Success</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
 
-            <section class="panel">
-                <h2>Profile</h2>
-                <div class="settings-grid">
-                    <div class="setting-item">
-                        <label>Full name</label>
-                        <input type="text" value="User Albo">
-                    </div>
-                    <div class="setting-item">
-                        <label>Role</label>
-                        <input type="text" value="Founder">
-                    </div>
-                    <div class="setting-item">
-                        <label>Company</label>
-                        <input type="text" value="CoVise">
-                    </div>
-                    <div class="setting-item">
-                        <label>Timezone</label>
-                        <input type="text" value="Asia/Riyadh">
-                    </div>
-                </div>
-                <button class="primary-btn" type="button">Save changes</button>
-            </section>
-
-            <section class="panel">
-                <h2>Preferences</h2>
-                <div class="settings-grid">
-                    <div class="setting-item">
-                        <label>Notifications</label>
-                        <input type="text" value="Email + Push">
-                    </div>
-                    <div class="setting-item">
-                        <label>Language</label>
-                        <input type="text" value="English">
-                    </div>
-                    <div class="setting-item">
-                        <label>Security</label>
-                        <input type="text" value="2FA Enabled">
-                    </div>
+            <section class="panel settings-section">
+                <div class="section-top"><h2>LEGAL &amp; COMPLIANCE</h2></div>
+                <div class="settings-stack">
+                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Terms of Service</strong><span>Last updated March 2026</span></div></div><a class="outline-btn" href="#">View</a></div>
+                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Privacy Policy</strong><span>How we collect and use your data</span></div></div><a class="outline-btn" href="#">View</a></div>
+                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-cookie-bite" aria-hidden="true"></i><div><strong>Cookie Policy</strong><span>Manage how we use cookies</span></div></div><a class="outline-btn" href="#">View</a></div>
+                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-download" aria-hidden="true"></i><div><strong>Download My Data</strong><span>Export all your CoVise data as a ZIP file (GDPR)</span></div></div><button class="outline-btn" id="requestExportButton" type="button">Request Export</button></div>
+                    <div class="inline-feedback" id="requestExportFeedback" hidden>Your data export will be emailed to you within 24 hours.</div>
+                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-trash" aria-hidden="true"></i><div><strong>Request Data Deletion</strong><span>Permanently delete all your data from CoVise</span></div></div><button class="danger-outline-btn" data-open-modal="dataDeletionModal" type="button">Request Deletion</button></div>
                 </div>
             </section>
 
-            <section class="panel">
-                <h2>Legal</h2>
-                <div class="legal-buttons">
-                    <button type="button">Terms & Conditions</button>
-                    <button type="button">Privacy Policy</button>
+            <section class="panel settings-section danger-zone">
+                <div class="section-top"><h2>DANGER ZONE</h2></div>
+                <div class="settings-stack">
+                    <div class="settings-row"><div class="row-copy"><strong>Pause My Account</strong><span>Temporarily hide your profile from the platform. Your data and matches are preserved. You can reactivate anytime.</span></div><button class="warning-outline-btn" id="pauseAccountButton" type="button">Pause Account</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Delete My Account</strong><span>Permanently delete your account and all associated data. This cannot be undone.</span></div><button class="danger-fill-btn" data-open-modal="dangerDeleteModal" type="button">Delete Account</button></div>
                 </div>
             </section>
 
-            <section class="panel">
-                <h2>Contact Us</h2>
-                <p class="contact-text">Need help? Reach out to our support team at <a class="contact-link" href="mailto:support@covise.com">support@covise.com</a>.</p>
-            </section>
-                 <!-- Footer -->
-                <footer class="footer">
-                <p> 2026 CoVise. All rights reserved.</p>
-                </footer>
-
-                </main>
+            <footer class="footer"><p>2026 CoVise. All rights reserved.</p></footer>
+        </main>
     </div>
+
+    <div class="modal-backdrop" id="accountDeleteModal" hidden><div class="modal-card"><div class="modal-head"><h3>Delete your account?</h3><button class="modal-close" type="button">x</button></div><p>This will permanently delete your account, all your data, matches, messages, and workspace. This cannot be undone.</p><input class="modal-input" id="deleteConfirmInput" type="text" placeholder='Type "DELETE" to confirm'><div class="modal-actions"><button class="danger-fill-btn disabled-delete" id="confirmDeleteButton" type="button" disabled>Permanently Delete</button><button class="outline-btn modal-close" type="button">Cancel</button></div></div></div>
+    <div class="modal-backdrop" id="dangerDeleteModal" hidden><div class="modal-card"><div class="modal-head"><h3>Delete your account?</h3><button class="modal-close" type="button">x</button></div><p>This will permanently delete your profile, matches, messages, workspace, and all data. This action cannot be reversed.</p><input class="modal-input" id="dangerDeleteInput" type="text" placeholder='Type "DELETE" to confirm'><div class="modal-actions"><button class="danger-fill-btn disabled-delete" id="dangerDeleteButton" type="button" disabled>Permanently Delete</button><button class="outline-btn modal-close" type="button">Cancel</button></div></div></div>
+    <div class="modal-backdrop" id="dataDeletionModal" hidden><div class="modal-card"><div class="modal-head"><h3>Request data deletion?</h3><button class="modal-close" type="button">x</button></div><p>Are you sure? This will schedule your account and all associated data for permanent deletion within 30 days. You can cancel this request within 30 days by logging in.</p><div class="modal-actions"><button class="danger-fill-btn" type="button">Confirm Request</button><button class="outline-btn modal-close" type="button">Cancel</button></div></div></div>
+    <div class="modal-backdrop" id="comingSoonModal" hidden><div class="modal-card"><div class="modal-head"><h3>Two-Factor Authentication</h3><button class="modal-close" type="button">x</button></div><p>Coming Soon - 2FA will be available shortly.</p><div class="modal-actions"><button class="outline-btn modal-close" type="button">Close</button></div></div></div>
+    <div class="modal-backdrop" id="aiActivityModal" hidden><div class="modal-card wide-modal"><div class="modal-head"><h3>AI Activity Log</h3><button class="modal-close" type="button">x</button></div><div class="table-wrap"><table class="settings-table"><thead><tr><th>Action</th><th>Date</th><th>Status</th><th>Undo</th></tr></thead><tbody><tr><td>Suggested profile improvement</td><td>Mar 13</td><td class="success">Completed</td><td>-</td></tr><tr><td>Generated milestone plan draft</td><td>Mar 12</td><td class="amber">Pending review</td><td><button class="text-link" type="button">Undo</button></td></tr><tr><td>Drafted post: MVP update</td><td>Mar 11</td><td class="success">Approved by you</td><td>-</td></tr></tbody></table></div></div></div>
+
+    <script>
+        (function () {
+            var toggleButton = document.getElementById('settingsThemeToggle');
+            if (toggleButton) {
+                function applyThemeState() {
+                    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                    toggleButton.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+                }
+                toggleButton.addEventListener('click', function () {
+                    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                    if (isLight) {
+                        document.documentElement.removeAttribute('data-theme');
+                        localStorage.setItem('covise-theme', 'dark');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'light');
+                        localStorage.setItem('covise-theme', 'light');
+                    }
+                    applyThemeState();
+                });
+                applyThemeState();
+            }
+
+            var bell = document.getElementById('notifBell');
+            var panel = document.getElementById('notifPanel');
+            if (bell && panel) {
+                bell.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    panel.classList.toggle('is-open');
+                });
+                document.addEventListener('click', function (event) {
+                    if (!panel.contains(event.target) && !bell.contains(event.target)) panel.classList.remove('is-open');
+                });
+            }
+
+            Array.prototype.slice.call(document.querySelectorAll('.toggle-switch:not(.locked)')).forEach(function (toggle) {
+                toggle.addEventListener('click', function () {
+                    if (toggle.disabled) return;
+                    var active = toggle.classList.toggle('active');
+                    toggle.setAttribute('aria-pressed', active ? 'true' : 'false');
+                });
+            });
+
+            var passwordButton = document.getElementById('togglePasswordFields');
+            var passwordFields = document.getElementById('passwordFields');
+            if (passwordButton && passwordFields) passwordButton.addEventListener('click', function () { passwordFields.hidden = !passwordFields.hidden; });
+
+            Array.prototype.slice.call(document.querySelectorAll('.single-select')).forEach(function (group) {
+                group.querySelectorAll('.selector-pill').forEach(function (pill) {
+                    pill.addEventListener('click', function () {
+                        group.querySelectorAll('.selector-pill').forEach(function (item) { item.classList.remove('is-active'); });
+                        pill.classList.add('is-active');
+                    });
+                });
+            });
+            Array.prototype.slice.call(document.querySelectorAll('.multi-select .selector-pill')).forEach(function (pill) {
+                pill.addEventListener('click', function () { pill.classList.toggle('is-active'); });
+            });
+
+            function syncBanner(toggleId, bannerId) {
+                var toggle = document.getElementById(toggleId);
+                var banner = document.getElementById(bannerId);
+                if (!toggle || !banner) return;
+                toggle.addEventListener('click', function () { banner.hidden = !toggle.classList.contains('active'); });
+            }
+            syncBanner('pauseMatchingToggle', 'pauseMatchingBanner');
+            syncBanner('aiPostToggle', 'aiPostBanner');
+            syncBanner('aiMessageToggle', 'aiMessageBanner');
+
+            var aiMasterToggle = document.getElementById('aiMasterToggle');
+            var aiPermissionShell = document.getElementById('aiPermissionShell');
+            function syncAiPermissions() {
+                if (!aiMasterToggle || !aiPermissionShell) return;
+                var enabled = aiMasterToggle.classList.contains('active');
+                aiPermissionShell.classList.toggle('permissions-disabled', !enabled);
+                aiPermissionShell.querySelectorAll('.toggle-switch:not(.locked)').forEach(function (toggle) { toggle.disabled = !enabled; });
+            }
+            if (aiMasterToggle) {
+                aiMasterToggle.addEventListener('click', syncAiPermissions);
+                syncAiPermissions();
+            }
+
+            Array.prototype.slice.call(document.querySelectorAll('[data-open-modal]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var modal = document.getElementById(button.getAttribute('data-open-modal'));
+                    if (modal) modal.hidden = false;
+                });
+            });
+            Array.prototype.slice.call(document.querySelectorAll('.modal-close')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var modal = button.closest('.modal-backdrop');
+                    if (modal) modal.hidden = true;
+                });
+            });
+            Array.prototype.slice.call(document.querySelectorAll('.modal-backdrop')).forEach(function (modal) {
+                modal.addEventListener('click', function (event) {
+                    if (event.target === modal) modal.hidden = true;
+                });
+            });
+
+            function bindDeleteInput(inputId, buttonId) {
+                var input = document.getElementById(inputId);
+                var button = document.getElementById(buttonId);
+                if (!input || !button) return;
+                input.addEventListener('input', function () {
+                    var enabled = input.value === 'DELETE';
+                    button.disabled = !enabled;
+                    button.classList.toggle('disabled-delete', !enabled);
+                });
+            }
+            bindDeleteInput('deleteConfirmInput', 'confirmDeleteButton');
+            bindDeleteInput('dangerDeleteInput', 'dangerDeleteButton');
+
+            var exportButton = document.getElementById('requestExportButton');
+            var exportFeedback = document.getElementById('requestExportFeedback');
+            if (exportButton && exportFeedback) exportButton.addEventListener('click', function () { exportFeedback.hidden = false; });
+
+            var pauseAccountButton = document.getElementById('pauseAccountButton');
+            if (pauseAccountButton) {
+                pauseAccountButton.addEventListener('click', function () {
+                    var paused = pauseAccountButton.classList.toggle('reactivate');
+                    pauseAccountButton.textContent = paused ? 'Reactivate Account' : 'Pause Account';
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
-
-

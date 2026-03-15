@@ -209,6 +209,7 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
           ringOuter: 'rgba(115,166,245,0.4)',
           ringShadow: 'rgba(120,165,230,0.35)',
           ringInner: 'rgba(110,154,222,0.28)',
+          graticuleRgb: '12,25,65',
           cityStroke: 'rgba(94,149,230,0.55)',
           cityShadow: 'rgba(112,168,246,0.52)',
           cityFill: 'rgba(239,248,255,0.95)'
@@ -363,6 +364,61 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
       }
     }
 
+    function drawGraticule(palette) {
+      if (!palette.graticuleRgb) return;
+      const STEPS = 180;
+      const PARALLELS = [-60, -30, 0, 30, 60];
+      const MERIDIAN_STEP = 30;
+
+      function traceLine(points) {
+        let segment = false;
+        for (let i = 0; i < points.length; i++) {
+          const { x, y, alpha } = points[i];
+          if (alpha <= 0) { segment = false; continue; }
+          if (!segment) { ctx.moveTo(x, y); segment = true; }
+          else { ctx.lineTo(x, y); }
+        }
+      }
+
+      // Parallels
+      PARALLELS.forEach((lat) => {
+        const isEquator = lat === 0;
+        ctx.beginPath();
+        const pts = [];
+        for (let i = 0; i <= STEPS; i++) {
+          const lon = -180 + (360 / STEPS) * i;
+          const p3 = latLonTo3D(lat, lon, state.radius);
+          const p = project(p3);
+          pts.push({ x: p.x, y: p.y, alpha: p3.z / state.radius });
+        }
+        traceLine(pts);
+        ctx.strokeStyle = isEquator
+          ? `rgba(${palette.graticuleRgb},0.55)`
+          : `rgba(${palette.graticuleRgb},0.32)`;
+        ctx.lineWidth = isEquator ? 1.1 : 0.7;
+        ctx.stroke();
+      });
+
+      // Meridians
+      for (let lon = -180; lon < 180; lon += MERIDIAN_STEP) {
+        const isPrimeMeridian = lon === 0;
+        ctx.beginPath();
+        const pts = [];
+        for (let i = 0; i <= STEPS; i++) {
+          const lat = -90 + (180 / STEPS) * i;
+          const p3 = latLonTo3D(lat, lon, state.radius);
+          const p = project(p3);
+          pts.push({ x: p.x, y: p.y, alpha: p3.z / state.radius });
+        }
+        traceLine(pts);
+        ctx.strokeStyle = isPrimeMeridian
+          ? `rgba(${palette.graticuleRgb},0.55)`
+          : `rgba(${palette.graticuleRgb},0.32)`;
+        ctx.lineWidth = isPrimeMeridian ? 1.1 : 0.7;
+        ctx.stroke();
+      }
+    }
+
     function drawFrame() {
       const palette = getPalette();
       ctx.clearRect(0, 0, state.width, state.height);
@@ -376,6 +432,8 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
       ctx.beginPath();
       ctx.arc(state.cx, state.cy, state.radius, 0, Math.PI * 2);
       ctx.clip();
+
+      drawGraticule(palette);
 
       const dotPositions = NETWORK_DOTS.map(([lon, lat]) => {
         const p3 = latLonTo3D(lat, lon, state.radius);
