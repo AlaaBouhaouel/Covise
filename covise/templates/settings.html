@@ -236,8 +236,8 @@
             <section class="panel settings-section">
                 <div class="section-top"><h2>LEGAL &amp; COMPLIANCE</h2></div>
                 <div class="settings-stack">
-                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Terms of Service</strong><span>Last updated March 2026</span></div></div><a class="outline-btn" href="#">View</a></div>
-                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Privacy Policy</strong><span>How we collect and use your data</span></div></div><a class="outline-btn" href="#">View</a></div>
+                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Terms of Service</strong><span>Last updated March 2026</span></div></div><a class="outline-btn" href="{% url 'Terms' %}">View</a></div>
+                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Privacy Policy</strong><span>How we collect and use your data</span></div></div><a class="outline-btn" href="{% url 'Privacy' %}">View</a></div>
                     <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-cookie-bite" aria-hidden="true"></i><div><strong>Cookie Policy</strong><span>Manage how we use cookies</span></div></div><a class="outline-btn" href="#">View</a></div>
                     <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-download" aria-hidden="true"></i><div><strong>Download My Data</strong><span>Export all your CoVise data as a ZIP file (GDPR)</span></div></div><button class="outline-btn" id="requestExportButton" type="button">Request Export</button></div>
                     <div class="inline-feedback" id="requestExportFeedback" hidden>Your data export will be emailed to you within 24 hours.</div>

@@ -78,6 +78,12 @@ def chatbot(request):
 def settings(request):
     return render(request, 'settings.html')
 
+def terms(request):
+    return render(request, 'terms.html')
+
+def privacy(request):
+    return render(request, 'privacy.html')
+
 def login_view(request):
     return render(request, 'login.html')
 
