@@ -1,6 +1,20 @@
 import boto3
+import secrets
+import string
 import uuid
 from django.conf import settings
+
+
+def generate_referral_code():
+    """Generate a unique referral code like CV-A1B2C3D4."""
+    from .models import WaitlistEntry
+    chars = string.ascii_uppercase + string.digits
+    for _ in range(10):
+        code = 'CV-' + ''.join(secrets.choice(chars) for _ in range(8))
+        if not WaitlistEntry.objects.filter(my_referral_code=code).exists():
+            return code
+    # Extremely unlikely fallback — extend length if collision persists
+    return 'CV-' + secrets.token_hex(6).upper()
 
 
 def upload_cv_to_s3(file, user_email):

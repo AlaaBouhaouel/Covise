@@ -3,8 +3,9 @@ from .models import OnboardingResponse, WaitlistEntry
 
 @admin.register(WaitlistEntry)
 class WaitlistEntryAdmin(admin.ModelAdmin):
-    list_display = ("full_name", "email", "country", "non_gcc_business", "created_at")
-    search_fields = ("full_name", "email", "phone_number")
+    list_display = ("full_name", "email", "country", "non_gcc_business", "my_referral_code", "referred_by", "created_at")
+    search_fields = ("full_name", "email", "phone_number", "my_referral_code")
+    readonly_fields = ("my_referral_code", "referred_by")
 
 
 @admin.register(OnboardingResponse)

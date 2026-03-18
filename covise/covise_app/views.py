@@ -6,7 +6,7 @@ from django.db import IntegrityError, OperationalError, close_old_connections
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import OnboardingResponse, WaitlistEntry
-from covise_app.utils import upload_cv_to_s3
+from covise_app.utils import generate_referral_code, upload_cv_to_s3
 from covise_app.project_details import PROJECT_DETAILS
 
 logger = logging.getLogger(__name__)
@@ -198,6 +198,14 @@ def onboarding_submit(request):
     ]
     onboarding_defaults = {field_id: answers.get(field_id) for field_id in onboarding_field_ids}
 
+    # Link referral if user entered a valid code
+    entered_code = str(answers.get("referral_code", "")).strip().upper()
+    if entered_code:
+        referrer = WaitlistEntry.objects.filter(my_referral_code=entered_code).exclude(pk=waitlist_entry.pk).first()
+        if referrer and not waitlist_entry.referred_by_id:
+            waitlist_entry.referred_by = referrer
+            waitlist_entry.save(update_fields=["referred_by"])
+
     OnboardingResponse.objects.update_or_create(
         waitlist_entry=waitlist_entry,
         defaults={
@@ -274,16 +282,18 @@ def waitlist(request):
                 print(f"[waitlist] duplicate email blocked before create for email={email!r}")
                 return render(request, 'waitlist.html', context)
 
+            # Upload CV before DB retry loop — file object is exhausted after first read
+            cv_s3_key = None
+            if cv_file:
+                cv_s3_key = upload_cv_to_s3(cv_file, email)
+                if cv_s3_key is None:
+                    logger.warning("[waitlist] S3 upload failed for %s", email)
+
+            referral_code = generate_referral_code()
+
             entry = None
             for attempt in range(2):
                 try:
-                    # Upload CV to S3 if provided
-                    cv_s3_key = None
-                    if cv_file:
-                        cv_s3_key = upload_cv_to_s3(cv_file, email)
-                        if cv_s3_key is None:
-                            print(f"[waitlist] S3 upload failed for {email}")
-
                     entry = WaitlistEntry.objects.create(
                         full_name=full_name,
                         phone_number=phone_number,
@@ -293,6 +303,7 @@ def waitlist(request):
                         custom_country=custom_country,
                         linkedin=linkedin,
                         cv_s3_key=cv_s3_key,
+                        my_referral_code=referral_code,
                     )
                     break
                 except IntegrityError:
@@ -312,6 +323,7 @@ def waitlist(request):
                 return render(request, 'waitlist.html', context)
             request.session["waitlist_email"] = email
             request.session["waitlist_entry_id"] = entry.id
+            request.session["my_referral_code"] = entry.my_referral_code
             print(f"[waitlist] success: redirecting to onboarding for email={email!r} entry_id={entry.id}")
             return redirect('Onboarding')
 
@@ -319,7 +331,9 @@ def waitlist(request):
 
 
 def waitlist_success(request):
-    return render(request, 'waitlist_success.html')
+    return render(request, 'waitlist_success.html', {
+        'my_referral_code': request.session.get('my_referral_code', ''),
+    })
 
 
 def csrf_failure(request, reason=""):

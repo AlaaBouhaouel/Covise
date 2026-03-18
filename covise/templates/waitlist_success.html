@@ -55,6 +55,29 @@
                 </ul>
             </div>
 
+            {% if my_referral_code %}
+            <div class="success-panel referral-panel">
+                <h2>Refer a founder</h2>
+                <p class="referral-note">Share your code — people who sign up with it will be linked to your profile.</p>
+                <div class="referral-code-row">
+                    <span class="referral-code-value" id="refCode">{{ my_referral_code }}</span>
+                    <button class="referral-copy-btn" type="button" id="copyRefBtn" aria-label="Copy referral code">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        Copy
+                    </button>
+                </div>
+            </div>
+            <script>
+                document.getElementById('copyRefBtn').addEventListener('click', function () {
+                    navigator.clipboard.writeText('{{ my_referral_code }}').then(function () {
+                        var btn = document.getElementById('copyRefBtn');
+                        btn.textContent = 'Copied!';
+                        setTimeout(function () { btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy'; }, 2000);
+                    });
+                });
+            </script>
+            {% endif %}
+
             <div class="success-actions">
                 <a class="success-btn primary" href="/">Back to Home</a>
                 <a class="success-btn secondary" href="/about/">Learn More</a>

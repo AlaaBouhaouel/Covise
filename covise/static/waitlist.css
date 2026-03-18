@@ -554,6 +554,54 @@ h1 {
     flex-wrap: wrap;
 }
 
+.referral-panel {
+    margin-top: calc(var(--spacing) * 2);
+}
+
+.referral-note {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: calc(var(--spacing) * 1.5);
+}
+
+.referral-code-row {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 1.5);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: calc(var(--spacing) * 1.2) calc(var(--spacing) * 1.5);
+}
+
+.referral-code-value {
+    flex: 1;
+    font-family: monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text);
+}
+
+.referral-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease;
+}
+
+.referral-copy-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 .success-btn {
     border-radius: 999px;
     padding: calc(var(--spacing) * 1.2) calc(var(--spacing) * 2.2);

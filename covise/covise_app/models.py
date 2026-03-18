@@ -9,6 +9,10 @@ class WaitlistEntry(models.Model):
     custom_country = models.CharField(max_length=100, blank=True)
     linkedin = models.URLField(max_length=300)
     cv_s3_key = models.CharField(max_length=500, blank=True, null=True)
+    my_referral_code = models.CharField(max_length=20, unique=True, blank=True)
+    referred_by = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='referrals'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
