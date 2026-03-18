@@ -585,7 +585,7 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
 }
 
 .ticker-item span {
-    color:  var(--purple);
+    color:  var(--match_color);
     font-weight: 600;
     margin-right: calc(var(--spacing) * 1.5);
 }
@@ -933,7 +933,7 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
     border-radius: 12px;
     border: 1px solid var(--border);
     background: var(--border);
-    color: #e7efff;
+    color: var(--muted);
     resize: none;
     padding: calc(var(--spacing) * 1.5);
     font-family: var(--font-display);
