@@ -8,6 +8,7 @@
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'chatbot.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -25,7 +26,7 @@
   gtag('config', 'G-RDN1TCMRNR');
 </script>
 <body>
-    <div class="layout">
+    <div class="chatbot-app">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
@@ -70,17 +71,433 @@
             </a>
         </aside>
 
-        <main class="main">
+        <!-- Agents Panel -->
+        <nav class="agents-panel" id="agentsPanel">
+            <div class="agents-panel-header">
+                <span class="agents-panel-title">Agents</span>
+            </div>
 
-            <section class="chatbot-shell">
-                <div class="chat-stream" id="chatStream">
-                    <div class="empty-state" id="emptyState" aria-live="polite">
-                        <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="" aria-hidden="true"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="" aria-hidden="true">
-                        <p>Ready when you are.</p>
+            <!-- Aria — always expanded, core -->
+            <div class="agent-section aria-section" data-agent="aria" style="--agent-accent: rgba(95,132,205,1); --agent-accent-bg: rgba(95,132,205,0.1); --agent-accent-border: rgba(95,132,205,0.3);">
+                <div class="agent-row agent-row--core">
+                    <div class="agent-avatar-sm">A</div>
+                    <div class="agent-row-info">
+                        <span class="agent-row-name">Aria</span>
+                        <span class="agent-row-role">User Agent</span>
+                    </div>
+                    <div class="agent-row-actions">
+                        <button class="agent-menu-btn" type="button" aria-label="Agent options">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
                     </div>
                 </div>
+                <div class="agent-menu-popover" hidden>
+                    <button class="agent-menu-item" type="button" data-action="summarize">
+                        <i class="fa-solid fa-file-lines"></i><span>Summarize</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="clear">
+                        <i class="fa-solid fa-trash"></i><span>Clear chat</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="export">
+                        <i class="fa-solid fa-download"></i><span>Export</span>
+                    </button>
+                </div>
+                <p class="agent-desc">Your strategic co-pilot. Reads your full profile and platform activity to help you find the right match and move fast.</p>
+                <div class="agent-caps-label">CAPABILITIES</div>
+                <div class="agent-caps">
+                    <button class="agent-cap-chip" type="button">Find matches</button>
+                    <button class="agent-cap-chip" type="button">Analyse profile</button>
+                    <button class="agent-cap-chip" type="button">Suggest next steps</button>
+                    <button class="agent-cap-chip" type="button">Weekly briefing</button>
+                </div>
+            </div>
+
+            <div class="agents-divider">
+                <span>Available</span>
+            </div>
+
+            <!-- Lex -->
+            <div class="agent-section" data-agent="lex" style="--agent-accent: rgba(217,119,6,1); --agent-accent-bg: rgba(217,119,6,0.1); --agent-accent-border: rgba(217,119,6,0.3);">
+                <div class="agent-row" aria-expanded="false">
+                    <div class="agent-avatar-sm">L</div>
+                    <div class="agent-row-info">
+                        <span class="agent-row-name">Lex</span>
+                        <span class="agent-row-role">Legal Advisor</span>
+                    </div>
+                    <div class="agent-row-actions">
+                        <button class="agent-menu-btn" type="button" aria-label="Agent options">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <button class="agent-add-btn" type="button" aria-label="Add Lex">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="agent-menu-popover" hidden>
+                    <button class="agent-menu-item" type="button" data-action="summarize">
+                        <i class="fa-solid fa-file-lines"></i><span>Summarize</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="clear">
+                        <i class="fa-solid fa-trash"></i><span>Clear chat</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="export">
+                        <i class="fa-solid fa-download"></i><span>Export</span>
+                    </button>
+                </div>
+                <div class="agent-expanded" hidden>
+                    <p class="agent-desc">Cuts through the legal fog. Drafts agreements, reviews terms, flags risks before they become problems.</p>
+                    <div class="agent-caps-label">WHAT LEX CAN DO</div>
+                    <div class="agent-caps">
+                        <button class="agent-cap-chip" type="button">Draft NDA</button>
+                        <button class="agent-cap-chip" type="button">Review agreement</button>
+                        <button class="agent-cap-chip" type="button">Compliance check</button>
+                        <button class="agent-cap-chip" type="button">IP advice</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nova -->
+            <div class="agent-section" data-agent="nova" style="--agent-accent: rgba(139,92,246,1); --agent-accent-bg: rgba(139,92,246,0.1); --agent-accent-border: rgba(139,92,246,0.3);">
+                <div class="agent-row" aria-expanded="false">
+                    <div class="agent-avatar-sm">N</div>
+                    <div class="agent-row-info">
+                        <span class="agent-row-name">Nova</span>
+                        <span class="agent-row-role">Marketing Strategist</span>
+                    </div>
+                    <div class="agent-row-actions">
+                        <button class="agent-menu-btn" type="button" aria-label="Agent options">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <button class="agent-add-btn" type="button" aria-label="Add Nova">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="agent-menu-popover" hidden>
+                    <button class="agent-menu-item" type="button" data-action="summarize">
+                        <i class="fa-solid fa-file-lines"></i><span>Summarize</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="clear">
+                        <i class="fa-solid fa-trash"></i><span>Clear chat</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="export">
+                        <i class="fa-solid fa-download"></i><span>Export</span>
+                    </button>
+                </div>
+                <div class="agent-expanded" hidden>
+                    <p class="agent-desc">Builds brands that land. Campaigns, copy, positioning — everything your venture needs to be seen.</p>
+                    <div class="agent-caps-label">WHAT NOVA CAN DO</div>
+                    <div class="agent-caps">
+                        <button class="agent-cap-chip" type="button">Write ad copy</button>
+                        <button class="agent-cap-chip" type="button">Content calendar</button>
+                        <button class="agent-cap-chip" type="button">Brand positioning</button>
+                        <button class="agent-cap-chip" type="button">Campaign brief</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rex -->
+            <div class="agent-section" data-agent="rex" style="--agent-accent: rgba(5,150,105,1); --agent-accent-bg: rgba(5,150,105,0.1); --agent-accent-border: rgba(5,150,105,0.3);">
+                <div class="agent-row" aria-expanded="false">
+                    <div class="agent-avatar-sm">R</div>
+                    <div class="agent-row-info">
+                        <span class="agent-row-name">Rex</span>
+                        <span class="agent-row-role">Market Research</span>
+                    </div>
+                    <div class="agent-row-actions">
+                        <button class="agent-menu-btn" type="button" aria-label="Agent options">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <button class="agent-add-btn" type="button" aria-label="Add Rex">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="agent-menu-popover" hidden>
+                    <button class="agent-menu-item" type="button" data-action="summarize">
+                        <i class="fa-solid fa-file-lines"></i><span>Summarize</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="clear">
+                        <i class="fa-solid fa-trash"></i><span>Clear chat</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="export">
+                        <i class="fa-solid fa-download"></i><span>Export</span>
+                    </button>
+                </div>
+                <div class="agent-expanded" hidden>
+                    <p class="agent-desc">Knows the GCC landscape cold. Competitors, gaps, trends — turns data into your advantage.</p>
+                    <div class="agent-caps-label">WHAT REX CAN DO</div>
+                    <div class="agent-caps">
+                        <button class="agent-cap-chip" type="button">Market sizing</button>
+                        <button class="agent-cap-chip" type="button">Competitor analysis</button>
+                        <button class="agent-cap-chip" type="button">Trend report</button>
+                        <button class="agent-cap-chip" type="button">Audience profile</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Max -->
+            <div class="agent-section" data-agent="max" style="--agent-accent: rgba(234,88,12,1); --agent-accent-bg: rgba(234,88,12,0.1); --agent-accent-border: rgba(234,88,12,0.3);">
+                <div class="agent-row" aria-expanded="false">
+                    <div class="agent-avatar-sm">M</div>
+                    <div class="agent-row-info">
+                        <span class="agent-row-name">Max</span>
+                        <span class="agent-row-role">MVP Architect</span>
+                    </div>
+                    <div class="agent-row-actions">
+                        <button class="agent-menu-btn" type="button" aria-label="Agent options">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <button class="agent-add-btn" type="button" aria-label="Add Max">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="agent-menu-popover" hidden>
+                    <button class="agent-menu-item" type="button" data-action="summarize">
+                        <i class="fa-solid fa-file-lines"></i><span>Summarize</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="clear">
+                        <i class="fa-solid fa-trash"></i><span>Clear chat</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="export">
+                        <i class="fa-solid fa-download"></i><span>Export</span>
+                    </button>
+                </div>
+                <div class="agent-expanded" hidden>
+                    <p class="agent-desc">Ships what matters. Scopes your product, cuts the noise, builds the version that validates fastest.</p>
+                    <div class="agent-caps-label">WHAT MAX CAN DO</div>
+                    <div class="agent-caps">
+                        <button class="agent-cap-chip" type="button">Feature prioritisation</button>
+                        <button class="agent-cap-chip" type="button">Tech stack advice</button>
+                        <button class="agent-cap-chip" type="button">MVP roadmap</button>
+                        <button class="agent-cap-chip" type="button">Sprint planning</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finn -->
+            <div class="agent-section" data-agent="finn" style="--agent-accent: rgba(20,184,166,1); --agent-accent-bg: rgba(20,184,166,0.1); --agent-accent-border: rgba(20,184,166,0.3);">
+                <div class="agent-row" aria-expanded="false">
+                    <div class="agent-avatar-sm">F</div>
+                    <div class="agent-row-info">
+                        <span class="agent-row-name">Finn</span>
+                        <span class="agent-row-role">Financial Advisor</span>
+                    </div>
+                    <div class="agent-row-actions">
+                        <button class="agent-menu-btn" type="button" aria-label="Agent options">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <button class="agent-add-btn" type="button" aria-label="Add Finn">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="agent-menu-popover" hidden>
+                    <button class="agent-menu-item" type="button" data-action="summarize">
+                        <i class="fa-solid fa-file-lines"></i><span>Summarize</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="clear">
+                        <i class="fa-solid fa-trash"></i><span>Clear chat</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="export">
+                        <i class="fa-solid fa-download"></i><span>Export</span>
+                    </button>
+                </div>
+                <div class="agent-expanded" hidden>
+                    <p class="agent-desc">Numbers that tell a story. Projections, burn rate, funding strategy — built for GCC investors.</p>
+                    <div class="agent-caps-label">WHAT FINN CAN DO</div>
+                    <div class="agent-caps">
+                        <button class="agent-cap-chip" type="button">Burn rate model</button>
+                        <button class="agent-cap-chip" type="button">Funding strategy</button>
+                        <button class="agent-cap-chip" type="button">Revenue projection</button>
+                        <button class="agent-cap-chip" type="button">Pitch financials</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scout -->
+            <div class="agent-section" data-agent="scout" style="--agent-accent: rgba(220,38,38,1); --agent-accent-bg: rgba(220,38,38,0.1); --agent-accent-border: rgba(220,38,38,0.3);">
+                <div class="agent-row" aria-expanded="false">
+                    <div class="agent-avatar-sm">S</div>
+                    <div class="agent-row-info">
+                        <span class="agent-row-name">Scout</span>
+                        <span class="agent-row-role">Scaler</span>
+                    </div>
+                    <div class="agent-row-actions">
+                        <button class="agent-menu-btn" type="button" aria-label="Agent options">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <button class="agent-add-btn" type="button" aria-label="Add Scout">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="agent-menu-popover" hidden>
+                    <button class="agent-menu-item" type="button" data-action="summarize">
+                        <i class="fa-solid fa-file-lines"></i><span>Summarize</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="clear">
+                        <i class="fa-solid fa-trash"></i><span>Clear chat</span>
+                    </button>
+                    <button class="agent-menu-item" type="button" data-action="export">
+                        <i class="fa-solid fa-download"></i><span>Export</span>
+                    </button>
+                </div>
+                <div class="agent-expanded" hidden>
+                    <p class="agent-desc">From traction to territory. Hiring plans, ops, expansion — built for founders ready to grow.</p>
+                    <div class="agent-caps-label">WHAT SCOUT CAN DO</div>
+                    <div class="agent-caps">
+                        <button class="agent-cap-chip" type="button">Hiring plan</button>
+                        <button class="agent-cap-chip" type="button">Expansion roadmap</button>
+                        <button class="agent-cap-chip" type="button">Ops audit</button>
+                        <button class="agent-cap-chip" type="button">Scale readiness check</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Chat Shell -->
+        <section class="chatbot-shell">
+            <header class="content-topbar">
+                <div class="topbar-copy">
+                    <h2>CoVise AI</h2>
+                    <p>Your agents collaborate in real time — each in their own thread, always in sync.</p>
+                </div>
+                <div class="topbar-actions">
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" type="button">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </button>
+                    <button class="agents-toggle-btn" type="button" aria-label="Toggle agents panel">
+                        <i class="fa-solid fa-robot"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="chat-tabs" id="chatTabs">
+                <div class="chat-tabs-list"> 
+                    <button class="chat-tab is-active" data-chat="global" type="button">
+                        <span class="tab-dot"></span>Global
+                    </button>
+                
+                    <button class="chat-tab" data-chat="lex" type="button" hidden style="--agent-accent: rgba(217,119,6,1)"><span class="tab-dot"></span>Lex</button>
+                    <button class="chat-tab" data-chat="nova" type="button" hidden style="--agent-accent: rgba(139,92,246,1)"><span class="tab-dot"></span>Nova</button>
+                    <button class="chat-tab" data-chat="rex" type="button" hidden style="--agent-accent: rgba(5,150,105,1)"><span class="tab-dot"></span>Rex</button>
+                    <button class="chat-tab" data-chat="max" type="button" hidden style="--agent-accent: rgba(234,88,12,1)"><span class="tab-dot"></span>Max</button>
+                    <button class="chat-tab" data-chat="finn" type="button" hidden style="--agent-accent: rgba(20,184,166,1)"><span class="tab-dot"></span>Finn</button>
+                    <button class="chat-tab" data-chat="scout" type="button" hidden style="--agent-accent: rgba(220,38,38,1)"><span class="tab-dot"></span>Scout</button>
+                </div>
+                <div class="chat-group-wrap" id="chatGroupWrap">
+                    <button class="chat-tab chat-group-btn" id="chatGroupBtn" data-chat="group" type="button" title="Open the group chat">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Groups</span>
+                    </button>
+                    <div class="group-dropdown" id="groupDropdown">
+                        <div class="group-dropdown-header">Active agents</div>
+                        <div class="group-dropdown-list" id="groupDropdownList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Panes -->
+            <div class="chat-panes" id="chatPanes">
+
+                <div class="chat-pane is-active" id="pane-global">
+                    <div class="agent-sync-note">
+                        <i class="fa-solid fa-circle-nodes"></i>
+                        <span>Aria coordinates all active agents — she can task them, receive their updates, and route answers back to you. Messages here are shared across all threads.</span>
+                    </div>
+
+                    <div class="agent-msg" style="--agent-accent: rgba(95, 132, 205, 1); --agent-accent-bg: rgba(95, 132, 205, 0.12); --agent-accent-border: rgba(95, 132, 205, 0.35);">
+                        <div class="msg-agent-avatar"><span>Ar</span></div>
+                        <div class="msg-body">
+                            <span class="msg-agent-name">Aria</span>
+                            <div class="msg-bubble">Welcome to your workspace. I've reviewed your profile — you're building a fintech product targeting Saudi Arabia. Let me know how I can help, or add more agents to bring in specialized expertise.</div>
+                        </div>
+                    </div>
+
+                    <div class="user-msg">
+                        <div class="msg-bubble">I need help with my go-to-market strategy and understanding the legal requirements in KSA. Can you bring in the right agents?</div>
+                    </div>
+
+                    <div class="agent-msg" style="--agent-accent: rgba(95, 132, 205, 1); --agent-accent-bg: rgba(95, 132, 205, 0.12); --agent-accent-border: rgba(95, 132, 205, 0.35);">
+                        <div class="msg-agent-avatar"><span>Ar</span></div>
+                        <div class="msg-body">
+                            <span class="msg-agent-name">Aria</span>
+                            <div class="msg-bubble">Great call. I'd suggest adding Lex for legal guidance and Nova for your GTM. Add them from the agents panel and they'll join the conversation.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-pane" id="pane-lex" hidden style="--agent-accent:rgba(217,119,6,1);--agent-accent-bg:rgba(217,119,6,0.1);--agent-accent-border:rgba(217,119,6,0.3);">
+                    <div class="agent-sync-note"><i class="fa-solid fa-arrows-rotate"></i><span>Lex shares context with Aria and all active agents — anything discussed in Global is available here.</span></div>
+                    <div class="agent-msg" style="--agent-accent:rgba(217,119,6,1);--agent-accent-bg:rgba(217,119,6,0.12);--agent-accent-border:rgba(217,119,6,0.35);">
+                        <div class="msg-agent-avatar"><span>Lx</span></div>
+                        <div class="msg-body"><span class="msg-agent-name">Lex</span><div class="msg-bubble">I'm in. For fintech in KSA, SAMA licensing is your first checkpoint — specifically the Regulatory Sandbox if you're pre-revenue. Tell me where you are and I'll map the exact compliance path.</div></div>
+                    </div>
+                </div>
+
+                <div class="chat-pane" id="pane-nova" hidden style="--agent-accent:rgba(139,92,246,1);--agent-accent-bg:rgba(139,92,246,0.1);--agent-accent-border:rgba(139,92,246,0.3);">
+                    <div class="agent-sync-note"><i class="fa-solid fa-arrows-rotate"></i><span>Nova shares context with Aria and all active agents — anything discussed in Global is available here.</span></div>
+                    <div class="agent-msg" style="--agent-accent:rgba(139,92,246,1);--agent-accent-bg:rgba(139,92,246,0.12);--agent-accent-border:rgba(139,92,246,0.35);">
+                        <div class="msg-agent-avatar"><span>Nv</span></div>
+                        <div class="msg-body"><span class="msg-agent-name">Nova</span><div class="msg-bubble">Ready to build. I'd start with a two-phase GTM: credibility through local bank partnerships first, then a targeted campaign in Riyadh and Jeddah for the 25–35 segment. Want me to draft the full playbook?</div></div>
+                    </div>
+                </div>
+
+                <div class="chat-pane" id="pane-rex" hidden style="--agent-accent:rgba(5,150,105,1);--agent-accent-bg:rgba(5,150,105,0.1);--agent-accent-border:rgba(5,150,105,0.3);">
+                    <div class="agent-sync-note"><i class="fa-solid fa-arrows-rotate"></i><span>Rex shares context with Aria and all active agents — anything discussed in Global is available here.</span></div>
+                    <div class="agent-msg" style="--agent-accent:rgba(5,150,105,1);--agent-accent-bg:rgba(5,150,105,0.12);--agent-accent-border:rgba(5,150,105,0.35);">
+                        <div class="msg-agent-avatar"><span>Rx</span></div>
+                        <div class="msg-body"><span class="msg-agent-name">Rex</span><div class="msg-bubble">KSA fintech grew 38% YoY last quarter. STC Pay, Tamara, and Tabby dominate consumer — but B2B payment rails for SMEs are wide open. Want a full competitive landscape or a specific segment deep-dive?</div></div>
+                    </div>
+                </div>
+
+                <div class="chat-pane" id="pane-max" hidden style="--agent-accent:rgba(234,88,12,1);--agent-accent-bg:rgba(234,88,12,0.1);--agent-accent-border:rgba(234,88,12,0.3);">
+                    <div class="agent-sync-note"><i class="fa-solid fa-arrows-rotate"></i><span>Max shares context with Aria and all active agents — anything discussed in Global is available here.</span></div>
+                    <div class="agent-msg" style="--agent-accent:rgba(234,88,12,1);--agent-accent-bg:rgba(234,88,12,0.12);--agent-accent-border:rgba(234,88,12,0.35);">
+                        <div class="msg-agent-avatar"><span>Mx</span></div>
+                        <div class="msg-body"><span class="msg-agent-name">Max</span><div class="msg-bubble">One payment flow, six weeks. Merchant-to-supplier is your fastest validation path. I'll draft the feature matrix — just confirm: web-first or mobile-first MVP?</div></div>
+                    </div>
+                </div>
+
+                <div class="chat-pane" id="pane-finn" hidden style="--agent-accent:rgba(20,184,166,1);--agent-accent-bg:rgba(20,184,166,0.1);--agent-accent-border:rgba(20,184,166,0.3);">
+                    <div class="agent-sync-note"><i class="fa-solid fa-arrows-rotate"></i><span>Finn shares context with Aria and all active agents — anything discussed in Global is available here.</span></div>
+                    <div class="agent-msg" style="--agent-accent:rgba(20,184,166,1);--agent-accent-bg:rgba(20,184,166,0.12);--agent-accent-border:rgba(20,184,166,0.35);">
+                        <div class="msg-agent-avatar"><span>Fn</span></div>
+                        <div class="msg-body"><span class="msg-agent-name">Finn</span><div class="msg-bubble">For this market you need to show 24-month runway to any serious investor. I'll model burn against Max's MVP timeline. Pre-seed in KSA fintech: $500K–$1.2M is the sweet spot. Want the model built around that range?</div></div>
+                    </div>
+                </div>
+
+                <div class="chat-pane" id="pane-scout" hidden style="--agent-accent:rgba(220,38,38,1);--agent-accent-bg:rgba(220,38,38,0.1);--agent-accent-border:rgba(220,38,38,0.3);">
+                    <div class="agent-sync-note"><i class="fa-solid fa-arrows-rotate"></i><span>Scout shares context with Aria and all active agents — anything discussed in Global is available here.</span></div>
+                    <div class="agent-msg" style="--agent-accent:rgba(220,38,38,1);--agent-accent-bg:rgba(220,38,38,0.12);--agent-accent-border:rgba(220,38,38,0.35);">
+                        <div class="msg-agent-avatar"><span>Sc</span></div>
+                        <div class="msg-body"><span class="msg-agent-name">Scout</span><div class="msg-bubble">Post-validation, the play is UAE via DIFC sandbox, then Bahrain. I'll draft a 12-month scaling roadmap with hiring milestones per market. Ready when Max ships the MVP.</div></div>
+                    </div>
+                </div>
+
+                <div class="chat-pane" id="pane-group" hidden style="--agent-accent:var(--accent);--agent-accent-bg:var(--brand-soft);--agent-accent-border:var(--accent-border);">
+                    <div class="agent-sync-note">
+                        <i class="fa-solid fa-users"></i>
+                        <span>All selected agents are listening — replies will come from each agent in turn.</span>
+                    </div>
+                    <div class="group-agents-list" id="groupAgentsList"></div>
+                </div>
+
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="chat-input-area">
                 <form class="chat-input" id="chatForm">
+                    <button class="chat-param-btn" type="button" id="filesBtn" aria-label="Attach files">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
                     <input type="text" id="chatText" placeholder="Type your question..." aria-label="Type your message">
+                    <button class="chat-param-btn" type="button" id="voiceBtn" aria-label="Voice message">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
                     <button type="submit" aria-label="Send">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -88,16 +505,329 @@
                         </svg>
                     </button>
                 </form>
-            </section>
-
-            <div class="messages-lock" aria-live="polite">
-                <p>Your chatbot will be available soon</p>
             </div>
-        </main>
+        </section>
     </div>
 
+    <script>
+    (function() {
+      var agentsPanel = document.getElementById('agentsPanel');
+      var themeToggle = document.getElementById('themeToggle');
+      var chatPanes   = document.getElementById('chatPanes');
+      var chatTabs    = document.getElementById('chatTabs');
+      var chatInput   = document.getElementById('chatText');
+      var groupBtn    = document.getElementById('chatGroupBtn');
+      var groupWrap   = document.getElementById('chatGroupWrap');
+      var groupDropdown = document.getElementById('groupDropdown');
+      var groupDropdownList = document.getElementById('groupDropdownList');
+      var groupAgentsList = document.getElementById('groupAgentsList');
 
+      var agentNames = {
+        lex: 'Lex',
+        nova: 'Nova',
+        rex: 'Rex',
+        max: 'Max',
+        finn: 'Finn',
+        scout: 'Scout'
+      };
+      var sidebarActiveAgents = new Set();
+      var groupSelectedAgents = new Set();
+
+      function setTheme(theme) {
+        if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+          localStorage.setItem('covise-theme', 'light');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('covise-theme', 'dark');
+        }
+      }
+
+      function getAgentSection(agentId) {
+        return document.querySelector('.agent-section[data-agent="' + agentId + '"]');
+      }
+
+      function getAgentTheme(agentId) {
+        var section = getAgentSection(agentId);
+        return {
+          accent: section ? getComputedStyle(section).getPropertyValue('--agent-accent').trim() : 'var(--accent)',
+          accentBg: section ? getComputedStyle(section).getPropertyValue('--agent-accent-bg').trim() : 'var(--brand-soft)',
+          accentBorder: section ? getComputedStyle(section).getPropertyValue('--agent-accent-border').trim() : 'var(--accent-border)'
+        };
+      }
+
+      function switchChat(id) {
+        chatTabs.querySelectorAll('.chat-tab').forEach(function(t) { t.classList.remove('is-active'); });
+        chatPanes.querySelectorAll('.chat-pane').forEach(function(p) { p.classList.remove('is-active'); });
+        var tab  = chatTabs.querySelector('.chat-tab[data-chat="' + id + '"]');
+        var pane = document.getElementById('pane-' + id);
+        if (tab)  tab.classList.add('is-active');
+        if (pane) { pane.classList.add('is-active'); pane.scrollTop = pane.scrollHeight; }
+      }
+
+      function getSidebarActiveAgents() {
+        return Array.from(sidebarActiveAgents);
+      }
+
+      function getGroupSelectedAgents() {
+        return Array.from(groupSelectedAgents);
+      }
+
+      function renderGroupAgents() {
+        var activeAgents = getGroupSelectedAgents();
+        groupDropdownList.innerHTML = '';
+        groupAgentsList.innerHTML = '';
+
+        Object.keys(agentNames).forEach(function(agentId) {
+          var theme = getAgentTheme(agentId);
+          var isActive = activeAgents.indexOf(agentId) !== -1;
+          var item = document.createElement('div');
+          item.className = 'group-dropdown-item';
+          item.style.setProperty('--agent-accent', theme.accent);
+          item.style.setProperty('--agent-accent-bg', theme.accentBg);
+          item.style.setProperty('--agent-accent-border', theme.accentBorder);
+
+          var name = document.createElement('span');
+          name.className = 'group-dropdown-name';
+          name.textContent = agentNames[agentId] || agentId;
+          name.style.color = theme.accent;
+
+          var actionBtn = document.createElement('button');
+          actionBtn.type = 'button';
+          actionBtn.className = isActive ? 'group-dropdown-remove' : 'group-dropdown-add';
+          actionBtn.setAttribute('data-group-action', isActive ? 'remove' : 'add');
+          actionBtn.setAttribute('data-agent-id', agentId);
+          actionBtn.setAttribute('aria-label', (isActive ? 'Remove ' : 'Add ') + (agentNames[agentId] || agentId));
+          actionBtn.style.color = theme.accent;
+          actionBtn.style.borderColor = theme.accentBorder;
+          actionBtn.style.background = isActive ? theme.accentBg : 'transparent';
+          actionBtn.innerHTML = isActive
+            ? '<i class="fa-solid fa-xmark"></i>'
+            : '<i class="fa-solid fa-plus"></i>';
+
+          item.appendChild(name);
+          item.appendChild(actionBtn);
+          groupDropdownList.appendChild(item);
+
+          if (isActive) {
+            var pill = document.createElement('span');
+            pill.className = 'group-agent-pill';
+            pill.textContent = agentNames[agentId] || agentId;
+            pill.style.color = theme.accent;
+            pill.style.borderColor = theme.accentBorder;
+            pill.style.background = theme.accentBg;
+            groupAgentsList.appendChild(pill);
+          }
+        });
+
+      }
+
+      function bindChatTab(tab) {
+        tab.addEventListener('click', function() {
+          switchChat(tab.dataset.chat);
+        });
+      }
+
+      chatTabs.querySelectorAll('.chat-tab').forEach(bindChatTab);
+
+      function syncActiveAgentUi() {
+        Object.keys(agentNames).forEach(function(agentId) {
+          var section = getAgentSection(agentId);
+          var isActive = sidebarActiveAgents.has(agentId);
+          if (!section) return;
+
+          var row = section.querySelector('.agent-row');
+          var expanded = section.querySelector('.agent-expanded');
+          var btn = section.querySelector('.agent-add-btn');
+          var tab = chatTabs.querySelector('.chat-tab[data-chat="' + agentId + '"]');
+
+          section.classList.toggle('is-added', isActive);
+
+          if (btn) {
+            btn.innerHTML = isActive ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-plus"></i>';
+            if (isActive) {
+              btn.style.color = 'var(--agent-accent)';
+              btn.style.borderColor = 'var(--agent-accent-border)';
+              btn.style.background = 'var(--agent-accent-bg)';
+            } else {
+              btn.style.cssText = '';
+            }
+          }
+
+          if (row) {
+            row.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+          }
+
+          if (expanded) {
+            if (isActive) expanded.removeAttribute('hidden');
+            else expanded.setAttribute('hidden', '');
+          }
+
+          if (tab) {
+            tab.hidden = !isActive;
+            if (isActive) tab.removeAttribute('hidden');
+            else tab.setAttribute('hidden', '');
+          }
+        });
+      }
+
+      function setAgentAddedState(section, isAdded, options) {
+        options = options || {};
+        var agentId = section.dataset.agent;
+        var activeChat = chatTabs.querySelector('.chat-tab.is-active');
+        var activeChatId = activeChat ? activeChat.dataset.chat : 'global';
+
+        if (isAdded) {
+          sidebarActiveAgents.add(agentId);
+          syncActiveAgentUi();
+          if (options.focusChat !== false) {
+            switchChat(agentId);
+          }
+          return;
+        }
+
+        sidebarActiveAgents.delete(agentId);
+        syncActiveAgentUi();
+
+        if (activeChatId === agentId) {
+          switchChat('global');
+        }
+      }
+
+      function removeGroupAgent(agentId) {
+        groupSelectedAgents.delete(agentId);
+        renderGroupAgents();
+      }
+
+      function addGroupAgent(agentId) {
+        groupSelectedAgents.add(agentId);
+        renderGroupAgents();
+      }
+
+      document.querySelectorAll('.agent-section:not(.aria-section) .agent-add-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var section  = btn.closest('.agent-section');
+          var isAdded  = section.classList.contains('is-added');
+          setAgentAddedState(section, !isAdded, { focusChat: true });
+        });
+      });
+
+      document.querySelectorAll('.agent-cap-chip').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+          chatInput.value = chip.textContent.trim() + ': ';
+          chatInput.focus();
+          var section = chip.closest('.agent-section');
+          if (section && !section.classList.contains('aria-section') && section.classList.contains('is-added')) {
+            switchChat(section.dataset.agent);
+          }
+        });
+      });
+
+      var toggleBtn = document.querySelector('.agents-toggle-btn');
+      if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+          var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+          setTheme(isLight ? 'dark' : 'light');
+        });
+      }
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() { agentsPanel.classList.toggle('is-open'); });
+      }
+      document.addEventListener('click', function(e) {
+        if (agentsPanel.classList.contains('is-open') &&
+            !agentsPanel.contains(e.target) &&
+            !e.target.closest('.agents-toggle-btn')) {
+          agentsPanel.classList.remove('is-open');
+        }
+      });
+
+      groupBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        switchChat('group');
+        groupDropdown.classList.toggle('is-open');
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!groupWrap.contains(e.target)) {
+          groupDropdown.classList.remove('is-open');
+        }
+      });
+
+      groupDropdown.addEventListener('click', function(e) {
+        var actionBtn = e.target.closest('[data-group-action]');
+        if (!actionBtn) return;
+        e.stopPropagation();
+        var agentId = actionBtn.getAttribute('data-agent-id');
+        if (actionBtn.getAttribute('data-group-action') === 'add') {
+          addGroupAgent(agentId);
+        } else {
+          removeGroupAgent(agentId);
+        }
+      });
+
+      document.getElementById('chatForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var text = chatInput.value.trim();
+        if (!text) return;
+        var activePane = chatPanes.querySelector('.chat-pane.is-active');
+        if (!activePane) return;
+        var el = document.createElement('div');
+        el.className = 'user-msg';
+        el.innerHTML = '<div class="msg-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+        activePane.appendChild(el);
+        chatInput.value = '';
+        activePane.scrollTop = activePane.scrollHeight;
+      });
+
+      // Agent three-dot menu
+      var activePopover = null;
+      document.querySelectorAll('.agent-menu-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var popover = btn.closest('.agent-section').querySelector('.agent-menu-popover');
+          if (activePopover && activePopover !== popover) {
+            activePopover.setAttribute('hidden', '');
+          }
+          if (popover.hasAttribute('hidden')) {
+            popover.removeAttribute('hidden');
+            activePopover = popover;
+          } else {
+            popover.setAttribute('hidden', '');
+            activePopover = null;
+          }
+        });
+      });
+
+      document.addEventListener('click', function(e) {
+        if (activePopover && !e.target.closest('.agent-menu-popover') && !e.target.closest('.agent-menu-btn')) {
+          activePopover.setAttribute('hidden', '');
+          activePopover = null;
+        }
+      });
+
+      document.querySelectorAll('.agent-menu-item').forEach(function(item) {
+        item.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var action  = item.dataset.action;
+          var section = item.closest('.agent-section');
+          var agentId = section ? section.dataset.agent : 'global';
+          var pane    = document.getElementById('pane-' + (agentId === 'aria' ? 'global' : agentId));
+          if (action === 'clear' && pane) {
+            var msgs = pane.querySelectorAll('.agent-msg, .user-msg');
+            msgs.forEach(function(m) { m.remove(); });
+          }
+          if (activePopover) { activePopover.setAttribute('hidden', ''); activePopover = null; }
+        });
+      });
+
+      switchChat('global');
+      document.querySelectorAll('.agent-section.is-added').forEach(function(section) {
+        if (section.dataset.agent) sidebarActiveAgents.add(section.dataset.agent);
+      });
+      syncActiveAgentUi();
+      renderGroupAgents();
+    })();
+    </script>
 </body>
 </html>
-
-
