@@ -1,3 +1,6 @@
+import uuid
+
+import django.db.models.deletion
 from django.db import migrations, models
 
 
@@ -5,24 +8,119 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = []
+    dependencies = [
+        ("auth", "0012_alter_user_first_name_max_length"),
+    ]
 
     operations = [
+        migrations.CreateModel(
+            name='User',
+            fields=[
+                ('password', models.CharField(max_length=128, verbose_name='password')),
+                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
+                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('email', models.EmailField(max_length=254, unique=True)),
+                ('full_name', models.CharField(blank=True, max_length=150)),
+                ('is_active', models.BooleanField(default=True)),
+                ('is_staff', models.BooleanField(default=False)),
+                ('date_joined', models.DateTimeField(auto_now_add=True)),
+                ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
+                ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
         migrations.CreateModel(
             name='WaitlistEntry',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('full_name', models.CharField(max_length=150)),
                 ('phone_number', models.CharField(max_length=30)),
-                ('email', models.EmailField(max_length=254)),
+                ('email', models.EmailField(max_length=254, unique=True)),
                 ('country', models.CharField(blank=True, max_length=100)),
                 ('non_gcc_business', models.BooleanField(default=False)),
                 ('custom_country', models.CharField(blank=True, max_length=100)),
                 ('linkedin', models.URLField(max_length=300)),
+                ('cv_s3_key', models.CharField(blank=True, max_length=500, null=True)),
+                ('my_referral_code', models.CharField(blank=True, max_length=20, unique=True)),
+                ('status', models.CharField(choices=[('pending', 'Pending'), ('approved', 'Approved'), ('activated', 'Activated'), ('rejected', 'Rejected')], default='pending', max_length=20)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('referred_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='referrals', to='covise_app.waitlistentry')),
             ],
             options={
                 'ordering': ['-created_at'],
+            },
+        ),
+        migrations.CreateModel(
+            name='OnboardingResponse',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('email', models.EmailField(db_index=True, max_length=254)),
+                ('flow_name', models.CharField(blank=True, max_length=200)),
+                ('user_type', models.JSONField(blank=True, null=True)),
+                ('industry', models.JSONField(blank=True, null=True)),
+                ('stage', models.JSONField(blank=True, null=True)),
+                ('target_market', models.JSONField(blank=True, null=True)),
+                ('team_size', models.JSONField(blank=True, null=True)),
+                ('one_liner', models.JSONField(blank=True, null=True)),
+                ('cofounders_needed', models.JSONField(blank=True, null=True)),
+                ('looking_for_type', models.JSONField(blank=True, null=True)),
+                ('founder_timeline', models.JSONField(blank=True, null=True)),
+                ('current_role', models.JSONField(blank=True, null=True)),
+                ('years_experience', models.JSONField(blank=True, null=True)),
+                ('industries_interested', models.JSONField(blank=True, null=True)),
+                ('venture_stage_preference', models.JSONField(blank=True, null=True)),
+                ('founder_type_preference', models.JSONField(blank=True, null=True)),
+                ('specialist_timeline', models.JSONField(blank=True, null=True)),
+                ('investor_type', models.JSONField(blank=True, null=True)),
+                ('investment_geography', models.JSONField(blank=True, null=True)),
+                ('ticket_size', models.JSONField(blank=True, null=True)),
+                ('investment_stage', models.JSONField(blank=True, null=True)),
+                ('investment_industries', models.JSONField(blank=True, null=True)),
+                ('investor_value_add', models.JSONField(blank=True, null=True)),
+                ('investor_looking_for', models.JSONField(blank=True, null=True)),
+                ('investor_timeline', models.JSONField(blank=True, null=True)),
+                ('home_country', models.JSONField(blank=True, null=True)),
+                ('target_gcc_market', models.JSONField(blank=True, null=True)),
+                ('foreign_industry', models.JSONField(blank=True, null=True)),
+                ('foreign_stage', models.JSONField(blank=True, null=True)),
+                ('foreign_one_liner', models.JSONField(blank=True, null=True)),
+                ('local_partner_need', models.JSONField(blank=True, null=True)),
+                ('foreign_timeline', models.JSONField(blank=True, null=True)),
+                ('program_type', models.JSONField(blank=True, null=True)),
+                ('program_location', models.JSONField(blank=True, null=True)),
+                ('program_stage_focus', models.JSONField(blank=True, null=True)),
+                ('program_industries', models.JSONField(blank=True, null=True)),
+                ('cohort_size', models.JSONField(blank=True, null=True)),
+                ('program_offering', models.JSONField(blank=True, null=True)),
+                ('incubator_looking_for', models.JSONField(blank=True, null=True)),
+                ('incubator_timeline', models.JSONField(blank=True, null=True)),
+                ('skills', models.JSONField(blank=True, null=True)),
+                ('availability', models.JSONField(blank=True, null=True)),
+                ('capital_contribution', models.JSONField(blank=True, null=True)),
+                ('looking_for_skills', models.JSONField(blank=True, null=True)),
+                ('cofounder_commitment', models.JSONField(blank=True, null=True)),
+                ('compensation', models.JSONField(blank=True, null=True)),
+                ('cofounder_location_pref', models.JSONField(blank=True, null=True)),
+                ('monthly_revenue', models.JSONField(blank=True, null=True)),
+                ('funding_status', models.JSONField(blank=True, null=True)),
+                ('customer_count', models.JSONField(blank=True, null=True)),
+                ('commitment_level', models.JSONField(blank=True, null=True)),
+                ('risk_tolerance', models.JSONField(blank=True, null=True)),
+                ('execution_history', models.JSONField(blank=True, null=True)),
+                ('leadership_style', models.JSONField(blank=True, null=True)),
+                ('how_heard', models.JSONField(blank=True, null=True)),
+                ('referral_code', models.JSONField(blank=True, null=True)),
+                ('profile_visibility_consent', models.JSONField(blank=True, null=True)),
+                ('answers', models.JSONField(default=dict)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('waitlist_entry', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='profile', to='covise_app.waitlistentry')),
+            ],
+            options={
+                'ordering': ['-updated_at'],
             },
         ),
     ]
