@@ -1,6 +1,12 @@
 from django.db import models
 
 class WaitlistEntry(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        ACTIVATED = "activated", "Activated"
+        REJECTED = "rejected", "Rejected"
+
     full_name = models.CharField(max_length=150)
     phone_number = models.CharField(max_length=30)
     email = models.EmailField(unique=True)
@@ -12,6 +18,11 @@ class WaitlistEntry(models.Model):
     my_referral_code = models.CharField(max_length=20, unique=True, blank=True)
     referred_by = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='referrals'
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
