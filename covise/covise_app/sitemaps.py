@@ -6,7 +6,7 @@ class StaticViewSitemap(Sitemap):
     changefreq = 'monthly'
 
     def items(self):
-        return ['home', 'Waitlist']  # your URL names here
+        return ['Landing Page']  # public marketing pages only
 
     def location(self, item):
         return reverse(item)
