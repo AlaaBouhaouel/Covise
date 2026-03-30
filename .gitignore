@@ -8,3 +8,13 @@ node_modules
 Instructions.txt
 instruction.txt
 .legal/
+
+.claude/
+.wrangler/
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+__pycache__/
+*.pyc
+pyvenv.cfg
