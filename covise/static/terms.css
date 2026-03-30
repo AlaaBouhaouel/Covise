@@ -86,12 +86,54 @@
 
 .terms-mobile-jump select {
     width: 100%;
-    padding: calc(var(--spacing) * 1.35) calc(var(--spacing) * 1.5);
+    padding: calc(var(--spacing) * 1.35) calc(var(--spacing) * 5) calc(var(--spacing) * 1.35) calc(var(--spacing) * 1.5);
     border-radius: 12px;
     border: 1px solid var(--border);
     background: rgba(255, 255, 255, 0.04);
     color: var(--text);
     font: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    background-image:
+        linear-gradient(45deg, transparent 50%, currentColor 50%),
+        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+        calc(100% - 22px) calc(50% - 2px),
+        calc(100% - 16px) calc(50% - 2px);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+}
+
+.terms-mobile-jump select:hover {
+    border-color: rgba(120, 150, 255, 0.38);
+    background-color: rgba(120, 150, 255, 0.06);
+}
+
+.terms-mobile-jump select:focus {
+    outline: none;
+    border-color: rgba(120, 150, 255, 0.48);
+    box-shadow: 0 0 0 3px rgba(120, 150, 255, 0.12);
+}
+
+.terms-mobile-jump select option {
+    background: #0f1626;
+    color: #e9edf5;
+}
+
+[data-theme="light"] .terms-mobile-jump select {
+    background-color: rgba(255, 255, 255, 0.84);
+}
+
+[data-theme="light"] .terms-mobile-jump select:hover {
+    background-color: rgba(84, 126, 214, 0.1);
+}
+
+[data-theme="light"] .terms-mobile-jump select option {
+    background: #ffffff;
+    color: #1a2140;
 }
 
 .terms-sections {

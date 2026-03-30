@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoVise — Global Network</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#040608;overflow:hidden;width:100vw;height:100vh;cursor:grab}
+body:active{cursor:grabbing}
+canvas{display:block}
+.vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(2,2,5,0.75) 100%);z-index:2}
+.bl{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 48%,rgba(255,190,80,0.02) 0%,transparent 50%);mix-blend-mode:screen}
+.gr{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+</style>
+</head>
+<body>
+<div class="vig"></div><div class="bl"></div><div class="gr"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,1000);
+camera.position.set(0,0.5,3.1);camera.lookAt(0,0,0);
+
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setClearColor(0x040608,1);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.2;
+document.body.prepend(renderer.domElement);
+
+const G=new THREE.Group();scene.add(G);
+
+// ─── Detailed continent canvas ───
+function makeEarth(){
+  const w=4096,h=2048,c=document.createElement('canvas');
+  c.width=w;c.height=h;const x=c.getContext('2d');
+  x.fillStyle='#070d14';x.fillRect(0,0,w,h);
+
+  function ll(lat,lng){return[(lng+180)/360*w,(90-lat)/180*h]}
+  function drawShape(pts,fill,stroke,lw){
+    x.beginPath();const s=ll(pts[0][0],pts[0][1]);x.moveTo(s[0],s[1]);
+    for(let i=1;i<pts.length;i++){const p=ll(pts[i][0],pts[i][1]);x.lineTo(p[0],p[1])}
+    x.closePath();
+    if(fill){x.fillStyle=fill;x.fill()}
+    if(stroke){x.strokeStyle=stroke;x.lineWidth=lw||1.5;x.stroke()}
+  }
+
+  const L='#0e1c28',E='#18324a';
+
+  // ── North America (detailed) ──
+  drawShape([
+    [83,-70],[82,-62],[80,-65],[78,-73],[76,-78],[74,-83],[72,-80],[70,-75],
+    [68,-65],[66,-62],[64,-58],[62,-55],[60,-57],[58,-60],[56,-58],[54,-56],
+    [52,-55],[50,-56],[48,-53],[46,-52],[45,-61],[44,-64],[43,-66],[42,-70],
+    [41,-72],[40,-74],[39,-75],[38,-76],[37,-76],[36,-76],[35,-77],[34,-78],
+    [33,-80],[32,-81],[31,-82],[30,-83],[29,-85],[28,-82],[27,-80],[26,-80],
+    [25,-81],[25,-83],[25,-88],[25,-90],[26,-93],[27,-97],[28,-97],[29,-95],
+    [30,-94],[30,-90],[29,-89],[28,-88],[27,-82],[26,-82],[25,-90],[24,-98],
+    [23,-106],[25,-108],[27,-110],[28,-113],[30,-114],[31,-117],[32,-117],
+    [33,-118],[34,-119],[35,-121],[36,-122],[37,-123],[38,-123],[39,-124],
+    [40,-124],[41,-124],[42,-124],[43,-125],[44,-125],[45,-124],[46,-124],
+    [47,-124],[48,-123],[49,-124],[50,-127],[51,-128],[52,-129],[53,-132],
+    [54,-133],[55,-131],[56,-133],[57,-136],[58,-137],[59,-139],[60,-141],
+    [61,-140],[62,-142],[63,-145],[64,-147],[65,-148],[66,-164],[67,-166],
+    [68,-165],[69,-168],[70,-163],[71,-157],[72,-150],[71,-140],[71,-130],
+    [72,-120],[73,-115],[74,-110],[75,-100],[76,-95],[77,-90],[78,-85],
+    [79,-80],[80,-73],[82,-68],[83,-70],
+  ],L,E);
+
+  // ── Mexico & Central America ──
+  drawShape([
+    [32,-117],[31,-115],[30,-114],[29,-112],[28,-110],[27,-109],[26,-109],
+    [25,-108],[24,-106],[23,-105],[22,-105],[21,-104],[20,-103],[19,-104],
+    [18,-103],[17,-101],[16,-98],[15,-96],[15,-93],[14,-91],[13,-89],
+    [12,-87],[11,-85],[10,-84],[9,-83],[8,-82],[8,-79],[9,-78],[10,-76],
+    [12,-77],[13,-80],[14,-83],[15,-86],[16,-88],[17,-90],[18,-91],
+    [19,-93],[20,-96],[21,-97],[22,-98],[23,-99],[24,-100],[25,-101],
+    [26,-102],[27,-104],[28,-105],[29,-107],[30,-108],[31,-110],[32,-113],
+    [32,-117],
+  ],L,E);
+
+  // ── South America (detailed) ──
+  drawShape([
+    [12,-72],[11,-74],[10,-76],[9,-78],[8,-77],[7,-77],[6,-76],[5,-76],
+    [4,-77],[3,-78],[2,-80],[1,-80],[0,-80],[0,-76],[-1,-75],[-2,-72],
+    [-3,-68],[-4,-65],[-5,-60],[-6,-55],[-7,-50],[-8,-45],[-8,-40],
+    [-7,-35],[-6,-35],[-5,-35],[-4,-37],[-3,-40],[-4,-42],[-5,-41],
+    [-6,-38],[-7,-36],[-8,-35],[-10,-36],[-12,-37],[-14,-39],[-16,-40],
+    [-18,-40],[-20,-41],[-22,-42],[-23,-43],[-24,-44],[-25,-46],
+    [-26,-48],[-27,-49],[-28,-49],[-29,-50],[-30,-51],[-31,-52],
+    [-32,-53],[-33,-53],[-34,-54],[-35,-55],[-36,-57],[-38,-58],
+    [-40,-62],[-42,-64],[-44,-65],[-46,-67],[-48,-66],[-50,-68],
+    [-52,-69],[-54,-69],[-55,-68],[-55,-66],[-54,-64],[-53,-63],
+    [-52,-70],[-51,-72],[-50,-74],[-48,-73],[-46,-72],[-44,-72],
+    [-42,-70],[-40,-68],[-38,-65],[-36,-62],[-34,-58],[-32,-56],
+    [-30,-53],[-28,-50],[-26,-48],[-24,-46],[-22,-45],[-20,-44],
+    [-18,-43],[-16,-42],[-14,-41],[-12,-40],[-10,-38],[-8,-38],
+    [-6,-42],[-4,-48],[-2,-52],[0,-56],[1,-60],[2,-62],[3,-65],
+    [4,-68],[5,-72],[6,-74],[7,-76],[8,-77],[9,-80],[10,-79],
+    [11,-76],[12,-72],
+  ],L,E);
+
+  // ── Europe (detailed) ──
+  drawShape([
+    [71,28],[70,32],[69,30],[68,28],[67,26],[66,24],[65,22],[64,20],
+    [63,18],[62,16],[61,14],[60,12],[59,10],[58,8],[57,7],[56,8],
+    [55,9],[54,10],[53,12],[52,14],[51,14],[50,12],[49,8],[48,6],
+    [47,5],[46,3],[45,1],[44,-1],[43,-3],[42,-4],[41,-5],[40,-5],
+    [39,-6],[38,-6],[37,-5],[36,-6],[36,-2],[37,0],[38,2],[39,4],
+    [38,8],[37,10],[36,12],[37,15],[38,18],[39,20],[40,22],[41,24],
+    [42,26],[42,28],[43,28],[44,28],[45,30],[46,32],[47,34],[48,36],
+    [49,34],[50,36],[51,38],[52,40],[53,40],[54,40],[55,42],[56,44],
+    [57,44],[58,44],[59,42],[60,40],[61,38],[62,36],[63,34],[64,32],
+    [65,30],[66,28],[67,28],[68,30],[69,32],[70,30],[71,28],
+  ],L,E);
+
+  // ── Scandinavia ──
+  drawShape([
+    [71,28],[70,20],[69,18],[68,16],[67,14],[66,12],[65,10],[64,10],
+    [63,8],[62,6],[61,5],[60,5],[59,6],[58,8],[59,10],[60,12],
+    [61,14],[62,16],[63,14],[64,16],[65,18],[66,20],[67,22],[68,24],
+    [69,26],[70,28],[71,28],
+  ],L,E);
+
+  // ── British Isles ──
+  drawShape([
+    [59,-6],[58,-3],[57,-2],[56,-2],[55,-3],[54,-4],[53,-5],[52,-5],
+    [51,-5],[50,-5],[50,-3],[51,-1],[52,0],[53,0],[54,1],[55,0],
+    [56,-1],[57,-2],[58,-3],[59,-4],[59,-6],
+  ],L,E);
+  drawShape([
+    [54,-10],[53,-9],[52,-8],[52,-6],[53,-6],[54,-7],[55,-8],[55,-10],[54,-10],
+  ],L,E);
+
+  // ── Africa (detailed) ──
+  drawShape([
+    [37,-1],[36,-2],[35,-1],[34,0],[33,1],[32,2],[31,3],[30,5],
+    [29,8],[28,10],[27,11],[26,12],[25,14],[24,15],[23,16],[22,17],
+    [21,18],[20,18],[19,17],[18,16],[17,16],[16,16],[15,15],[14,14],
+    [13,14],[12,13],[11,12],[10,10],[9,8],[8,6],[7,4],[6,2],
+    [5,1],[4,1],[3,7],[2,9],[1,10],[0,10],[-1,10],[-2,11],[-3,12],
+    [-4,12],[-5,12],[-6,13],[-7,13],[-8,14],[-9,14],[-10,14],
+    [-11,14],[-12,14],[-13,14],[-14,14],[-15,14],[-16,15],[-17,16],
+    [-18,18],[-19,20],[-20,22],[-22,24],[-24,26],[-26,28],[-28,28],
+    [-30,28],[-32,28],[-34,26],[-35,20],[-34,18],[-33,17],[-32,16],
+    [-31,16],[-30,18],[-29,24],[-28,28],[-26,30],[-24,32],[-22,34],
+    [-20,36],[-18,38],[-16,40],[-14,41],[-12,42],[-10,44],[-8,46],
+    [-6,42],[-4,40],[-2,40],[0,41],[2,42],[4,42],[5,44],[6,44],
+    [8,46],[10,48],[11,50],[12,51],[13,48],[14,46],[15,44],[16,43],
+    [18,42],[20,40],[22,38],[24,36],[26,34],[28,33],[30,32],[32,32],
+    [34,28],[35,20],[36,12],[37,6],[37,2],[37,-1],
+  ],L,E);
+
+  // ── Arabian Peninsula ──
+  drawShape([
+    [30,32],[28,33],[26,36],[24,38],[22,40],[20,42],[18,44],[16,43],
+    [15,44],[14,44],[13,46],[12,44],[13,42],[15,40],[16,38],[14,42],
+    [12,44],[12,48],[14,50],[16,52],[18,55],[20,56],[22,58],[24,57],
+    [26,56],[28,54],[29,52],[30,50],[30,48],[30,44],[30,40],[30,36],
+    [30,32],
+  ],L,E);
+
+  // ── India ──
+  drawShape([
+    [35,74],[33,72],[31,70],[29,68],[27,68],[25,68],[23,69],[21,72],
+    [19,73],[17,74],[15,75],[13,76],[11,76],[9,77],[8,77],[8,79],
+    [10,80],[12,80],[14,80],[16,80],[18,82],[20,84],[22,86],[24,87],
+    [26,86],[28,84],[30,82],[32,80],[33,78],[34,76],[35,74],
+  ],L,E);
+
+  // ── Russia / Northern Asia ──
+  drawShape([
+    [71,28],[72,30],[73,35],[74,40],[75,50],[76,60],[77,70],[78,80],
+    [77,90],[78,100],[77,110],[76,120],[75,130],[74,135],[73,140],
+    [72,145],[70,150],[68,155],[66,162],[64,168],[62,170],[60,175],
+    [58,178],[60,180],[65,180],[70,178],[72,172],[74,165],[76,155],
+    [77,145],[78,135],[79,125],[80,115],[80,100],[80,90],[80,80],
+    [79,70],[78,60],[77,50],[76,40],[74,35],[72,30],[71,28],
+  ],L,E);
+
+  // ── China / East Asia ──
+  drawShape([
+    [54,80],[52,85],[50,88],[48,92],[46,96],[44,98],[42,100],[40,104],
+    [38,106],[36,108],[34,110],[32,112],[30,112],[28,110],[26,108],
+    [24,106],[22,108],[20,110],[21,112],[22,114],[24,116],[26,118],
+    [28,120],[30,122],[32,122],[34,120],[36,118],[38,116],[40,118],
+    [42,120],[43,124],[44,128],[45,130],[47,132],[48,134],[50,130],
+    [52,125],[53,120],[54,115],[55,110],[55,105],[55,100],[55,95],
+    [55,90],[54,85],[54,80],
+  ],L,E);
+
+  // ── Japan ──
+  drawShape([
+    [45,140],[44,141],[43,142],[42,143],[41,142],[40,141],[39,140],
+    [38,139],[37,137],[36,136],[35,134],[35,130],[36,131],[37,133],
+    [38,135],[39,137],[40,139],[41,140],[42,141],[43,142],[44,143],
+    [45,143],[46,142],[45,140],
+  ],L,E);
+  drawShape([[43,145],[42,144],[41,145],[40,146],[41,146],[42,145],[43,145]],L,E);
+
+  // ── Southeast Asia ──
+  drawShape([
+    [20,100],[18,103],[16,106],[14,108],[12,108],[10,106],[8,104],
+    [6,103],[4,102],[2,104],[0,106],[-1,108],[0,110],[2,112],
+    [4,114],[6,116],[8,114],[10,112],[12,110],[14,108],[16,110],
+    [18,108],[20,106],[20,100],
+  ],L,E);
+
+  // ── Borneo ──
+  drawShape([[4,108],[2,110],[0,112],[-2,114],[-3,116],[-2,118],[0,118],[2,116],[4,114],[5,112],[4,108]],L,E);
+  // ── Sumatra ──
+  drawShape([[5,98],[3,100],[0,102],[-2,104],[-4,106],[-5,104],[-3,102],[-1,100],[2,98],[5,98]],L,E);
+  // ── Java ──
+  drawShape([[-6,106],[-7,108],[-8,112],[-8,114],[-7,114],[-6,112],[-6,110],[-6,106]],L,E);
+  // ── Sulawesi ──
+  drawShape([[-1,120],[-2,122],[-3,124],[-2,124],[0,122],[1,120],[-1,120]],L,E);
+  // ── Papua ──
+  drawShape([[-2,132],[-4,134],[-6,140],[-7,144],[-6,148],[-4,148],[-2,146],[-1,142],[0,138],[0,134],[-2,132]],L,E);
+
+  // ── Philippines ──
+  drawShape([[18,120],[16,122],[14,124],[12,125],[10,126],[12,124],[14,122],[16,120],[18,120]],L,E);
+
+  // ── Taiwan ──
+  drawShape([[25,121],[24,122],[23,121],[22,120],[23,120],[25,121]],L,E);
+
+  // ── Sri Lanka ──
+  drawShape([[10,80],[9,80],[8,81],[7,82],[8,82],[9,81],[10,80]],L,E);
+
+  // ── Australia (detailed) ──
+  drawShape([
+    [-12,130],[-13,128],[-14,127],[-16,124],[-18,122],[-20,118],
+    [-22,116],[-24,114],[-26,114],[-28,114],[-30,115],[-32,116],
+    [-34,118],[-35,120],[-36,122],[-37,126],[-38,130],[-38,134],
+    [-38,138],[-38,142],[-38,146],[-37,148],[-36,150],[-35,152],
+    [-34,152],[-32,152],[-30,153],[-28,154],[-26,152],[-24,150],
+    [-22,149],[-20,148],[-18,146],[-16,144],[-14,142],[-13,140],
+    [-12,138],[-11,136],[-12,134],[-11,132],[-12,130],
+  ],L,E);
+
+  // ── New Zealand ──
+  drawShape([[-35,172],[-37,174],[-39,176],[-41,177],[-42,176],[-41,174],[-39,173],[-37,172],[-35,172]],L,E);
+  drawShape([[-44,168],[-45,170],[-47,168],[-46,167],[-44,168]],L,E);
+
+  // ── Greenland ──
+  drawShape([
+    [84,-40],[83,-35],[82,-28],[81,-22],[80,-18],[79,-18],[78,-20],
+    [77,-22],[76,-22],[75,-20],[74,-21],[73,-22],[72,-24],[71,-28],
+    [70,-35],[70,-42],[71,-48],[72,-52],[73,-54],[74,-56],[75,-58],
+    [76,-60],[77,-60],[78,-58],[79,-55],[80,-52],[81,-48],[82,-44],
+    [83,-42],[84,-40],
+  ],L,E);
+
+  // ── Iceland ──
+  drawShape([[66,-18],[65,-16],[64,-14],[63,-14],[63,-18],[64,-22],[65,-24],[66,-22],[66,-18]],L,E);
+
+  // ── Madagascar ──
+  drawShape([[-12,49],[-14,48],[-16,46],[-18,44],[-20,44],[-22,44],[-24,46],[-25,47],[-24,48],[-22,49],[-20,50],[-18,50],[-16,50],[-14,50],[-12,49]],L,E);
+
+  // Subtle noise on land
+  const id=x.getImageData(0,0,w,h),d=id.data;
+  for(let i=0;i<d.length;i+=4){
+    if(d[i]>9){const n=(Math.random()-0.5)*5;d[i]=Math.max(0,d[i]+n);d[i+1]=Math.max(0,d[i+1]+n);d[i+2]=Math.max(0,d[i+2]+n)}
+  }
+  x.putImageData(id,0,0);
+
+  // Subtle ocean grid
+  x.strokeStyle='rgba(20,50,80,0.04)';x.lineWidth=0.5;
+  for(let lat=-80;lat<=80;lat+=10){const y=(90-lat)/180*h;x.beginPath();x.moveTo(0,y);x.lineTo(w,y);x.stroke()}
+  for(let lng=-180;lng<=180;lng+=15){const xx=(lng+180)/360*w;x.beginPath();x.moveTo(xx,0);x.lineTo(xx,h);x.stroke()}
+
+  return c;
+}
+
+const earthTex=new THREE.CanvasTexture(makeEarth());
+earthTex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+
+// ─── Earth sphere ───
+const earthMat=new THREE.MeshStandardMaterial({map:earthTex,roughness:0.88,metalness:0.05,emissiveMap:earthTex,emissive:new THREE.Color(0x0a1520),emissiveIntensity:0.25});
+G.add(new THREE.Mesh(new THREE.SphereGeometry(1,64,64),earthMat));
+
+// Wireframe overlay
+G.add(new THREE.Mesh(new THREE.SphereGeometry(1.002,36,36),new THREE.MeshBasicMaterial({color:0x224466,wireframe:true,transparent:true,opacity:0.018})));
+
+// ─── Lighting ───
+scene.add(new THREE.AmbientLight(0x223344,0.7));
+const sun=new THREE.DirectionalLight(0xddeeff,1.3);sun.position.set(4,2,4);scene.add(sun);
+scene.add(new THREE.DirectionalLight(0x3366aa,0.3).position.set(-3,1,-3)&&scene.children[scene.children.length-1]||new THREE.Object3D());
+const rim=new THREE.DirectionalLight(0x3366aa,0.3);rim.position.set(-3,1,-3);scene.add(rim);
+
+// ─── Atmosphere ───
+function addAtmos(r,pow,mul,side,blend){
+  const m=new THREE.ShaderMaterial({
+    vertexShader:`varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader:`varying vec3 vN;void main(){float i=pow(${pow}-dot(vN,vec3(0,0,1)),3.5);vec3 c=mix(vec3(0.15,0.35,0.6),vec3(0.3,0.55,0.85),i);gl_FragColor=vec4(c,i*${mul});}`,
+    transparent:true,side:side,depthWrite:false,blending:blend});
+  G.add(new THREE.Mesh(new THREE.SphereGeometry(r,64,64),m));
+}
+addAtmos(1.035,0.6,0.35,THREE.FrontSide,THREE.AdditiveBlending);
+addAtmos(1.09,0.42,0.1,THREE.BackSide,THREE.AdditiveBlending);
+
+// ─── City glow ───
+function ll3(lat,lng,r){const p=(90-lat)*Math.PI/180,t=(lng+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t))}
+
+function makeGlow(inner,mid,outer){
+  const c=document.createElement('canvas');c.width=128;c.height=128;const x=c.getContext('2d');
+  const g=x.createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0,inner);g.addColorStop(0.12,mid);g.addColorStop(0.4,outer);g.addColorStop(1,'rgba(255,130,10,0)');
+  x.fillStyle=g;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c);
+}
+const gT=makeGlow('rgba(255,225,140,1)','rgba(255,200,90,0.85)','rgba(255,160,30,0.2)');
+const gT2=makeGlow('rgba(255,235,160,1)','rgba(255,218,120,0.95)','rgba(255,180,50,0.35)');
+
+const cities=[
+  // GCC
+  {lat:24.71,lng:46.67,s:.085,o:1,g:1},{lat:25.28,lng:55.30,s:.085,o:1,g:1},
+  {lat:24.45,lng:54.65,s:.07,o:.95,g:1},{lat:26.22,lng:50.58,s:.06,o:.9,g:1},
+  {lat:25.29,lng:51.53,s:.06,o:.9,g:1},{lat:29.37,lng:47.97,s:.06,o:.9,g:1},
+  {lat:23.58,lng:58.38,s:.055,o:.85,g:1},{lat:21.54,lng:39.17,s:.07,o:.9,g:1},
+  {lat:21.42,lng:39.83,s:.05,o:.8,g:1},{lat:26.07,lng:44,s:.04,o:.7,g:1},
+  {lat:24.47,lng:39.61,s:.04,o:.7,g:1},{lat:16.89,lng:42.55,s:.035,o:.6,g:1},
+  // Major
+  {lat:51.50,lng:-0.12,s:.05,o:.7},{lat:40.71,lng:-74.01,s:.055,o:.75},
+  {lat:48.85,lng:2.35,s:.04,o:.6},{lat:35.68,lng:139.69,s:.05,o:.7},
+  {lat:1.35,lng:103.82,s:.045,o:.65},{lat:22.32,lng:114.17,s:.045,o:.65},
+  {lat:-33.87,lng:151.21,s:.04,o:.55},{lat:37.77,lng:-122.42,s:.04,o:.6},
+  {lat:55.75,lng:37.62,s:.04,o:.55},{lat:19.07,lng:72.88,s:.045,o:.6},
+  {lat:30.04,lng:31.24,s:.045,o:.6},{lat:-23.55,lng:-46.63,s:.04,o:.55},
+  {lat:52.52,lng:13.40,s:.035,o:.5},{lat:31.23,lng:121.47,s:.05,o:.7},
+  {lat:39.90,lng:116.40,s:.05,o:.7},{lat:34.05,lng:-118.24,s:.045,o:.6},
+  {lat:41.01,lng:28.98,s:.04,o:.55},{lat:43.65,lng:-79.38,s:.035,o:.5},
+  {lat:-1.29,lng:36.82,s:.03,o:.45},{lat:13.76,lng:100.50,s:.04,o:.55},
+  {lat:3.14,lng:101.69,s:.035,o:.5},{lat:59.33,lng:18.07,s:.03,o:.45},
+  {lat:33.89,lng:35.50,s:.035,o:.5},{lat:28.61,lng:77.21,s:.045,o:.6},
+  // Dense scatter
+  {lat:42.36,lng:-71.06,s:.025,o:.4},{lat:41.88,lng:-87.63,s:.03,o:.45},
+  {lat:29.76,lng:-95.37,s:.025,o:.4},{lat:33.45,lng:-112.07,s:.02,o:.35},
+  {lat:47.61,lng:-122.33,s:.025,o:.4},{lat:25.76,lng:-80.19,s:.025,o:.4},
+  {lat:38.91,lng:-77.04,s:.025,o:.4},{lat:45.50,lng:-73.57,s:.02,o:.35},
+  {lat:49.28,lng:-123.12,s:.02,o:.35},{lat:19.43,lng:-99.13,s:.03,o:.45},
+  {lat:4.71,lng:-74.07,s:.02,o:.35},{lat:-34.60,lng:-58.38,s:.03,o:.45},
+  {lat:-22.91,lng:-43.17,s:.025,o:.4},{lat:-33.45,lng:-70.65,s:.025,o:.4},
+  {lat:-12.05,lng:-77.04,s:.02,o:.35},{lat:55.68,lng:12.57,s:.02,o:.35},
+  {lat:60.17,lng:24.94,s:.02,o:.35},{lat:52.23,lng:21.01,s:.02,o:.35},
+  {lat:48.21,lng:16.37,s:.02,o:.35},{lat:37.98,lng:23.73,s:.02,o:.35},
+  {lat:40.42,lng:-3.70,s:.025,o:.4},{lat:41.90,lng:12.50,s:.025,o:.4},
+  {lat:53.48,lng:-2.24,s:.02,o:.35},{lat:50.08,lng:14.44,s:.02,o:.3},
+  {lat:34.69,lng:135.50,s:.03,o:.45},{lat:37.57,lng:126.98,s:.035,o:.5},
+  {lat:23.13,lng:113.26,s:.03,o:.45},{lat:30.57,lng:104.07,s:.025,o:.4},
+  {lat:12.97,lng:77.59,s:.025,o:.4},{lat:13.08,lng:80.27,s:.02,o:.35},
+  {lat:22.57,lng:88.36,s:.025,o:.4},{lat:21.03,lng:105.85,s:.02,o:.35},
+  {lat:10.82,lng:106.63,s:.02,o:.35},{lat:14.60,lng:120.98,s:.025,o:.4},
+  {lat:-6.21,lng:106.85,s:.03,o:.45},{lat:33.59,lng:-7.59,s:.02,o:.35},
+  {lat:36.75,lng:3.06,s:.02,o:.35},{lat:6.52,lng:3.38,s:.025,o:.4},
+  {lat:5.56,lng:-0.19,s:.02,o:.35},{lat:9.02,lng:38.75,s:.02,o:.35},
+  {lat:-33.92,lng:18.42,s:.025,o:.4},{lat:-26.20,lng:28.04,s:.02,o:.35},
+  {lat:36.19,lng:44.01,s:.02,o:.3},{lat:33.31,lng:44.37,s:.02,o:.3},
+  {lat:35.69,lng:51.39,s:.03,o:.45},{lat:32.06,lng:34.77,s:.025,o:.4},
+  {lat:31.95,lng:35.93,s:.02,o:.3},{lat:-37.81,lng:144.96,s:.03,o:.45},
+  {lat:-27.47,lng:153.03,s:.02,o:.35},{lat:-31.95,lng:115.86,s:.02,o:.35},
+  {lat:-36.85,lng:174.76,s:.02,o:.35},{lat:64.15,lng:-21.94,s:.015,o:.3},
+  {lat:39.74,lng:-104.99,s:.02,o:.35},{lat:32.78,lng:-96.80,s:.02,o:.35},
+  {lat:35.23,lng:-80.84,s:.015,o:.3},{lat:44.98,lng:-93.27,s:.015,o:.3},
+  {lat:23.81,lng:90.41,s:.02,o:.35},{lat:27.70,lng:85.32,s:.015,o:.3},
+  {lat:6.93,lng:79.84,s:.02,o:.35},{lat:47.37,lng:8.54,s:.02,o:.35},
+  {lat:46.20,lng:6.14,s:.015,o:.3},{lat:43.30,lng:5.37,s:.015,o:.3},
+];
+
+const sprites=[];
+cities.forEach(c=>{
+  const p=ll3(c.lat,c.lng,1.01);
+  const sm=new THREE.SpriteMaterial({map:c.g?gT2:gT,color:c.g?0xffcc55:0xffaa44,transparent:true,opacity:c.o,blending:THREE.AdditiveBlending,depthWrite:false});
+  const sp=new THREE.Sprite(sm);sp.position.copy(p);sp.scale.set(c.s,c.s,1);
+  sp.userData={bo:c.o,ph:Math.random()*6.28,sp:0.25+Math.random()*0.6};
+  G.add(sp);sprites.push(sp);
+});
+
+// ─── Dense connection arcs ───
+function arc(f,t,col,op){
+  const a=ll3(f.lat,f.lng,1.01),b=ll3(t.lat,t.lng,1.01);
+  const m=a.clone().add(b).multiplyScalar(0.5);
+  m.normalize().multiplyScalar(1.01+a.distanceTo(b)*0.3);
+  const cv=new THREE.QuadraticBezierCurve3(a,m,b);
+  const g=new THREE.BufferGeometry().setFromPoints(cv.getPoints(48));
+  G.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending})));
+}
+
+// GCC full mesh
+const gcc=cities.filter(c=>c.g);
+for(let i=0;i<gcc.length;i++)for(let j=i+1;j<gcc.length;j++){
+  if(Math.random()>0.2) arc(gcc[i],gcc[j],0x5599cc,0.05+Math.random()*0.06);
+}
+
+// Intercontinental — many routes
+const intercon=[
+  // GCC → Europe
+  [0,12],[0,14],[1,12],[1,14],[7,12],[4,14],[3,12],[1,24],[0,28],
+  // GCC → Asia
+  [1,16],[1,17],[0,21],[1,25],[1,26],[2,16],[5,21],[0,15],
+  // GCC → Africa
+  [7,22],[0,22],[1,30],[3,22],
+  // GCC → Americas
+  [1,13],[0,13],[1,19],[0,27],
+  // GCC → Oceania
+  [1,18],
+  // Europe → Americas
+  [12,13],[12,29],[14,13],[12,37],[14,23],
+  // Europe → Asia
+  [12,15],[12,20],[14,15],[24,15],[12,25],
+  // Asia → Americas
+  [15,19],[15,13],[17,19],[26,27],
+  // Asia → Africa
+  [21,30],[15,22],
+  // Asia → Oceania
+  [15,18],[17,18],[25,18],[16,18],
+  // Americas internal
+  [13,19],[13,27],[13,23],[19,23],
+  // Europe → Africa
+  [12,22],[14,22],[24,30],
+  // Africa → Asia
+  [22,21],[22,34],
+  // Oceania → Americas
+  [18,19],
+  // Middle East bridge
+  [34,0],[34,1],[34,12],[34,21],
+];
+intercon.forEach(([a,b])=>{
+  if(cities[a]&&cities[b]) arc(cities[a],cities[b],0x2255aa,0.025+Math.random()*0.025);
+});
+
+// Random additional connections for density
+for(let i=0;i<30;i++){
+  const a=Math.floor(Math.random()*cities.length);
+  let b=Math.floor(Math.random()*cities.length);
+  while(b===a) b=Math.floor(Math.random()*cities.length);
+  arc(cities[a],cities[b],0x1a4488,0.015+Math.random()*0.02);
+}
+
+// ─── Particles ───
+const tC=700;const tG=new THREE.BufferGeometry();const tP=new Float32Array(tC*3);const tD=[];
+for(let i=0;i<tC;i++){const r=1.05+Math.random()*.22,th=Math.random()*6.28,ph=Math.acos(2*Math.random()-1),sp=.0002+Math.random()*.0007,dr=(Math.random()-.5)*.00015;tD.push({r,th,ph,sp,dr});tP[i*3]=r*Math.sin(ph)*Math.cos(th);tP[i*3+1]=r*Math.cos(ph);tP[i*3+2]=r*Math.sin(ph)*Math.sin(th)}
+tG.setAttribute('position',new THREE.BufferAttribute(tP,3));
+const tc=document.createElement('canvas');tc.width=32;tc.height=32;const tx=tc.getContext('2d');
+const tgg=tx.createRadialGradient(16,16,0,16,16,16);tgg.addColorStop(0,'rgba(200,220,255,1)');tgg.addColorStop(.25,'rgba(150,190,250,.35)');tgg.addColorStop(1,'rgba(100,160,230,0)');
+tx.fillStyle=tgg;tx.fillRect(0,0,32,32);
+G.add(new THREE.Points(tG,new THREE.PointsMaterial({map:new THREE.CanvasTexture(tc),size:.009,transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true})));
+
+// ─── Stars ───
+const sC=1600,sG=new THREE.BufferGeometry(),sP=new Float32Array(sC*3);
+for(let i=0;i<sC;i++){sP[i*3]=(Math.random()-.5)*80;sP[i*3+1]=(Math.random()-.5)*80;sP[i*3+2]=-12-Math.random()*50}
+sG.setAttribute('position',new THREE.BufferAttribute(sP,3));
+scene.add(new THREE.Points(sG,new THREE.PointsMaterial({size:.04,color:0x8899bb,transparent:true,opacity:.3,sizeAttenuation:true})));
+
+// ─── Mouse/Touch ───
+let mX=0,mY=0,drag=false,pX=0,pY=0,dX=0,dY=0;
+document.addEventListener('mousemove',e=>{mX=(e.clientX/innerWidth-.5)*2;mY=(e.clientY/innerHeight-.5)*2;if(drag){dY+=(e.clientX-pX)*.005;dX+=(e.clientY-pY)*.003;dX=Math.max(-.8,Math.min(.8,dX));pX=e.clientX;pY=e.clientY}});
+document.addEventListener('mousedown',e=>{drag=true;pX=e.clientX;pY=e.clientY});
+document.addEventListener('mouseup',()=>{drag=false});
+document.addEventListener('touchmove',e=>{const t=e.touches[0];if(drag){dY+=(t.clientX-pX)*.005;dX+=(t.clientY-pY)*.003;dX=Math.max(-.8,Math.min(.8,dX));pX=t.clientX;pY=t.clientY}},{passive:true});
+document.addEventListener('touchstart',e=>{drag=true;pX=e.touches[0].clientX;pY=e.touches[0].clientY},{passive:true});
+document.addEventListener('touchend',()=>{drag=false});
+
+// ─── Animate ───
+const clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);const t=clock.getElapsedTime();
+  G.rotation.y+=(t*.05+mX*.18+dY-G.rotation.y)*.018;
+  G.rotation.x+=(mY*.12+dX-G.rotation.x)*.025;
+  sprites.forEach(s=>{s.material.opacity=s.userData.bo+Math.sin(t*s.userData.sp+s.userData.ph)*.12});
+  const pos=tG.attributes.position.array;
+  for(let i=0;i<tC;i++){const d=tD[i];d.th+=d.sp;d.ph+=d.dr;pos[i*3]=d.r*Math.sin(d.ph)*Math.cos(d.th);pos[i*3+1]=d.r*Math.cos(d.ph);pos[i*3+2]=d.r*Math.sin(d.ph)*Math.sin(d.th)}
+  tG.attributes.position.needsUpdate=true;
+  sun.position.x=Math.cos(t*.025)*5;sun.position.z=Math.sin(t*.025)*4;
+  camera.position.y=.5+Math.sin(t*.12)*.03;camera.position.z=3.1+Math.sin(t*.08)*.04;
+  renderer.render(scene,camera);
+}
+animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body>
+</html>

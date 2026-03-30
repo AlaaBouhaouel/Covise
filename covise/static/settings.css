@@ -7,6 +7,8 @@
 :root {
     --bg: #05060b;
     --panel: rgba(16, 24, 40, 0.9);
+    --panel-soft: rgba(10, 16, 28, 0.95);
+    --panel-elevated: rgba(14, 22, 38, 0.98);
     --text: #e9edf5;
     --muted: #9aa6bd;
     --border: rgba(255, 255, 255, 0.08);
@@ -38,11 +40,13 @@
 
 [data-theme="light"] {
     --bg: #f0f4fc;
-    --panel: rgba(220, 232, 255, 0.9);
+    --panel: rgba(246, 250, 255, 0.94);
+    --panel-soft: rgba(255, 255, 255, 0.92);
+    --panel-elevated: rgba(255, 255, 255, 0.98);
     --text: #1a2140;
     --muted: #4a5580;
     --border: rgba(0, 20, 80, 0.1);
-    --sidebar-bg: rgba(220, 232, 255, 0.98);
+    --sidebar-bg: rgba(12, 34, 86, 0.5);
     --sidebar-link-bg: rgba(255, 255, 255, 0.92);
     --mobile-sidebar-bg: rgba(233, 241, 255, 0.88);
     --notif-bell-color: var(--text);
@@ -65,6 +69,7 @@ body {
     color: var(--text);
     font-family: var(--font-display);
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 p {
@@ -76,6 +81,7 @@ p {
 .layout {
     display: flex;
     min-height: 100vh;
+    width: 100%;
 }
 
 .sidebar {
@@ -137,7 +143,7 @@ p {
 }
 
 [data-theme="light"] .sidebar .sidebar-link {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--panel-soft);
     color: #2b3f6c;
     border-color: rgba(72, 108, 175, 0.2);
 }
@@ -146,14 +152,56 @@ p {
     border: 1px solid var(--accent);
 }
 
+[data-theme="light"] .settings-row,
+[data-theme="light"] .warning-banner,
+[data-theme="light"] .info-banner,
+[data-theme="light"] .inline-feedback,
+[data-theme="light"] .permission-shell,
+[data-theme="light"] .inner-panel,
+[data-theme="light"] .table-wrap,
+[data-theme="light"] .outline-btn,
+[data-theme="light"] .selector-pill,
+[data-theme="light"] .modal-close,
+[data-theme="light"] .disabled-delete {
+    background: var(--panel-soft);
+}
+
+[data-theme="light"] .setting-item input,
+[data-theme="light"] .input-action input,
+[data-theme="light"] .modal-input,
+[data-theme="light"] .password-mask {
+    background: var(--panel-elevated);
+}
+
+[data-theme="light"] .settings-table tbody tr:nth-child(even) {
+    background: rgba(84, 126, 214, 0.06);
+}
+
 .main {
     flex: 1;
+    width: calc(100% - 68px);
+    min-width: 0;
     margin-left: 68px;
     padding: 0 calc(var(--spacing) * 10) calc(var(--spacing) * 14);
     display: grid;
     grid-template-rows: auto auto auto auto auto auto;
     gap: calc(var(--spacing) * 4);
     min-height: 100vh;
+}
+
+.panel,
+.profile,
+.settings-section,
+.settings-row,
+.row-copy,
+.row-control,
+.row-inline-actions,
+.input-action,
+.permission-shell,
+.inner-panel,
+.table-wrap,
+.profile-info {
+    min-width: 0;
 }
 
 .home-header {
@@ -287,6 +335,7 @@ p {
     top: calc(100% + 12px);
     right: 0;
     width: 320px;
+    max-width: min(320px, calc(100vw - 24px));
     border-radius: 18px;
     border: 1px solid var(--notif-panel-border);
     background: var(--notif-panel-bg);
@@ -1189,6 +1238,7 @@ p {
 
     .main {
         margin-left: 0;
+        width: 100%;
         height: auto;
         min-height: 0;
         padding: 0 calc(var(--spacing) * 4) calc(var(--spacing) * 12);

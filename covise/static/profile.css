@@ -1240,7 +1240,7 @@ p {
     --text: #1a2140;
     --muted: #4a5580;
     --border: rgba(0, 20, 80, 0.1);
-    --sidebar-bg: rgba(220, 232, 255, 0.98);
+    --sidebar-bg: rgba(12, 34, 86, 0.5);
     --sidebar-link-bg: rgba(255, 255, 255, 0.92);
     --mobile-sidebar-bg: rgba(233, 241, 255, 0.88);
     --avatar-bg: rgba(84, 126, 214, 0.14);

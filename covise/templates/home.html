@@ -25,6 +25,18 @@
   gtag('config', 'G-RDN1TCMRNR');
 </script>
 <body>
+    <div class="demo-notice-backdrop" id="demoNotice" aria-modal="true" role="dialog" aria-labelledby="demoNoticeTitle">
+        <div class="demo-notice-card">
+            <div class="demo-notice-head">
+                <h2 class="demo-notice-title" id="demoNoticeTitle">DEMO NOTICE</h2>
+                <span class="demo-notice-pill">Preview</span>
+            </div>
+            <p class="demo-notice-text">This is a demo. All data shown is simulated, and features are not fully functional.</p>
+            <div class="demo-notice-actions">
+                <button class="demo-notice-close" id="demoNoticeClose" type="button">Close</button>
+            </div>
+        </div>
+    </div>
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" id="side_active" href="../" aria-label="Landing Page">
@@ -274,13 +286,13 @@
                     .feed-shell .structured-post { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: grid; gap: 16px; }
                     .feed-shell .structured-post-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
                     .feed-shell .structured-post-meta { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
-                    .feed-shell .structured-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; color: #e7efff; border: 1px solid rgba(123, 167, 255, 0.42); flex: 0 0 auto; }
-                    .feed-shell .structured-avatar.a { background: rgba(64, 110, 196, 0.38); }
-                    .feed-shell .structured-avatar.b { background: rgba(90, 95, 170, 0.38); }
-                    .feed-shell .structured-avatar.c { background: rgba(78, 126, 172, 0.35); }
-                    .feed-shell .structured-avatar.d { background: rgba(124, 58, 237, 0.35); }
-                    .feed-shell .structured-avatar.e { background: rgba(5, 150, 105, 0.35); }
-                    .feed-shell .structured-avatar.f { background: rgba(217, 119, 6, 0.3); }
+                    .feed-shell .structured-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; color: var(--avatar-text); border: 1px solid var(--avatar-border); flex: 0 0 auto; }
+                    .feed-shell .structured-avatar.a { background: var(--avatar-blue-bg); }
+                    .feed-shell .structured-avatar.b { background: var(--avatar-purple-bg); }
+                    .feed-shell .structured-avatar.c { background: var(--avatar-cyan-bg); }
+                    .feed-shell .structured-avatar.d { background: var(--avatar-violet-bg); }
+                    .feed-shell .structured-avatar.e { background: var(--avatar-green-bg); }
+                    .feed-shell .structured-avatar.f { background: var(--avatar-amber-bg); }
                     .feed-shell .structured-post-title { font-size: 0.96rem; font-weight: 700; color: var(--white); line-height: 1.2; }
                     .feed-shell .structured-post-subtitle { margin-top: 4px; color: var(--muted); font-size: 0.76rem; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
                     .feed-shell .structured-post-tools { display: inline-flex; align-items: center; gap: 10px; flex: 0 0 auto; }
@@ -303,12 +315,12 @@
                     .feed-shell .comments-block { display: none; gap: 12px; border-top: 1px solid var(--border); padding-top: 14px; }
                     .feed-shell .comments-block.is-open { display: grid; }
                     .feed-shell .comment-row { display: flex; align-items: flex-start; gap: 10px; }
-                    .feed-shell .comment-avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 0.62rem; font-weight: 700; color: #e7efff; background: rgba(64, 110, 196, 0.38); border: 1px solid rgba(123, 167, 255, 0.42); flex: 0 0 auto; }
+                    .feed-shell .comment-avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 0.62rem; font-weight: 700; color: var(--avatar-text); background: var(--avatar-blue-bg); border: 1px solid var(--avatar-border); flex: 0 0 auto; }
                     .feed-shell .comment-card strong { color: var(--white); font-size: 0.78rem; }
-                    .feed-shell .comment-card p { color: rgba(231, 239, 255, 0.82); font-size: 0.8rem; line-height: 1.45; }
+                    .feed-shell .comment-card p { color: var(--muted); font-size: 0.8rem; line-height: 1.45; }
                     .feed-shell .comment-time { margin-top: 4px; font-size: 0.7rem; color: var(--muted); }
                     .feed-shell .comment-input-row { display: flex; align-items: center; gap: 10px; }
-                    .feed-shell .comment-input { flex: 1; min-height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--border); color: #e7efff; padding: calc(var(--spacing) * 1.5); font-family: var(--font-display); font-size: 0.76rem; }
+                    .feed-shell .comment-input { flex: 1; min-height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--border); color: var(--text); padding: calc(var(--spacing) * 1.5); font-family: var(--font-display); font-size: 0.76rem; }
                     .feed-shell .comment-send { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(120, 150, 255, 0.35); background: rgba(120, 150, 255, 0.14); display: grid; place-items: center; }
                     .feed-shell .comment-input:focus { outline: none; border-color: rgba(120, 150, 255, 0.45); box-shadow: 0 0 0 3px rgba(120, 150, 255, 0.14); }
                 </style>
@@ -489,6 +501,21 @@
 
 <script>
     (function() {
+        var notice = document.getElementById('demoNotice');
+        var closeBtn = document.getElementById('demoNoticeClose');
+        if (!notice || !closeBtn) return;
+
+        function closeNotice() {
+            notice.hidden = true;
+            document.dispatchEvent(new CustomEvent('demoNoticeClosed'));
+        }
+
+        notice.hidden = false;
+        closeBtn.addEventListener('click', closeNotice);
+    })();
+</script>
+<script>
+    (function() {
         var btn = document.getElementById('themeToggle');
         var html = document.documentElement;
         function setTheme(theme) {
@@ -546,6 +573,7 @@
             var margin = 12;
             var top = rect.bottom + 12;
             var left = rect.left + (rect.width / 2);
+            var arrowLeft = guide.offsetWidth / 2;
             var transform = 'translateX(-50%)';
 
             guide.classList.remove('pos-left', 'pos-side', 'pos-bottom');
@@ -579,9 +607,21 @@
                 top = window.innerHeight - guide.offsetHeight - margin;
             }
 
+             if (pos === 'left') {
+                arrowLeft = (rect.left + (rect.width / 2)) - left;
+            } else if (guide.classList.contains('pos-bottom')) {
+                arrowLeft = (rect.left + (rect.width / 2)) - left;
+            }
+
+            var minArrowLeft = 20;
+            var maxArrowLeft = guide.offsetWidth - 20;
+            if (arrowLeft < minArrowLeft) arrowLeft = minArrowLeft;
+            if (arrowLeft > maxArrowLeft) arrowLeft = maxArrowLeft;
+
             guide.style.top = top + 'px';
             guide.style.left = left + 'px';
             guide.style.transform = transform;
+            guide.style.setProperty('--guide-arrow-left', arrowLeft + 'px');
         }
 
         function showStep(index) {
@@ -629,7 +669,12 @@
             }
         }, { passive: true });
 
-        startTour();
+        var notice = document.getElementById('demoNotice');
+        if (notice && !notice.hidden) {
+            document.addEventListener('demoNoticeClosed', startTour, { once: true });
+        } else {
+            startTour();
+        }
     })();
 </script>
 <script>

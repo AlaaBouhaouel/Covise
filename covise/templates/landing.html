@@ -8,13 +8,8 @@
     <meta name="description" content="CoVise is where bold ideas meet the right partners. We connect cofounders across the GCC who are ready to build, commit, and grow together. هي المساحة التي تلتقي فيها الأفكار الطموحة بالشركاء المناسبين. نربط بين رواد الأعمال في دول الخليج المستعدين للبناء والالتزام والنمو معًا COVISE.">
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'landing.css' %}">
+    <link rel="stylesheet" href="{% static 'site_nav.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        (function() {
-            var theme = localStorage.getItem('covise-theme');
-            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
-        })();
-    </script>
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
@@ -29,59 +24,12 @@
 <body>
     <div class="container">
         <!-- Navigation -->
-        <nav class="nav">
-            <a href="/" class="logo">
-                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
-                <span>CoVise</span>
-            </a>
-            <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNavMenu">
-                <svg class="mobile-nav-icon mobile-nav-icon-menu" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                    <rect x="2" y="4" width="16" height="2" rx="1" fill="currentColor"/>
-                    <rect x="2" y="9" width="16" height="2" rx="1" fill="currentColor"/>
-                    <rect x="2" y="14" width="16" height="2" rx="1" fill="currentColor"/>
-                </svg>
-                <svg class="mobile-nav-icon mobile-nav-icon-close" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                    <line x1="4" y1="4" x2="16" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="16" y1="4" x2="4" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-            </button>
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
-                <!-- Sun icon (shown in dark mode) -->
-                <svg class="icon-sun" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="4.5"></circle>
-                    <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
-                </svg>
-                <!-- Moon icon (shown in light mode) -->
-                <svg class="icon-moon" viewBox="0 0 24 24">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-            </button>
-            <div class="nav-links">
-                <a href="/about/" class="nav-link">ABOUT</a>
-                <a href="/features/" class="nav-link">FEATURES</a>
-                <a href="/home/" class="nav-link nav-link-demo">DEMO</a>
-            </div>
-            <div class="mobile-nav-menu" id="mobileNavMenu" hidden>
-                <a href="/about/" class="mobile-nav-link">ABOUT</a>
-                <a href="/features/" class="mobile-nav-link">FEATURES</a>
-                <a href="/home/" class="mobile-nav-link mobile-nav-link-demo">DEMO</a>
-                <button class="mobile-nav-link mobile-theme-link" id="mobileThemeToggle" type="button">
-                    <svg class="mobile-theme-icon mobile-theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="12" cy="12" r="4.5"></circle>
-                        <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
-                    </svg>
-                    <svg class="mobile-theme-icon mobile-theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <span class="mobile-theme-label">LIGHT MODE</span>
-                </button>
-            </div>
-        </nav>
+        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href='/home/' nav_cta_label='DEMO' nav_classes='nav--overlay nav--mobile-compact nav--font-body nav--no-theme' show_home=False %}
 
         <!-- Hero Section -->
         <section class="hero">
             <div class="hero-globe-canvas-wrap" aria-hidden="true">
-                <canvas class="landing-globe-canvas" data-globe-canvas="hero"></canvas>
+                <div class="landing-globe" data-globe-container="hero"></div>
             </div>
 
             <div class="hero-content">
@@ -89,14 +37,13 @@
                     BUILD YOUR<br>
                     FUTURE
                 </h1>
-                <p class="hero-subtitle">
-                    Shared vision. Structured collaboration. Real execution.<br>
-                    Where serious founders align, connect, and execute.
+                <p class="hero-subtitle" id="typing" aria-label="Shared vision. Structured collaboration. Real execution. Where serious founders align, connect, and execute.">
+                    <span id="typingLineOne"></span><span class="typing-cursor" id= "cursor-up" aria-hidden="true"></span><br><span id="typingLineTwo"></span><span class="typing-cursor"  id= "cursor-down"  aria-hidden="true"></span>
                 </p>
             </div>
             
             <div class="hero-cta">
-                <a href="/waitlist/" class="btn-primary reserve-spot-btn">Reserve a spot</a>
+                <a href="/waitlist/" class="btn-primary reserve-spot-btn">Reserve a spot  <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
                 <div class="scroll-indicator">
                     <a href="#cta-section"><span>Scroll</span></a>
                     <div class="scroll-line"></div>
@@ -168,7 +115,7 @@
         <!-- CTA Section -->
         <section id="cta-section" class="cta-section">
             <div class="cta-globe-canvas-wrap" aria-hidden="true">
-                <canvas class="landing-globe-canvas" data-globe-canvas="cta"></canvas>
+                <div class="landing-globe" data-globe-container="cta"></div>
             </div>
             <div class="cta-content reveal-up" style="--reveal-delay: 0ms;">
                 <h2 class="cta-title">READY TO BUILD?</h2>
@@ -216,6 +163,50 @@
 </footer>
     </div>
     <script>
+        (function() {
+            var lines = [
+                "Shared vision. Structured collaboration. Real execution.",
+                "Where serious founders align, connect, and execute."
+            ];
+            var cursor_up = document.getElementById('cursor-up');
+            var cursor_down = document.getElementById('cursor-down');
+            var lineElements = [
+                document.getElementById('typingLineOne'),
+                document.getElementById('typingLineTwo')
+            ];
+            if (!lineElements[0] || !lineElements[1]) return;
+
+            var lineIndex = 0;
+            var charIndex = 0;
+
+            function type() {
+                if (lineIndex >= lines.length) return;
+
+                if (charIndex < lines[lineIndex].length) {
+                    if (lineIndex === 1) {
+                        cursor_up.style.display = 'none';
+                        cursor_down.style.display = 'inline-block';
+                    } else {
+                        cursor_up.style.display = 'inline-block';
+                        cursor_down.style.display = 'none';
+                    }
+                    lineElements[lineIndex].textContent += lines[lineIndex].charAt(charIndex);
+                    charIndex += 1;
+                    setTimeout(type, 38);
+
+                    return;
+                }
+
+                if (lineIndex < lines.length - 1) {
+                    lineIndex += 1;
+                    charIndex = 0;
+                    setTimeout(type, 520);
+                }
+            }
+
+            type();
+        })();
+
         const nav = document.querySelector('.nav');
         function onScroll() {
             if (window.scrollY > 10) {
@@ -227,42 +218,7 @@
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
     </script>
-    <script>
-        (function() {
-            var navToggle = document.getElementById('mobileNavToggle');
-            var navMenu = document.getElementById('mobileNavMenu');
-            if (!navToggle || !navMenu) return;
-
-            function closeMenu() {
-                navMenu.hidden = true;
-                navToggle.setAttribute('aria-expanded', 'false');
-                nav.classList.remove('is-menu-open');
-            }
-
-            navToggle.addEventListener('click', function() {
-                var isOpen = navToggle.getAttribute('aria-expanded') === 'true';
-                if (isOpen) {
-                    closeMenu();
-                    return;
-                }
-                navToggle.setAttribute('aria-expanded', 'true');
-                navMenu.hidden = false;
-                nav.classList.add('is-menu-open');
-            });
-
-            navMenu.querySelectorAll('a').forEach(function(link) {
-                link.addEventListener('click', closeMenu);
-            });
-
-            document.addEventListener('click', function(event) {
-                if (!nav.contains(event.target)) closeMenu();
-            });
-
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 520) closeMenu();
-            });
-        })();
-    </script>
+    {% include 'includes/site_nav_scripts.html' %}
     <script>
         (function() {
             var revealItems = document.querySelectorAll('.reveal-up');
@@ -284,34 +240,9 @@
                 observer.observe(item);
             });
         })();
+
     </script>
-    <script>
-        (function() {
-            var btn = document.getElementById('themeToggle');
-            var mobileBtn = document.getElementById('mobileThemeToggle');
-            var mobileBtnLabel = mobileBtn ? mobileBtn.querySelector('.mobile-theme-label') : null;
-            var html = document.documentElement;
-            function setTheme(theme) {
-                if (theme === 'light') {
-                    html.setAttribute('data-theme', 'light');
-                    localStorage.setItem('covise-theme', 'light');
-                    if (mobileBtnLabel) mobileBtnLabel.textContent = 'DARK MODE';
-                } else {
-                    html.removeAttribute('data-theme');
-                    localStorage.setItem('covise-theme', 'dark');
-                    if (mobileBtnLabel) mobileBtnLabel.textContent = 'LIGHT MODE';
-                }
-            }
-            function toggleTheme() {
-                var current = html.getAttribute('data-theme');
-                setTheme(current === 'light' ? 'dark' : 'light');
-            }
-            if (btn) btn.addEventListener('click', toggleTheme);
-            if (mobileBtn) mobileBtn.addEventListener('click', toggleTheme);
-            setTheme(html.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
-        })();
-    </script>
+    <script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
     <script src="{% static 'landing-globe.js' %}"></script>
 </body>
 </html>
-

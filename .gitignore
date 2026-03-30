@@ -7,3 +7,14 @@ node_modules
 *.env.*
 Instructions.txt
 instruction.txt
+.legal/
+db.sqlite3
+.claude/
+.wrangler/
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+__pycache__/
+*.pyc
+pyvenv.cfg
