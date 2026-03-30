@@ -110,12 +110,20 @@
                         <div class="founder-meta">
                             <span class="founder-avatar">CV</span>
                             <span>CoVise venture dossier</span>
+                            {% if project.city or project.country %}
                             <span class="meta-pill"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>{{ project.city }}, {{ project.country }}</span></span>
+                            {% endif %}
+                            {% if project.sector %}
                             <span class="meta-pill"><i class="fa-solid fa-building" aria-hidden="true"></i><span>{{ project.sector }}</span></span>
+                            {% endif %}
                         </div>
                         <div class="founder-meta">
+                            {% if project.stage %}
                             <span class="meta-pill"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span>{{ project.stage }}</span></span>
+                            {% endif %}
+                            {% if project.runway %}
                             <span class="meta-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>{{ project.runway }} runway</span></span>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -125,7 +133,9 @@
                                 <h1 class="project-title detail-title">{{ project.title }}</h1>
                                 <span class="project-code">{{ project.code }}</span>
                             </div>
+                            {% if project.tagline %}
                             <p class="project-desc detail-tagline">{{ project.tagline }}</p>
+                            {% endif %}
                         </div>
                         <div class="alignment-score" aria-label="Alignment Score {{ project.alignment_score }}%">
                             <span class="alignment-value {{ alignment_band }}">{{ project.alignment_score }}%</span>
@@ -133,14 +143,26 @@
                         </div>
                     </div>
 
+                    {% if project.stage or project.sector or project.founder_commitment or project.capital_status %}
                     <div class="tag-row detail-primary-tags">
+                        {% if project.stage %}
                         <span class="tag-pill"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>{{ project.stage }}</span></span>
+                        {% endif %}
+                        {% if project.sector %}
                         <span class="tag-pill"><i class="fa-solid fa-building" aria-hidden="true"></i><span>{{ project.sector }}</span></span>
+                        {% endif %}
+                        {% if project.founder_commitment %}
                         <span class="tag-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>{{ project.founder_commitment }}</span></span>
+                        {% endif %}
+                        {% if project.capital_status %}
                         <span class="tag-pill"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>{{ project.capital_status }}</span></span>
+                        {% endif %}
                     </div>
+                    {% endif %}
                     
+                    {% if project.positions_needed or project.skills_needed %}
                     <div class="looking-for-block">
+                        {% if project.positions_needed %}
                         <div class="label-row">
                             <span class="section-label">Looking for:</span>
                             <div class="role-pill-list">
@@ -149,6 +171,8 @@
                                 {% endfor %}
                             </div>
                         </div>
+                        {% endif %}
+                        {% if project.skills_needed %}
                         <div class="label-row">
                             <span class="section-label">Skills needed:</span>
                             <div class="skill-pill-list">
@@ -157,7 +181,9 @@
                                 {% endfor %}
                             </div>
                         </div>
+                        {% endif %}
                     </div>
+                    {% endif %}
 
                     <div class="detail-summary-grid">
                         <section class="detail-section detail-summary-card">
@@ -167,17 +193,30 @@
                         <section class="detail-section detail-summary-card">
                             <div class="detail-section-head"><span class="section-label">Venture Snapshot</span></div>
                             <div class="detail-grid detail-grid-meta">
+                                {% if project.city or project.country %}
                                 <div class="detail-item"><span>Location</span><strong>{{ project.city }}, {{ project.country }}</strong></div>
+                                {% endif %}
+                                {% if project.stage %}
                                 <div class="detail-item"><span>Stage</span><strong>{{ project.stage }}</strong></div>
+                                {% endif %}
+                                {% if project.founder_commitment %}
                                 <div class="detail-item"><span>Commitment</span><strong>{{ project.founder_commitment }}</strong></div>
+                                {% endif %}
+                                {% if project.capital_status %}
                                 <div class="detail-item"><span>Capital</span><strong>{{ project.capital_status }}</strong></div>
+                                {% endif %}
+                                {% if project.runway %}
                                 <div class="detail-item"><span>Runway</span><strong>{{ project.runway }}</strong></div>
+                                {% endif %}
+                                {% if project.target_raise %}
                                 <div class="detail-item"><span>Target Raise</span><strong>{{ project.target_raise }}</strong></div>
+                                {% endif %}
                             </div>
                         </section>
                     </div>
 
                     <div class="detail-summary-grid">
+                        {% if project.problem_points %}
                         <section class="detail-section">
                             <div class="detail-section-head"><span class="section-label">Problem Statement</span></div>
                             <ul class="detail-list">
@@ -186,6 +225,8 @@
                                 {% endfor %}
                             </ul>
                         </section>
+                        {% endif %}
+                        {% if project.solution_points %}
                         <section class="detail-section">
                             <div class="detail-section-head"><span class="section-label">Proposed Solution</span></div>
                             <ul class="detail-list">
@@ -194,10 +235,12 @@
                                 {% endfor %}
                             </ul>
                         </section>
+                        {% endif %}
                     </div>
 
 
                     <div class="detail-summary-grid">
+                        {% if project.market_assumptions %}
                         <section class="detail-section">
                             <div class="detail-section-head"><span class="section-label">Market Assumptions</span></div>
                             <div class="detail-kpi-list">
@@ -209,6 +252,8 @@
                                 {% endfor %}
                             </div>
                         </section>
+                        {% endif %}
+                        {% if project.unit_economics %}
                         <section class="detail-section">
                             <div class="detail-section-head"><span class="section-label">Unit Economics</span></div>
                             <div class="detail-kpi-list">
@@ -221,8 +266,10 @@
                                 {% endfor %}
                             </div>
                         </section>
+                        {% endif %}
                     </div>
 
+                    {% if project.go_to_market %}
                     <section class="detail-section">
                         <div class="detail-section-head"><span class="section-label">Go-To-Market Plan</span></div>
                         <ul class="detail-list">
@@ -231,8 +278,10 @@
                             {% endfor %}
                         </ul>
                     </section>
+                    {% endif %}
 
                     <div class="detail-summary-grid">
+                        {% if project.milestones %}
                         <section class="detail-section">
                             <div class="detail-section-head"><span class="section-label">Milestones</span></div>
                             <div class="detail-table">
@@ -245,6 +294,8 @@
                                 {% endfor %}
                             </div>
                         </section>
+                        {% endif %}
+                        {% if project.diligence_docs %}
                         <section class="detail-section">
                             <div class="detail-section-head"><span class="section-label">Diligence Documents</span></div>
                             <ul class="detail-list">
@@ -253,8 +304,10 @@
                                 {% endfor %}
                             </ul>
                         </section>
+                        {% endif %}
                     </div>
 
+                    {% if project.risk_register %}
                     <section class="detail-section">
                         <div class="detail-section-head"><span class="section-label">Risk Register</span></div>
                         <div class="detail-table">
@@ -267,6 +320,7 @@
                             {% endfor %}
                         </div>
                     </section>
+                    {% endif %}
 
                     <div class="project-footer detail-footer">
                         <div class="project-actions">

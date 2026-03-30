@@ -42,18 +42,24 @@
                 </div>
 
                 <form class="auth-form" action="#" method="post">
+                    {% csrf_token %}
                     <div class="auth-field">
                         <label for="signin-name">Full name</label>
-                        <input id="signin-name" name="name" type="text" placeholder="User Bo" required>
+                        <input id="signin-name" name="name" type="text" value="{{ form_data.name|default:'' }}" placeholder="User Name" required>
                     </div>
                     <div class="auth-field">
                         <label for="signin-email">Email</label>
-                        <input id="signin-email" name="email" type="email" placeholder="User@covise.com" required>
+                        <input id="signin-email" name="email" type="email" value="{{ form_data.email|default:'' }}" placeholder="User@covise.com" required>
                     </div>
                     <div class="auth-field">
                         <label for="signin-password">Password</label>
                         <input id="signin-password" name="password" type="password" placeholder="Create a password" required>
                     </div>
+                    {% if error_message %}
+                        <div class="auth-error">
+                            {{ error_message }}
+                        </div>
+                    {% endif %}
                     <button class="auth-button" type="submit">Create account</button>
                 </form>
 
@@ -72,8 +78,18 @@
             </ul>
         </aside>
     </main>
-    <footer class="auth-footer">
-        <p>Where serious founders align and build together.</p>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-bottom reveal-up" style="--reveal-delay: 100ms;">
+            <p>- 2026 CoVise. All rights reserved.</p>
+            <div class="footer-legal">
+                <a href="{% url 'Terms' %}">Terms</a>
+                <a href="{% url 'Privacy' %}">Privacy</a>
+                <a href="mailto:support@covise.com">Contact</a>
+                <a href="{% url 'Settings' %}">Security</a>
+            </div>
+        </div>   
+
     </footer>
 </body>
 </html>

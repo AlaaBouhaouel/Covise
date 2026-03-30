@@ -26,10 +26,10 @@
         <section class="card-shell">
             <article class="profile-share-card" id="profile-share-card" aria-label="Profile card preview">
                 <div class="share-card-head">
-                    <div class="share-avatar" id="card-avatar">A</div>
+                    <div class="share-avatar" id="card-avatar">{{ profile_card.avatar_initials }}</div>
                     <div class="share-identity">
-                        <h3 id="card-name">Ahmed Al-Rashidi</h3>
-                        <p id="card-meta">OPERATIONS - RIYADH, KSA</p>
+                        <h3 id="card-name">{{ profile_card.display_name }}</h3>
+                        <p id="card-meta">{{ profile_card.role_location }}</p>
                     </div>
                     <span class="share-verified">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -42,31 +42,31 @@
                 <div class="share-card-body">
                     <section class="share-score">
                         <p class="share-label">Founder Conviction</p>
-                        <p class="share-score-value"><span id="card-score">84</span><small>/100</small></p>
+                        <p class="share-score-value"><span id="card-score">{{ profile_card.score }}</span><small>/100</small></p>
                         <div class="share-progress-track">
-                            <div class="share-progress-fill" id="card-score-fill" style="width:84%"></div>
+                            <div class="share-progress-fill" id="card-score-fill" style="width:{{ profile_card.score }}%"></div>
                         </div>
                     </section>
 
                     <section class="share-section">
                         <p class="share-label">Skills</p>
                         <div class="share-chip-group" id="card-skills">
-                            <span class="share-chip active">Operations</span>
-                            <span class="share-chip">Supply Chain</span>
-                            <span class="share-chip">Team Building</span>
-                            <span class="share-chip">Finance</span>
+                            {% for skill in profile_card.skills %}
+                            <span class="share-chip{% if forloop.first %} active{% endif %}">{{ skill }}</span>
+                            {% endfor %}
                         </div>
                     </section>
 
                     <section class="share-section">
                         <p class="share-label">Looking For</p>
                         <div class="share-chip-group" id="card-looking-for">
-                            <span class="share-chip active">Tech Co-founder</span>
-                            <span class="share-chip">Product</span>
+                            {% for item in profile_card.looking_for %}
+                            <span class="share-chip{% if forloop.first %} active{% endif %}">{{ item }}</span>
+                            {% endfor %}
                         </div>
                     </section>
 
-                    <p class="share-about" id="card-about">Building a B2B logistics platform for SMEs in Saudi. 8 years in supply chain. Need a technical co-founder who can ship fast and own the product.</p>
+                    <p class="share-about" id="card-about">{{ profile_card.about }}</p>
                 </div>
             </article>
         </section>
@@ -95,6 +95,7 @@
         <p id="cardStatus" class="card-status" aria-live="polite"></p>
     </main>
 
+    {{ profile_card|json_script:"profile-card-data" }}
     <script src="{% static 'profile-card-page.js' %}"></script>
 </body>
 </html>

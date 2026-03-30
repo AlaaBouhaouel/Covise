@@ -7,6 +7,7 @@
     <title>CoVise | About</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'about.css' %}">
+    <link rel="stylesheet" href="{% static 'site_nav.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         (function() {
@@ -25,68 +26,44 @@
 </script>
 <body>
     <div class="container">
-        <nav class="nav">
-            <a href="/" class="logo">
-                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
-                <span>CoVise</span>
-            </a>
-            <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNavMenu">
-                <svg class="mobile-nav-icon mobile-nav-icon-menu" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                    <rect x="2" y="4" width="16" height="2" rx="1" fill="currentColor"/>
-                    <rect x="2" y="9" width="16" height="2" rx="1" fill="currentColor"/>
-                    <rect x="2" y="14" width="16" height="2" rx="1" fill="currentColor"/>
-                </svg>
-                <svg class="mobile-nav-icon mobile-nav-icon-close" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                    <line x1="4" y1="4" x2="16" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="16" y1="4" x2="4" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-            </button>
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
-                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            </button>
-            <div class="nav-links">
-                <a href="/about/" class="nav-link nav-link-active">ABOUT</a>
-                <a href="/features/" class="nav-link">FEATURES</a>
-                <a href="/home/" class="nav-link nav-link-demo">DEMO</a>
-            </div>
-            <div class="mobile-nav-menu" id="mobileNavMenu" hidden>
-                <a href="/about/" class="mobile-nav-link mobile-nav-link-active">ABOUT</a>
-                <a href="/features/" class="mobile-nav-link">FEATURES</a>
-                <a href="/home/" class="mobile-nav-link mobile-nav-link-demo">DEMO</a>
-                <button class="mobile-nav-link mobile-theme-link" id="mobileThemeToggle" type="button">
-                    <svg class="mobile-theme-icon mobile-theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="12" cy="12" r="4.5"></circle>
-                        <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
-                    </svg>
-                    <svg class="mobile-theme-icon mobile-theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <span class="mobile-theme-label">LIGHT MODE</span>
-                </button>
-            </div>
-        </nav>
+        {% include 'includes/site_nav.html' with active_page='about' nav_cta_href='/waitlist/' nav_cta_label='GET STARTED' nav_classes='nav--overlay nav--mobile-compact nav--font-body' show_home=True %}
 
-        <main class="about-page">
-            <div class="hero">
-                <div class="hero-eyebrow">Our Story</div>
+        <main class="page-content">
+
+            <div class="section-layout">
+                <!-- Left sidebar -->
+                <div class="sidebar animate-in">
+                <div class="sidebar-number">01</div>
+                <div class="sidebar-label">Why we<br>built this</div>
+                <div class="sidebar-line"></div>
             </div>
 
+            <!-- Main content -->
             <div class="content">
-                <div class="story">
-                    
-                    <p>
-                        <strong>We built Covise because finding the right co-founder in the GCC shouldn't be left to luck.</strong><br
-                        Finding a serious business partner in the Gulf is genuinely hard. There is no structured place to look, no way to verify who is truly committed, and no process to test compatibility before you go all in. Most partnerships don't fail because of bad ideas - <strong>they fail because of bad alignment.</strong>
-                    </p>
-                    <p>
-                        We watched talented founders across the GCC either build alone out of frustration, or rush into the wrong partnerships because there was nowhere serious to meet people. LinkedIn wasn't built for this. Incubators only serve a small slice. And most platforms that claim to help are either too niche, too passive, or too focused on deep tech to be useful to the full spectrum of entrepreneurs in the region.
-                    </p>
-                    <p>
-                        <strong>Covise was built to fix that.</strong> <br> A verified, structured, AI-powered network where serious founders find each other - across every industry, every city in the Gulf, and across borders. Not just tech. Not just the well-funded. Everyone who is serious about building something real.
-                    </p>
-                </div>
 
+                <div class="section-tag animate-in" style="transition-delay: 0.1s;">The Problem</div>
+
+                <h2 class="headline animate-in" style="transition-delay: 0.2s;">
+                    <span class="bright">Talented founders were building alone —</span>
+                    <span class="faded">or with the wrong people.</span>
+                </h2>
+
+                <p class="body-text animate-in" style="transition-delay: 0.35s;">
+                    We watched talented founders across the GCC either build alone out of frustration, or rush into the wrong partnerships because there was nowhere serious to meet people.
+                </p>
+
+                <p class="body-text animate-in" style="transition-delay: 0.45s;">
+                    LinkedIn wasn't built for this. Incubators only serve a small slice. Most platforms are too niche, too passive, or too focused on deep tech to be useful to the full spectrum of entrepreneurs in the region.
+                </p>
+
+                <div class="quote-block animate-in" style="transition-delay: 0.55s;">
+                    <div class="quote-inner">
+                        <p class="quote-text">
+                            "Not just tech. Not just the well-funded. Everyone who is serious about building something real."
+                        </p>
+                    </div>
+                </div>
+                
                 <div class="divider"></div>
 
                 <div class="facts">
@@ -116,14 +93,15 @@
                     </div>
                 </div>
 
-                <div class="cta-block">
-                    <div class="cta-title">Want to be part of the first cohort?</div>
-                    <div class="cta-sub">We're onboarding verified founders in batches. Apply for early access.</div>
-                    <a href="/waitlist/" class="cta-btn">Join the Waitlist <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
-                </div>
+            </div>
+            
+            <div class="cta-block">
+                <div class="cta-title">Want to be part of the first cohort?</div>
+                <div class="cta-sub">We're onboarding verified founders in batches. Apply for early access.</div>
+                <a href="/waitlist/" class="cta-btn">Join the Waitlist <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
             </div>
         </main>
-
+        
         <footer class="footer">
             <div class="footer-top">
                 <div class="footer-brand">
@@ -147,83 +125,35 @@
                     <h4>Company</h4>
                     <a href="/about/">About</a>
                     <a href="mailto:support@covise.com">Contact</a>
-                    <a href="mailto:donotreply@covise.net">donotreply@covise.net</a>
+                    <a href="mailto:support@covise.net">support@covise.net</a>
                     <a href="https://www.linkedin.com/company/covise/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                 </div>
             </div>
             <div class="footer-bottom">
                 <p>- 2026 CoVise. All rights reserved.</p>
                 <div class="footer-legal">
-                    <a href="#">Terms</a>
-                    <a href="#">Privacy</a>
+                    <a href="{% url 'Terms' %}">Terms</a>
+                    <a href="{% url 'Privacy' %}">Privacy</a>
                     <a href="#">Security</a>
                 </div>
             </div>
         </footer>
+
+
     </div>
 <script>
-    (function() {
-        var nav = document.querySelector('.nav');
-        var navToggle = document.getElementById('mobileNavToggle');
-        var navMenu = document.getElementById('mobileNavMenu');
-        if (!nav || !navToggle || !navMenu) return;
-
-        function closeMenu() {
-            navMenu.hidden = true;
-            navToggle.setAttribute('aria-expanded', 'false');
-            nav.classList.remove('is-menu-open');
+    const nav = document.querySelector('.nav');
+    function onScroll() {
+        if (!nav) return;
+        if (window.scrollY > 10) {
+            nav.classList.add('is-scrolled');
+        } else {
+            nav.classList.remove('is-scrolled');
         }
-
-        navToggle.addEventListener('click', function() {
-            var isOpen = navToggle.getAttribute('aria-expanded') === 'true';
-            if (isOpen) {
-                closeMenu();
-                return;
-            }
-            navToggle.setAttribute('aria-expanded', 'true');
-            navMenu.hidden = false;
-            nav.classList.add('is-menu-open');
-        });
-
-        navMenu.querySelectorAll('a').forEach(function(link) {
-            link.addEventListener('click', closeMenu);
-        });
-
-        document.addEventListener('click', function(event) {
-            if (!nav.contains(event.target)) closeMenu();
-        });
-
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) closeMenu();
-        });
-    })();
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
 </script>
-<script>
-    (function() {
-        var btn = document.getElementById('themeToggle');
-        var mobileBtn = document.getElementById('mobileThemeToggle');
-        var mobileBtnLabel = mobileBtn ? mobileBtn.querySelector('.mobile-theme-label') : null;
-        var html = document.documentElement;
-        function setTheme(theme) {
-            if (theme === 'light') {
-                html.setAttribute('data-theme', 'light');
-                localStorage.setItem('covise-theme', 'light');
-                if (mobileBtnLabel) mobileBtnLabel.textContent = 'DARK MODE';
-            } else {
-                html.removeAttribute('data-theme');
-                localStorage.setItem('covise-theme', 'dark');
-                if (mobileBtnLabel) mobileBtnLabel.textContent = 'LIGHT MODE';
-            }
-        }
-        function toggleTheme() {
-            var current = html.getAttribute('data-theme');
-            setTheme(current === 'light' ? 'dark' : 'light');
-        }
-        if (btn) btn.addEventListener('click', toggleTheme);
-        if (mobileBtn) mobileBtn.addEventListener('click', toggleTheme);
-        setTheme(html.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
-    })();
-</script>
+{% include 'includes/site_nav_scripts.html' %}
 </body>
 </html>
-

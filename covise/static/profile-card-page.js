@@ -18,13 +18,19 @@
         return;
     }
 
-    var cardData = {
-        name: 'Ahmed Al-Rashidi',
-        roleLocation: 'OPERATIONS - RIYADH, KSA',
-        score: 84,
-        skills: ['Operations', 'Supply Chain', 'Team Building', 'Finance'],
-        lookingFor: ['Tech Co-founder', 'Product'],
-        about: 'Building a B2B logistics platform for SMEs in Saudi. 8 years in supply chain. Need a technical co-founder who can ship fast and own the product.'
+    var cardDataElement = document.getElementById('profile-card-data');
+    var cardData = cardDataElement ? JSON.parse(cardDataElement.textContent) : {
+        avatar_initials: elements.avatar ? elements.avatar.textContent.trim() : 'CV',
+        display_name: elements.name ? elements.name.textContent.trim() : 'CoVise User',
+        role_location: elements.meta ? elements.meta.textContent.trim() : 'PROFILE IN PROGRESS',
+        score: elements.score ? parseInt(elements.score.textContent, 10) || 0 : 0,
+        skills: Array.from(elements.skills ? elements.skills.querySelectorAll('.share-chip') : []).map(function (chip) {
+            return chip.textContent.trim();
+        }),
+        looking_for: Array.from(elements.lookingFor ? elements.lookingFor.querySelectorAll('.share-chip') : []).map(function (chip) {
+            return chip.textContent.trim();
+        }),
+        about: elements.about ? elements.about.textContent.trim() : ''
     };
 
     function setStatus(message) {
@@ -42,14 +48,14 @@
     }
 
     function paintHtmlCard() {
-        elements.name.textContent = cardData.name;
-        elements.avatar.textContent = cardData.name.charAt(0).toUpperCase();
-        elements.meta.textContent = cardData.roleLocation;
+        elements.name.textContent = cardData.display_name;
+        elements.avatar.textContent = cardData.avatar_initials;
+        elements.meta.textContent = cardData.role_location;
         elements.score.textContent = String(cardData.score);
         elements.scoreFill.style.width = cardData.score + '%';
         elements.about.textContent = cardData.about;
         renderChips(elements.skills, cardData.skills);
-        renderChips(elements.lookingFor, cardData.lookingFor);
+        renderChips(elements.lookingFor, cardData.looking_for);
     }
 
     function roundedRect(ctx, x, y, w, h, r) {
@@ -188,15 +194,15 @@
         ctx.fill();
         ctx.fillStyle = '#171209';
         ctx.font = '700 52px Syne, Segoe UI, sans-serif';
-        ctx.fillText(cardData.name.charAt(0).toUpperCase(), 80, 112);
+        ctx.fillText(cardData.avatar_initials, 80, 112);
 
         ctx.fillStyle = '#f2f5fc';
         ctx.font = '700 52px Syne, Segoe UI, sans-serif';
-        ctx.fillText(cardData.name, 182, 96);
+        ctx.fillText(cardData.display_name, 182, 96);
 
         ctx.fillStyle = '#8f9eb9';
         ctx.font = '600 26px Syne, Segoe UI, sans-serif';
-        ctx.fillText(cardData.roleLocation, 182, 133);
+        ctx.fillText(cardData.role_location, 182, 133);
 
         roundedRect(ctx, 682, 70, 178, 56, 28);
         ctx.fillStyle = 'rgba(216,177,100,0.12)';
@@ -247,7 +253,7 @@
         ctx.fillStyle = '#9aa6bd';
         ctx.font = '500 22px Syne, Segoe UI, sans-serif';
         ctx.fillText('LOOKING FOR', 62, skillsBottom + 68);
-        lookingBottom = drawChipRows(ctx, cardData.lookingFor, 62, skillsBottom + 84, 858);
+        lookingBottom = drawChipRows(ctx, cardData.looking_for, 62, skillsBottom + 84, 858);
 
         ctx.strokeStyle = 'rgba(255,255,255,0.14)';
         ctx.beginPath();

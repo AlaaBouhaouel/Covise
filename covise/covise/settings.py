@@ -3,6 +3,7 @@ import os
 from decouple import config
 import dj_database_url
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='fallback-secret-key')
@@ -24,10 +25,12 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.sitemaps',
     'django.contrib.contenttypes',
+    'channels',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -47,6 +50,14 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'covise.urls'
 CSRF_FAILURE_VIEW = 'covise_app.views.csrf_failure'
+CHANNEL_LAYERS={
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG":{
+            "hosts":["redis://127.0.0.1:6379/0"],
+        },
+    },
+}
 
 TEMPLATES = [
     {
@@ -58,13 +69,18 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'covise_app.context_processors.user_ui_context',
+
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'covise.wsgi.application'
+ASGI_APPLICATION= 'covise.asgi.application'
 AUTH_USER_MODEL = "covise_app.User"
+
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -84,6 +100,15 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='support@covise.net')
 
 # HTTPS Security (only in production)
 if not DEBUG:
@@ -131,8 +156,10 @@ else:
         }
     }
 
-    
 
+    
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/home/'
 
 # AWS S3
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')

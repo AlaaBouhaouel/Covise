@@ -1,52 +1,18 @@
 (function () {
-    const directConversations = [
-        {
-            id: "leena",
-            name: "Leena Al-Sabah",
-            avatar: "L",
-            avatarColor: "var(--avatar-blue)",
-            preview: "I can handle product and early technical hiring if we align on scope.",
-            time: "2h ago",
-            unread: 3,
-            online: true,
-            match: "Tech Co-founder Match",
-            status: "Active now",
-            matchedOn: "March 8, 2026",
-            userType: "Specialist / Operator",
-            industry: "Fintech / B2B SaaS",
-            stage: "MVP built",
-            conviction: 84,
-            mutual: 7,
-            pinned: "Pinned: Review the GCC launch checklist before our call.",
-            messages: [
-                { type: "separator", label: "March 10" },
-                { from: "them", text: "Great connecting on CoVise. I reviewed your one-liner for the SME treasury platform.", time: "10:11 AM" },
-                { from: "me", text: "Thanks Leena. We are focused on automating invoice financing workflows for GCC distributors.", time: "10:13 AM", receipt: "sent" },
-                { from: "them", text: "That fits my background. I led product at a payments startup in Kuwait for 3 years.", time: "10:16 AM" },
-                { type: "separator", label: "Yesterday" },
-                { from: "me", text: "Would you be open to leading product while I stay on GTM and partnerships?", time: "4:08 PM", receipt: "delivered" },
-                { from: "them", text: "Yes, if we agree on decision boundaries and weekly execution cadence.", time: "4:12 PM" },
-                { from: "me", text: "Fair. I propose weekly sprint planning on Mondays and investor update every two weeks.", time: "4:15 PM", receipt: "delivered" },
-                { from: "them", text: "Works for me. Also we should validate with 5 pilot CFOs in Riyadh and Dubai.", time: "4:17 PM" },
-                { type: "separator", label: "Today" },
-                { from: "me", text: "I already have intros to 3 CFOs in logistics and wholesale. We can run discovery this week.", time: "9:42 AM", receipt: "seen" },
-                { from: "them", text: "Perfect. If the pain is strong, I can draft the MVP PRD by Sunday.", time: "9:44 AM" },
-                { from: "me", text: "Let us do a call tonight at 8 PM KSA and lock milestones for the next 30 days.", time: "9:46 AM", receipt: "seen" },
-                { from: "them", text: "Confirmed. I will send a proposed product timeline before the call.", time: "9:49 AM" }
-            ]
-        },
-        { id: "fahad", name: "Fahad Al-Qahtani", avatar: "F", avatarColor: "var(--avatar-green)", preview: "I have a shortlist of enterprise leads in Dammam ready for pilot.", time: "Yesterday", unread: 1, online: false, match: "Sales Operator Match", status: "Last seen 2h ago", matchedOn: "March 5, 2026", userType: "Specialist / Operator", industry: "Logistics / Supply Chain", stage: "Early revenue", conviction: 79, mutual: 4, pinned: "Pinned: Share pilot pricing model.", messages: [] },
-        { id: "nora", name: "Nora Al-Mansoori", avatar: "N", avatarColor: "var(--avatar-purple)", preview: "Can we review the UAE licensing timeline before next week?", time: "Yesterday", unread: 0, online: true, match: "GCC Expansion Match", status: "Active now", matchedOn: "March 2, 2026", userType: "Founder", industry: "Legal / Regtech", stage: "MVP built", conviction: 82, mutual: 5, pinned: "Pinned: UAE entity setup checklist.", messages: [] },
-        { id: "abdullah", name: "Abdullah Al-Otaibi", avatar: "A", avatarColor: "var(--avatar-amber)", preview: "I can support the backend architecture and security review.", time: "2d ago", unread: 2, online: false, match: "Technical Architect Match", status: "Last seen 1d ago", matchedOn: "March 1, 2026", userType: "Specialist / Operator", industry: "Cybersecurity", stage: "Idea", conviction: 76, mutual: 3, pinned: "Pinned: API security architecture notes.", messages: [] },
-        { id: "mariam", name: "Mariam Al-Hajri", avatar: "M", avatarColor: "var(--avatar-pink)", preview: "Investor intro deck looks good, only financial assumptions need revision.", time: "3d ago", unread: 0, online: true, match: "Investor Readiness Match", status: "Active now", matchedOn: "February 28, 2026", userType: "Investor", industry: "Fintech", stage: "Early revenue", conviction: 88, mutual: 11, pinned: "Pinned: Final investor deck v3.", messages: [] },
-        { id: "salem", name: "Salem Al-Rumaithi", avatar: "S", avatarColor: "var(--avatar-cyan)", preview: "Let us align on founder vesting terms before signing.", time: "4d ago", unread: 0, online: false, match: "Legal Structuring Match", status: "Last seen 3d ago", matchedOn: "February 26, 2026", userType: "Founder", industry: "Marketplace", stage: "MVP built", conviction: 81, mutual: 6, pinned: "Pinned: Founder vesting clause draft.", messages: [] }
-    ];
+    const conversations = JSON.parse(
+        document.getElementById("conversation-data").textContent
+    );
+    const conversationRequests = JSON.parse(
+        document.getElementById("conversation-request-data").textContent
+    );
+    const activeConversationValue = JSON.parse(
+        document.getElementById("active-conversation-id").textContent
+    );
+    const currentUserId = JSON.parse(
+        document.getElementById("current-user-id").textContent
+    );
 
-    const groupConversations = [
-        { name: "Riyadh AI Builders", members: 8, preview: "New benchmark results posted for the matching model.", time: "1h ago", avatar: "R" },
-        { name: "GCC Fintech Founders", members: 14, preview: "Who can share a compliance advisor in Bahrain?", time: "Yesterday", avatar: "G" }
-    ];
-
+    const groupConversations = [];
     const app = document.getElementById("messagesApp");
     const directList = document.getElementById("directList");
     const groupsList = document.getElementById("groupsList");
@@ -54,7 +20,6 @@
     const directTabBtn = document.getElementById("directTabBtn");
     const groupsTabBtn = document.getElementById("groupsTabBtn");
     const messagesStream = document.getElementById("messagesStream");
-    const chatInput = document.getElementById("chatInput");
     const sendBtn = document.getElementById("sendBtn");
     const chatName = document.getElementById("chatName");
     const chatStatus = document.getElementById("chatStatus");
@@ -81,9 +46,32 @@
     const modalTitle = document.getElementById("modalTitle");
     const modalBody = document.getElementById("modalBody");
     const modalFoot = document.getElementById("modalFoot");
+    const chatInput = document.getElementById("chatInput");
+    const searchInChatBtn = document.getElementById("searchInChatBtn");
+    const attachFileBtn = document.getElementById("attachFileBtn");
+    const inputAttachBtn = document.getElementById("inputAttachBtn");
+    const emojiPickerBtn = document.getElementById("emojiPickerBtn");
 
     let activeTab = "direct";
-    let activeConversationId = directConversations[0].id;
+    let activeConversationId = activeConversationValue || (conversations[0] ? conversations[0].id : "");
+    let chatSocket = null;
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let index = 0; index < cookies.length; index += 1) {
+                const cookie = cookies[index].trim();
+                if (cookie.substring(0, name.length + 1) === name + "=") {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie("csrftoken");
 
     function receiptHTML(receipt) {
         if (receipt === "sent") return '<span class="receipt">✓</span>';
@@ -93,57 +81,185 @@
     }
 
     function activeConversation() {
-        return directConversations.find((c) => c.id === activeConversationId) || directConversations[0];
+        return conversations.find((conversation) => conversation.id === activeConversationId) || null;
+    }
+
+    function ensureActiveConversation() {
+        if (!activeConversationId && conversations[0]) {
+            activeConversationId = conversations[0].id;
+        }
+        if (activeConversationId && activeConversation()) {
+            return;
+        }
+        activeConversationId = conversations[0] ? conversations[0].id : "";
+    }
+
+    function connectSocket() {
+        if (!activeConversationId) {
+            return;
+        }
+
+        if (chatSocket) {
+            chatSocket.close();
+        }
+
+        chatSocket = new WebSocket(
+            "ws://" + window.location.host + "/ws/messages/" + activeConversationId + "/"
+        );
+
+        chatSocket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            const conversation = conversations.find((item) => item.id === data.conversation_id);
+
+            if (!conversation) {
+                return;
+            }
+
+            conversation.messages.push({
+                id: data.message_id,
+                sender_id: data.sender_id,
+                sender_name: data.sender_name,
+                text: data.message,
+                created_at: data.created_at,
+            });
+
+            conversation.preview = data.message;
+            conversation.time = "Now";
+            if (conversation.id === activeConversationId) {
+                conversation.unread = 0;
+            } else {
+                conversation.unread += 1;
+            }
+
+            renderAll();
+        };
+    }
+
+    function formatMessageTime(value) {
+        if (!value) {
+            return "";
+        }
+
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) {
+            return value;
+        }
+
+        return parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+
+    function renderRequests() {
+        const requestCount = conversationRequests.length;
+        const label = requestCount === 1 ? "1 Message Request" : `${requestCount} Message Requests`;
+        requestsToggle.querySelector("span").textContent = label;
+        requestsList.innerHTML = "";
+
+        if (!requestCount) {
+            requestsList.innerHTML = '<article class="request-item"><div><h3>No pending requests</h3><p>Send a request from someone&apos;s public profile to start a private chat after they accept.</p></div></article>';
+            return;
+        }
+
+        conversationRequests.forEach((requestItem) => {
+            const element = document.createElement("article");
+            element.className = "request-item";
+            let actionsHtml = '<div class="request-actions">';
+            if (requestItem.is_incoming) {
+                actionsHtml += `<button class="accept" type="button" data-request-id="${requestItem.id}" data-action="accept">Accept</button>`;
+                actionsHtml += `<button class="decline" type="button" data-request-id="${requestItem.id}" data-action="decline">Decline</button>`;
+            } else {
+                actionsHtml += '<button class="accept" type="button" disabled>Pending</button>';
+            }
+            actionsHtml += "</div>";
+            element.innerHTML = `
+                <div><h3>${requestItem.name}</h3><p>${requestItem.description}</p></div>
+                ${actionsHtml}
+            `;
+
+            element.querySelectorAll("[data-request-id]").forEach((button) => {
+                button.addEventListener("click", () => {
+                    fetch(`/messages/requests/${requestItem.id}/${button.dataset.action}/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrftoken,
+                        },
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (!data.ok) {
+                                return;
+                            }
+                            if (data.conversation_id) {
+                                window.location.href = `/messages/?conversation=${data.conversation_id}`;
+                                return;
+                            }
+                            window.location.reload();
+                        });
+                });
+            });
+
+            requestsList.appendChild(element);
+        });
     }
 
     function renderLists() {
-        const q = searchInput.value.trim().toLowerCase();
+        const query = searchInput.value.trim().toLowerCase();
         directList.innerHTML = "";
         groupsList.innerHTML = "";
 
-        directConversations
-            .filter((c) => (c.name + " " + c.preview + " " + c.match).toLowerCase().includes(q))
-            .forEach((c) => {
-                const el = document.createElement("button");
-                el.type = "button";
-                el.className = "conv-item" + (activeTab === "direct" && c.id === activeConversationId ? " is-active" : "");
-                el.innerHTML = `
+        conversations
+            .filter((conversation) => (
+                conversation.name + " " + conversation.preview + " " + conversation.match
+            ).toLowerCase().includes(query))
+            .forEach((conversation) => {
+                const element = document.createElement("button");
+                element.type = "button";
+                element.className = "conv-item" + (
+                    activeTab === "direct" && conversation.id === activeConversationId ? " is-active" : ""
+                );
+                element.innerHTML = `
                     <div class="conv-avatar-wrap">
-                        <div class="avatar" style="background:${c.avatarColor};">${c.avatar}</div>
-                        ${c.online ? '<span class="online-dot"></span>' : ""}
+                        <div class="avatar">${conversation.avatar}</div>
                     </div>
                     <div class="conv-main">
-                        <div class="conv-head"><h3>${c.name}</h3><span>${c.time}</span></div>
-                        <p>${c.preview}</p>
+                        <div class="conv-head"><h3>${conversation.name}</h3><span>${conversation.time}</span></div>
+                        <p>${conversation.preview}</p>
                         <div class="conv-foot">
-                            <span class="match-pill subtle">${c.match}</span>
-                            ${c.unread ? `<span class="unread-badge">${c.unread}</span>` : ""}
+                            <span class="match-pill subtle">${conversation.match}</span>
+                            ${conversation.unread ? `<span class="unread-badge">${conversation.unread}</span>` : ""}
                         </div>
                     </div>`;
-                el.addEventListener("click", () => {
-                    activeConversationId = c.id;
+                element.addEventListener("click", () => {
+                    activeConversationId = conversation.id;
+                    conversation.unread = 0;
                     activeTab = "direct";
+                    connectSocket();
                     renderAll();
                     app.classList.add("mobile-chat-open");
                 });
-                directList.appendChild(el);
+                directList.appendChild(element);
             });
 
-        groupConversations
-            .filter((g) => (g.name + " " + g.preview).toLowerCase().includes(q))
-            .forEach((g) => {
-                const el = document.createElement("button");
-                el.type = "button";
-                el.className = "conv-item group-item";
-                el.innerHTML = `
-                    <div class="avatar">${g.avatar}</div>
-                    <div class="conv-main">
-                        <div class="conv-head"><h3>${g.name}</h3><span>${g.time}</span></div>
-                        <p>${g.preview}</p>
-                        <div class="conv-foot"><span class="match-pill subtle">${g.members} members</span></div>
-                    </div>`;
-                groupsList.appendChild(el);
-            });
+        if (!conversations.length) {
+            directList.innerHTML = '<div class="request-item"><div><h3>No conversations yet</h3><p>Open a public profile and press "Request Private Chat" to start one.</p></div></div>';
+        }
+
+        groupConversations.forEach((group) => {
+            const element = document.createElement("button");
+            element.type = "button";
+            element.className = "conv-item group-item";
+            element.innerHTML = `
+                <div class="avatar">${group.avatar}</div>
+                <div class="conv-main">
+                    <div class="conv-head"><h3>${group.name}</h3><span>${group.time}</span></div>
+                    <p>${group.preview}</p>
+                    <div class="conv-foot"><span class="match-pill subtle">${group.members} members</span></div>
+                </div>`;
+            groupsList.appendChild(element);
+        });
+
+        if (!groupConversations.length) {
+            groupsList.innerHTML = '<div class="request-item"><div><h3>No groups yet</h3><p>Group conversations are not enabled yet.</p></div></div>';
+        }
 
         directList.classList.toggle("is-hidden", activeTab !== "direct");
         groupsList.classList.toggle("is-hidden", activeTab !== "groups");
@@ -152,49 +268,64 @@
     }
 
     function renderChat() {
-        const c = activeConversation();
-        chatName.textContent = c.name;
-        chatStatus.textContent = c.status;
+        const conversation = activeConversation();
+        messagesStream.innerHTML = "";
+
+        if (!conversation) {
+            chatName.textContent = "Messages";
+            chatStatus.textContent = "Choose a conversation to start chatting";
+            chatAvatar.textContent = "C";
+            chatMatchPill.textContent = "Private conversation";
+            pinnedText.textContent = "Start a private chat from a public profile.";
+            detailsName.textContent = "No conversation selected";
+            detailsPersonName.textContent = "No conversation selected";
+            detailsAvatar.textContent = "C";
+            detailsMatchPill.textContent = "Private conversation";
+            detailsMatchedOn.textContent = "";
+            detailsUserType.textContent = "";
+            detailsIndustry.textContent = "";
+            detailsStage.textContent = "";
+            detailsMutual.textContent = "0";
+            convictionFill.style.width = "0%";
+            convictionValue.textContent = "0/100";
+            return;
+        }
+
+        chatName.textContent = conversation.name;
+        chatStatus.textContent = conversation.status;
         if (chatStatusDot) {
             chatStatus.prepend(chatStatusDot);
-            chatStatusDot.classList.toggle("offline", !c.online);
+            chatStatusDot.classList.add("offline");
         }
-        chatAvatar.textContent = c.avatar;
-        chatAvatar.style.background = c.avatarColor;
-        chatMatchPill.textContent = c.match;
-        pinnedText.textContent = c.pinned;
+        chatAvatar.textContent = conversation.avatar;
+        chatMatchPill.textContent = conversation.match;
+        pinnedText.textContent = conversation.pinned || "Private chat with this member.";
 
-        detailsName.textContent = c.name;
-        detailsPersonName.textContent = c.name;
-        detailsAvatar.textContent = c.avatar;
-        detailsAvatar.style.background = c.avatarColor;
-        detailsMatchPill.textContent = c.match;
-        detailsMatchedOn.textContent = c.matchedOn;
-        detailsUserType.textContent = c.userType;
-        detailsIndustry.textContent = c.industry;
-        detailsStage.textContent = c.stage;
-        detailsMutual.textContent = c.mutual;
-        convictionFill.style.width = c.conviction + "%";
-        convictionValue.textContent = c.conviction + "/100";
+        detailsName.textContent = conversation.name;
+        detailsPersonName.textContent = conversation.name;
+        detailsAvatar.textContent = conversation.avatar;
+        detailsMatchPill.textContent = conversation.match;
+        detailsMatchedOn.textContent = conversation.matchedOn;
+        detailsUserType.textContent = conversation.userType;
+        detailsIndustry.textContent = conversation.industry;
+        detailsStage.textContent = conversation.stage;
+        detailsMutual.textContent = conversation.mutual;
+        convictionFill.style.width = "0%";
+        convictionValue.textContent = "N/A";
 
-        messagesStream.innerHTML = "";
-        c.messages.forEach((m) => {
-            if (m.type === "separator") {
-                const sep = document.createElement("div");
-                sep.className = "date-separator";
-                sep.textContent = m.label;
-                messagesStream.appendChild(sep);
-                return;
-            }
+        conversation.messages.forEach((message) => {
             const row = document.createElement("article");
-            row.className = "msg " + (m.from === "me" ? "outgoing" : "incoming");
-            row.innerHTML = `<div class="bubble">${m.text}</div><div class="msg-meta"><span>${m.time}</span>${m.from === "me" ? receiptHTML(m.receipt) : ""}</div>`;
+            const isMine = message.sender_id === currentUserId;
+            row.className = "msg " + (isMine ? "outgoing" : "incoming");
+            row.innerHTML = `<div class="bubble">${message.text}</div><div class="msg-meta"><span>${formatMessageTime(message.created_at)}</span>${isMine ? receiptHTML(message.receipt || "sent") : ""}</div>`;
             messagesStream.appendChild(row);
         });
         messagesStream.scrollTop = messagesStream.scrollHeight;
     }
 
     function renderAll() {
+        ensureActiveConversation();
+        renderRequests();
         renderLists();
         renderChat();
     }
@@ -208,24 +339,37 @@
         if (ok) ok.addEventListener("click", closeModal);
     }
 
-    function closeModal() { modalBackdrop.classList.remove("is-open"); }
+    function closeModal() {
+        modalBackdrop.classList.remove("is-open");
+    }
 
     function handleSend() {
         const text = chatInput.value.trim();
-        if (!text) return;
-        const c = activeConversation();
-        const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-        c.messages.push({ from: "me", text, time: now, receipt: "sent" });
-        c.preview = text;
-        c.time = "Now";
-        c.unread = 0;
+
+        if (!text || !chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
+            return;
+        }
+
+        chatSocket.send(JSON.stringify({
+            message: text,
+        }));
+
         chatInput.value = "";
         sendBtn.disabled = true;
-        renderAll();
     }
 
-    directTabBtn.addEventListener("click", () => { activeTab = "direct"; renderAll(); });
-    groupsTabBtn.addEventListener("click", () => { activeTab = "groups"; renderAll(); });
+    function openComingSoonModal(title, body) {
+        openModal(title, `<p>${body}</p>`);
+    }
+
+    directTabBtn.addEventListener("click", () => {
+        activeTab = "direct";
+        renderAll();
+    });
+    groupsTabBtn.addEventListener("click", () => {
+        activeTab = "groups";
+        renderAll();
+    });
     searchInput.addEventListener("input", renderAll);
     requestsToggle.addEventListener("click", () => {
         requestsList.classList.toggle("is-open");
@@ -237,73 +381,100 @@
     document.getElementById("mobileBackBtn").addEventListener("click", () => app.classList.remove("mobile-chat-open"));
     document.getElementById("mobileCloseChat").addEventListener("click", () => app.classList.remove("mobile-chat-open"));
 
-    document.querySelectorAll(".details-tab").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            const tab = btn.dataset.detailsTab;
-            document.querySelectorAll(".details-tab").forEach((b) => b.classList.remove("is-active"));
-            document.querySelectorAll(".details-pane").forEach((p) => p.classList.remove("is-active"));
-            btn.classList.add("is-active");
+    document.querySelectorAll(".details-tab").forEach((button) => {
+        button.addEventListener("click", () => {
+            const tab = button.dataset.detailsTab;
+            document.querySelectorAll(".details-tab").forEach((item) => item.classList.remove("is-active"));
+            document.querySelectorAll(".details-pane").forEach((pane) => pane.classList.remove("is-active"));
+            button.classList.add("is-active");
             document.querySelector('.details-pane[data-pane="' + tab + '"]').classList.add("is-active");
         });
     });
 
     moreMenuBtn.addEventListener("click", () => moreMenu.classList.toggle("is-open"));
-    document.addEventListener("click", (e) => { if (!e.target.closest(".menu-wrap")) moreMenu.classList.remove("is-open"); });
-    moreMenu.addEventListener("click", (e) => {
-        const btn = e.target.closest("button");
-        if (!btn) return;
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest(".menu-wrap")) {
+            moreMenu.classList.remove("is-open");
+        }
+    });
+    moreMenu.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button) return;
         moreMenu.classList.remove("is-open");
-        if (btn.dataset.action === "contract") {
-            openModal("Contract Maker", "<p>Contract Maker — Coming Soon. This feature will allow you to generate co-founder agreements directly from your conversation.</p>");
+        if (button.dataset.action === "contract") {
+            openModal("Contract Maker", "<p>Contract Maker is still coming soon for private chats.</p>");
         } else {
-            openModal("AI Summary", "<p>AI Summary — Coming Soon. CoVise Advisor will summarize key decisions and agreements from this conversation.</p>");
+            openModal("AI Summary", "<p>AI summaries will be enabled after message history is connected more deeply.</p>");
         }
     });
 
-    document.getElementById("videoCallBtn").addEventListener("click", () => openModal("Video Call", "<p>Video calling is coming soon on CoVise messaging.</p>"));
-    document.getElementById("createAgreementBtn").addEventListener("click", () => openModal("Contract Maker", "<p>Contract Maker — Coming Soon. This feature will allow you to generate co-founder agreements directly from your conversation.</p>"));
+    if (searchInChatBtn) {
+        searchInChatBtn.addEventListener("click", () => {
+            openComingSoonModal("Search In Chat", "In-chat search is not wired yet, but the button is now active and ready for the real search flow.");
+        });
+    }
+    if (attachFileBtn) {
+        attachFileBtn.addEventListener("click", () => {
+            openComingSoonModal("Attach File", "File sharing is not wired yet, but this is where upload support will connect.");
+        });
+    }
+    if (inputAttachBtn) {
+        inputAttachBtn.addEventListener("click", () => {
+            openComingSoonModal("Attach File", "File sharing from the input bar is not wired yet, but the control is active now.");
+        });
+    }
+    if (emojiPickerBtn) {
+        emojiPickerBtn.addEventListener("click", () => {
+            openComingSoonModal("Emoji Picker", "Emoji reactions and the picker are not wired yet, but this button is now active.");
+        });
+    }
+    document.getElementById("videoCallBtn").addEventListener("click", () => openModal("Video Call", "<p>Video calling is not wired yet, but the control is now active for the future call flow.</p>"));
+    document.getElementById("createAgreementBtn").addEventListener("click", () => openModal("Contract Maker", "<p>Contract Maker is still coming soon for private chats.</p>"));
     const railContactsBtn = document.getElementById("railContactsBtn");
     const railGroupsBtn = document.getElementById("railGroupsBtn");
     if (railContactsBtn) {
         railContactsBtn.addEventListener("click", () => openModal("Contacts", "<p>Contacts directory will be available in the next release.</p>"));
     }
     if (railGroupsBtn) {
-        railGroupsBtn.addEventListener("click", () => { activeTab = "groups"; renderAll(); });
+        railGroupsBtn.addEventListener("click", () => {
+            activeTab = "groups";
+            renderAll();
+        });
     }
 
+    document.getElementById("removeContactBtn").addEventListener("click", () => {
+        openModal("Remove Contact", "<p>Removing a contact is not connected yet, but this action is now enabled and ready for the contact-management flow.</p>");
+    });
     document.getElementById("blockUserBtn").addEventListener("click", () => {
-        openModal("Block User", "<p>Are you sure you want to block this user? They will no longer be able to message you or see your profile.</p>",
-            '<button class="panel-btn ghost" id="modalOkBtn" type="button">Cancel</button><button class="panel-btn danger" id="confirmBlockBtn" type="button">Block User</button>');
-        const confirm = document.getElementById("confirmBlockBtn");
-        if (confirm) confirm.addEventListener("click", () => { closeModal(); openModal("User Blocked", "<p>This user has been blocked.</p>"); });
+        openModal("Block User", "<p>Blocking is not connected yet for live chat conversations.</p>");
     });
 
     document.getElementById("reportUserBtn").addEventListener("click", () => {
-        openModal("Report User",
-            '<label class="modal-label" for="reportReason">Reason</label><select id="reportReason" class="modal-select"><option>Spam</option><option>Inappropriate behavior</option><option>Fake profile</option><option>Other</option></select>',
-            '<button class="panel-btn ghost" id="modalOkBtn" type="button">Cancel</button><button class="panel-btn" id="submitReportBtn" type="button">Submit</button>');
-        const submit = document.getElementById("submitReportBtn");
-        if (submit) submit.addEventListener("click", () => { closeModal(); openModal("Report Submitted", "<p>Thanks. Our trust and safety team will review your report.</p>"); });
+        openModal("Report User", "<p>Reporting is not connected yet for live chat conversations.</p>");
     });
 
     document.getElementById("clearChatBtn").addEventListener("click", () => {
-        openModal("Clear Chat History", "<p>Are you sure you want to clear this conversation history?</p>",
-            '<button class="panel-btn ghost" id="modalOkBtn" type="button">Cancel</button><button class="panel-btn danger" id="confirmClearBtn" type="button">Clear</button>');
-        const clear = document.getElementById("confirmClearBtn");
-        if (clear) clear.addEventListener("click", () => { activeConversation().messages = []; closeModal(); renderChat(); });
+        openModal("Clear Chat History", "<p>Chat history deletion is not connected yet.</p>");
     });
 
     document.getElementById("closeModalBtn").addEventListener("click", closeModal);
-    modalBackdrop.addEventListener("click", (e) => { if (e.target === modalBackdrop) closeModal(); });
+    modalBackdrop.addEventListener("click", (event) => {
+        if (event.target === modalBackdrop) {
+            closeModal();
+        }
+    });
 
-    chatInput.addEventListener("input", () => { sendBtn.disabled = chatInput.value.trim().length === 0; });
+    chatInput.addEventListener("input", () => {
+        sendBtn.disabled = chatInput.value.trim().length === 0;
+    });
     sendBtn.addEventListener("click", handleSend);
-    chatInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
+    chatInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
             handleSend();
         }
     });
 
+    connectSocket();
     renderAll();
 })();

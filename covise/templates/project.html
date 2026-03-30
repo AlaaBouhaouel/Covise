@@ -8,6 +8,9 @@
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'requests.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .unstyled-link { color: inherit; text-decoration: none; }
+    </style>
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -124,8 +127,8 @@
                         </div>
                         <div class="projects-controls">
                                 <div style="position: relative; width: 100%;">
-                                    <input class="post-input" id="advisorInput" type="text" name="prompt" placeholder="Find what you are looking for..." style="padding-right: 44px;">
-                                    <button type="submit" aria-label="search" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(120,150,255,0.35); background: rgba(120,150,255,0.14); color: var(--text); display: grid; place-items: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;" onmouseover="this.style.borderColor='rgba(120,150,255,0.6)';this.style.background='rgba(120,150,255,0.26)';" onmouseout="this.style.borderColor='rgba(120,150,255,0.35)';this.style.background='rgba(120,150,255,0.14)';">
+                                    <input class="post-input" id="projectSearch" type="text" name="prompt" placeholder="Find what you are looking for..." style="padding-right: 44px;">
+                                    <button id="projectSearchButton" type="button" aria-label="search" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(120,150,255,0.35); background: rgba(120,150,255,0.14); color: var(--text); display: grid; place-items: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;" onmouseover="this.style.borderColor='rgba(120,150,255,0.6)';this.style.background='rgba(120,150,255,0.26)';" onmouseout="this.style.borderColor='rgba(120,150,255,0.35)';this.style.background='rgba(120,150,255,0.14)';">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                             <circle cx="11" cy="11" r="8"></circle>
                                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -180,6 +183,102 @@
                 </div>
 
                 <div class="project-list" id="projectList">
+                    {% for project in projects %}
+                    <article class="project-card" data-filters="{{ project.data_filters|default:''|escape }}" data-search="{{ project.data_search|default:''|escape }}">
+                        <div class="founder-row">
+                            <div class="founder-meta">
+                                {% if project.owner_user_id %}
+                                <a href="{% url 'Public Profile' project.owner_user_id %}" class="unstyled-link" aria-label="View {{ project.founder_name }} profile"><span class="founder-avatar">{{ project.founder_initials }}</span></a>
+                                <a href="{% url 'Public Profile' project.owner_user_id %}" class="unstyled-link">Posted by {{ project.founder_name }}</a>
+                                {% else %}
+                                <span class="founder-avatar">{{ project.founder_initials }}</span>
+                                <span>Posted by {{ project.founder_name }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="founder-meta" style="gap: calc(var(--spacing)*1.5);">
+                                <span>{{ project.city }}, {{ project.country }}</span>
+                                <span>{{ project.relative_time }}</span>
+                            </div>
+                        </div>
+                        <div class="project-card-top">
+                            <div class="project-title-block">
+                                <div class="project-title-row">
+                                    <a class="project-title-link" href="{% url 'Project Detail' project.slug %}">
+                                        <h2 class="project-title">{{ project.title }}</h2>
+                                    </a>
+                                    <span class="project-code">{{ project.code }}</span>
+                                </div>
+                            </div>
+                            <div class="alignment-score" aria-label="Alignment Score {{ project.alignment_score }} percent" data-align='{{ project.alignment_json|escapejs }}'>
+                                <div class="alignment-score-top">
+                                    <button class="align-eye-btn" type="button" aria-label="See why you match">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </button>
+                                    <span class="alignment-value">{{ project.alignment_score }}%</span>
+                                </div>
+                                <span class="alignment-label">Match</span>
+                            </div>
+                        </div>
+                        <p class="project-desc">{{ project.description }}</p>
+                        {% if project.stage or project.sector or project.founder_commitment or project.capital_status %}
+                        <div class="tag-row">
+                            {% if project.stage %}
+                            <span class="tag-pill"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>{{ project.stage }}</span></span>
+                            {% endif %}
+                            {% if project.sector %}
+                            <span class="tag-pill"><i class="fa-solid fa-building" aria-hidden="true"></i><span>{{ project.sector }}</span></span>
+                            {% endif %}
+                            {% if project.founder_commitment %}
+                            <span class="tag-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>{{ project.founder_commitment }}</span></span>
+                            {% endif %}
+                            {% if project.capital_status %}
+                            <span class="tag-pill"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>{{ project.capital_status }}</span></span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% if project.positions_needed or project.skills_needed %}
+                        <div class="looking-for-block">
+                            {% if project.positions_needed %}
+                            <div class="label-row">
+                                <span class="section-label">Looking for:</span>
+                                <div class="role-pill-list">
+                                    {% for role in project.positions_needed %}
+                                    <span class="role-pill">{{ role }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if project.skills_needed %}
+                            <div class="label-row">
+                                <span class="section-label">Skills needed:</span>
+                                <div class="skill-pill-list">
+                                    {% for skill in project.skills_needed %}
+                                    <span class="skill-pill">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="team-progress" style="--team-progress: {{ project.team_progress_percent }}%;">
+                            <div class="team-progress-head">
+                                <span>Team: {{ project.team_members_filled }} of {{ project.team_size_target }} positions filled</span>
+                                <strong>{{ project.team_progress_percent }}%</strong>
+                            </div>
+                            <div class="team-progress-track" aria-hidden="true">
+                                <span class="team-progress-fill"></span>
+                            </div>
+                        </div>
+                        <div class="project-footer">
+                            <div class="project-actions">
+                                <a class="outline-btn action-btn" href="{% url 'Project Detail' project.slug %}">View Project</a>
+                                <button class="primary-btn action-btn" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>Request to Join</button>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                    {% comment %}
                     <article class="project-card" data-filters="seeking-co-founder early-stage" data-search="b2b marketplace for construction materials cv-6631 ahmed alharbi riyadh saudi arabia construction tech marketplace architecture backend systems bootstrapped technical co-founder">
                         <div class="founder-row">
                             <div class="founder-meta">
@@ -538,6 +637,7 @@
                             </div>
                         </div>
                     </article>
+                    {% endcomment %}
                 </div>
 
                 <div class="empty-state" id="projectEmptyState" hidden>
@@ -590,6 +690,7 @@
         (function () {
             var form = document.querySelector('.projects-search');
             var searchInput = document.getElementById('projectSearch');
+            var searchButton = document.getElementById('projectSearchButton');
             var cards = Array.prototype.slice.call(document.querySelectorAll('.project-card'));
             var filterButtons = Array.prototype.slice.call(document.querySelectorAll('.filter-pill'));
             var emptyState = document.getElementById('projectEmptyState');
@@ -597,13 +698,24 @@
 
             if (!searchInput || !cards.length || !filterButtons.length || !emptyState) return;
 
+            function normalizeText(value) {
+                return (value || '').toString().trim().toLowerCase();
+            }
+
+            function normalizeFilterValue(value) {
+                return normalizeText(value).replace(/\s+/g, '-');
+            }
+
             function updateCards() {
-                var query = searchInput.value.trim().toLowerCase();
+                var query = normalizeText(searchInput.value);
                 var visibleCount = 0;
 
                 cards.forEach(function (card) {
-                    var cardFilters = (card.getAttribute('data-filters') || '').split(/\s+/);
-                    var cardSearch = (card.getAttribute('data-search') || '').toLowerCase();
+                    var cardFilters = normalizeText(card.getAttribute('data-filters')).split(/\s+/).filter(Boolean);
+                    var cardSearch = normalizeText(card.getAttribute('data-search'));
+                    if (!cardSearch) {
+                        cardSearch = normalizeText(card.textContent);
+                    }
                     var matchesFilter = activeFilter === 'all' || cardFilters.indexOf(activeFilter) !== -1;
                     var matchesQuery = !query || cardSearch.indexOf(query) !== -1;
                     var shouldShow = matchesFilter && matchesQuery;
@@ -617,7 +729,7 @@
 
             filterButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
-                    activeFilter = button.getAttribute('data-filter') || 'all';
+                    activeFilter = normalizeFilterValue(button.getAttribute('data-filter') || 'all');
                     filterButtons.forEach(function (item) {
                         var isActive = item === button;
                         item.classList.toggle('is-active', isActive);
@@ -631,6 +743,13 @@
                 form.addEventListener('submit', function (event) {
                     event.preventDefault();
                     updateCards();
+                });
+            }
+
+            if (searchButton) {
+                searchButton.addEventListener('click', function () {
+                    updateCards();
+                    searchInput.focus();
                 });
             }
 

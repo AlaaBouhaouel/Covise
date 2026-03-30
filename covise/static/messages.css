@@ -90,12 +90,12 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
 
 .messages-app {
     height: 100vh;
+    position: relative;
     display: grid;
     grid-template-columns: 68px 360px minmax(0, 1fr) 0;
-    transition: grid-template-columns 0.25s ease;
 }
 
-.messages-app.details-open { grid-template-columns: 68px 360px minmax(0, 1fr) 330px; }
+.messages-app.details-open { grid-template-columns: 68px 360px minmax(0, 1fr) 0; }
 
 .sidebar {
     position: sticky;
@@ -333,8 +333,25 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
 .send-btn { background: var(--brand); color: var(--on-brand); border-color: transparent; }
 .send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.details-panel { border-right: 0; width: 330px; overflow: hidden; transform: translateX(100%); transition: transform 0.25s ease; }
-.messages-app.details-open .details-panel { transform: translateX(0); }
+.details-panel {
+    border-right: 0;
+    border-left: 1px solid var(--line);
+    width: 330px;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    box-shadow: -20px 0 40px rgba(0, 0, 0, 0.28);
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    pointer-events: none;
+}
+.messages-app.details-open .details-panel {
+    transform: translateX(0);
+    pointer-events: auto;
+}
 .details-header { padding: 12px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
 .details-tabs { padding: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .details-tab { border: 1px solid var(--line); border-radius: 8px; background: var(--panel-soft); color: var(--text); padding: 6px; font-size: 0.76rem; }

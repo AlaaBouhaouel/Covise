@@ -4,10 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
     <title>CoVise | Home</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'home.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .unstyled-link { color: inherit; text-decoration: none; }
+    </style>
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -55,7 +59,7 @@
             <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
                 <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
-            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile" data-demo="Open your personal profile card and founder summary." data-demo-pos="side">
+            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile" data-demo="Start here: finish your profile so CoVise can recommend stronger matches, sharper intros, and better next steps." data-demo-pos="side">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="8" r="4"></circle>
                     <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
@@ -142,8 +146,13 @@
                     <article class="dashboard-card post" data-demo="Ask CoVise Advisor for guidance on who to reach out to next and how to strengthen your founder profile.">
                         <div class="widget post-widget">
                             <div>
-                                <h2 style="font-size: 1.65rem; font-weight: 700; color: var(--white); line-height: 1.1;">Welcome back, Ahmad</h2>
-                                <div class="post-sub" style="margin-top: calc(var(--spacing) * 1);">Your founder network is active.</div>
+                            {% if ui_user.is_authenticated %} 
+                                <h2 style="font-size: 1.65rem; font-weight: 700; color: var(--white); line-height: 1.1;">Welcome back, {{ ui_user.first_name }}</h2>
+                                <div class="post-sub" style="margin-top: calc(var(--spacing) * 1); font-weight: 500;">Your founder network is active.</div>
+                            {% else %}
+                                <h2 style="font-size: 1.65rem; font-weight: 700; color: var(--white); line-height: 1.1;">Welcome to CoVise</h2>
+                                <div class="post-sub" style="margin-top: calc(var(--spacing) * 1); font-weight: 500;">Finish your profile to unlock stronger matches and better guidance.</div>
+                            {% endif %}
                             </div>
                             <div style="height: 1px; background: var(--border);"></div>
                             <form action="{% url 'Chatbot' %}" method="get" class="post-widget">
@@ -157,7 +166,7 @@
                                     </button>
                                 </div>
                                 <div class="request-actions" style="margin-left: 0; flex-wrap: wrap; gap: calc(var(--spacing) * 1);">
-                                    <button class="status" type="submit" name="prompt" value="Review my profile" style="background: transparent; color: var(--muted); border-color: var(--border); cursor: pointer;" onmouseover="this.style.borderColor='rgba(120, 150, 255, 0.45)'; this.style.color='var(--white)';" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted)';">Review my profile</button>
+                                    <button class="status" type="submit" name="prompt" value="Help me finish my profile" style="background: transparent; color: var(--muted); border-color: var(--border); cursor: pointer;" onmouseover="this.style.borderColor='rgba(120, 150, 255, 0.45)'; this.style.color='var(--white)';" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted)';">Finish my profile</button>
                                     <button class="status" type="submit" name="prompt" value="Who should I reach out to?" style="background: transparent; color: var(--muted); border-color: var(--border); cursor: pointer;" onmouseover="this.style.borderColor='rgba(120, 150, 255, 0.45)'; this.style.color='var(--white)';" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted)';">Who should I reach out to?</button>
                                     <button class="status" type="submit" name="prompt" value="What's trending in my market?" style="background: transparent; color: var(--muted); border-color: var(--border); cursor: pointer;" onmouseover="this.style.borderColor='rgba(120, 150, 255, 0.45)'; this.style.color='var(--white)';" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted)';">What's trending in my market?</button>
                                 </div>
@@ -300,152 +309,100 @@
                     .feed-shell .structured-post-footer { display: flex; align-items: center; gap: 16px; border-top: 1px solid var(--border); padding-top: 14px; font-size: 0.85rem; }
                     .feed-shell .action-btn { display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; }
                     .feed-shell .bookmark-btn { margin-left: auto; }
-                    .feed-shell .comments-block { display: none; gap: 12px; border-top: 1px solid var(--border); padding-top: 14px; }
+                    .feed-shell .comments-block { display: none; gap: 12px; border-top: 1px solid var(--border); padding-top: 14px; max-height: 260px; overflow-y: auto; padding-right: 4px; }
                     .feed-shell .comments-block.is-open { display: grid; }
-                    .feed-shell .comment-row { display: flex; align-items: flex-start; gap: 10px; }
+                    .feed-shell .comment-wrap { display: grid; gap: 8px; }
+                    .feed-shell .comment-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+                    .feed-shell .comment-user { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
                     .feed-shell .comment-avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 0.62rem; font-weight: 700; color: #e7efff; background: rgba(64, 110, 196, 0.38); border: 1px solid rgba(123, 167, 255, 0.42); flex: 0 0 auto; }
-                    .feed-shell .comment-card strong { color: var(--white); font-size: 0.78rem; }
-                    .feed-shell .comment-card p { color: rgba(231, 239, 255, 0.82); font-size: 0.8rem; line-height: 1.45; }
-                    .feed-shell .comment-time { margin-top: 4px; font-size: 0.7rem; color: var(--muted); }
-                    .feed-shell .comment-input-row { display: flex; align-items: center; gap: 10px; }
+                    .feed-shell .comment-header h3 { color: var(--white); font-size: 0.78rem; font-weight: 700; }
+                    .feed-shell .comment-content { padding: 0 0 0 38px; color: rgba(231, 239, 255, 0.82); font-size: 0.8rem; line-height: 1.45; }
+                    .feed-shell .comment-time, .feed-shell .comment-header p { margin-top: 0; font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+                    .feed-shell .comment-footer { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-left: 38px; flex-wrap: wrap; }
+                    .feed-shell .comment-footer a { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.74rem; text-decoration: none; }
+                    .feed-shell .comment-footer a:hover { color: var(--accent); }
+                    .feed-shell .comment-footer a.is-active { color: var(--white); font-weight: 700; }
+                    .feed-shell .comment-input-row { display: flex; align-items: center; gap: 10px; position: sticky; bottom: 0; padding-top: 10px; background: linear-gradient(180deg, rgba(5, 6, 11, 0) 0%, rgba(5, 6, 11, 0.92) 35%, rgba(5, 6, 11, 0.98) 100%); z-index: 2; }
                     .feed-shell .comment-input { flex: 1; min-height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--border); color: #e7efff; padding: calc(var(--spacing) * 1.5); font-family: var(--font-display); font-size: 0.76rem; }
                     .feed-shell .comment-send { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(120, 150, 255, 0.35); background: rgba(120, 150, 255, 0.14); display: grid; place-items: center; }
                     .feed-shell .comment-input:focus { outline: none; border-color: rgba(120, 150, 255, 0.45); box-shadow: 0 0 0 3px rgba(120, 150, 255, 0.14); }
                 </style>
-                <div class="structured-feed">
+                 <div class="structured-feed">
+                    {% for post in posts %}
                     <article class="structured-post">
                         <div class="structured-post-head">
                             <div class="structured-post-meta">
-                                <div class="structured-avatar a">FR</div>
-                                <div><div class="structured-post-title">Faisal Al-Rashid</div><div class="structured-post-subtitle">Founder · Riyadh, KSA · 2h ago</div></div>
+                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
+                                    <div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div>
+                                </a>
+                                <div>
+                                    <div class="structured-post-title"><a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a></div>
+                                    <div class="structured-post-subtitle">{{ post.get_post_type_display }} · {{ post.created_at|timesince }} ago</div>
+                                </div>
                             </div>
-                            <div class="structured-post-tools"><span class="structured-badge badge-update">Update</span><button class="menu-btn" type="button" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button></div>
+                            <div class="structured-post-tools">
+                                <span class="structured-badge badge-update">{{ post.get_post_type_display }}</span>
+                                <button class="menu-btn" type="button" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                            </div>
                         </div>
-                        <div class="structured-post-body">Just closed our first enterprise client in the logistics sector. Eighteen months of grinding and it finally clicked. The GCC B2B market rewards patience and relationships above everything else.</div>
+                        <div class="structured-post-body">{{ post.content }}</div>
                         <div class="structured-post-footer">
-                            <button class="action-btn like-btn" type="button" data-count="24"><i class="fa-regular fa-thumbs-up"></i><span class="count">24</span></button>
-                            <button class="action-btn comment-toggle" type="button"><i class="fa-regular fa-comment"></i><span>6</span></button>
-                            <button class="action-btn" type="button"><i class="fa-solid fa-share"></i><span>4</span></button>
+                            <button class="action-btn like-btn" type="button" data-count="{{ post.likes_number }}"><i class="fa-regular fa-thumbs-up"></i><span class="count">{{ post.likes_number }}</span></button>
+                            <button class="action-btn comment-toggle" type="button"><i class="fa-regular fa-comment"></i><span class="comment-count">{{ post.comments.count }}</span></button>
                             <button class="action-btn bookmark-btn" type="button"><i class="fa-regular fa-bookmark"></i></button>
                         </div>
                         <div class="comments-block">
-                            <div class="comment-row"><div class="comment-avatar">SK</div><div class="comment-card"><strong>Sara Al-Kurdi</strong><p>Huge milestone. Enterprise trust in logistics takes time, so this is a strong signal.</p><div class="comment-time">48m ago</div></div></div>
-                            <div class="comment-row"><div class="comment-avatar">FM</div><div class="comment-card"><strong>Faisal Al-Mutairi</strong><p>Congratulations. The next two accounts should move faster now that the first one is live.</p><div class="comment-time">31m ago</div></div></div>
-                            <div class="comment-input-row"><input class="comment-input" type="text" placeholder="Write a comment..."><button class="comment-send" type="button" aria-label="Send comment"><i class="fa-solid fa-paper-plane"></i></button></div>
+                            {% for comment in post.comments.all %}
+                            <div class="comment-wrap">
+                                <div class="comment-header">
+                                    <div class="comment-user">
+                                        <a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link" aria-label="View {{ comment.user.full_name|default:comment.user.email }} profile"><div class="comment-avatar">{{ comment.user.avatar_initials }}</div></a>
+                                        <h3><a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link">{{ comment.user.full_name|default:comment.user.email }}</a></h3>
+                                    </div>
+                                    <p>{{ comment.created_at|timesince }} ago</p>
+                                </div>
+                                <div class="comment-content">{{ comment.content }}</div>
+                                <div class="comment-footer">
+                                    <a href="#" class="parameter-comment"><i class="fa-solid fa-ellipsis"></i></a>
+                                    <a href="#" class="parameter-comment"><span><i class="fa-solid fa-reply"></i>Reply</span></a>
+                                    <a href="#" class="arrow-up" data-comment-id="{{ comment.id }}"><i class="fa-solid fa-chevron-up"></i> <span class="up-count">{{ comment.up }}</span></a>
+                                    <a href="#" class="arrow-down" data-comment-id="{{ comment.id }}"><i class="fa-solid fa-chevron-down"></i> <span class="down-count">{{ comment.down }}</span></a>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="comment-wrap empty-comment">
+                                <div class="comment-content">No comments yet.</div>
+                            </div>
+                            {% endfor %}
+                            <div class="comment-input-row"><input class="comment-input" type="text" placeholder="Write a comment..." data-post-id="{{ post.id }}"><button class="comment-send" type="button" aria-label="Send comment" data-post-id="{{ post.id }}"><i class="fa-solid fa-paper-plane"></i></button></div>
                         </div>
                     </article>
+                    {% empty %}
                     <article class="structured-post">
-                        <div class="structured-post-head">
-                            <div class="structured-post-meta">
-                                <div class="structured-avatar b">NH</div>
-                                <div><div class="structured-post-title">Nora Al-Hamdan</div><div class="structured-post-subtitle">Entrepreneur · Dubai, UAE · 5h ago</div></div>
-                            </div>
-                            <div class="structured-post-tools"><span class="structured-badge badge-cofounder">Looking for Co-founder</span><button class="menu-btn" type="button" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button></div>
-                        </div>
-                        <div class="structured-post-body">Building a fintech platform targeting SME invoice financing in the UAE. Looking for a technical co-founder with experience in open banking APIs. We have the business model validated and early LOIs from three companies.</div>
-                        <div class="attachment-row"><div class="attachment-main"><i class="fa-regular fa-file-pdf"></i><div><div class="attachment-name">SME_Financing_Brief.pdf</div><div class="attachment-size">2.4 MB</div></div></div><button class="menu-btn" type="button" aria-label="Download attachment"><i class="fa-solid fa-download"></i></button></div>
-                        <div class="structured-post-footer">
-                            <button class="action-btn like-btn" type="button" data-count="18"><i class="fa-regular fa-thumbs-up"></i><span class="count">18</span></button>
-                            <button class="action-btn comment-toggle" type="button"><i class="fa-regular fa-comment"></i><span>9</span></button>
-                            <button class="action-btn" type="button"><i class="fa-solid fa-share"></i><span>7</span></button>
-                            <button class="action-btn bookmark-btn" type="button"><i class="fa-regular fa-bookmark"></i></button>
-                        </div>
-                        <div class="comments-block">
-                            <div class="comment-row"><div class="comment-avatar">LA</div><div class="comment-card"><strong>Lama Al-Salem</strong><p>Open banking background here. Sending you a note because this is right in my lane.</p><div class="comment-time">1h ago</div></div></div>
-                            <div class="comment-row"><div class="comment-avatar">AH</div><div class="comment-card"><strong>Ahmed H.</strong><p>The SME financing angle is strong if you can shorten approval time significantly.</p><div class="comment-time">53m ago</div></div></div>
-                            <div class="comment-input-row"><input class="comment-input" type="text" placeholder="Write a comment..."><button class="comment-send" type="button" aria-label="Send comment"><i class="fa-solid fa-paper-plane"></i></button></div>
-                        </div>
+                        <div class="structured-post-body">No posts yet.</div>
                     </article>
-                    <article class="structured-post">
-                        <div class="structured-post-head">
-                            <div class="structured-post-meta">
-                                <div class="structured-avatar c">CP</div>
-                                <div><div class="structured-post-title">CoVise Platform</div><div class="structured-post-subtitle">Platform · GCC · 8h ago</div></div>
-                            </div>
-                            <div class="structured-post-tools"><span class="structured-badge badge-insight">Market Insight</span><button class="menu-btn" type="button" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button></div>
-                        </div>
-                        <div class="structured-post-body">Vision 2030 is creating a structural shift in GCC logistics. The sector is projected to grow 11% annually through 2030. Founders with operations or supply chain expertise are seeing faster co-founder matching across the platform this month.</div>
-                        <div class="structured-post-footer">
-                            <button class="action-btn like-btn" type="button" data-count="41"><i class="fa-regular fa-thumbs-up"></i><span class="count">41</span></button>
-                            <button class="action-btn comment-toggle" type="button"><i class="fa-regular fa-comment"></i><span>3</span></button>
-                            <button class="action-btn" type="button"><i class="fa-solid fa-share"></i><span>13</span></button>
-                            <button class="action-btn bookmark-btn" type="button"><i class="fa-regular fa-bookmark"></i></button>
-                        </div>
-                        <div class="comments-block">
-                            <div class="comment-row"><div class="comment-avatar">JW</div><div class="comment-card"><strong>James Whitfield</strong><p>This lines up with what we are seeing while evaluating Saudi entry.</p><div class="comment-time">2h ago</div></div></div>
-                            <div class="comment-row"><div class="comment-avatar">RH</div><div class="comment-card"><strong>Riyadh Founders Hub</strong><p>Strong signal for anyone building B2B infrastructure in the region.</p><div class="comment-time">1h ago</div></div></div>
-                            <div class="comment-input-row"><input class="comment-input" type="text" placeholder="Write a comment..."><button class="comment-send" type="button" aria-label="Send comment"><i class="fa-solid fa-paper-plane"></i></button></div>
-                        </div>
-                    </article>
-                    <article class="structured-post">
-                        <div class="structured-post-head">
-                            <div class="structured-post-meta">
-                                <div class="structured-avatar d">JW</div>
-                                <div><div class="structured-post-title">James Whitfield</div><div class="structured-post-subtitle">Foreign Founder · London, UK · 1d ago</div></div>
-                            </div>
-                            <div class="structured-post-tools"><span class="structured-badge badge-opportunity">Opportunity</span><button class="menu-btn" type="button" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button></div>
-                        </div>
-                        <div class="structured-post-body">We are a Series A SaaS company looking to expand into the GCC starting with Saudi Arabia. Looking for a local partner who understands enterprise sales in the Kingdom. DIFC setup is already in progress and we are open to an equity partnership.</div>
-                        <div class="attachment-row"><div class="attachment-main"><i class="fa-regular fa-file-pdf"></i><div><div class="attachment-name">GCC_Expansion_Plan.pdf</div><div class="attachment-size">1.7 MB</div></div></div><button class="menu-btn" type="button" aria-label="Download attachment"><i class="fa-solid fa-download"></i></button></div>
-                        <div class="structured-post-footer">
-                            <button class="action-btn like-btn" type="button" data-count="33"><i class="fa-regular fa-thumbs-up"></i><span class="count">33</span></button>
-                            <button class="action-btn comment-toggle" type="button"><i class="fa-regular fa-comment"></i><span>14</span></button>
-                            <button class="action-btn" type="button"><i class="fa-solid fa-share"></i><span>10</span></button>
-                            <button class="action-btn bookmark-btn" type="button"><i class="fa-regular fa-bookmark"></i></button>
-                        </div>
-                        <div class="comments-block">
-                            <div class="comment-row"><div class="comment-avatar">FA</div><div class="comment-card"><strong>Fahad Al-Qahtani</strong><p>Happy to talk if you need help with the first enterprise introductions in Saudi.</p><div class="comment-time">20h ago</div></div></div>
-                            <div class="comment-row"><div class="comment-avatar">NA</div><div class="comment-card"><strong>Nora Al-Mansoori</strong><p>Enterprise timing matters a lot here. The right local operator will make a big difference.</p><div class="comment-time">18h ago</div></div></div>
-                            <div class="comment-input-row"><input class="comment-input" type="text" placeholder="Write a comment..."><button class="comment-send" type="button" aria-label="Send comment"><i class="fa-solid fa-paper-plane"></i></button></div>
-                        </div>
-                    </article>
-                    <article class="structured-post">
-                        <div class="structured-post-head">
-                            <div class="structured-post-meta">
-                                <div class="structured-avatar e">RF</div>
-                                <div><div class="structured-post-title">Riyadh Founders Hub</div><div class="structured-post-subtitle">Incubator · Riyadh, KSA · 1d ago</div></div>
-                            </div>
-                            <div class="structured-post-tools"><span class="structured-badge badge-update">Update</span><button class="menu-btn" type="button" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button></div>
-                        </div>
-                        <div class="structured-post-body">Applications are now open for our Spring 2026 cohort. We are accepting 12 ventures across fintech, healthtech, and logistics. Equity-free funding of SAR 150,000 plus workspace and mentorship for selected teams.</div>
-                        <div class="structured-post-footer">
-                            <button class="action-btn like-btn" type="button" data-count="87"><i class="fa-regular fa-thumbs-up"></i><span class="count">87</span></button>
-                            <button class="action-btn comment-toggle" type="button"><i class="fa-regular fa-comment"></i><span>22</span></button>
-                            <button class="action-btn" type="button"><i class="fa-solid fa-share"></i><span>29</span></button>
-                            <button class="action-btn bookmark-btn" type="button"><i class="fa-regular fa-bookmark"></i></button>
-                        </div>
-                        <div class="comments-block">
-                            <div class="comment-row"><div class="comment-avatar">AA</div><div class="comment-card"><strong>Ahmad Al-Qahtani</strong><p>This looks strong for logistics founders at early traction stage.</p><div class="comment-time">16h ago</div></div></div>
-                            <div class="comment-row"><div class="comment-avatar">MD</div><div class="comment-card"><strong>Mariam D.</strong><p>Is the cohort open to UAE-based teams with Saudi expansion plans?</p><div class="comment-time">14h ago</div></div></div>
-                            <div class="comment-input-row"><input class="comment-input" type="text" placeholder="Write a comment..."><button class="comment-send" type="button" aria-label="Send comment"><i class="fa-solid fa-paper-plane"></i></button></div>
-                        </div>
-                    </article>
-                    <article class="structured-post">
-                        <div class="structured-post-head">
-                            <div class="structured-post-meta">
-                                <div class="structured-avatar f">AD</div>
-                                <div><div class="structured-post-title">Ahmed Al-Dosari</div><div class="structured-post-subtitle">Founder · Abu Dhabi, UAE · 2d ago</div></div>
-                            </div>
-                            <div class="structured-post-tools"><span class="structured-badge badge-update">Update</span><button class="menu-btn" type="button" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button></div>
-                        </div>
-                        <div class="structured-post-body">MVP is live. We built a B2B procurement platform for mid-market manufacturers in the UAE and onboarded our first 50 users in 72 hours. Looking for early design and growth partners who can help shape the next phase.</div>
-                        <div class="structured-post-footer">
-                            <button class="action-btn like-btn" type="button" data-count="56"><i class="fa-regular fa-thumbs-up"></i><span class="count">56</span></button>
-                            <button class="action-btn comment-toggle" type="button"><i class="fa-regular fa-comment"></i><span>17</span></button>
-                            <button class="action-btn" type="button"><i class="fa-solid fa-share"></i><span>12</span></button>
-                            <button class="action-btn bookmark-btn" type="button"><i class="fa-regular fa-bookmark"></i></button>
-                        </div>
-                        <div class="comments-block">
-                            <div class="comment-row"><div class="comment-avatar">CP</div><div class="comment-card"><strong>CoVise Platform</strong><p>Fifty users in 72 hours is a sharp early signal. Keep posting your onboarding learnings.</p><div class="comment-time">1d ago</div></div></div>
-                            <div class="comment-row"><div class="comment-avatar">SK</div><div class="comment-card"><strong>Sara Al-Kurdi</strong><p>Would love to see how you are handling procurement approvals across teams.</p><div class="comment-time">22h ago</div></div></div>
-                            <div class="comment-input-row"><input class="comment-input" type="text" placeholder="Write a comment..."><button class="comment-send" type="button" aria-label="Send comment"><i class="fa-solid fa-paper-plane"></i></button></div>
-                        </div>
-                    </article>
+                    {% endfor %}
                 </div>
                 <script>
                     (function() {
                         var feedSection = document.querySelector('.feed-shell');
                         if (!feedSection) return;
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = cookies[i].trim();
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        var csrftoken = getCookie('csrftoken');
                         if (!document.getElementById('feed-fa-link')) {
                             var faLink = document.createElement('link');
                             faLink.id = 'feed-fa-link';
@@ -477,6 +434,122 @@
                                 var post = button.closest('.structured-post');
                                 var block = post ? post.querySelector('.comments-block') : null;
                                 if (block) block.classList.toggle('is-open');
+                            });
+                        });
+                        function updateReactionUI(button, data) {
+                            var footer = button.closest('.comment-footer');
+                            if (!footer) return;
+
+                            var upButton = footer.querySelector('.arrow-up');
+                            var downButton = footer.querySelector('.arrow-down');
+
+                            if (upButton) {
+                                upButton.querySelector('.up-count').textContent = data.upvotes;
+                                upButton.classList.toggle('is-active', data.user_reaction === 'up');
+                            }
+
+                            if (downButton) {
+                                downButton.querySelector('.down-count').textContent = data.downvotes;
+                                downButton.classList.toggle('is-active', data.user_reaction === 'down');
+                            }
+                        }
+
+                        function bindReactionButtons(scope) {
+                            scope.querySelectorAll('.arrow-up').forEach(function(button) {
+                                if (button.dataset.bound === 'true') return;
+                                button.dataset.bound = 'true';
+                                button.addEventListener('click', function(event) {
+                                    event.preventDefault();
+                                    var commentId = this.dataset.commentId;
+                                    fetch('/profile/' + commentId + '/upvote/', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': csrftoken,
+                                            'Content-Type': 'application/json'
+                                        }
+                                    })
+                                    .then(function(response) { return response.json(); })
+                                    .then(function(data) {
+                                        updateReactionUI(button, data);
+                                    });
+                                });
+                            });
+
+                            scope.querySelectorAll('.arrow-down').forEach(function(button) {
+                                if (button.dataset.bound === 'true') return;
+                                button.dataset.bound = 'true';
+                                button.addEventListener('click', function(event) {
+                                    event.preventDefault();
+                                    var commentId = this.dataset.commentId;
+                                    fetch('/profile/' + commentId + '/downvote/', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': csrftoken,
+                                            'Content-Type': 'application/json'
+                                        }
+                                    })
+                                    .then(function(response) { return response.json(); })
+                                    .then(function(data) {
+                                        updateReactionUI(button, data);
+                                    });
+                                });
+                            });
+                        }
+
+                        bindReactionButtons(feedSection);
+                        feedSection.querySelectorAll('.comment-send').forEach(function(button) {
+                            button.addEventListener('click', function() {
+                                var postId = button.getAttribute('data-post-id');
+                                var row = button.closest('.comment-input-row');
+                                var input = row ? row.querySelector('.comment-input') : null;
+                                var post = button.closest('.structured-post');
+                                var commentsBlock = post ? post.querySelector('.comments-block') : null;
+                                var countNode = post ? post.querySelector('.comment-count') : null;
+                                if (!input || !commentsBlock || !postId) return;
+
+                                var content = input.value.trim();
+                                if (!content) return;
+
+                                fetch('/posts/' + postId + '/comment/', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRFToken': csrftoken,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ content: content })
+                                })
+                                .then(function(response) { return response.json(); })
+                                .then(function(data) {
+                                    if (data.error || !data.comment) return;
+
+                                    var emptyState = commentsBlock.querySelector('.empty-comment');
+                                    if (emptyState) {
+                                        emptyState.remove();
+                                    }
+
+                                    var commentRow = document.createElement('div');
+                                    commentRow.className = 'comment-wrap';
+                                    commentRow.innerHTML =
+                                        '<div class="comment-header">' +
+                                            '<div class="comment-user">' +
+                                                '<a href="/profile/user/' + data.comment.user_id + '/" class="unstyled-link" aria-label="View profile"><div class="comment-avatar">' + data.comment.avatar_initials + '</div></a>' +
+                                                '<h3><a href="/profile/user/' + data.comment.user_id + '/" class="unstyled-link">' + data.comment.author + '</a></h3>' +
+                                            '</div>' +
+                                            '<p>' + data.comment.created_at + '</p>' +
+                                        '</div>' +
+                                        '<div class="comment-content">' + data.comment.content + '</div>' +
+                                        '<div class="comment-footer">' +
+                                            '<a href="#" class="parameter-comment"><i class="fa-solid fa-ellipsis"></i></a>' +
+                                            '<a href="#" class="parameter-comment"><span><i class="fa-solid fa-reply"></i>Reply</span></a>' +
+                                            '<a href="#" class="arrow-up" data-comment-id="' + data.comment.id + '"><i class="fa-solid fa-chevron-up"></i> <span class="up-count">0</span></a>' +
+                                            '<a href="#" class="arrow-down" data-comment-id="' + data.comment.id + '"><i class="fa-solid fa-chevron-down"></i> <span class="down-count">0</span></a>' +
+                                        '</div>';
+
+                                    commentsBlock.insertBefore(commentRow, row);
+                                    bindReactionButtons(commentRow);
+                                    input.value = '';
+                                    if (countNode) countNode.textContent = String(data.comments_count);
+                                });
                             });
                         });
                     })();

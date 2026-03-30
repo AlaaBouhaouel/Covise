@@ -186,7 +186,10 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
       lastY: 0,
       arcProgress: ARC_ROUTES.map(() => Math.random()),
       animationId: 0,
-      dpr: 1
+      dpr: 1,
+      isAnimating: false,
+      isVisible: true,
+      isPageVisible: document.visibilityState !== 'hidden'
     };
 
     function getPalette() {
@@ -246,7 +249,7 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
       const cssHeight = Math.max(1, rect.height);
       const baseWidth = Math.max(1, wrapperRect.width);
       const baseHeight = Math.max(1, wrapperRect.height);
-      state.dpr = window.devicePixelRatio || 1;
+      state.dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.round(cssWidth * state.dpr);
       canvas.height = Math.round(cssHeight * state.dpr);
       ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
@@ -277,7 +280,7 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
     }
 
     function drawAnimatedArc(from, to, progress, palette) {
-      const steps = 80;
+      const steps = 48;
       const points = [];
 
       for (let t = 0; t <= 1; t += 1 / steps) {
@@ -547,6 +550,12 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
     }
 
     function animate() {
+      if (!state.isPageVisible || !state.isVisible) {
+        state.isAnimating = false;
+        state.animationId = 0;
+        return;
+      }
+
       state.rotY += 0.0006;
       state.arcProgress.forEach((_, i) => {
         state.arcProgress[i] += 0.002;
@@ -556,6 +565,22 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
       });
       drawFrame();
       state.animationId = window.requestAnimationFrame(animate);
+    }
+
+    function ensureAnimation() {
+      if (state.isAnimating || !state.isVisible || !state.isPageVisible) {
+        return;
+      }
+      state.isAnimating = true;
+      state.animationId = window.requestAnimationFrame(animate);
+    }
+
+    function stopAnimation() {
+      if (state.animationId) {
+        window.cancelAnimationFrame(state.animationId);
+        state.animationId = 0;
+      }
+      state.isAnimating = false;
     }
 
     function startDragging(clientX, clientY) {
@@ -605,17 +630,55 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
     window.addEventListener('touchend', stopDragging, { passive: true });
 
     if (typeof ResizeObserver !== 'undefined') {
-      const observer = new ResizeObserver(() => updateCanvasSize());
+      const observer = new ResizeObserver(() => {
+        updateCanvasSize();
+        drawFrame();
+      });
       observer.observe(canvas);
     } else {
-      window.addEventListener('resize', updateCanvasSize);
+      window.addEventListener('resize', () => {
+        updateCanvasSize();
+        drawFrame();
+      });
+    }
+
+    if (typeof IntersectionObserver !== 'undefined') {
+      const visibilityObserver = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        state.isVisible = !!(entry && entry.isIntersecting);
+        if (state.isVisible) {
+          ensureAnimation();
+        } else {
+          stopAnimation();
+        }
+      }, { threshold: 0.05 });
+      visibilityObserver.observe(canvas);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      state.isPageVisible = document.visibilityState !== 'hidden';
+      if (state.isPageVisible) {
+        ensureAnimation();
+      } else {
+        stopAnimation();
+      }
+    });
+
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      updateCanvasSize();
+      drawFrame();
+      return () => {
+        stopAnimation();
+        stopDragging();
+      };
     }
 
     updateCanvasSize();
-    animate();
+    drawFrame();
+    ensureAnimation();
 
     return () => {
-      window.cancelAnimationFrame(state.animationId);
+      stopAnimation();
       stopDragging();
     };
   }
@@ -625,10 +688,24 @@ const CONNECTIONS = [[253, 264], [222, 211], [230, 238], [77, 93], [225, 228], [
   function mountLandingGlobeCanvases() {
     const canvases = document.querySelectorAll('.landing-globe-canvas[data-globe-canvas]');
     canvases.forEach((canvas, index) => {
-      initGlobe(canvas, {
+      const mount = () => initGlobe(canvas, {
         initialRotY: index === 0 ? 0.5 : 0.2,
         initialRotX: index === 0 ? -0.15 : -0.08
       });
+
+      if (index === 0 || typeof IntersectionObserver === 'undefined') {
+        mount();
+        return;
+      }
+
+      const lazyObserver = new IntersectionObserver((entries, observer) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          mount();
+          observer.unobserve(canvas);
+        }
+      }, { rootMargin: '240px 0px' });
+
+      lazyObserver.observe(canvas);
     });
   }
 

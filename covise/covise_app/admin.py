@@ -1,20 +1,20 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import OnboardingResponse, Profile, WaitlistEntry, User
+from .models import OnboardingResponse, Profile, UserPreference, WaitlistEntry, User, Post, Comment, Experiences, Active_projects, Project, Conversation, Message, ConversationRequest
 
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     model = User
     ordering = ("email",)
-    list_display = ("email", "full_name", "is_staff", "is_active", "is_superuser")
+    list_display = ("email", "full_name", "sign_in_count", "has_seen_interactive_demo", "last_login", "is_staff", "is_active", "is_superuser")
     search_fields = ("email", "full_name")
     list_filter = ("is_staff", "is_active", "is_superuser", "groups")
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Personal Info", {"fields": ("full_name",)}),
+        ("Activity", {"fields": ("sign_in_count", "has_seen_interactive_demo", "last_login", "date_joined")}),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
-        ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (
         (None, {
@@ -22,7 +22,7 @@ class CustomUserAdmin(UserAdmin):
             "fields": ("email", "full_name", "password1", "password2", "is_staff", "is_active"),
         }),
     )
-    readonly_fields = ("last_login", "date_joined")
+    readonly_fields = ("sign_in_count", "last_login", "date_joined")
 
 
 @admin.register(WaitlistEntry)
@@ -74,9 +74,26 @@ class ProfileAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at", "updated_at")
     fieldsets = (
         ("User Link", {"fields": ("user", "source_waitlist_entry", "source_onboarding_response")}),
-        ("Identity", {"fields": ("full_name", "phone_number", "country", "custom_country", "linkedin", "bio")}),
+        (
+            "Identity",
+            {
+                "fields": (
+                    "full_name",
+                    "phone_number",
+                    "country",
+                    "nationality",
+                    "custom_country",
+                    "linkedin",
+                    "github",
+                    "proof_of_work_url",
+                    "bio",
+                    "tools",
+                    "plan",
+                )
+            },
+        ),
         ("Referral", {"fields": ("my_referral_code", "referred_by")}),
-        ("Business Info", {"fields": ("non_gcc_business", "cv_s3_key", "flow_name")}),
+        ("Business Info", {"fields": ("non_gcc_business", "cv_s3_key", "flow_name", "waitlist_snapshot", "onboarding_answers")}),
         ("Onboarding Snapshot", {
             "fields": (
                 "user_type",
@@ -133,9 +150,123 @@ class ProfileAdmin(admin.ModelAdmin):
                 "leadership_style",
                 "how_heard",
                 "referral_code",
-                "profile_visibility_consent",
-                "answers",
             )
         }),
         ("Timestamps", {"fields": ("created_at", "updated_at")}),
     )
+
+
+@admin.register(UserPreference)
+class UserPreferenceAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "profile_visibility",
+        "pause_matching",
+        "ai_enabled",
+        "email_frequency",
+        "updated_at",
+    )
+    search_fields = ("user__email", "user__full_name")
+    list_filter = ("profile_visibility", "pause_matching", "ai_enabled", "email_frequency", "updated_at")
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        ("User Link", {"fields": ("user",)}),
+        (
+            "Profile Visibility",
+            {
+                "fields": (
+                    "profile_visibility",
+                    "show_conviction_score",
+                    "show_cv_to_matches",
+                    "show_linkedin_to_matches",
+                    "appear_in_search",
+                    "pause_matching",
+                )
+            },
+        ),
+        (
+            "AI Permissions",
+            {
+                "fields": (
+                    "ai_enabled",
+                    "ai_read_messages",
+                    "ai_read_workspace",
+                    "ai_post_updates",
+                    "ai_send_messages",
+                    "ai_edit_workspace",
+                    "ai_manage_milestones",
+                )
+            },
+        ),
+        (
+            "Notifications",
+            {
+                "fields": (
+                    "email_new_match",
+                    "email_new_message",
+                    "email_connection_request",
+                    "email_request_accepted",
+                    "email_milestone_reminder",
+                    "email_workspace_activity",
+                    "email_platform_updates",
+                    "email_marketing",
+                    "in_app_new_match",
+                    "in_app_new_message",
+                    "in_app_connection_request",
+                    "in_app_request_accepted",
+                    "in_app_milestone_reminder",
+                    "in_app_workspace_activity",
+                    "in_app_platform_updates",
+                    "in_app_marketing",
+                    "email_frequency",
+                )
+            },
+        ),
+        ("Timestamps", {"fields": ("created_at", "updated_at")}),
+    )
+
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display = ("user", "post_type", "content","likes_number", "comments_number","created_at")
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ("user", "post", "created_at")
+
+@admin.register(Experiences)
+class ExperienceAdmin(admin.ModelAdmin):
+    list_display = ("user", "title", "date", "desc")
+
+
+@admin.register(Active_projects)
+class ActiveProjectsAdmin(admin.ModelAdmin):
+    list_display = ("user", "name", "status", "desc")
+
+
+@admin.register(Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = ("code", "title", "user", "founder_name", "city", "country", "stage", "alignment_score", "is_active", "published_at")
+    search_fields = ("code", "title", "user__email", "user__full_name", "founder_name", "city", "country", "sector", "search_text")
+    list_filter = ("is_active", "country", "city", "stage", "sector", "published_at")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ("id", "conversation_type", "created_by", "last_message_at", "created_at")
+    search_fields = ("id", "created_by__email", "created_by__full_name", "participants__email", "participants__full_name")
+    filter_horizontal = ("participants",)
+
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ("id", "conversation", "sender", "created_at")
+    search_fields = ("id", "conversation__id", "sender__email", "sender__full_name", "body")
+
+
+@admin.register(ConversationRequest)
+class ConversationRequestAdmin(admin.ModelAdmin):
+    list_display = ("id", "requester", "recipient", "status", "conversation", "created_at", "responded_at")
+    search_fields = ("requester__email", "requester__full_name", "recipient__email", "recipient__full_name")
+    list_filter = ("status", "created_at", "responded_at")

@@ -594,7 +594,6 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
     display: grid;
     grid-template-columns: 1.2fr 1fr;
     gap: calc(var(--spacing) * 2);
-    max-width: 980px;
 }
 
 .dashboard-right {

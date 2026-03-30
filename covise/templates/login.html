@@ -42,9 +42,12 @@
                 </div>
 
                 <form class="auth-form" action="#" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next|default:'' }}">
+
                     <div class="auth-field">
                         <label for="login-email">Email</label>
-                        <input id="login-email" name="email" type="email" placeholder="User@covise.com" required>
+                        <input id="login-email" name="email" type="email" value="{{ form_data.email|default:'' }}" placeholder="User@covise.com" required>
                     </div>
                     <div class="auth-field">
                         <label for="login-password">Password</label>
@@ -55,7 +58,7 @@
                             <input type="checkbox" name="remember">
                             Remember me
                         </label>
-                        <a class="ghost-link" href="#">Forgot password?</a>
+                        <a class="ghost-link" href="{% url 'Forgot Password' %}">Forgot password?</a>
                     </div>
                     <button class="auth-button" type="submit">Log in</button>
                 </form>
@@ -75,8 +78,19 @@
             </ul>
         </aside>
     </main>
-    <footer class="auth-footer">
-        <p>Where serious founders align and build together.</p>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-bottom reveal-up" style="--reveal-delay: 100ms;">
+            <p>- 2026 CoVise. All rights reserved.</p>
+            <div class="footer-legal">
+                <a href="{% url 'Terms' %}">Terms</a>
+                <a href="{% url 'Privacy' %}">Privacy</a>
+                <a href="mailto:support@covise.com">Contact</a>
+                <a href="{% url 'Settings' %}">Security</a>
+            </div>
+        </div>   
+
     </footer>
 </body>
 </html>

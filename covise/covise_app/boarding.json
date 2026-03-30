@@ -1016,18 +1016,8 @@
           "label": "Referral code (if you have one)",
           "required": false,
           "placeholder": "e.g. COVISE-2026"
-        },
-        {
-          "id": "profile_visibility_consent",
-          "type": "single_select",
-          "label": "Profile visibility",
-          "required": true,
-          "options": [
-            "Visible to all CoVise members",
-            "Visible to curated matches only",
-            "Visible to CoVise team only until I approve"
-          ]
         }
+        
       ]
     }
   ],

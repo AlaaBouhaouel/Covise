@@ -15,7 +15,7 @@
         })();
     </script>
 </head>
-<body>
+<body data-save-success="{% if save_success %}true{% else %}false{% endif %}">
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
@@ -84,25 +84,35 @@
 
             <section class="panel profile">
                 <div class="profile-left">
-                    <div class="avatar">AG</div>
+                    <div class="avatar">{{ ui_user.avatar_initials }}</div>
                     <div>
-                        <div class="profile-name">Ahmed Ghamdi</div>
-                        <div class="profile-role">Founder - CoVise</div>
+                        <div class="profile-name">{{ settings_page.display_name }}</div>
+                        <div class="profile-role">{{ settings_page.current_role|default:"Profile in progress" }}</div>
                     </div>
                 </div>
                 <div class="profile-info">
-                    <div><span>Email</span><strong>ahmed@covise.io</strong></div>
-                    <div><span>Location</span><strong>Riyadh, KSA</strong></div>
-                    <div><span>Plan</span><strong>Founder Pro</strong></div>
+                    <div><span>Email</span><strong>{{ settings_page.email }}</strong></div>
+                    <div><span>Location</span><strong>{{ settings_page.location|default:"Add your location" }}</strong></div>
+                    <div><span>Plan</span><strong>{{ settings_page.plan|default:"Free" }}</strong></div>
                 </div>
             </section>
 
+            {% if success_message %}
+            <div class="submit-banner submit-banner-success">{{ success_message }}</div>
+            {% endif %}
+
+            {% if error_message %}
+            <div class="submit-banner submit-banner-error">{{ error_message }}</div>
+            {% endif %}
+
+            <form method="post" action="{% url 'Settings' %}" style="margin-top: calc(var(--spacing)*2);">
+                {% csrf_token %}
             <section class="panel settings-section notifications-section">
                 <div class="section-top"><h2>ACCOUNT</h2></div>
                 <div class="settings-stack">
-                    <div class="settings-row"><div class="row-copy"><strong>Full Name</strong></div><div class="row-control input-action"><input type="text" value="User Albo"><button class="primary-btn" type="button">Save</button></div></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Email</strong><span>Changing your email requires verification.</span></div><div class="row-control input-action"><input type="text" value="user@covise.io"><button class="primary-btn" type="button">Save</button></div></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Phone Number</strong></div><div class="row-control input-action"><input type="text" value="+966 55 123 4567"><button class="primary-btn" type="button">Save</button></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Full Name</strong></div><div class="row-control input-action">{{ settings_page.display_name }}</div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Email</strong><span>Changing your email requires verification.</span></div><div class="row-control input-action"><input type="text" name="email" value="{{ settings_page.email }}"></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Phone Number</strong></div><div class="row-control input-action"><input type="text" name="phone_number" value="{{ settings_page.phone_number }}"></div></div>
                     <div class="settings-row settings-row-block">
                         <div class="row-copy">
                             <strong>Password</strong>
@@ -110,98 +120,254 @@
                         <div class="row-control password-shell">
                             <div class="inline-action">
                                 <span class="password-mask">••••••••</span>
-                                <button class="outline-btn" id="togglePasswordFields" type="button">Change Password</button>
+                                <a class="outline-btn" href="{% url 'Forgot Password' %}">Change Password</a>
                             </div>
                         </div>
                     </div>
-                    <div class="settings-row"><div class="row-copy"><strong>Profile Photo</strong></div><div class="row-control photo-row"><span class="avatar small-avatar">AA</span><button class="outline-btn" type="button">Upload Photo</button><button class="text-link danger-link" type="button">Remove</button></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Last Sign In</strong></div><div class="row-control input-action">{{ settings_page.last_login|date:"M j, Y, g:i a"|default:"No sign-in recorded yet" }}</div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Total Sign Ins</strong></div><div class="row-control input-action">{{ settings_page.sign_in_count }}</div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Interactive Demo</strong></div><div class="row-control input-action">{% if settings_page.has_seen_interactive_demo %}Completed{% else %}Not completed yet{% endif %}</div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Profile Photo</strong></div><div class="row-control photo-row"><span class="avatar small-avatar">{{ ui_user.avatar_initials }}</span><button class="outline-btn" type="button">Upload Photo</button><button class="text-link danger-link" type="button">Remove</button></div></div>
+                    <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="personal_data">Save Changes</button></div>
                 </div>
             </section>
 
+        </form>
+        <form method="post" action="{% url 'Settings' %}" style="margin-top: calc(var(--spacing)*2);">
+                {% csrf_token %}
+            <section class="panel settings-section">
+                <div class="section-top"><h2>PROFILE DETAILS</h2></div>
+                <div class="settings-stack">
+                    <div class="settings-row"><div class="row-copy"><strong>LinkedIn</strong><span>Imported from your waitlist or onboarding profile.</span></div><div class="row-control input-action"><input type="url" name="linkedin" value="{{ settings_page.linkedin_url }}"></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>GitHub</strong><span>Add your GitHub if you are a developer.</span></div><div class="row-control input-action"><input type="url" name="github" value="{{ settings_page.github_url }}"></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Proof of Work</strong><span>Portfolio, demos, or anything that proves how you build.</span></div><div class="row-control input-action"><input type="url" name="proof_of_work_url" value="{{ settings_page.proof_of_work_url }}"></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Location</strong><span>Used across your profile and matching context.</span></div><div class="row-control input-action"><input type="text" name="location" value="{{ settings_page.location }}"></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Nationality</strong><span>Useful for cross-border founder and operator matching.</span></div><div class="row-control input-action"><input type="text" name="nationality" value="{{ settings_page.nationality }}"></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Bio</strong><span>Your top-line founder summary.</span></div><div class="row-control input-action"><input type="text" name="bio" value="{{ settings_page.bio }}"></div></div>
+                    <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="professional_data">Save Changes</button></div>
+                </div>
+            </section>
+        </form>
+        <section class="panel settings-section" style="margin-top: calc(var(--spacing)*2);">
+            <div class="section-top">
+                <h2>Experiences and Projects</h2>
+                <span class="section-note">Add the work and ventures you want people to notice first.</span>
+            </div>
+            <div class="entry-builder">
+                <form method="post" action="{% url 'Settings' %}" class="entry-form">
+                    {% csrf_token %}
+                    <article class="entry-column">
+                        <div class="entry-column-head">
+                            <div>
+                                <h3>Experience</h3>
+                                <p>Add roles, dates, and the impact behind them.</p>
+                            </div>
+                            <button class="outline-btn" type="button" data-toggle-panel="experience-panel">Add Experience</button>
+                        </div>
+                        <div class="entry-card" id="experience-panel" hidden>
+                            <div class="entry-grid">
+                                <label class="entry-field">
+                                    <span>Title or Role</span>
+                                    <input class="entry-input" type="text" name="title" placeholder="Founding Product Designer">
+                                </label>
+                                <label class="entry-field">
+                                    <span>Date or Period</span>
+                                    <input class="entry-input" type="date" name="date">
+                                </label>
+                            </div>
+                            <label class="entry-field">
+                                <span>Description</span>
+                                <textarea class="entry-textarea" name="desc" rows="4" placeholder="Summarize what you built, owned, or improved."></textarea>
+                            </label>
+                            <div class="entry-actions">
+                                <span class="mini-chip">Visible on profile</span>
+                                <div class="entry-action-buttons">
+                                    <button class="text-link" type="button" data-hide-panel="experience-panel">Cancel</button>
+                                    <button class="primary-btn" data-default-label="Save Experience" type="submit" name="save_section" value="experiences">Save Experience</button>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </form>
+
+                <form method="post" action="{% url 'Settings' %}" class="entry-form">
+                    {% csrf_token %}
+                    <article class="entry-column">
+                        <div class="entry-column-head">
+                            <div>
+                                <h3>Active Projects</h3>
+                                <p>Show what you are building now and why it matters.</p>
+                            </div>
+                            <button class="outline-btn" type="button" data-toggle-panel="project-panel">Add Project</button>
+                        </div>
+                        <div class="entry-card" id="project-panel" hidden>
+                            <div class="entry-grid">
+                                <label class="entry-field">
+                                    <span>Project Name</span>
+                                    <input class="entry-input" type="text" name="name" placeholder="B2B marketplace for regional suppliers">
+                                </label>
+                                <label class="entry-field">
+                                    <span>Status</span>
+                                    <input class="entry-input" type="text" name="status" placeholder="MVP in progress">
+                                </label>
+                            </div>
+                            <label class="entry-field">
+                                <span>Description</span>
+                                <textarea class="entry-textarea" name="desc" rows="4" placeholder="Share the problem, current traction, or what support you need."></textarea>
+                            </label>
+                            <div class="entry-actions">
+                                <span class="mini-chip">Shown as active</span>
+                                <div class="entry-action-buttons">
+                                    <button class="text-link" type="button" data-hide-panel="project-panel">Cancel</button>
+                                    <button class="primary-btn" data-default-label="Save Project" type="submit" name="save_section" value="projects">Save Project</button>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </form>
+            </div>
+        </section>
+        <form method="post" action="{% url 'Settings' %}" style="margin-top: calc(var(--spacing)*2);">
+            {% csrf_token %}
+            <input type="hidden" name="profile_visibility" value="{{ settings_page.preferences.profile_visibility }}">
+                <input type="hidden" name="show_conviction_score" value="{% if settings_page.preferences.show_conviction_score %}true{% else %}false{% endif %}">
+                <input type="hidden" name="show_cv_to_matches" value="{% if settings_page.preferences.show_cv_to_matches %}true{% else %}false{% endif %}">
+                <input type="hidden" name="show_linkedin_to_matches" value="{% if settings_page.preferences.show_linkedin_to_matches %}true{% else %}false{% endif %}">
+                <input type="hidden" name="appear_in_search" value="{% if settings_page.preferences.appear_in_search %}true{% else %}false{% endif %}">
+                <input type="hidden" name="pause_matching" value="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}">
             <section class="panel settings-section">
                 <div class="section-top"><h2>PROFILE VISIBILITY</h2></div>
                 <div class="settings-stack">
-                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Who can see your profile</strong></div><div class="row-control"><div class="selector-group single-select" data-group="profile-visibility"><button class="selector-pill is-active" type="button">Everyone</button><button class="selector-pill" type="button">Matched users only</button><button class="selector-pill" type="button">Nobody</button></div></div></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Show Founder Conviction Score on profile</strong><span>Other users will see your conviction score when viewing your profile.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Show CV to matches</strong><span>Your CV will be visible to users you are matched with.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Show LinkedIn to matches</strong><span>Your LinkedIn profile link will be shown to your matches.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Appear in search results</strong><span>Turn this off to become invisible in platform search.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Pause matching</strong><span>Temporarily stop appearing in other users' match lists. Your existing matches are unaffected.</span></div><button class="toggle-switch" id="pauseMatchingToggle" type="button" aria-pressed="false"></button></div>
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Who can see your profile</strong></div><div class="row-control"><div class="selector-group single-select" data-group="profile_visibility"><button class="selector-pill{% if settings_page.preferences.profile_visibility == 'everyone' %} is-active{% endif %}" data-value="everyone" type="button">Everyone</button><button class="selector-pill{% if settings_page.preferences.profile_visibility == 'matched_only' %} is-active{% endif %}" data-value="matched_only" type="button">Matched users only</button><button class="selector-pill{% if settings_page.preferences.profile_visibility == 'nobody' %} is-active{% endif %}" data-value="nobody" type="button">Nobody</button></div></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Show Founder Conviction Score on profile</strong><span>Other users will see your conviction score when viewing your profile.</span></div><button class="toggle-switch{% if settings_page.preferences.show_conviction_score %} active{% endif %}" data-field="show_conviction_score" type="button" aria-pressed="{% if settings_page.preferences.show_conviction_score %}true{% else %}false{% endif %}"></button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Show CV to matches</strong><span>Your CV will be visible to users you are matched with.</span></div><button class="toggle-switch{% if settings_page.preferences.show_cv_to_matches %} active{% endif %}" data-field="show_cv_to_matches" type="button" aria-pressed="{% if settings_page.preferences.show_cv_to_matches %}true{% else %}false{% endif %}"></button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Show LinkedIn to matches</strong><span>Your LinkedIn profile link will be shown to your matches.</span></div><button class="toggle-switch{% if settings_page.preferences.show_linkedin_to_matches %} active{% endif %}" data-field="show_linkedin_to_matches" type="button" aria-pressed="{% if settings_page.preferences.show_linkedin_to_matches %}true{% else %}false{% endif %}"></button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Appear in search results</strong><span>Turn this off to become invisible in platform search.</span></div><button class="toggle-switch{% if settings_page.preferences.appear_in_search %} active{% endif %}" data-field="appear_in_search" type="button" aria-pressed="{% if settings_page.preferences.appear_in_search %}true{% else %}false{% endif %}"></button></div>
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Pause matching</strong><span>Temporarily stop appearing in other users' match lists. Your existing matches are unaffected.</span></div><button class="toggle-switch{% if settings_page.preferences.pause_matching %} active{% endif %}" data-field="pause_matching" id="pauseMatchingToggle" type="button" aria-pressed="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}"></button></div>
                     <div class="warning-banner" id="pauseMatchingBanner" hidden>You are currently paused. You will not appear in new match results.</div>
+                    <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="profile_preferences">Save Changes</button></div>
+
                 </div>
             </section>
-
+        </form>
+        <form method="post" action="{% url 'Settings' %}" style="margin-top: calc(var(--spacing)*2);">
+            {% csrf_token %}
+                <input type="hidden" name="ai_enabled" value="{% if settings_page.preferences.ai_enabled %}true{% else %}false{% endif %}">
+                <input type="hidden" name="read_profile_data" value="{% if settings_page.preferences.read_profile_data %}true{% else %}false{% endif %}">
+                <input type="hidden" name="ai_read_messages" value="{% if settings_page.preferences.ai_read_messages %}true{% else %}false{% endif %}">
+                <input type="hidden" name="ai_read_workspace" value="{% if settings_page.preferences.ai_read_workspace %}true{% else %}false{% endif %}">
+                <input type="hidden" name="ai_post_updates" value="{% if settings_page.preferences.ai_post_updates %}true{% else %}false{% endif %}">
+                <input type="hidden" name="ai_send_messages" value="{% if settings_page.preferences.ai_send_messages %}true{% else %}false{% endif %}">
+                <input type="hidden" name="ai_edit_workspace" value="{% if settings_page.preferences.ai_edit_workspace %}true{% else %}false{% endif %}">
+                <input type="hidden" name="ai_manage_milestones" value="{% if settings_page.preferences.ai_manage_milestones %}true{% else %}false{% endif %}">
             <section class="panel settings-section">
                 <div class="section-top"><h2>COVISE AI AGENT</h2></div>
                 <div class="info-banner">CoVise Advisor is your AI chief of staff. You control exactly what it can and cannot do on your behalf.</div>
                 <div class="settings-stack">
-                    <div class="settings-row"><div class="row-copy"><strong>Enable CoVise AI Agent</strong><span>Turn off to disable all AI features across the platform.</span></div><button class="toggle-switch active" id="aiMasterToggle" type="button" aria-pressed="true"></button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Enable CoVise AI Agent</strong><span>Turn off to disable all AI features across the platform.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_enabled %} active{% endif %}" data-field="ai_enabled" id="aiMasterToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_enabled %}true{% else %}false{% endif %}"></button></div>
                 </div>
                 <div class="permission-shell" id="aiPermissionShell">
                     <div class="permission-group-head"><span>READ ONLY PERMISSIONS</span></div>
                     <div class="settings-stack">
-                        <div class="settings-row"><div class="row-copy"><strong>Read my profile and venture data</strong><span>Required for the AI to give personalized advice.</span></div><button class="toggle-switch active locked" type="button" aria-pressed="true" disabled></button></div>
-                        <div class="settings-row"><div class="row-copy"><strong>Read my messages (summaries only)</strong><span>The AI reads conversation context to give better match and communication advice. It never stores message content.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                        <div class="settings-row"><div class="row-copy"><strong>Read workspace content</strong><span>Allows the AI to review your milestones, tasks, and documents.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+
+
+                        <div class="settings-row"><div class="row-copy"><strong>Read my profile and venture data</strong><span>Required for the AI to give personalized advice.</span></div><button class="toggle-switch{% if settings_page.preferences.read_profile_data %} active{% endif %}" data-field="read_profile_data" type="button" aria-pressed="{% if settings_page.preferences.read_profile_data %}true{% else %}false{% endif %}"></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Read my messages (summaries only)</strong><span>The AI reads conversation context to give better match and communication advice. It never stores message content.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_read_messages %} active{% endif %}" data-field="ai_read_messages" type="button" aria-pressed="{% if settings_page.preferences.ai_read_messages %}true{% else %}false{% endif %}"></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Read workspace content</strong><span>Allows the AI to review your milestones, tasks, and documents.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_read_workspace %} active{% endif %}" data-field="ai_read_workspace" type="button" aria-pressed="{% if settings_page.preferences.ai_read_workspace %}true{% else %}false{% endif %}"></button></div>
                     </div>
                     <div class="permission-group-head"><span>ACTION PERMISSIONS</span><small>All actions are logged and can be reversed.</small></div>
                     <div class="warning-note">Warning: These permissions allow the AI to act on your behalf. All actions are logged and can be reversed.</div>
                     <div class="settings-stack">
-                        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Post updates on my behalf</strong><span>The AI can post venture updates to your feed. You will be notified before each post.</span></div><button class="toggle-switch" id="aiPostToggle" type="button" aria-pressed="false"></button></div>
+                        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Post updates on my behalf</strong><span>The AI can post venture updates to your feed. You will be notified before each post.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_post_updates %} active{% endif %}" data-field="ai_post_updates" id="aiPostToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_post_updates %}true{% else %}false{% endif %}"></button></div>
                         <div class="warning-banner" id="aiPostBanner" hidden>The AI will draft posts for your approval before publishing. You can review in AI Activity Log.</div>
-                        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Send messages to matches</strong><span>The AI can send initial outreach messages to your top matches. You approve each message first.</span></div><button class="toggle-switch" id="aiMessageToggle" type="button" aria-pressed="false"></button></div>
+                        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Send messages to matches</strong><span>The AI can send initial outreach messages to your top matches. You approve each message first.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_send_messages %} active{% endif %}" data-field="ai_send_messages" id="aiMessageToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_send_messages %}true{% else %}false{% endif %}"></button></div>
                         <div class="warning-banner" id="aiMessageBanner" hidden>Messages will be drafted for your review before sending.</div>
-                        <div class="settings-row"><div class="row-copy"><strong>Edit workspace content</strong><span>The AI can update tasks, milestones, and notes in your workspace.</span></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
-                        <div class="settings-row"><div class="row-copy"><strong>Schedule and manage milestones</strong><span>The AI can suggest and create milestone plans in your workspace based on your venture stage.</span></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Edit workspace content</strong><span>The AI can update tasks, milestones, and notes in your workspace.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_edit_workspace %} active{% endif %}" data-field="ai_edit_workspace" type="button" aria-pressed="{% if settings_page.preferences.ai_edit_workspace %}true{% else %}false{% endif %}"></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Schedule and manage milestones</strong><span>The AI can suggest and create milestone plans in your workspace based on your venture stage.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_manage_milestones %} active{% endif %}" data-field="ai_manage_milestones" type="button" aria-pressed="{% if settings_page.preferences.ai_manage_milestones %}true{% else %}false{% endif %}"></button></div>
                     </div>
                 </div>
                 <div class="section-footer start"><button class="text-link icon-link" data-open-modal="aiActivityModal" type="button"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>View AI Activity Log</span></button></div>
-            </section>
+                    <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="ai_preferences">Save Changes</button></div>
 
+
+            </section>
+        </form>
+        <form method="post" action="{% url 'Settings' %}" style="margin-top: calc(var(--spacing)*2);">
+            {% csrf_token %}    
+                <input type="hidden" name="email_new_match" value="{% if settings_page.preferences.email_new_match %}true{% else %}false{% endif %}">
+                <input type="hidden" name="email_new_message" value="{% if settings_page.preferences.email_new_message %}true{% else %}false{% endif %}">
+                <input type="hidden" name="email_connection_request" value="{% if settings_page.preferences.email_connection_request %}true{% else %}false{% endif %}">
+                <input type="hidden" name="email_request_accepted" value="{% if settings_page.preferences.email_request_accepted %}true{% else %}false{% endif %}">
+                <input type="hidden" name="email_milestone_reminder" value="{% if settings_page.preferences.email_milestone_reminder %}true{% else %}false{% endif %}">
+                <input type="hidden" name="email_workspace_activity" value="{% if settings_page.preferences.email_workspace_activity %}true{% else %}false{% endif %}">
+                <input type="hidden" name="email_platform_updates" value="{% if settings_page.preferences.email_platform_updates %}true{% else %}false{% endif %}">
+                <input type="hidden" name="email_marketing" value="{% if settings_page.preferences.email_marketing %}true{% else %}false{% endif %}">
+                <input type="hidden" name="in_app_new_match" value="{% if settings_page.preferences.in_app_new_match %}true{% else %}false{% endif %}">
+                <input type="hidden" name="in_app_new_message" value="{% if settings_page.preferences.in_app_new_message %}true{% else %}false{% endif %}">
+                <input type="hidden" name="in_app_connection_request" value="{% if settings_page.preferences.in_app_connection_request %}true{% else %}false{% endif %}">
+                <input type="hidden" name="in_app_request_accepted" value="{% if settings_page.preferences.in_app_request_accepted %}true{% else %}false{% endif %}">
+                <input type="hidden" name="in_app_milestone_reminder" value="{% if settings_page.preferences.in_app_milestone_reminder %}true{% else %}false{% endif %}">
+                <input type="hidden" name="in_app_workspace_activity" value="{% if settings_page.preferences.in_app_workspace_activity %}true{% else %}false{% endif %}">
+                <input type="hidden" name="in_app_platform_updates" value="{% if settings_page.preferences.in_app_platform_updates %}true{% else %}false{% endif %}">
+                <input type="hidden" name="in_app_marketing" value="{% if settings_page.preferences.in_app_marketing %}true{% else %}false{% endif %}">
+                <input type="hidden" name="email_frequency" value="{{ settings_page.preferences.email_frequency }}">
+                
             <section class="panel settings-section">
                 <div class="section-top"><h2>NOTIFICATIONS</h2></div>
                 <div class="two-panel-grid">
                     <div class="inner-panel">
                         <h3>Email Notifications</h3>
                         <div class="settings-stack compact-stack">
-                            <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch{% if settings_page.preferences.email_new_match %} active{% endif %}" data-field="email_new_match" type="button" aria-pressed="{% if settings_page.preferences.email_new_match %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch{% if settings_page.preferences.email_new_message %} active{% endif %}" data-field="email_new_message" type="button" aria-pressed="{% if settings_page.preferences.email_new_message %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch{% if settings_page.preferences.email_connection_request %} active{% endif %}" data-field="email_connection_request" type="button" aria-pressed="{% if settings_page.preferences.email_connection_request %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch{% if settings_page.preferences.email_request_accepted %} active{% endif %}" data-field="email_request_accepted" type="button" aria-pressed="{% if settings_page.preferences.email_request_accepted %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch{% if settings_page.preferences.email_milestone_reminder %} active{% endif %}" data-field="email_milestone_reminder" type="button" aria-pressed="{% if settings_page.preferences.email_milestone_reminder %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch{% if settings_page.preferences.email_workspace_activity %} active{% endif %}" data-field="email_workspace_activity" type="button" aria-pressed="{% if settings_page.preferences.email_workspace_activity %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch{% if settings_page.preferences.email_platform_updates %} active{% endif %}" data-field="email_platform_updates" type="button" aria-pressed="{% if settings_page.preferences.email_platform_updates %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch{% if settings_page.preferences.email_marketing %} active{% endif %}" data-field="email_marketing" type="button" aria-pressed="{% if settings_page.preferences.email_marketing %}true{% else %}false{% endif %}"></button></div>
                         </div>
                     </div>
                     <div class="inner-panel">
                         <h3>In-App Notifications</h3>
                         <div class="settings-stack compact-stack">
-                            <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch" type="button" aria-pressed="false"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_new_match %} active{% endif %}" data-field="in_app_new_match" type="button" aria-pressed="{% if settings_page.preferences.in_app_new_match %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_new_message %} active{% endif %}" data-field="in_app_new_message" type="button" aria-pressed="{% if settings_page.preferences.in_app_new_message %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_connection_request %} active{% endif %}" data-field="in_app_connection_request" type="button" aria-pressed="{% if settings_page.preferences.in_app_connection_request %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_request_accepted %} active{% endif %}" data-field="in_app_request_accepted" type="button" aria-pressed="{% if settings_page.preferences.in_app_request_accepted %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_milestone_reminder %} active{% endif %}" data-field="in_app_milestone_reminder" type="button" aria-pressed="{% if settings_page.preferences.in_app_milestone_reminder %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_workspace_activity %} active{% endif %}" data-field="in_app_workspace_activity" type="button" aria-pressed="{% if settings_page.preferences.in_app_workspace_activity %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_platform_updates %} active{% endif %}" data-field="in_app_platform_updates" type="button" aria-pressed="{% if settings_page.preferences.in_app_platform_updates %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_marketing %} active{% endif %}" data-field="in_app_marketing" type="button" aria-pressed="{% if settings_page.preferences.in_app_marketing %}true{% else %}false{% endif %}"></button></div>
                         </div>
                     </div>
                 </div>
-                <div class="settings-row settings-row-block"><div class="row-copy"><strong>Notification frequency</strong><span>Applies to email notifications only.</span></div><div class="row-control"><div class="selector-group single-select" data-group="email-frequency"><button class="selector-pill is-active" type="button">Instant</button><button class="selector-pill" type="button">Daily Digest</button><button class="selector-pill" type="button">Weekly Digest</button></div></div></div>
+                <div class="settings-row settings-row-block"><div class="row-copy"><strong>Notification frequency</strong><span>Applies to email notifications only.</span></div><div class="row-control"><div class="selector-group single-select" data-group="email_frequency"><button class="selector-pill{% if settings_page.preferences.email_frequency == 'instant' %} is-active{% endif %}" data-value="instant" type="button">Instant</button><button class="selector-pill{% if settings_page.preferences.email_frequency == 'daily' %} is-active{% endif %}" data-value="daily" type="button">Daily Digest</button><button class="selector-pill{% if settings_page.preferences.email_frequency == 'weekly' %} is-active{% endif %}" data-value="weekly" type="button">Weekly Digest</button></div></div></div>
+                    <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="notifications">Save Changes</button></div>
             </section>
-
+        </form>
+        <form method="post" action="{% url 'Settings' %}" style="margin-top: calc(var(--spacing)*2);">
+            {% csrf_token %}
+                <input type="hidden" name="pause_matching" value="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}">
+                <input type="hidden" name="preferred_cofounder_types" value="{{ settings_page.preferences.preferred_cofounder_types|join:'|' }}">
+                <input type="hidden" name="preferred_industries" value="{{ settings_page.preferences.preferred_industries|join:'|' }}">
+                <input type="hidden" name="preferred_gcc_markets" value="{{ settings_page.preferences.preferred_gcc_markets|join:'|' }}">
+                <input type="hidden" name="minimum_commitment" value="{{ settings_page.preferences.minimum_commitment }}">
+                <input type="hidden" name="open_to_foreign_founders" value="{% if settings_page.preferences.open_to_foreign_founders %}true{% else %}false{% endif %}">
             <section class="panel settings-section">
                 <div class="section-top"><h2>MATCHING PREFERENCES</h2></div>
                 <div class="settings-stack">
-                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred co-founder type</strong></div><div class="pill-grid multi-select"><button class="selector-pill is-active" type="button">Technical</button><button class="selector-pill" type="button">Business</button><button class="selector-pill" type="button">Operations</button><button class="selector-pill" type="button">Sales</button><button class="selector-pill" type="button">Marketing</button><button class="selector-pill" type="button">Finance</button><button class="selector-pill" type="button">Legal</button><button class="selector-pill" type="button">Design</button></div></div>
-                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred industries</strong></div><div class="pill-grid multi-select"><button class="selector-pill is-active" type="button">Fintech</button><button class="selector-pill" type="button">Healthtech</button><button class="selector-pill is-active" type="button">Logistics</button><button class="selector-pill" type="button">E-commerce</button><button class="selector-pill" type="button">EdTech</button><button class="selector-pill" type="button">PropTech</button><button class="selector-pill" type="button">FoodTech</button><button class="selector-pill" type="button">Energy</button><button class="selector-pill" type="button">Retail</button><button class="selector-pill is-active" type="button">SaaS</button></div></div>
-                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred GCC markets</strong></div><div class="pill-grid multi-select"><button class="selector-pill is-active" type="button">Saudi Arabia</button><button class="selector-pill is-active" type="button">UAE</button><button class="selector-pill" type="button">Kuwait</button><button class="selector-pill" type="button">Qatar</button><button class="selector-pill" type="button">Bahrain</button><button class="selector-pill" type="button">Oman</button></div></div>
-                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Minimum commitment level</strong></div><div class="selector-group single-select" data-group="commitment"><button class="selector-pill" type="button">Part-time</button><button class="selector-pill" type="button">Full-time</button><button class="selector-pill is-active" type="button">Either</button></div></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Open to foreign founders</strong><span>Include founders from outside the GCC in your matches.</span></div><button class="toggle-switch active" type="button" aria-pressed="true"></button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Pause Matching</strong><span>Temporarily pause matching.</span></div><button class="toggle-switch{% if settings_page.preferences.pause_matching %} active{% endif %}" data-field="pause_matching" type="button" aria-pressed="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}"></button></div>
+
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred co-founder type</strong></div><div class="pill-grid multi-select" data-group="preferred_cofounder_types"><button class="selector-pill{% if 'Technical' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Technical</button><button class="selector-pill{% if 'Business' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Business</button><button class="selector-pill{% if 'Operations' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Operations</button><button class="selector-pill{% if 'Sales' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Sales</button><button class="selector-pill{% if 'Marketing' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Marketing</button><button class="selector-pill{% if 'Finance' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Finance</button><button class="selector-pill{% if 'Legal' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Legal</button><button class="selector-pill{% if 'Design' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Design</button></div></div>
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred industries</strong></div><div class="pill-grid multi-select" data-group="preferred_industries"><button class="selector-pill{% if 'Fintech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Fintech</button><button class="selector-pill{% if 'Healthtech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Healthtech</button><button class="selector-pill{% if 'Logistics' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Logistics</button><button class="selector-pill{% if 'E-commerce' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">E-commerce</button><button class="selector-pill{% if 'EdTech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">EdTech</button><button class="selector-pill{% if 'PropTech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">PropTech</button><button class="selector-pill{% if 'FoodTech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">FoodTech</button><button class="selector-pill{% if 'Energy' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Energy</button><button class="selector-pill{% if 'Retail' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Retail</button><button class="selector-pill{% if 'SaaS' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">SaaS</button></div></div>
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred GCC markets</strong></div><div class="pill-grid multi-select" data-group="preferred_gcc_markets"><button class="selector-pill{% if 'Saudi Arabia' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Saudi Arabia</button><button class="selector-pill{% if 'UAE' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">UAE</button><button class="selector-pill{% if 'Kuwait' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Kuwait</button><button class="selector-pill{% if 'Qatar' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Qatar</button><button class="selector-pill{% if 'Bahrain' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Bahrain</button><button class="selector-pill{% if 'Oman' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Oman</button></div></div>
+                    <div class="settings-row settings-row-block"><div class="row-copy"><strong>Minimum commitment level</strong></div><div class="selector-group single-select" data-group="minimum_commitment"><button class="selector-pill{% if settings_page.preferences.minimum_commitment == 'Part-time' %} is-active{% endif %}" data-value="Part-time" type="button">Part-time</button><button class="selector-pill{% if settings_page.preferences.minimum_commitment == 'Full-time' %} is-active{% endif %}" data-value="Full-time" type="button">Full-time</button><button class="selector-pill{% if settings_page.preferences.minimum_commitment == 'Either' %} is-active{% endif %}" data-value="Either" type="button">Either</button></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Open to foreign founders</strong><span>Include founders from outside the GCC in your matches.</span></div><button class="toggle-switch{% if settings_page.preferences.open_to_foreign_founders %} active{% endif %}" data-field="open_to_foreign_founders" type="button" aria-pressed="{% if settings_page.preferences.open_to_foreign_founders %}true{% else %}false{% endif %}"></button></div>
                 </div>
-                <div class="section-footer full-width"><button class="primary-btn wide-btn" type="button">Save Preferences</button></div>
+                <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="matching_preferences">Save Changes</button></div>
             </section>
+            </form>
 
             <section class="panel settings-section">
                 <div class="section-top"><h2>SECURITY</h2></div>
@@ -231,6 +397,7 @@
                         </table>
                     </div>
                 </div>
+
             </section>
 
             <section class="panel settings-section">
@@ -297,34 +464,78 @@
                 });
             }
 
+            function updateHiddenField(field, value, source) {
+                var root = source ? source.closest('form') : document;
+                var input = root ? root.querySelector('input[type="hidden"][name="' + field + '"]') : null;
+                if (input) input.value = value;
+            }
+
             Array.prototype.slice.call(document.querySelectorAll('.toggle-switch:not(.locked)')).forEach(function (toggle) {
                 toggle.addEventListener('click', function () {
                     if (toggle.disabled) return;
                     var active = toggle.classList.toggle('active');
                     toggle.setAttribute('aria-pressed', active ? 'true' : 'false');
+                    if (toggle.dataset.field) updateHiddenField(toggle.dataset.field, active ? 'true' : 'false', toggle);
                 });
             });
-
-            var passwordButton = document.getElementById('togglePasswordFields');
-            var passwordFields = document.getElementById('passwordFields');
-            if (passwordButton && passwordFields) passwordButton.addEventListener('click', function () { passwordFields.hidden = !passwordFields.hidden; });
 
             Array.prototype.slice.call(document.querySelectorAll('.single-select')).forEach(function (group) {
                 group.querySelectorAll('.selector-pill').forEach(function (pill) {
                     pill.addEventListener('click', function () {
                         group.querySelectorAll('.selector-pill').forEach(function (item) { item.classList.remove('is-active'); });
                         pill.classList.add('is-active');
+                        if (group.dataset.group && pill.dataset.value) updateHiddenField(group.dataset.group, pill.dataset.value, pill);
                     });
                 });
             });
             Array.prototype.slice.call(document.querySelectorAll('.multi-select .selector-pill')).forEach(function (pill) {
-                pill.addEventListener('click', function () { pill.classList.toggle('is-active'); });
+                pill.addEventListener('click', function () {
+                    pill.classList.toggle('is-active');
+                    var group = pill.closest('.multi-select');
+                    if (!group || !group.dataset.group) return;
+                    var selected = Array.prototype.slice.call(group.querySelectorAll('.selector-pill.is-active')).map(function (item) {
+                        return item.textContent.trim();
+                    });
+                    updateHiddenField(group.dataset.group, selected.join('|'), pill);
+                });
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('.multi-select[data-group]')).forEach(function (group) {
+                var selected = Array.prototype.slice.call(group.querySelectorAll('.selector-pill.is-active')).map(function (item) {
+                    return item.textContent.trim();
+                });
+                updateHiddenField(group.dataset.group, selected.join('|'), group);
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('[data-toggle-panel]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var panel = document.getElementById(button.getAttribute('data-toggle-panel'));
+                    if (!panel) return;
+                    var willShow = panel.hidden;
+                    panel.hidden = !panel.hidden;
+                    if (willShow) {
+                        var firstInput = panel.querySelector('input, textarea');
+                        if (firstInput) firstInput.focus();
+                    }
+                });
+            });
+
+            Array.prototype.slice.call(document.querySelectorAll('[data-hide-panel]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var panel = document.getElementById(button.getAttribute('data-hide-panel'));
+                    if (!panel) return;
+                    panel.hidden = true;
+                    panel.querySelectorAll('input, textarea').forEach(function (field) {
+                        field.value = '';
+                    });
+                });
             });
 
             function syncBanner(toggleId, bannerId) {
                 var toggle = document.getElementById(toggleId);
                 var banner = document.getElementById(bannerId);
                 if (!toggle || !banner) return;
+                banner.hidden = !toggle.classList.contains('active');
                 toggle.addEventListener('click', function () { banner.hidden = !toggle.classList.contains('active'); });
             }
             syncBanner('pauseMatchingToggle', 'pauseMatchingBanner');
@@ -342,6 +553,45 @@
             if (aiMasterToggle) {
                 aiMasterToggle.addEventListener('click', syncAiPermissions);
                 syncAiPermissions();
+            }
+
+            function flashSaveButtons() {
+                Array.prototype.slice.call(document.querySelectorAll('button[type="submit"].primary-btn, button[type="submit"].wide-btn')).forEach(function (button) {
+                    if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent.trim();
+                    button.disabled = true;
+                    button.textContent = 'Saved';
+                    button.style.backgroundColor = '#111111';
+                    button.style.color = '#ffffff';
+                    button.style.borderColor = '#111111';
+                    setTimeout(function () {
+                        button.disabled = false;
+                        button.textContent = button.dataset.defaultLabel;
+                        button.style.backgroundColor = '';
+                        button.style.color = '';
+                        button.style.borderColor = '';
+                    }, 1500);
+                });
+            }
+
+            Array.prototype.slice.call(document.querySelectorAll('form[action="{% url "Settings" %}"]')).forEach(function (settingsForm) {
+                settingsForm.addEventListener('submit', function (event) {
+                    if (settingsForm.dataset.submitting === 'true') {
+                        event.preventDefault();
+                        return;
+                    }
+                    settingsForm.dataset.submitting = 'true';
+                    Array.prototype.slice.call(settingsForm.querySelectorAll('button[type="submit"]')).forEach(function (button) {
+                        if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent.trim();
+                        button.textContent = 'Saved';
+                        button.style.backgroundColor = '#111111';
+                        button.style.color = '#ffffff';
+                        button.style.borderColor = '#111111';
+                    });
+                });
+            });
+
+            if (document.body.dataset.saveSuccess === 'true') {
+                flashSaveButtons();
             }
 
             Array.prototype.slice.call(document.querySelectorAll('[data-open-modal]')).forEach(function (button) {

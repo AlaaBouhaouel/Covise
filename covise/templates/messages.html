@@ -34,7 +34,7 @@
                     <rect x="14" y="15" width="7" height="7"></rect>
                 </svg>
             </a>
-            <a class="sidebar-link" id="side_active"  href="{% url 'Messages' %}" aria-label="Messages">
+            <a class="sidebar-link" id="side_active" href="{% url 'Messages' %}" aria-label="Messages">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <path d="M4 6h16v10H7l-3 3V6z"></path>
                 </svg>
@@ -71,19 +71,10 @@
             </div>
             <div class="request-wrap">
                 <button class="requests-toggle" id="requestsToggle" type="button">
-                    <span>2 Message Requests</span>
+                    <span>Message Requests</span>
                     <i class="fa-solid fa-chevron-down"></i>
                 </button>
-                <div class="requests-list" id="requestsList">
-                    <article class="request-item">
-                        <div><h3>Rashed Al-Harbi</h3><p>Interested in joining your logistics SaaS venture.</p></div>
-                        <div class="request-actions"><button class="accept" type="button">Accept</button><button class="decline" type="button">Decline</button></div>
-                    </article>
-                    <article class="request-item">
-                        <div><h3>Noura Al-Mutairi</h3><p>Wants to discuss growth partnership in KSA/UAE.</p></div>
-                        <div class="request-actions"><button class="accept" type="button">Accept</button><button class="decline" type="button">Decline</button></div>
-                    </article>
-                </div>
+                <div class="requests-list" id="requestsList"></div>
             </div>
             <div class="conv-search"><i class="fa-solid fa-magnifying-glass"></i><input id="conversationSearch" type="text" placeholder="Search conversations..."></div>
             <div class="conv-tabs">
@@ -108,9 +99,9 @@
                 </div>
                 <span class="match-pill" id="chatMatchPill">Tech Co-founder Match</span>
                 <div class="chat-actions">
-                    <button class="icon-btn" type="button" data-tooltip="Search in chat"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    <button class="icon-btn" type="button" data-tooltip="Attach file"><i class="fa-solid fa-paperclip"></i></button>
-                    <button class="icon-btn is-disabled" id="videoCallBtn" type="button" data-tooltip="Video Call - Coming Soon"><i class="fa-solid fa-video"></i></button>
+                    <button class="icon-btn" id="searchInChatBtn" type="button" data-tooltip="Search in chat"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <button class="icon-btn" id="attachFileBtn" type="button" data-tooltip="Attach file"><i class="fa-solid fa-paperclip"></i></button>
+                    <button class="icon-btn" id="videoCallBtn" type="button" data-tooltip="Video Call"><i class="fa-solid fa-video"></i></button>
                     <button class="icon-btn" id="toggleDetailsBtn" type="button" data-tooltip="Details"><i class="fa-solid fa-circle-info"></i></button>
                     <div class="menu-wrap">
                         <button class="icon-btn" id="moreMenuBtn" type="button" data-tooltip="More"><i class="fa-solid fa-ellipsis"></i></button>
@@ -123,12 +114,14 @@
             </header>
             <div class="chat-body">
                 <div class="pinned-banner"><i class="fa-solid fa-thumbtack"></i><span id="pinnedText"></span></div>
-                <div class="messages-stream" id="messagesStream"></div>
+                <div class="messages-stream" id="messagesStream">
+
+                </div>
             </div>
             <form class="chat-input-bar" id="chatInputBar" onsubmit="return false;">
-                <button class="input-icon-btn" type="button"><i class="fa-solid fa-paperclip"></i></button>
+                <button class="input-icon-btn" id="inputAttachBtn" type="button"><i class="fa-solid fa-paperclip"></i></button>
                 <input id="chatInput" type="text" placeholder="Type a message...">
-                <button class="input-icon-btn" type="button"><i class="fa-regular fa-face-smile"></i></button>
+                <button class="input-icon-btn" id="emojiPickerBtn" type="button"><i class="fa-regular fa-face-smile"></i></button>
                 <button class="send-btn" id="sendBtn" type="submit" disabled><i class="fa-solid fa-paper-plane"></i></button>
             </form>
         </main>
@@ -149,34 +142,31 @@
                     <div class="details-profile">
                         <div class="avatar avatar-xl" id="detailsAvatar">L</div>
                         <h4 id="detailsPersonName">Leena Al-Sabah</h4>
-                        <span class="match-pill" id="detailsMatchPill">Tech Co-founder Match</span>
-                        <p class="meta-row"><strong>Matched on:</strong> <span id="detailsMatchedOn">March 8, 2026</span></p>
-                        <p class="meta-row"><strong>User type:</strong> <span id="detailsUserType">Specialist / Operator</span></p>
-                        <p class="meta-row"><strong>Industry:</strong> <span id="detailsIndustry">Fintech / B2B SaaS</span></p>
-                        <p class="meta-row"><strong>Venture stage:</strong> <span id="detailsStage">MVP built</span></p>
+                        <span class="match-pill" id="detailsMatchPill">Conversation details</span>
+                        <p class="meta-row"><strong>Matched on:</strong> <span id="detailsMatchedOn">-</span></p>
+                        <p class="meta-row"><strong>User type:</strong> <span id="detailsUserType">-</span></p>
+                        <p class="meta-row"><strong>Industry:</strong> <span id="detailsIndustry">-</span></p>
+                        <p class="meta-row"><strong>Venture stage:</strong> <span id="detailsStage">-</span></p>
                         <div class="score-wrap">
-                            <div class="score-head"><span>Founder Conviction Score</span><span id="convictionValue">84/100</span></div>
+                            <div class="score-head"><span>Founder Conviction Score</span><span id="convictionValue">-</span></div>
                             <div class="score-track"><div class="score-fill" id="convictionFill"></div></div>
                         </div>
-                        <p class="meta-row"><strong>Mutual connections:</strong> <span id="detailsMutual">7</span></p>
+                        <p class="meta-row"><strong>Mutual connections:</strong> <span id="detailsMutual">-</span></p>
                         <button class="panel-btn" type="button">View Full Profile</button>
                     </div>
                 </section>
                 <section class="details-pane" data-pane="files">
-                    <article class="file-item"><i class="fa-regular fa-file-pdf"></i><div><h4>Market_Validation_Deck.pdf</h4><p>2.1 MB • March 12, 2026</p></div><button type="button">Download</button></article>
-                    <article class="file-item"><i class="fa-regular fa-file-word"></i><div><h4>GTM_Plan_Draft.docx</h4><p>684 KB • March 11, 2026</p></div><button type="button">Download</button></article>
-                    <article class="file-item"><i class="fa-regular fa-file-image"></i><div><h4>Prototype_Screen.png</h4><p>1.4 MB • March 10, 2026</p></div><button type="button">Download</button></article>
-                    <p class="muted-note">No more files</p>
+                    <p class="muted-note">No shared files yet.</p>
                 </section>
                 <section class="details-pane" data-pane="agreements">
-                    <article class="agreement-item"><div class="agreement-head"><i class="fa-regular fa-file-lines"></i><h4>Founders Collaboration MoU</h4></div><p>Created: March 9, 2026</p><span class="status-pill pending">Pending</span></article>
-                    <article class="agreement-item"><div class="agreement-head"><i class="fa-regular fa-file-signature"></i><h4>NDA for Product Roadmap</h4></div><p>Created: March 8, 2026</p><span class="status-pill signed">Signed</span></article>
+                    <p class="muted-note">No agreements yet.</p>
                     <button class="panel-btn" id="createAgreementBtn" type="button">Create New Agreement</button>
                 </section>
                 <section class="details-pane" data-pane="settings">
                     <label class="toggle-row"><span>Mute notifications</span><input type="checkbox"><span class="toggle-slider"></span></label>
                     <label class="toggle-row"><span>Pin conversation</span><input type="checkbox"><span class="toggle-slider"></span></label>
                     <div class="settings-actions">
+                        <button class="text-btn danger" id="removeContactBtn" type="button">Remove Contact</button>
                         <button class="text-btn danger" id="blockUserBtn" type="button">Block User</button>
                         <button class="text-btn" id="reportUserBtn" type="button">Report User</button>
                         <button class="text-btn" id="clearChatBtn" type="button">Clear Chat History</button>
@@ -193,7 +183,13 @@
             <div class="modal-foot" id="modalFoot"></div>
         </div>
     </div>
+    {{ request.user.username|json_script:"current-username" }}
+    {{ request.user.id|json_script:"current-user-id" }}
+    {{ conversation_data|json_script:"conversation-data" }}
+    {{ conversation_requests|json_script:"conversation-request-data" }}
+    {{ active_conversation_id|json_script:"active-conversation-id" }}
 
     <script src="{% static 'messages.js' %}"></script>
+
 </body>
 </html>
