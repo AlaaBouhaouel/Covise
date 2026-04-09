@@ -53,7 +53,9 @@
                 </div>
 
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email"  required>
+                <input id="email" name="email" type="email" value="{{ initial_waitlist_email }}" required>
+                <p class="email-verification-note" id="emailVerificationNote" hidden></p>
+
 
                 <label for="country">Country</label>
                 <select id="country" name="country" required>
@@ -105,9 +107,15 @@
                 <label for="venture_summary">Tell us about your venture briefly <span class="recommended-tag">(Recommended)</span></label>
                 <p class="field-helper">Your information stays private and is only used to ensure a better experience within the platform. <a href="/privacy/">Read our privacy policy.</a></p>
                 <textarea id="venture_summary" name="venture_summary" rows="2" placeholder="A short summary of what you're building, or hoping to launch"></textarea>
-
-
-
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
+                        <p class="submit-verification-note">Enter the code sent to your email</p>
+                        <p class="field-helper" >This should not take more than a few seconds.</p>
+                    </div>
+                    <div class="email-verification-panel">
+                        <input id="emailVerificationCode" name="email_verification_code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+                    </div>
+                </div>
                 <button class="process" type="submit" id="onboard-btn">
                     <span class="btn-label">Onboard</span>
                     <span class="btn-spinner" aria-hidden="true"></span>
@@ -125,12 +133,119 @@
         const customCountryInput = document.getElementById('custom_country');
         const customDescriptionField = document.getElementById('custom-description-field');
         const customDescriptionInput = document.getElementById('custom_description');
+        const emailInput = document.getElementById('email');
+        const emailVerificationNote = document.getElementById('emailVerificationNote');
+        const emailVerificationCode = document.getElementById('emailVerificationCode');
         const linkedinInput = document.getElementById('linkedin');
         const noLinkedinCheckbox = document.getElementById('no_linkedin');
         const cvInput = document.getElementById('cv');
         const cvLabel = document.getElementById('cv-label');
         const optionalTag = document.getElementById('optional-cv-input');
+        const waitlistForm = document.querySelector('.waitlist-form');
+        const onboardBtn = document.getElementById('onboard-btn');
+        const onboardBtnLabel = onboardBtn ? onboardBtn.querySelector('.btn-label') : null;
+        const csrfToken = waitlistForm.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        const initialVerifiedEmail = "{{ initial_verified_email|escapejs }}";
+        const initialVerificationNotice = "{{ initial_verification_notice|escapejs }}";
+        const initialPendingVerificationEmail = "{{ initial_verification_pending_email|escapejs }}";
 
+        let verifiedEmail = initialVerifiedEmail;
+        let verificationSentEmail = initialVerifiedEmail || initialPendingVerificationEmail;
+        function normalizeEmail(value) {
+            return (value || '').trim().toLowerCase();
+        }
+
+        function isReadyForVerificationEmail(value) {
+            const normalizedValue = normalizeEmail(value);
+            return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalizedValue);
+        }
+
+        function setEmailVerificationState(message, tone) {
+            if (!message) {
+                emailVerificationNote.hidden = true;
+                emailVerificationNote.textContent = '';
+                emailVerificationNote.dataset.state = '';
+
+                return;
+            }
+            
+            emailVerificationNote.hidden = false;
+            emailVerificationNote.textContent = message;
+            emailVerificationNote.dataset.state = tone || 'pending';
+        }
+
+
+
+        function updateSubmitState() {
+            const currentEmail = normalizeEmail(emailInput.value);
+            const hasPendingCode = currentEmail && currentEmail === verificationSentEmail && currentEmail !== verifiedEmail;
+            const canSubmit = currentEmail && (currentEmail === verifiedEmail || hasPendingCode);
+            onboardBtn.disabled = !canSubmit;
+            onboardBtn.classList.toggle('is-blocked', !canSubmit);
+        }
+
+        async function sendVerificationEmail() {
+            const currentEmail = normalizeEmail(emailInput.value);
+            if (!currentEmail || !emailInput.checkValidity() || !isReadyForVerificationEmail(currentEmail)) return;
+            if (currentEmail === verifiedEmail || currentEmail === verificationSentEmail) return;
+
+            const response = await fetch("{% url 'Waitlist Email Verify Send' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ email: currentEmail }),
+            });
+
+            const data = await response.json().catch(function () { return {}; });
+
+            if (!response.ok) {
+                setEmailVerificationState(data.error || 'Could not send verification email. Please try again.', 'error');
+                verifiedEmail = '';
+                verificationSentEmail = '';
+                updateSubmitState();
+                return;
+            }
+
+            if (data.already_verified) {
+                verifiedEmail = currentEmail;
+                verificationSentEmail = currentEmail;
+                setEmailVerificationState(data.message || 'Email verified. You can submit now.', 'success');
+                updateSubmitState();
+                return;
+            }
+
+            verificationSentEmail = currentEmail;
+            verifiedEmail = '';
+            setEmailVerificationState(
+                data.message || 'A verification code was sent to your email. Enter it below before submitting.',
+                'pending'
+            );
+            updateSubmitState();
+        }
+
+        function resetEmailVerificationIfNeeded() {
+            const currentEmail = normalizeEmail(emailInput.value);
+            if (!currentEmail) {
+                verifiedEmail = '';
+                verificationSentEmail = '';
+                setEmailVerificationState('', '');
+                updateSubmitState();
+                return;
+            }
+
+            if (currentEmail !== verifiedEmail) {
+                verifiedEmail = '';
+                updateSubmitState();
+            }
+
+            if (currentEmail !== verificationSentEmail) {
+                verificationSentEmail = '';
+                setEmailVerificationState('', '');
+                emailVerificationCode.value = '';
+            }
+        }
 
         function syncCountryInputs() {
             const hasSelectedGccCountry = countrySelect.value !== '';
@@ -197,9 +312,25 @@
         descriptionSelect.addEventListener('change', syncDescriptionInput);
         nonGccCheckbox.addEventListener('change', syncCountryInputs);
         noLinkedinCheckbox.addEventListener('change', syncLinkedinInput);
+        emailInput.addEventListener('input', function () {
+            resetEmailVerificationIfNeeded();
+        });
+        emailInput.addEventListener('blur', function () {
+            sendVerificationEmail().catch(function () {
+                setEmailVerificationState('Could not send verification email. Please try again.', 'error');
+                updateSubmitState();
+            });
+        });
+        emailVerificationCode.addEventListener('input', function () {
+            emailVerificationCode.value = emailVerificationCode.value.replace(/[^\d]/g, '').slice(0, 6);
+        });
         syncCountryInputs();
         syncDescriptionInput();
         syncLinkedinInput();
+        if (initialVerificationNotice && verifiedEmail) {
+            setEmailVerificationState(initialVerificationNotice, 'success');
+        }
+        updateSubmitState();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
@@ -232,11 +363,18 @@
             return '+' + dialCode + localDigits;
         }
 
-        const waitlistForm = document.querySelector('.waitlist-form');
-        const onboardBtn = document.getElementById('onboard-btn');
-        const onboardBtnLabel = onboardBtn ? onboardBtn.querySelector('.btn-label') : null;
+        waitlistForm.addEventListener('submit', function (event) {
+            const currentEmail = normalizeEmail(emailInput.value);
+            if (!currentEmail || (currentEmail !== verifiedEmail && currentEmail !== verificationSentEmail)) {
+                event.preventDefault();
+                setEmailVerificationState('A verification code was sent to your email. Enter it below before submitting.', 'error');
+                sendVerificationEmail().catch(function () {
+                    setEmailVerificationState('Could not send verification email. Please try again.', 'error');
+                });
+                updateSubmitState();
+                return;
+            }
 
-        waitlistForm.addEventListener('submit', function () {
             let formattedPhone = '';
             try {
                 formattedPhone = (iti.getNumber() || '').trim();

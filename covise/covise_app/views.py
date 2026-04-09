@@ -1,15 +1,74 @@
 import json
 import logging
+import random
+import uuid
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from pathlib import Path
 from django.http import Http404, JsonResponse
 from django.db import IntegrityError, OperationalError, close_old_connections
+from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import OnboardingResponse, WaitlistEntry
+from .models import OnboardingResponse, WaitlistEmailVerification, WaitlistEntry
 from covise_app.utils import generate_referral_code, upload_cv_to_s3
 from covise_app.project_details import PROJECT_DETAILS
+import resend
 
 logger = logging.getLogger(__name__)
+RESEND_API_KEY = settings.RESEND_API
+
+
+def _normalize_email(value):
+    return str(value or "").strip().lower()
+
+
+def _generate_verification_code():
+    return f"{random.randint(0, 999999):06d}"
+
+
+def _send_waitlist_verification_email(email_verification):
+    if not RESEND_API_KEY:
+        raise RuntimeError("RESEND_API is not configured.")
+
+    resend.api_key = RESEND_API_KEY
+    payload = {
+        "from": "CoVise <founders@covise.net>",
+        "to": [email_verification.email],
+        "subject": "Verify your email for the CoVise waitlist",
+        "html":  (
+    '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 24px; color: #e2e8f0; background: #0f1117; border-radius: 12px;">'
+    # Logo / Brand header
+    '<div style="text-align: center; margin-bottom: 32px;">'
+    '<img src="https://logo-im-g.s3.eu-central-1.amazonaws.com/covise_logo.png " alt="CoVise" style="height: 40px; margin-bottom: 8px;">'
+    '<h1 style="font-size: 28px; font-weight: 700; color: #ffffff; margin: 0;">CoVise</h1>'
+    '<p style="font-size: 13px; color: #64748b; margin: 4px 0 0; letter-spacing: 0.05em;">THE FOUNDERS COMMUNITY</p>'
+    '</div>'
+    
+    '<hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 0 0 28px;">'
+    
+    # Body
+    f'<p style="font-size: 15px; color: #cbd5e1; margin: 0 0 8px;">Hey, this is the CoVise Team,</p>'
+    '<p style="font-size: 15px; color: #cbd5e1; margin: 0 0 20px;">We\'re excited to have you on board!</p>'
+    '<p style="font-size: 15px; color: #94a3b8; margin: 0 0 8px;">You\'re one step away from reserving your spot in the CoVise community.</p>'
+    '<p style="font-size: 15px; color: #94a3b8; margin: 0 0 24px;">Enter this 6-digit verification code in the waitlist form to complete your application:</p>'
+    
+    # Code block
+    '<div style="text-align: center; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 24px; margin: 0 0 28px;">'
+    '<p style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 10px;">Verification Code</p>'
+    f'<p style="font-size: 32px; font-weight: 700; letter-spacing: 0.3em; color: #ffffff; margin: 0;">{email_verification.verification_code}</p>'
+    '</div>'
+    
+    '<hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 0 0 20px;">'
+    
+    # Footer
+    '<p style="font-size: 13px; color: #cbd5e1; margin: 0;">— The CoVise Team</p>'
+    '<p style="font-size: 12px; color: #cbd5e1; margin: 12px 0 0;">If you didn\'t request this, you can safely ignore this email.</p>'
+    
+    '</div>'),
+    }
+    result = resend.Emails.send(payload)
 
 
 
@@ -234,13 +293,122 @@ def workspace(request):
     return render(request, 'workspace.html')
 
 @ensure_csrf_cookie
+def waitlist_verify_email_send(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed."}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+
+    email = _normalize_email(payload.get("email"))
+    if not email:
+        return JsonResponse({"error": "Email is required."}, status=400)
+
+    try:
+        validate_email(email)
+    except ValidationError:
+        return JsonResponse({"error": "Please enter a valid email address."}, status=400)
+
+    if WaitlistEntry.objects.filter(email=email).exists():
+        return JsonResponse({"error": "This email is already registered on CoVise."}, status=400)
+
+    existing_verification = WaitlistEmailVerification.objects.filter(
+        email=email,
+        verified_at__isnull=False,
+    ).first()
+    if existing_verification:
+        request.session["verified_waitlist_email"] = email
+        return JsonResponse(
+            {
+                "ok": True,
+                "already_verified": True,
+                "message": "Email verified. You can submit now.",
+            }
+        )
+
+    email_verification = WaitlistEmailVerification.objects.filter(email=email).first()
+    if email_verification is None:
+        email_verification = WaitlistEmailVerification.objects.create(
+            email=email,
+            token=uuid.uuid4(),
+            verification_code=_generate_verification_code(),
+        )
+    elif not email_verification.verification_code:
+        email_verification.token = uuid.uuid4()
+        email_verification.verification_code = _generate_verification_code()
+        email_verification.verified_at = None
+        email_verification.save(update_fields=["token", "verification_code", "verified_at", "updated_at"])
+
+    try:
+        _send_waitlist_verification_email(email_verification)
+    except Exception as exc:
+        logger.exception("Failed to send verification email for %s: %s", email, exc)
+        return JsonResponse(
+            {"error": "Failed to send verification email. Please try again in a moment."},
+            status=500,
+        )
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "message": "A verification code was sent to your email. Enter it below before submitting.",
+        }
+    )
+
+
+@ensure_csrf_cookie
+def waitlist_verify_email_code(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed."}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+
+    email = _normalize_email(payload.get("email"))
+    code = str(payload.get("code", "")).strip()
+    if not email or not code:
+        return JsonResponse({"error": "Email and verification code are required."}, status=400)
+
+    email_verification = WaitlistEmailVerification.objects.filter(email=email).first()
+    if email_verification is None:
+        return JsonResponse({"error": "Please request a verification code first."}, status=400)
+
+    if email_verification.verified_at is not None:
+        request.session["verified_waitlist_email"] = email
+        request.session["waitlist_verification_notice"] = "Email verified. You can submit now."
+        return JsonResponse({"ok": True, "message": "Email verified. You can submit now."})
+
+    if email_verification.verification_code != code:
+        return JsonResponse({"error": "Incorrect verification code. Please try again."}, status=400)
+
+    email_verification.verified_at = timezone.now()
+    email_verification.save(update_fields=["verified_at", "updated_at"])
+    request.session["verified_waitlist_email"] = email
+    request.session["waitlist_verification_notice"] = "Email verified. You can submit now."
+    return JsonResponse({"ok": True, "message": "Email verified. You can submit now."})
+
+@ensure_csrf_cookie
 def waitlist(request):
-    context = {}
+    context = {
+        "initial_waitlist_email": request.session.pop(
+            "waitlist_initial_email",
+            request.session.get("verified_waitlist_email", ""),
+        ),
+        "initial_verified_email": request.session.get("verified_waitlist_email", ""),
+        "initial_verification_notice": request.session.pop("waitlist_verification_notice", ""),
+        "initial_verification_pending_email": request.session.pop("waitlist_pending_email", ""),
+        "error_message": request.session.pop("waitlist_error_message", ""),
+    }
 
     if request.method == 'POST':
         full_name = request.POST.get('full_name', '').strip()
         phone_number = request.POST.get('phone_number', '').strip()
-        email = request.POST.get('email', '').strip()
+        email = _normalize_email(request.POST.get('email'))
+        email_verification_code = ''.join(ch for ch in str(request.POST.get('email_verification_code', '')) if ch.isdigit())[:6]
         country = request.POST.get('country', '').strip()
         description = request.POST.get('description', '').strip()
         custom_description = request.POST.get('custom_description', '').strip()
@@ -251,36 +419,44 @@ def waitlist(request):
         venture_summary = request.POST.get('venture_summary', '').strip()
         cv_file = request.FILES.get('cv')
 
-        print(
-            f"[waitlist] POST received email={email!r} country={country!r} "
-            f"description={description!r} non_gcc_business={non_gcc_business} no_linkedin={no_linkedin} "
-            f"has_cv={bool(cv_file)}"
-        )
+        def redirect_with_error(message, *, pending_email=''):
+            request.session["waitlist_error_message"] = message
+            request.session["waitlist_initial_email"] = email
+            request.session["waitlist_pending_email"] = pending_email
+            return redirect('Waitlist')
 
         linkedin_missing_when_required = (not no_linkedin) and (not linkedin)
         cv_missing_when_required = no_linkedin and (not cv_file)
 
+        is_email_verified = WaitlistEmailVerification.objects.filter(
+            email=email,
+            verified_at__isnull=False,
+        ).exists()
+
         if not all([full_name, phone_number, email]) or linkedin_missing_when_required or cv_missing_when_required:
-            context['error_message'] = 'Please complete all required fields.'
-            print(
-                "[waitlist] validation failed: required fields missing "
-                f"(full_name={bool(full_name)} phone_number={bool(phone_number)} "
-                f"email={bool(email)} linkedin_required_missing={linkedin_missing_when_required} "
-                f"cv_required_missing={cv_missing_when_required})"
-            )
+            return redirect_with_error('Please complete all required fields.')
         elif non_gcc_business and not custom_country:
-            context['error_message'] = 'Please enter your country if you are outside the GCC.'
-            print("[waitlist] validation failed: non-GCC checked but custom_country is empty")
+            return redirect_with_error('Please enter your country if you are outside the GCC.')
         elif not description:
-            context['error_message'] = 'Please select what best describes you.'
-            print("[waitlist] validation failed: description is empty")
+            return redirect_with_error('Please select what best describes you.')
         elif description == 'other' and not custom_description:
-            context['error_message'] = 'Please tell us more if you selected Other.'
-            print("[waitlist] validation failed: custom_description is empty for other")
-        elif not non_gcc_business and not country:
-            context['error_message'] = 'Please select your country.'
-            print("[waitlist] validation failed: GCC country not selected")
-        else:
+            return redirect_with_error('Please tell us more if you selected Other.')
+        elif not is_email_verified and not email_verification_code:
+            return redirect_with_error('Enter the verification code sent to your email.', pending_email=email)
+        elif not is_email_verified:
+            email_verification = WaitlistEmailVerification.objects.filter(email=email).first()
+            if email_verification is None:
+                return redirect_with_error('Please verify your email before submitting.', pending_email=email)
+            if email_verification.verification_code != email_verification_code:
+                return redirect_with_error('Incorrect verification code. Please try again.', pending_email=email)
+            email_verification.verified_at = timezone.now()
+            email_verification.save(update_fields=["verified_at", "updated_at"])
+            request.session["verified_waitlist_email"] = email
+            is_email_verified = True
+
+        if is_email_verified and not non_gcc_business and not country:
+            return redirect_with_error('Please select your country.')
+        if is_email_verified:
             if non_gcc_business:
                 country = ''
             else:
@@ -290,9 +466,7 @@ def waitlist(request):
                 custom_description = ''
 
             if WaitlistEntry.objects.filter(email=email).exists():
-                context['error_message'] = 'This email is already registered on CoVise.'
-                print(f"[waitlist] duplicate email blocked before create for email={email!r}")
-                return render(request, 'waitlist.html', context)
+                return redirect_with_error('This email is already registered on CoVise.')
 
             # Upload CV before DB retry loop — file object is exhausted after first read
             cv_s3_key = None
@@ -302,6 +476,8 @@ def waitlist(request):
                     logger.warning("[waitlist] S3 upload failed for %s", email)
 
             referral_code = generate_referral_code()
+
+
 
             entry = None
             for attempt in range(2):
@@ -323,24 +499,17 @@ def waitlist(request):
                     )
                     break
                 except IntegrityError:
-                    context['error_message'] = 'This email is already registered on CoVise.'
-                    print(f"[waitlist] duplicate email blocked by IntegrityError for email={email!r}")
-                    return render(request, 'waitlist.html', context)
+                    return redirect_with_error('This email is already registered on CoVise.')
                 except OperationalError:
                     # Handle transient DB disconnects (e.g., SSL EOF) by refreshing the connection once.
                     close_old_connections()
-                    print(f"[waitlist] db OperationalError on attempt={attempt + 1} for email={email!r}")
                     if attempt == 1:
                         logger.exception("Failed to create waitlist entry after retry for %s", email)
-                        context['error_message'] = 'Temporary database issue. Please try again in a moment.'
+                        return redirect_with_error('Temporary database issue. Please try again in a moment.')
 
-            if entry is None:
-                print(f"[waitlist] render waitlist again after db failure for email={email!r}")
-                return render(request, 'waitlist.html', context)
             request.session["waitlist_email"] = email
             request.session["waitlist_entry_id"] = entry.id
             request.session["my_referral_code"] = entry.my_referral_code
-            print(f"[waitlist] success: redirecting to waitlist success for email={email!r} entry_id={entry.id}")
             return redirect('Waitlist Success')
 
     return render(request, 'waitlist.html', context)

@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Email Verification</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'waitlist.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="waitlist-page">
+        <section class="waitlist-card">
+            <div class="waitlist-header">
+                <div class="brand">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+                    <span>CoVise</span>
+                </div>
+                <a class="back-link" href="{% url 'Waitlist' %}">Back</a>
+            </div>
+
+            {% if verification_success %}
+            <h1 class="waitlist-title">Email Verified</h1>
+            <p class="intro">Your email{% if verified_email %} ({{ verified_email }}){% endif %} is verified. Return to the waitlist form to finish submitting.</p>
+            {% else %}
+            <h1 class="waitlist-title">Verification Link Invalid</h1>
+            <p class="intro">This verification link is invalid or has expired. Return to the waitlist form and request a new verification email.</p>
+            {% endif %}
+
+            <div class="success-actions">
+                <a class="success-btn success-btn-home" href="{% url 'Waitlist' %}">Back To Waitlist</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

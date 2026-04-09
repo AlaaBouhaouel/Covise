@@ -40,6 +40,21 @@ class WaitlistEntry(models.Model):
         return f"{self.full_name} ({self.email})"
 
 
+class WaitlistEmailVerification(models.Model):
+    email = models.EmailField(unique=True)
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    verification_code = models.CharField(max_length=6, blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"WaitlistEmailVerification<{self.email}>"
+
+
 class OnboardingResponse(models.Model):
     waitlist_entry = models.OneToOneField(
         WaitlistEntry,
