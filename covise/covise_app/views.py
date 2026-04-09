@@ -401,6 +401,7 @@ def waitlist(request):
         "initial_verified_email": request.session.get("verified_waitlist_email", ""),
         "initial_verification_notice": request.session.pop("waitlist_verification_notice", ""),
         "initial_verification_pending_email": request.session.pop("waitlist_pending_email", ""),
+        "initial_referral_code": request.session.pop("waitlist_referral_code", ""),
         "error_message": request.session.pop("waitlist_error_message", ""),
     }
 
@@ -412,6 +413,7 @@ def waitlist(request):
         country = request.POST.get('country', '').strip()
         description = request.POST.get('description', '').strip()
         custom_description = request.POST.get('custom_description', '').strip()
+        entered_referral_code = request.POST.get('referral_code', '').strip().upper()
         non_gcc_business = request.POST.get('non_gcc_business') == 'on'
         no_linkedin = request.POST.get('no_linkedin') == 'on'
         custom_country = request.POST.get('custom_country', '').strip()
@@ -423,6 +425,7 @@ def waitlist(request):
             request.session["waitlist_error_message"] = message
             request.session["waitlist_initial_email"] = email
             request.session["waitlist_pending_email"] = pending_email
+            request.session["waitlist_referral_code"] = entered_referral_code
             return redirect('Waitlist')
 
         linkedin_missing_when_required = (not no_linkedin) and (not linkedin)
@@ -441,6 +444,8 @@ def waitlist(request):
             return redirect_with_error('Please select what best describes you.')
         elif description == 'other' and not custom_description:
             return redirect_with_error('Please tell us more if you selected Other.')
+        elif entered_referral_code and not WaitlistEntry.objects.filter(my_referral_code=entered_referral_code).exists():
+            return redirect_with_error('This referral code is not valid.')
         elif not is_email_verified and not email_verification_code:
             return redirect_with_error('Enter the verification code sent to your email.', pending_email=email)
         elif not is_email_verified:
@@ -475,7 +480,10 @@ def waitlist(request):
                 if cv_s3_key is None:
                     logger.warning("[waitlist] S3 upload failed for %s", email)
 
-            referral_code = generate_referral_code()
+            generated_referral_code = generate_referral_code()
+            referred_by = None
+            if entered_referral_code:
+                referred_by = WaitlistEntry.objects.filter(my_referral_code=entered_referral_code).first()
 
 
 
@@ -494,8 +502,10 @@ def waitlist(request):
                         linkedin=linkedin,
                         no_linkedin=no_linkedin,
                         venture_summary=venture_summary,
+                        referral_code=entered_referral_code,
+                        referred_by=referred_by,
                         cv_s3_key=cv_s3_key,
-                        my_referral_code=referral_code,
+                        my_referral_code=generated_referral_code,
                     )
                     break
                 except IntegrityError:
