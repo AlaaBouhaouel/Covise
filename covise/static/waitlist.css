@@ -204,6 +204,7 @@ h1 {
     border-radius: 10px;
     background: var(--input-bg);
     color: var(--text);
+    color-scheme: dark;
     padding: calc(var(--spacing) * 1.5);
     font-size: 1rem;
     font-family: sans-serif;
@@ -479,6 +480,12 @@ h1 {
 .waitlist-form select option {
     color: var(--option-text);
     background: var(--option-bg);
+}
+
+[data-theme="light"] .waitlist-form input,
+[data-theme="light"] .waitlist-form textarea,
+[data-theme="light"] .waitlist-form select {
+    color-scheme: light;
 }
 
 .waitlist-form label.non-gcc-toggle {
