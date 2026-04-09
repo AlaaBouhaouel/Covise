@@ -55,7 +55,15 @@
                 <label for="email">Email</label>
                 <input id="email" name="email" type="email" value="{{ initial_waitlist_email }}" required>
                 <p class="email-verification-note" id="emailVerificationNote" hidden></p>
-
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; ">
+                        <p class="submit-verification-note"w>Enter the code sent to your email</p>
+                        <p class="field-helper" >This should not take more than a few seconds.</p>
+                    </div>
+                    <div class="email-verification-panel">
+                        <input id="emailVerificationCode" name="email_verification_code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+                    </div>
+                </div>
 
                 <label for="country">Country</label>
                 <select id="country" name="country" required>
@@ -107,18 +115,7 @@
                 <label for="venture_summary">Tell us about your venture briefly <span class="recommended-tag">(Recommended)</span></label>
                 <p class="field-helper">Your information stays private and is only used to ensure a better experience within the platform. <a href="/privacy/">Read our privacy policy.</a></p>
                 <textarea id="venture_summary" name="venture_summary" rows="2" placeholder="A short summary of what you're building, or hoping to launch"></textarea>
-
-                <label for="referral_code">Referral code <span class="optional-tag">(Optional)</span></label>
-                <input id="referral_code" name="referral_code" type="text" value="{{ initial_referral_code }}" maxlength="20" placeholder="Enter your referral code">
-                <div style="display: flex; justify-content: space-between;">
-                    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
-                        <p class="submit-verification-note">Enter the code sent to your email</p>
-                        <p class="field-helper" >This should not take more than a few seconds.</p>
-                    </div>
-                    <div class="email-verification-panel">
-                        <input id="emailVerificationCode" name="email_verification_code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
-                    </div>
-                </div>
+                
                 <button class="process" type="submit" id="onboard-btn">
                     <span class="btn-label">Onboard</span>
                     <span class="btn-spinner" aria-hidden="true"></span>
@@ -154,13 +151,10 @@
 
         let verifiedEmail = initialVerifiedEmail;
         let verificationSentEmail = initialVerifiedEmail || initialPendingVerificationEmail;
+        let verificationSendTimeout = null;
+
         function normalizeEmail(value) {
             return (value || '').trim().toLowerCase();
-        }
-
-        function isReadyForVerificationEmail(value) {
-            const normalizedValue = normalizeEmail(value);
-            return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalizedValue);
         }
 
         function setEmailVerificationState(message, tone) {
@@ -187,9 +181,16 @@
             onboardBtn.classList.toggle('is-blocked', !canSubmit);
         }
 
+        function clearVerificationSendTimeout() {
+            if (verificationSendTimeout) {
+                window.clearTimeout(verificationSendTimeout);
+                verificationSendTimeout = null;
+            }
+        }
+
         async function sendVerificationEmail() {
             const currentEmail = normalizeEmail(emailInput.value);
-            if (!currentEmail || !emailInput.checkValidity() || !isReadyForVerificationEmail(currentEmail)) return;
+            if (!currentEmail || !emailInput.checkValidity()) return;
             if (currentEmail === verifiedEmail || currentEmail === verificationSentEmail) return;
 
             const response = await fetch("{% url 'Waitlist Email Verify Send' %}", {
@@ -234,6 +235,7 @@
                 verifiedEmail = '';
                 verificationSentEmail = '';
                 setEmailVerificationState('', '');
+                clearVerificationSendTimeout();
                 updateSubmitState();
                 return;
             }
@@ -248,6 +250,21 @@
                 setEmailVerificationState('', '');
                 emailVerificationCode.value = '';
             }
+        }
+
+        function scheduleVerificationEmail() {
+            clearVerificationSendTimeout();
+            const currentEmail = normalizeEmail(emailInput.value);
+            if (!currentEmail || !emailInput.checkValidity() || currentEmail === verifiedEmail || currentEmail === verificationSentEmail) {
+                return;
+            }
+
+            verificationSendTimeout = window.setTimeout(function () {
+                sendVerificationEmail().catch(function () {
+                    setEmailVerificationState('Could not send verification email. Please try again.', 'error');
+                    updateSubmitState();
+                });
+            }, 700);
         }
 
         function syncCountryInputs() {
@@ -317,8 +334,10 @@
         noLinkedinCheckbox.addEventListener('change', syncLinkedinInput);
         emailInput.addEventListener('input', function () {
             resetEmailVerificationIfNeeded();
+            scheduleVerificationEmail();
         });
         emailInput.addEventListener('blur', function () {
+            clearVerificationSendTimeout();
             sendVerificationEmail().catch(function () {
                 setEmailVerificationState('Could not send verification email. Please try again.', 'error');
                 updateSubmitState();
@@ -340,7 +359,7 @@
     <script>
         const phoneInput = document.getElementById('phone_number');
         const iti = window.intlTelInput(phoneInput, {
-            initialCountry: 'ae',
+            initialCountry: 'sa',
             loadUtils: () => import('https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js'),
             separateDialCode: true,
         });

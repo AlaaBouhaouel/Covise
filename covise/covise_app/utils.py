@@ -1,8 +1,15 @@
-import boto3
 import secrets
 import string
 import uuid
 from django.conf import settings
+
+
+def _get_boto3():
+    try:
+        import boto3
+    except ImportError:
+        return None
+    return boto3
 
 
 def generate_referral_code():
@@ -23,6 +30,11 @@ def upload_cv_to_s3(file, user_email):
     Returns None if upload fails.
     """
     try:
+        boto3 = _get_boto3()
+        if boto3 is None:
+            print("[S3] Upload skipped because boto3 is not installed.")
+            return None
+
         s3 = boto3.client(
             's3',
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -60,6 +72,11 @@ def get_cv_download_url(s3_key, expiry_seconds=3600):
     Link expires in 1 hour by default.
     """
     try:
+        boto3 = _get_boto3()
+        if boto3 is None:
+            print("[S3] URL generation skipped because boto3 is not installed.")
+            return None
+
         s3 = boto3.client(
             's3',
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
