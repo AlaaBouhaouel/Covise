@@ -36,7 +36,7 @@
                 </div>
                 <a class="back-link" href="{% url 'Landing Page' %}">Back</a>
             </div>
-            <h1>Join the Waitlist</h1>
+            <h1 class="waitlist-title">Reserve Your Spot</h1>
             <p class="intro">Share your info and we will reach out soon.</p>
             {% if error_message %}
             <p class="form-error" role="alert">{{ error_message }}</p>
@@ -68,13 +68,28 @@
 
                 <label class="non-gcc-toggle" for="non_gcc_business">
                     <input id="non_gcc_business" name="non_gcc_business" type="checkbox">
-                    Not based in the GCC, but looking to do business there.
+                    Not based in the GCC.
                 </label>
 
                 <div id="custom-country-field" class="custom-country-field" hidden>
                     <label for="custom_country">Enter your country</label>
                     <input id="custom_country" name="custom_country" type="text" >
                 </div>
+
+                
+                <label for="description">What best describes you?</label>
+                <select id="description" name="description" required>
+                    <option value="">Select what best describes you</option>
+                    <option value="founder_idea">Founder with an idea</option>
+                    <option value="developer">Developer or technical builder</option>
+                    <option value="operator">Operator or specialist</option>
+                    <option value="other">Other</option>
+                </select>
+                <div id="custom-description-field" class="custom-country-field" hidden>
+                    <label for="custom_description">Tell us more</label>
+                    <input id="custom_description" name="custom_description" type="text">
+                </div>
+
 
                 <label for="linkedin">LinkedIn</label>
                 <input id="linkedin" name="linkedin" type="url" placeholder="https://linkedin.com/in/username" required>
@@ -83,8 +98,15 @@
                     I do not have a LinkedIn
                 </label>
 
-                <label id="cv-label" for="cv">CV <span class="optional-tag">(Optional)</span></label>
+                <label id="cv-label" for="cv">CV <span class="optional-tag" id="optional-cv-input">(Optional)</span></label>
                 <input id="cv" name="cv" type="file" accept=".pdf,.doc,.docx">
+
+
+                <label for="venture_summary">Tell us about your venture briefly <span class="recommended-tag">(Recommended)</span></label>
+                <p class="field-helper">Your information stays private and is only used to ensure a better experience within the platform. <a href="/privacy/">Read our privacy policy.</a></p>
+                <textarea id="venture_summary" name="venture_summary" rows="2" placeholder="A short summary of what you're building, or hoping to launch"></textarea>
+
+
 
                 <button class="process" type="submit" id="onboard-btn">
                     <span class="btn-label">Onboard</span>
@@ -97,15 +119,18 @@
 
     <script>
         const countrySelect = document.getElementById('country');
+        const descriptionSelect = document.getElementById('description');
         const nonGccCheckbox = document.getElementById('non_gcc_business');
         const customCountryField = document.getElementById('custom-country-field');
         const customCountryInput = document.getElementById('custom_country');
+        const customDescriptionField = document.getElementById('custom-description-field');
+        const customDescriptionInput = document.getElementById('custom_description');
         const linkedinInput = document.getElementById('linkedin');
         const noLinkedinCheckbox = document.getElementById('no_linkedin');
         const cvInput = document.getElementById('cv');
         const cvLabel = document.getElementById('cv-label');
-        const cvNotice = document.getElementById('cv-notice');
-        const optionalTag = cvLabel.querySelector('.optional-tag');
+        const optionalTag = document.getElementById('optional-cv-input');
+
 
         function syncCountryInputs() {
             const hasSelectedGccCountry = countrySelect.value !== '';
@@ -136,7 +161,6 @@
                 cvInput.disabled = false;
                 cvInput.required = true;
                 cvLabel.classList.add('warning');
-                cvNotice.classList.add('warning');
                 optionalTag.textContent = '(Required)';
                 return;
             }
@@ -144,8 +168,17 @@
             cvInput.disabled = false;
             cvInput.required = false;
             cvLabel.classList.remove('warning');
-            cvNotice.classList.remove('warning');
             optionalTag.textContent = '(Optional)';
+        }
+
+        function syncDescriptionInput() {
+            const showCustomDescription = descriptionSelect.value === 'other';
+            customDescriptionField.hidden = !showCustomDescription;
+            customDescriptionInput.required = showCustomDescription;
+
+            if (!showCustomDescription) {
+                customDescriptionInput.value = '';
+            }
         }
 
         function syncLinkedinInput() {
@@ -161,9 +194,11 @@
         }
 
         countrySelect.addEventListener('change', syncCountryInputs);
+        descriptionSelect.addEventListener('change', syncDescriptionInput);
         nonGccCheckbox.addEventListener('change', syncCountryInputs);
         noLinkedinCheckbox.addEventListener('change', syncLinkedinInput);
         syncCountryInputs();
+        syncDescriptionInput();
         syncLinkedinInput();
     </script>
 
@@ -223,4 +258,3 @@
     </script>
 </body>
 </html>
-

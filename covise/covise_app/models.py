@@ -16,7 +16,11 @@ class WaitlistEntry(models.Model):
     country = models.CharField(max_length=100, blank=True)
     non_gcc_business = models.BooleanField(default=False)
     custom_country = models.CharField(max_length=100, blank=True)
+    description = models.CharField(max_length=100, blank=True)
+    custom_description = models.CharField(max_length=255, blank=True)
     linkedin = models.URLField(max_length=300)
+    no_linkedin = models.BooleanField(default=False)
+    venture_summary = models.TextField(blank=True)
     cv_s3_key = models.CharField(max_length=500, blank=True, null=True)
     my_referral_code = models.CharField(max_length=20, unique=True, blank=True)
     referred_by = models.ForeignKey(

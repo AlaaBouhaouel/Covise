@@ -242,15 +242,18 @@ def waitlist(request):
         phone_number = request.POST.get('phone_number', '').strip()
         email = request.POST.get('email', '').strip()
         country = request.POST.get('country', '').strip()
+        description = request.POST.get('description', '').strip()
+        custom_description = request.POST.get('custom_description', '').strip()
         non_gcc_business = request.POST.get('non_gcc_business') == 'on'
         no_linkedin = request.POST.get('no_linkedin') == 'on'
         custom_country = request.POST.get('custom_country', '').strip()
         linkedin = request.POST.get('linkedin', '').strip()
+        venture_summary = request.POST.get('venture_summary', '').strip()
         cv_file = request.FILES.get('cv')
 
         print(
             f"[waitlist] POST received email={email!r} country={country!r} "
-            f"non_gcc_business={non_gcc_business} no_linkedin={no_linkedin} "
+            f"description={description!r} non_gcc_business={non_gcc_business} no_linkedin={no_linkedin} "
             f"has_cv={bool(cv_file)}"
         )
 
@@ -268,6 +271,12 @@ def waitlist(request):
         elif non_gcc_business and not custom_country:
             context['error_message'] = 'Please enter your country if you are outside the GCC.'
             print("[waitlist] validation failed: non-GCC checked but custom_country is empty")
+        elif not description:
+            context['error_message'] = 'Please select what best describes you.'
+            print("[waitlist] validation failed: description is empty")
+        elif description == 'other' and not custom_description:
+            context['error_message'] = 'Please tell us more if you selected Other.'
+            print("[waitlist] validation failed: custom_description is empty for other")
         elif not non_gcc_business and not country:
             context['error_message'] = 'Please select your country.'
             print("[waitlist] validation failed: GCC country not selected")
@@ -276,6 +285,9 @@ def waitlist(request):
                 country = ''
             else:
                 custom_country = ''
+
+            if description != 'other':
+                custom_description = ''
 
             if WaitlistEntry.objects.filter(email=email).exists():
                 context['error_message'] = 'This email is already registered on CoVise.'
@@ -301,7 +313,11 @@ def waitlist(request):
                         country=country,
                         non_gcc_business=non_gcc_business,
                         custom_country=custom_country,
+                        description=description,
+                        custom_description=custom_description,
                         linkedin=linkedin,
+                        no_linkedin=no_linkedin,
+                        venture_summary=venture_summary,
                         cv_s3_key=cv_s3_key,
                         my_referral_code=referral_code,
                     )
@@ -324,13 +340,16 @@ def waitlist(request):
             request.session["waitlist_email"] = email
             request.session["waitlist_entry_id"] = entry.id
             request.session["my_referral_code"] = entry.my_referral_code
-            print(f"[waitlist] success: redirecting to onboarding for email={email!r} entry_id={entry.id}")
-            return redirect('Onboarding')
+            print(f"[waitlist] success: redirecting to waitlist success for email={email!r} entry_id={entry.id}")
+            return redirect('Waitlist Success')
 
     return render(request, 'waitlist.html', context)
 
 
 def waitlist_success(request):
+    if not request.session.get("waitlist_entry_id"):
+        return redirect('Waitlist')
+
     return render(request, 'waitlist_success.html', {
         'my_referral_code': request.session.get('my_referral_code', ''),
     })
