@@ -8,7 +8,6 @@
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'waitlist.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -50,7 +49,7 @@
 
                     <label for="phone_number">Phone number</label>
                     <div class="phone-wrapper">
-                        <input id="phone_number" name="phone_number" type="tel" required>
+                        <input id="phone_number" name="phone_number" type="tel" inputmode="tel" placeholder="+971 5X XXX XXXX" required>
                     </div>
 
                     <label for="email">Email</label>
@@ -421,36 +420,7 @@
         updateSubmitState();
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
     <script>
-        const phoneInput = document.getElementById('phone_number');
-        const iti = window.intlTelInput(phoneInput, {
-            initialCountry: 'sa',
-            loadUtils: () => import('https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js'),
-            separateDialCode: true,
-        });
-
-        function normalizePhoneWithCountryCode(rawValue) {
-            const typedPhone = (rawValue || '').trim();
-            if (!typedPhone) return '';
-
-            // If user already entered an international number, keep it.
-            if (typedPhone.startsWith('+')) {
-                return '+' + typedPhone.slice(1).replace(/[^\d]/g, '');
-            }
-
-            const selectedCountry = iti.getSelectedCountryData();
-            const dialCode = selectedCountry && selectedCountry.dialCode
-                ? String(selectedCountry.dialCode).replace(/[^\d]/g, '')
-                : '';
-            const localDigits = typedPhone.replace(/[^\d]/g, '');
-
-            if (!localDigits) return '';
-            if (!dialCode) return '+' + localDigits;
-            if (localDigits.startsWith(dialCode)) return '+' + localDigits;
-            return '+' + dialCode + localDigits;
-        }
-
         waitlistForm.addEventListener('submit', function (event) {
             const currentEmail = normalizeEmail(emailInput.value);
             if (!currentEmail || (currentEmail !== verifiedEmail && currentEmail !== verificationSentEmail)) {
@@ -462,16 +432,6 @@
                 updateSubmitState();
                 return;
             }
-
-            let formattedPhone = '';
-            try {
-                formattedPhone = (iti.getNumber() || '').trim();
-            } catch (err) {
-                formattedPhone = '';
-            }
-
-            // Save with explicit country code from selected country when formatter is empty.
-            phoneInput.value = formattedPhone || normalizePhoneWithCountryCode(phoneInput.value);
 
             if (onboardBtn) {
                 onboardBtn.disabled = true;
