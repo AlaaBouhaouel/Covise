@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import OnboardingResponse, Profile, WaitlistEntry, User
+from .models import OnboardingResponse, Profile, WaitlistEmailVerification, WaitlistEntry, User
 
 
 @admin.register(User)
@@ -31,6 +31,14 @@ class WaitlistEntryAdmin(admin.ModelAdmin):
     list_filter = ("status", "non_gcc_business", "created_at")
     search_fields = ("full_name", "email", "phone_number", "my_referral_code")
     readonly_fields = ("my_referral_code", "referred_by")
+
+
+@admin.register(WaitlistEmailVerification)
+class WaitlistEmailVerificationAdmin(admin.ModelAdmin):
+    list_display = ("email", "verification_code", "verified_at", "created_at", "updated_at")
+    search_fields = ("email", "verification_code")
+    list_filter = ("verified_at", "created_at", "updated_at")
+    readonly_fields = ("token", "created_at", "updated_at")
 
 
 @admin.register(OnboardingResponse)

@@ -27,44 +27,62 @@
 </script>
 <body>
     <main class="waitlist-page">
-        <section class="waitlist-card">
-            <div class="waitlist-header">
-                <div class="brand">
-                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
-                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
-                    <span>CoVise</span>
-                </div>
-                <a class="back-link" href="{% url 'Landing Page' %}">Back</a>
-            </div>
-            <h1 class="waitlist-title">Reserve Your Spot</h1>
-            <p class="intro">Share your info and we will reach out soon.</p>
-            {% if error_message %}
-            <p class="form-error" role="alert">{{ error_message }}</p>
-            {% endif %}
-
-            <form class="waitlist-form" method="post" action="{% url 'Waitlist' %}" enctype="multipart/form-data">
-                {% csrf_token %}
-                <label for="full_name">Name</label>
-                <input id="full_name" name="full_name" type="text" required>
-
-                <label for="phone_number">Phone number</label>
-                <div class="phone-wrapper">
-                    <input id="phone_number" name="phone_number" type="tel" required>
-                </div>
-
-                <label for="email">Email</label>
-                <input id="email" name="email" type="email" value="{{ initial_waitlist_email }}" required>
-                <p class="email-verification-note" id="emailVerificationNote" hidden></p>
-                <div style="display: flex; justify-content: space-between;">
-                    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; ">
-                        <p class="submit-verification-note"w>Enter the code sent to your email</p>
-                        <p class="field-helper" >This should not take more than a few seconds.</p>
+    
+        <form class="waitlist-form" method="post" action="{% url 'Waitlist' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <section class="waitlist-card" id="waitlist-card-first">
+                <div class="waitlist-header">
+                    <div class="brand">
+                        <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                        <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+                        <span>CoVise</span>
                     </div>
-                    <div class="email-verification-panel">
-                        <input id="emailVerificationCode" name="email_verification_code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
-                    </div>
+                    <a class="back-link" href="{% url 'Landing Page' %}">Home</a>
                 </div>
+                <h1 class="waitlist-title">Reserve Your Spot</h1>
+                <p class="intro">Share your info and we will reach out soon.</p>
+                {% if error_message %}
+                <p class="form-error" role="alert">{{ error_message }}</p>
+                {% endif %}
 
+                    <label for="full_name">Name</label>
+                    <input id="full_name" name="full_name" type="text" required>
+
+                    <label for="phone_number">Phone number</label>
+                    <div class="phone-wrapper">
+                        <input id="phone_number" name="phone_number" type="tel" required>
+                    </div>
+
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" value="{{ initial_waitlist_email }}" required>
+                    <p class="email-verification-note" id="emailVerificationNote" hidden></p>
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; ">
+                            <p class="submit-verification-note">Enter the code sent to your email</p>
+                            <p class="field-helper" >This should not take more than a few seconds.</p>
+                        </div>
+                        <div class="email-verification-panel">
+                            <input id="emailVerificationCode" name="email_verification_code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+                        </div>
+                    </div>
+                    <button class="process" type="button" id="next-btn">
+                        <span class="btn-label">Next</span>
+                    </button>
+            </section>
+            <section class="waitlist-card" id="waitlist-card-second" hidden>
+                <div class="waitlist-header">
+                    <div class="brand">
+                        <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                        <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+                        <span>CoVise</span>
+                    </div>
+                    <a class="back-link" href="{% url 'Waitlist' %}">Back</a>
+                </div>
+                <h1 class="waitlist-title">Few Steps Away</h1>
+                <p class="intro">Join a community of entrepreneurs.</p>
+                {% if error_message %}
+                <p class="form-error" role="alert">{{ error_message }}</p>
+                {% endif %}
                 <label for="country">Country</label>
                 <select id="country" name="country" required>
                     <option value="">Select your country</option>
@@ -115,14 +133,16 @@
                 <label for="venture_summary">Tell us about your venture briefly <span class="recommended-tag">(Recommended)</span></label>
                 <p class="field-helper">Your information stays private and is only used to ensure a better experience within the platform. <a href="/privacy/">Read our privacy policy.</a></p>
                 <textarea id="venture_summary" name="venture_summary" rows="2" placeholder="A short summary of what you're building, or hoping to launch"></textarea>
+
+                <label for="referral_code">Referred by someone?</label>
+                <input id="referral_code" name="referral_code" type="text" value="{{ initial_referral_code }}" placeholder="Enter their referral code">
                 
                 <button class="process" type="submit" id="onboard-btn">
                     <span class="btn-label">Onboard</span>
                     <span class="btn-spinner" aria-hidden="true"></span>
                 </button>
-            </form>
-            
-        </section>
+            </section>
+        </form>
     </main>
 
     <script>
@@ -149,9 +169,34 @@
         const initialVerificationNotice = "{{ initial_verification_notice|escapejs }}";
         const initialPendingVerificationEmail = "{{ initial_verification_pending_email|escapejs }}";
 
+        const nextBtn= document.getElementById('next-btn');
+        const secondCard = document.getElementById('waitlist-card-second');
+        const firstCard = document.getElementById('waitlist-card-first');
+
         let verifiedEmail = initialVerifiedEmail;
         let verificationSentEmail = initialVerifiedEmail || initialPendingVerificationEmail;
         let verificationSendTimeout = null;
+
+        function showSecondCard() {
+            firstCard.hidden = true;
+            secondCard.hidden = false;
+        }
+        function showFirstCard() {
+            firstCard.hidden = false;
+            secondCard.hidden = true;
+        }
+
+        function validateFirstStep() {
+            const firstStepFields = firstCard.querySelectorAll('input, select, textarea');
+            for (const field of firstStepFields) {
+                if (typeof field.checkValidity === 'function' && !field.checkValidity()) {
+                    field.reportValidity();
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         function normalizeEmail(value) {
             return (value || '').trim().toLowerCase();
@@ -209,6 +254,7 @@
                 verifiedEmail = '';
                 verificationSentEmail = '';
                 updateSubmitState();
+                nextBtn.disabled = true;
                 return;
             }
 
@@ -226,6 +272,7 @@
                 data.message || 'A verification code was sent to your email. Enter it below before submitting.',
                 'pending'
             );
+            nextBtn.disabled = false;
             updateSubmitState();
         }
 
@@ -346,6 +393,25 @@
         emailVerificationCode.addEventListener('input', function () {
             emailVerificationCode.value = emailVerificationCode.value.replace(/[^\d]/g, '').slice(0, 6);
         });
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function () {
+                if (!validateFirstStep()) {
+                    return;
+                }
+
+                const currentEmail = normalizeEmail(emailInput.value);
+                if (!currentEmail || (currentEmail !== verifiedEmail && currentEmail !== verificationSentEmail)) {
+                    setEmailVerificationState('A verification code was sent to your email. Enter it below before continuing.', 'error');
+                    sendVerificationEmail().catch(function () {
+                        setEmailVerificationState('Could not send verification email. Please try again.', 'error');
+                    });
+                    updateSubmitState();
+                    return;
+                }
+
+                showSecondCard();
+            });
+        }
         syncCountryInputs();
         syncDescriptionInput();
         syncLinkedinInput();
@@ -415,6 +481,7 @@
                 onboardBtnLabel.textContent = 'Processing...';
             }
         });
+
     </script>
 </body>
 </html>
