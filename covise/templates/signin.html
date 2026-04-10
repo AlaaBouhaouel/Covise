@@ -25,7 +25,7 @@
   gtag('config', 'G-RDN1TCMRNR');
 </script>
 <body>
-    <main class="auth-shell">
+    <main class="auth-shell" style="display: block;">
         <section class="auth-main">
             <header class="auth-top">
                 <a class="brand" href="/">
@@ -37,16 +37,13 @@
 
             <div class="auth-card">
                 <div>
-                    <h1>Create your account</h1>
-                    <p>Find the right co-founder. Build with clarity.</p>
+                    <h1 class="centered-text syne-text">Welcome Onboard!</h1>
+                    <p class="centered-text">First time loging in? Create your password and welcome to the community.</p>
+                    <h3 class="centered-text sub">This is a private community. You can only access it if your application has been approved. Don't have an invite? <span style="text-decoration: underline;"><a href="/request-access/">Request Access</a></span></h3>
                 </div>
 
                 <form class="auth-form" action="#" method="post">
                     {% csrf_token %}
-                    <div class="auth-field">
-                        <label for="signin-name">Full name</label>
-                        <input id="signin-name" name="name" type="text" value="{{ form_data.name|default:'' }}" placeholder="User Name" required>
-                    </div>
                     <div class="auth-field">
                         <label for="signin-email">Email</label>
                         <input id="signin-email" name="email" type="email" value="{{ form_data.email|default:'' }}" placeholder="User@covise.com" required>
@@ -54,6 +51,10 @@
                     <div class="auth-field">
                         <label for="signin-password">Password</label>
                         <input id="signin-password" name="password" type="password" placeholder="Create a password" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="signin-password-confirm">Confirm Password</label>
+                        <input id="signin-password-confirm" name="confirm_password" type="password" placeholder="Confirm your password" required>
                     </div>
                     {% if error_message %}
                         <div class="auth-error">
@@ -69,28 +70,46 @@
             </div>
         </section>
 
-        <aside class="auth-aside">
-            <h2>What you get</h2>
-            <ul>
-                <li>Private workspace tailored for builders.</li>
-                <li>Curated founder community and updates.</li>
-                <li>Tools that keep the signal high.</li>
-            </ul>
-        </aside>
+        
     </main>
-    <!-- Footer -->
     <footer class="footer">
+        <div class="footer-top reveal-up" style="--reveal-delay: 0ms;">
+            <div class="footer-brand">
+                <div class="footer-brand-title">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+                    <span>CoVise</span>
+                </div>
+                <p class="footer-tagline">Where serious founders align and build together.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Product</h4>
+                <a href="/features/">Features</a>
+                <a href="/pricing/">Pricing</a>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <a href="/waitlist/">Events</a>
+                <a href="mailto:support@covise.com">Support</a>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <a href="/about/">About</a>
+                <a href="mailto:support@covise.com">Contact</a>
+                <a href="mailto:support@covise.net">support@covise.net</a>
+                <a href="https://www.linkedin.com/company/covise/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            </div>
+        </div>
         <div class="footer-bottom reveal-up" style="--reveal-delay: 100ms;">
             <p>- 2026 CoVise. All rights reserved.</p>
             <div class="footer-legal">
-                <a href="{% url 'Terms' %}">Terms</a>
-                <a href="{% url 'Privacy' %}">Privacy</a>
-                <a href="mailto:support@covise.com">Contact</a>
-                <a href="{% url 'Settings' %}">Security</a>
+                <a href="#">Terms</a>
+                <a href="#">Privacy</a>
+                <a href="#">Security</a>
             </div>
-        </div>   
-
+        </div>
     </footer>
+    <script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
+    <script src="{% static 'landing-globe.js' %}"></script>
 </body>
 </html>
 

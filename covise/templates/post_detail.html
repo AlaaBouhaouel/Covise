@@ -1,0 +1,601 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>CoVise | Post</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'home.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar" aria-label="Primary">
+            <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 18l-6-6 6-6"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <rect x="3" y="4" width="7" height="7"></rect>
+                    <rect x="14" y="4" width="7" height="7"></rect>
+                    <rect x="3" y="15" width="7" height="7"></rect>
+                    <rect x="14" y="15" width="7" height="7"></rect>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Messages' %}" aria-label="Messages">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <path d="M4 6h16v10H7l-3 3V6z"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Workspace' %}" aria-label="Workspace">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <path d="M3 7h18v12H3z"></path>
+                    <path d="M9 7V5h6v2"></path>
+                    <path d="M3 12h18"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
+                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+            </a>
+            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <circle cx="12" cy="8" r="4"></circle>
+                    <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Settings' %}" aria-label="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </a>
+        </aside>
+
+        <main class="main">
+            <header class="home-header" aria-label="Post top bar">
+                <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
+                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
+                    <span>CoVise</span>
+                </a>
+                <div class="home-header-actions">
+                    <a class="profile-button" href="{% url 'Home' %}" aria-label="Back to home">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 18l-6-6 6-6"></path>
+                        </svg>
+                    </a>
+                </div>
+            </header>
+
+            <section class="post-detail-shell">
+                <article class="post-detail-card">
+                    <div class="post-detail-meta">
+                        <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
+                            <div class="post-detail-avatar">{{ post.user.avatar_initials }}</div>
+                        </a>
+                        <div class="post-detail-meta-copy">
+                            <div class="post-detail-author"><a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a></div>
+                            <div class="post-detail-sub">{{ post.get_post_type_display }} · {{ post.created_at|timesince }} ago</div>
+                        </div>
+                        <div class="post-detail-tools">
+                            <span class="structured-badge {% if post.post_type == 'update' %}badge-update{% elif post.post_type == 'ask' or post.post_type == 'ask_me_anything' %}badge-insight{% elif post.post_type == 'idea' %}badge-cofounder{% elif post.post_type == 'win' %}badge-opportunity{% else %}badge-update{% endif %}">{{ post.get_post_type_display }}</span>
+                        </div>
+                    </div>
+                    <h1 class="post-detail-title">{{ post.feed_title }}</h1>
+                    <div class="post-detail-content">{{ post.content }}</div>
+                    <div class="post-detail-actions">
+                        <button class="action-btn like-btn" type="button" data-count="{{ post.likes_number }}" data-liked="false">
+                            <i class="fa-regular fa-thumbs-up"></i>
+                            <span class="count">{{ post.likes_number }}</span>
+                        </button>
+                        <button class="action-btn dislike-btn" type="button" data-count="0" data-disliked="false">
+                            <i class="fa-regular fa-thumbs-down"></i>
+                            <span class="dislike-count">0</span>
+                        </button>
+                        <button class="action-btn comment-jump-btn" type="button" aria-label="Jump to comments">
+                            <i class="fa-regular fa-comment"></i>
+                            <span>{{ post.comments.count }}</span>
+                        </button>
+                        <button class="action-btn bookmark-btn" type="button" aria-label="Save post">
+                            <i class="fa-regular fa-bookmark"></i>
+                        </button>
+                    </div>
+                </article>
+
+                <section class="post-comments-card">
+                    <div class="post-comment-list">
+                        {% for comment in post.comments.all %}
+                        <article class="post-comment">
+                            <div class="post-comment-head">
+                                <div class="post-comment-user">
+                                    <a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link" aria-label="View {{ comment.user.full_name|default:comment.user.email }} profile"><div class="post-comment-avatar">{{ comment.user.avatar_initials }}</div></a>
+                                    <div>
+                                        <h3><a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link">{{ comment.user.full_name|default:comment.user.email }}</a></h3>
+                                        <p>{{ comment.created_at|timesince }} ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="post-comment-body">{{ comment.content }}</div>
+                            <div class="post-comment-actions">
+                                <button class="action-btn comment-reaction like-btn" type="button" data-count="{{ comment.up }}" data-liked="false" aria-label="Like comment">
+                                    <i class="fa-regular fa-thumbs-up"></i>
+                                    <span class="count">{{ comment.up }}</span>
+                                </button>
+                                <button class="action-btn comment-reaction dislike-btn" type="button" data-count="{{ comment.down }}" data-disliked="false" aria-label="Dislike comment">
+                                    <i class="fa-regular fa-thumbs-down"></i>
+                                    <span class="dislike-count">{{ comment.down }}</span>
+                                </button>
+                                <button class="action-btn comment-reaction" type="button" aria-label="Comment on comment">
+                                    <i class="fa-regular fa-comment"></i>
+                                </button>
+                                <button class="action-btn comment-reaction comment-more-btn" type="button" aria-label="More comment actions">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </button>
+                            </div>
+                        </article>
+                        {% empty %}
+                        <div class="post-comments-empty">No comments yet.</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="post-comment-compose">
+                        <input id="postCommentInput" type="text" placeholder="Write a comment..." data-post-id="{{ post.id }}">
+                        <button id="postCommentSend" type="button" aria-label="Send comment">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+        .unstyled-link,
+        .unstyled-link:hover,
+        .unstyled-link:focus,
+        .unstyled-link:active {
+            color: inherit;
+            text-decoration: none;
+        }
+        .post-detail-shell {
+            width: 80%;
+            min-width: 0;
+            height: calc(100vh - 92px);
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 18px;
+            align-content: start;
+        }
+        .post-detail-card,
+        .post-comments-card {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 14px 10px 12px;
+            min-width: 0;
+            background-color: var(--background);
+
+        }
+        .post-detail-card {
+            background: transparent;
+            position: sticky;
+            top: calc(var(--spacing) * 11);
+            z-index: 5;
+        }
+        .post-comments-card {
+            background: var(--panel);
+            max-height: calc(100vh - 200px);
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: 1fr;
+        }
+        .post-detail-meta,
+        .post-comment-user {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .post-detail-meta {
+            justify-content: space-between;
+        }
+        .post-detail-meta-copy {
+            min-width: 0;
+            flex: 1;
+        }
+        .post-detail-tools {
+            flex: 0 0 auto;
+        }
+        .structured-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 11px; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; color: #ffffff; }
+        .badge-update { background: var(--accent); }
+        .badge-cofounder { background: #7c3aed; }
+        .badge-insight { background: #d97706; }
+        .badge-opportunity { background: #059669; }
+        .post-detail-avatar,
+        .post-comment-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #e7efff;
+            background: rgba(64, 110, 196, 0.38);
+            border: 1px solid rgba(123, 167, 255, 0.42);
+        }
+        .post-detail-author,
+        .post-comment-user h3 {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+        .post-detail-sub,
+        .post-comment-user p {
+            margin-top: 2px;
+            font-size: 0.68rem;
+            color: var(--muted);
+        }
+        .post-detail-title {
+            margin-top: 14px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #dbe8fb;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+        .post-detail-content {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: rgba(231, 239, 255, 0.92);
+            white-space: pre-wrap;
+        }
+        .post-detail-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 34px;
+            padding: 0 13px;
+            border-radius: 999px;
+            border: 1px solid rgba(214, 226, 248, 0.16);
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(239, 245, 255, 0.96);
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .action-btn i {
+            font-size: 0.88rem;
+        }
+        .action-btn:hover {
+            border-color: rgba(214, 226, 248, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .action-btn.is-active {
+            color: var(--white);
+            border-color: rgba(120, 150, 255, 0.4);
+            background: rgba(120, 150, 255, 0.14);
+        }
+        .bookmark-btn {
+            margin-left: auto;
+        }
+        .comment-more-btn {
+            margin-left: auto;
+            min-width: 34px;
+            justify-content: center;
+            padding: 0 10px;
+        }
+        .post-comment-list {
+            display: grid;
+            gap: 12px;
+            overflow-y: auto;
+            padding: 0 22px;
+            padding-bottom: 20px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .post-comment-list::-webkit-scrollbar {
+            display: none;
+        }
+        .post-comment {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 12px;
+        }
+        .post-comment:first-child {
+            border-top: 0;
+            padding-top: 0;
+        }
+        .post-comment-body,
+        .post-comments-empty {
+            padding-left: 40px;
+            font-size: 0.74rem;
+            line-height: 1.5;
+            color: rgba(231, 239, 255, 0.84);
+        }
+        .post-comment-actions {
+            display: flex;
+            gap: 8px;
+            padding-left: 40px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .post-comment-actions .action-btn {
+            min-height: 30px;
+            padding: 0 12px;
+            font-size: 0.7rem;
+        }
+        .post-comment-actions .action-btn i {
+            font-size: 0.8rem;
+        }
+        .post-comment-compose {
+            position: fixed;
+            left: 52%;
+            bottom: 0;
+            transform: translateX(-50%);
+            width: 70%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 14px 10px 18px;
+            background: linear-gradient(180deg, rgba(5, 6, 11, 0) 0%, rgba(5, 6, 11, 0.9) 24%, rgba(5, 6, 11, 0.98) 100%);
+            z-index: 30;
+        }
+        .post-comment-compose input {
+            flex: 1;
+            min-height: 42px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            padding: 0 30px;
+            font: inherit;
+            font-size: 0.74rem;
+        }
+        .post-comment-compose button {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid rgba(120, 150, 255, 0.35);
+            background: rgba(120, 150, 255, 0.14);
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+        @media (max-width: 1100px) {
+            html,
+            body {
+                height: auto;
+                overflow: auto;
+            }
+            .post-detail-shell {
+                width: 100%;
+                height: auto;
+            }
+            .post-detail-card {
+                position: static;
+            }
+            .post-comments-card {
+                max-height: none;
+            }
+            .post-comment-list {
+                overflow: visible;
+                padding-bottom: 0;
+            }
+            .post-comment-compose {
+                position: static;
+                transform: none;
+                width: 100%;
+                padding-left: 0;
+                padding-right: 0;
+            }
+        }
+    </style>
+
+    <script>
+        (function() {
+            var commentJumpButton = document.querySelector('.comment-jump-btn');
+            var commentList = document.querySelector('.post-comments-card');
+            if (commentJumpButton && commentList) {
+                commentJumpButton.addEventListener('click', function() {
+                    commentList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            }
+
+            document.querySelectorAll('.like-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var icon = button.querySelector('i');
+                    var countNode = button.querySelector('.count');
+                    var count = Number(button.getAttribute('data-count') || '0');
+                    var liked = button.getAttribute('data-liked') === 'true';
+                    var dislikeButton = document.querySelector('.dislike-btn');
+                    if (liked) {
+                        count -= 1;
+                        button.setAttribute('data-liked', 'false');
+                        icon.className = 'fa-regular fa-thumbs-up';
+                    } else {
+                        if (dislikeButton && dislikeButton.getAttribute('data-disliked') === 'true') {
+                            var dislikeIcon = dislikeButton.querySelector('i');
+                            var dislikeCountNode = dislikeButton.querySelector('.dislike-count');
+                            var dislikeCount = Number(dislikeButton.getAttribute('data-count') || '0');
+                            dislikeButton.setAttribute('data-disliked', 'false');
+                            dislikeButton.setAttribute('data-count', String(Math.max(0, dislikeCount - 1)));
+                            dislikeCountNode.textContent = String(Math.max(0, dislikeCount - 1));
+                            dislikeIcon.className = 'fa-regular fa-thumbs-down';
+                            dislikeButton.classList.remove('is-active');
+                        }
+                        count += 1;
+                        button.setAttribute('data-liked', 'true');
+                        icon.className = 'fa-solid fa-thumbs-up';
+                    }
+                    button.setAttribute('data-count', String(count));
+                    countNode.textContent = String(count);
+                    button.classList.toggle('is-active', !liked);
+                });
+            });
+
+            document.querySelectorAll('.dislike-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var icon = button.querySelector('i');
+                    var countNode = button.querySelector('.dislike-count');
+                    var count = Number(button.getAttribute('data-count') || '0');
+                    var disliked = button.getAttribute('data-disliked') === 'true';
+                    var likeButton = document.querySelector('.like-btn');
+                    if (disliked) {
+                        count -= 1;
+                        button.setAttribute('data-disliked', 'false');
+                        icon.className = 'fa-regular fa-thumbs-down';
+                    } else {
+                        if (likeButton && likeButton.getAttribute('data-liked') === 'true') {
+                            var likeIcon = likeButton.querySelector('i');
+                            var likeCountNode = likeButton.querySelector('.count');
+                            var likeCount = Number(likeButton.getAttribute('data-count') || '0');
+                            likeButton.setAttribute('data-liked', 'false');
+                            likeButton.setAttribute('data-count', String(Math.max(0, likeCount - 1)));
+                            likeCountNode.textContent = String(Math.max(0, likeCount - 1));
+                            likeIcon.className = 'fa-regular fa-thumbs-up';
+                            likeButton.classList.remove('is-active');
+                        }
+                        count += 1;
+                        button.setAttribute('data-disliked', 'true');
+                        icon.className = 'fa-solid fa-thumbs-down';
+                    }
+                    button.setAttribute('data-count', String(count));
+                    countNode.textContent = String(count);
+                    button.classList.toggle('is-active', !disliked);
+                });
+            });
+
+            document.querySelectorAll('.post-comment-actions .like-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var icon = button.querySelector('i');
+                    var countNode = button.querySelector('.count');
+                    var count = Number(button.getAttribute('data-count') || '0');
+                    var liked = button.getAttribute('data-liked') === 'true';
+                    var dislikeButton = button.parentElement ? button.parentElement.querySelector('.dislike-btn') : null;
+                    if (liked) {
+                        count -= 1;
+                        button.setAttribute('data-liked', 'false');
+                        icon.className = 'fa-regular fa-thumbs-up';
+                    } else {
+                        if (dislikeButton && dislikeButton.getAttribute('data-disliked') === 'true') {
+                            var dislikeIcon = dislikeButton.querySelector('i');
+                            var dislikeCountNode = dislikeButton.querySelector('.dislike-count');
+                            var dislikeCount = Number(dislikeButton.getAttribute('data-count') || '0');
+                            dislikeButton.setAttribute('data-disliked', 'false');
+                            dislikeButton.setAttribute('data-count', String(Math.max(0, dislikeCount - 1)));
+                            dislikeCountNode.textContent = String(Math.max(0, dislikeCount - 1));
+                            dislikeIcon.className = 'fa-regular fa-thumbs-down';
+                            dislikeButton.classList.remove('is-active');
+                        }
+                        count += 1;
+                        button.setAttribute('data-liked', 'true');
+                        icon.className = 'fa-solid fa-thumbs-up';
+                    }
+                    button.setAttribute('data-count', String(count));
+                    countNode.textContent = String(count);
+                    button.classList.toggle('is-active', !liked);
+                });
+            });
+
+            document.querySelectorAll('.post-comment-actions .dislike-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var icon = button.querySelector('i');
+                    var countNode = button.querySelector('.dislike-count');
+                    var count = Number(button.getAttribute('data-count') || '0');
+                    var disliked = button.getAttribute('data-disliked') === 'true';
+                    var likeButton = button.parentElement ? button.parentElement.querySelector('.like-btn') : null;
+                    if (disliked) {
+                        count -= 1;
+                        button.setAttribute('data-disliked', 'false');
+                        icon.className = 'fa-regular fa-thumbs-down';
+                    } else {
+                        if (likeButton && likeButton.getAttribute('data-liked') === 'true') {
+                            var likeIcon = likeButton.querySelector('i');
+                            var likeCountNode = likeButton.querySelector('.count');
+                            var likeCount = Number(likeButton.getAttribute('data-count') || '0');
+                            likeButton.setAttribute('data-liked', 'false');
+                            likeButton.setAttribute('data-count', String(Math.max(0, likeCount - 1)));
+                            likeCountNode.textContent = String(Math.max(0, likeCount - 1));
+                            likeIcon.className = 'fa-regular fa-thumbs-up';
+                            likeButton.classList.remove('is-active');
+                        }
+                        count += 1;
+                        button.setAttribute('data-disliked', 'true');
+                        icon.className = 'fa-solid fa-thumbs-down';
+                    }
+                    button.setAttribute('data-count', String(count));
+                    countNode.textContent = String(count);
+                    button.classList.toggle('is-active', !disliked);
+                });
+            });
+
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            var input = document.getElementById('postCommentInput');
+            var send = document.getElementById('postCommentSend');
+            if (!input || !send) return;
+            send.addEventListener('click', function() {
+                var content = input.value.trim();
+                var postId = input.getAttribute('data-post-id');
+                if (!content || !postId) return;
+                fetch('/posts/' + postId + '/comment/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content: content })
+                }).then(function(response) {
+                    if (!response.ok) throw new Error('Request failed');
+                    return response.json();
+                }).then(function() {
+                    window.location.reload();
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

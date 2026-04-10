@@ -25,7 +25,8 @@
   gtag('config', 'G-RDN1TCMRNR');
 </script>
 <body>
-    <main class="auth-shell">
+    <main class="auth-shell" style="display: block; margin-top: 3 rem;">
+
         <section class="auth-main">
             <header class="auth-top">
                 <a class="brand" href="/">
@@ -37,8 +38,8 @@
 
             <div class="auth-card">
                 <div>
-                    <h1>Log in to your workspace</h1>
-                    <p>Find the right co-founder. Build with clarity.</p>
+                    <h1>Member Access</h1>
+                    <p>Great to see you again!</p>
                 </div>
 
                 <form class="auth-form" action="#" method="post">
@@ -69,29 +70,47 @@
             </div>
         </section>
 
-        <aside class="auth-aside">
-            <h2>Designed for momentum</h2>
-            <ul>
-                <li>Curated founder introductions</li>
-                <li>Verified profiles</li>
-                <li>Focused collaboration — no noise</li>
-            </ul>
-        </aside>
+    
     </main>
 
-    <!-- Footer -->
     <footer class="footer">
+        <div class="footer-top reveal-up" style="--reveal-delay: 0ms;">
+            <div class="footer-brand">
+                <div class="footer-brand-title">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+                    <span>CoVise</span>
+                </div>
+                <p class="footer-tagline">Where serious founders align and build together.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Product</h4>
+                <a href="/features/">Features</a>
+                <a href="/pricing/">Pricing</a>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <a href="/waitlist/">Events</a>
+                <a href="mailto:support@covise.com">Support</a>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <a href="/about/">About</a>
+                <a href="mailto:support@covise.com">Contact</a>
+                <a href="mailto:support@covise.net">support@covise.net</a>
+                <a href="https://www.linkedin.com/company/covise/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            </div>
+        </div>
         <div class="footer-bottom reveal-up" style="--reveal-delay: 100ms;">
             <p>- 2026 CoVise. All rights reserved.</p>
             <div class="footer-legal">
-                <a href="{% url 'Terms' %}">Terms</a>
-                <a href="{% url 'Privacy' %}">Privacy</a>
-                <a href="mailto:support@covise.com">Contact</a>
-                <a href="{% url 'Settings' %}">Security</a>
+                <a href="#">Terms</a>
+                <a href="#">Privacy</a>
+                <a href="#">Security</a>
             </div>
-        </div>   
-
+        </div>
     </footer>
+    <script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
+    <script src="{% static 'landing-globe.js' %}"></script>
 </body>
 </html>
 

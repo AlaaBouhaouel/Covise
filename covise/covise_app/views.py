@@ -4,7 +4,7 @@ from pathlib import Path
 from django.http import Http404, HttpResponsePermanentRedirect, JsonResponse
 from django.db import IntegrityError, OperationalError, close_old_connections
 from django.db.models import Count, Q
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
@@ -59,6 +59,15 @@ def _relative_time_label(value):
         return "Now"
 
     return f"{first_part} ago"
+
+
+def _build_post_feed_title(post):
+    raw_text = " ".join((post.content or "").split())
+    if not raw_text:
+        return post.get_post_type_display()
+    sentence_break = raw_text.find(". ")
+    title_source = raw_text if sentence_break == -1 else raw_text[:sentence_break + 1]
+    return (title_source[:110].rstrip() + "…") if len(title_source) > 110 else title_source
 
 
 def _conversation_partner(conversation, current_user):
@@ -241,9 +250,27 @@ def home(request):
     if not request.user.is_authenticated:
         return HttpResponsePermanentRedirect(reverse('Landing Page'))
 
+    posts = list(
+        Post.objects.select_related("user").prefetch_related("comments__user").order_by("-created_at")
+    )
+    for post in posts:
+        post.feed_title = _build_post_feed_title(post)
+
     response = render(request, 'home.html', {
-        "posts": Post.objects.select_related("user").prefetch_related("comments__user").order_by("-created_at")
+        "posts": posts
     })
+    response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return response
+
+
+@login_required
+def post_detail(request, post_id):
+    post = get_object_or_404(
+        Post.objects.select_related("user").prefetch_related("comments__user"),
+        id=post_id,
+    )
+    post.feed_title = _build_post_feed_title(post)
+    response = render(request, "post_detail.html", {"post": post})
     response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     return response
 
@@ -760,33 +787,50 @@ def signin(request):
     if request.method != 'POST':
         return render(request, 'signin.html')
     
-    name = request.POST.get('name', '').strip() #strip means remove whitespace from the beginning and end of the string
     email = request.POST.get('email', '').strip()
     password = request.POST.get('password', '').strip()
-
+    confirm_password = request.POST.get('confirm_password', '').strip()
     context = {
         "form_data": {
-            "name": name,
             "email": email,
         }
     }
-    if not email or not password or not name:
+    if not email or not password or not confirm_password:
         context["error_message"] = "All fields are required."
         return render(request, 'signin.html', context, status=400)
-
-        
-    if User.objects.filter(email=email).exists():
-        context["error_message"] = "This email is already registered on CoVise. Please sign in instead."
-        return render(request, 'signin.html', context, status=400)
-
     
-    try:
-        user = User.objects.create_user(email=email, full_name=name, password=password)
-    except IntegrityError: #this error raises when there is a duplicate email in the database due to the unique constraint on the email field
-        context["error_message"] = "This email is already registered on CoVise. Please sign in instead."
+    if User.objects.filter(email=email).exists():
+        context["error_message"] = "This email is already registered on CoVise. Please log in instead."
+        return render(request, 'signin.html', context, status=400)
+    
+    approved_waitlist_entry = WaitlistEntry.objects.filter(
+        email=email,
+        status=WaitlistEntry.Status.APPROVED,
+    ).first()
+    if approved_waitlist_entry is None:
+        context["error_message"] = "This email is not registered in CoVise or has not been approved yet. Please request access to become a member."
+        return render(request, 'signin.html', context, status=400)
+    
+    if password != confirm_password:
+        context["error_message"] = "Passwords do not match."
         return render(request, 'signin.html', context, status=400)
 
-    sync_profile_for_user(user)
+
+    try:
+        user = User.objects.create_user(
+            email=email,
+            full_name=approved_waitlist_entry.full_name,
+            password=password,
+        )
+    except IntegrityError: #this error raises when there is a duplicate email in the database due to the unique constraint on the email field
+        context["error_message"] = "This email is already registered on CoVise. Please log in instead."
+        return render(request, 'signin.html', context, status=400)
+
+    sync_profile_for_user(user, waitlist_entry=approved_waitlist_entry)
+    user = authenticate(request, email=email, password=password)
+    if user is None:
+        context["error_message"] = "Your account was created, but we could not sign you in automatically. Please try logging in."
+        return render(request, 'signin.html', context, status=500)
     login(request, user)
     _record_successful_sign_in(user)
     return redirect("Home")

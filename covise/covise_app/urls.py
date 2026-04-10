@@ -27,6 +27,7 @@ urlpatterns = [
 
     path('', views.landing, name='Landing Page'),
     path('home/', views.home, name='Home'),
+    path('posts/<int:post_id>/', views.post_detail, name='Post Detail'),
     path('posts/<int:post_id>/comment/', views.add_comment, name='add_comment'),
     path('projects/', views.projects, name='Projects'),
     path('projects/<slug:project_slug>/', views.project_detail, name='Project Detail'),
@@ -76,12 +77,12 @@ urlpatterns = [
     path('onboarding/', views.onboarding, name='Onboarding'),
     path('onboarding/submit/', views.onboarding_submit, name='Onboarding Submit'),
     path('loading/', views.loading, name='Loading'),
-    path('pricing/', views.pricing, name='Pricing'),
+#    path('pricing/', views.pricing, name='Pricing'),
     path('features/', views.features, name='Features'),
     path('about/', views.about, name='About'),
     path('workspace/', views.workspace, name='Workspace'),
-    path('waitlist/', views.waitlist, name='Waitlist'),
-    path('waitlist/success/', views.waitlist_success, name='Waitlist Success'),
+#    path('waitlist/', views.waitlist, name='Waitlist'),
+#    path('waitlist/success/', views.waitlist_success, name='Waitlist Success'),
 
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 

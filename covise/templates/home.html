@@ -9,6 +9,7 @@
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'home.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         .unstyled-link { color: inherit; text-decoration: none; }
     </style>
@@ -81,6 +82,13 @@
                     <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
                     <span>CoVise</span>
                 </a>
+                <div class="home-header-search" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="7"></circle>
+                            <path d="M20 20l-3.5-3.5"></path>
+                        </svg>
+                        <input type="search" placeholder="Search Anything">
+                </div>
                 <div class="home-header-actions">
                     <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
                         <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -126,7 +134,7 @@
                     </a>
                 </div>
             </header>
-
+<!--
             <section class="ticker" aria-label="Workspace activity ticker">
                 <div class="ticker-track">
                     <div class="ticker-group">
@@ -267,69 +275,69 @@
                     </article>
                 </div>
             </section>
+-->
+            <section class="home-content-grid" aria-label="Home content">
+                <div class="home-primary">
 
-
-
-            <header class="page-header">
-                <h1>Community</h1>
-                <p>Follow product progress, founder updates, and ideas shared across CoVise.</p>
-            </header>
-
-
-
-            <section class="feed-shell" data-demo="The feed keeps you close to founder momentum, product progress, and community updates in one wide stream." style="width: 100%; padding: 0 0 24px;">
+                    <section class="feed-shell" data-demo="The feed keeps you close to founder momentum, product progress, and community updates in one wide stream." style="width: 100%; padding: 0 0 24px;">
                 <style>
-                    .feed-shell .structured-feed { display: grid; gap: 16px; width: 100%; }
-                    .feed-shell .structured-post { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: grid; gap: 16px; }
-                    .feed-shell .structured-post-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-                    .feed-shell .structured-post-meta { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
-                    .feed-shell .structured-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; color: #e7efff; border: 1px solid rgba(123, 167, 255, 0.42); flex: 0 0 auto; }
+                    .feed-shell .structured-feed { display: grid; gap: 0; width: 100%; }
+                    .feed-shell .structured-post { background: transparent; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0; padding: 14px 10px 12px; display: grid; gap: 10px; transition: background 0.18s ease; cursor: pointer; }
+                    .feed-shell .structured-post:hover { background: rgba(255, 255, 255, 0.035); }
+                    .feed-shell .structured-post-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+                    .feed-shell .structured-post-meta { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+                    .feed-shell .structured-avatar { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 0.56rem; font-weight: 700; letter-spacing: 0.04em; color: #e7efff; border: 1px solid rgba(123, 167, 255, 0.42); flex: 0 0 auto; }
                     .feed-shell .structured-avatar.a { background: rgba(64, 110, 196, 0.38); }
                     .feed-shell .structured-avatar.b { background: rgba(90, 95, 170, 0.38); }
                     .feed-shell .structured-avatar.c { background: rgba(78, 126, 172, 0.35); }
                     .feed-shell .structured-avatar.d { background: rgba(124, 58, 237, 0.35); }
                     .feed-shell .structured-avatar.e { background: rgba(5, 150, 105, 0.35); }
                     .feed-shell .structured-avatar.f { background: rgba(217, 119, 6, 0.3); }
-                    .feed-shell .structured-post-title { font-size: 0.96rem; font-weight: 700; color: var(--white); line-height: 1.2; }
-                    .feed-shell .structured-post-subtitle { margin-top: 4px; color: var(--muted); font-size: 0.76rem; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-                    .feed-shell .structured-post-tools { display: inline-flex; align-items: center; gap: 10px; flex: 0 0 auto; }
-                    .feed-shell .structured-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 10px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; color: #ffffff; }
+                    .feed-shell .structured-post-title { font-size: 0.72rem; font-weight: 700; color: rgba(225, 235, 255, 0.96); line-height: 1.2; }
+                    .feed-shell .structured-post-subtitle { margin-top: 1px; color: var(--muted); font-size: 0.68rem; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    .feed-shell .structured-post-link { display: grid; gap: 8px; color: inherit; text-decoration: none; }
+                    .feed-shell .structured-post-tools { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+                    .feed-shell .structured-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 11px; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; color: #ffffff; }
                     .feed-shell .badge-update { background: var(--accent); }
                     .feed-shell .badge-cofounder { background: #7c3aed; }
                     .feed-shell .badge-insight { background: #d97706; }
                     .feed-shell .badge-opportunity { background: #059669; }
                     .feed-shell .menu-btn, .feed-shell .action-btn, .feed-shell .comment-send { border: 0; background: transparent; color: var(--muted); cursor: pointer; }
-                    .feed-shell .menu-btn { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; border: 1px solid var(--border); background: rgba(255, 255, 255, 0.03); }
-                    .feed-shell .menu-btn:hover, .feed-shell .action-btn:hover, .feed-shell .comment-send:hover { color: var(--accent); }
-                    .feed-shell .structured-post-body { color: rgba(231, 239, 255, 0.88); font-size: 0.95rem; line-height: 1.6; max-width: 100%; }
+                    .feed-shell .menu-btn { width: 26px; height: 26px; border-radius: 999px; display: grid; place-items: center; border: 0; background: transparent; }
+                    .feed-shell .menu-btn:hover, .feed-shell .action-btn:hover, .feed-shell .comment-send:hover { color: var(--white); }
+                    .feed-shell .structured-post-heading { font-size: 0.94rem; font-weight: 600; color: #dbe8fb; line-height: 1.18; letter-spacing: -0.02em; }
+                    .feed-shell .structured-post-body { color: rgba(231, 239, 255, 0.9); font-size: 0.72rem; line-height: 1.42; max-width: 100%; }
                     .feed-shell .attachment-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255, 255, 255, 0.03); padding: 12px 14px; }
                     .feed-shell .attachment-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
-                    .feed-shell .attachment-name { font-size: 0.82rem; font-weight: 600; color: var(--white); }
-                    .feed-shell .attachment-size { font-size: 0.72rem; color: var(--muted); }
-                    .feed-shell .structured-post-footer { display: flex; align-items: center; gap: 16px; border-top: 1px solid var(--border); padding-top: 14px; font-size: 0.85rem; }
-                    .feed-shell .action-btn { display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+                    .feed-shell .attachment-name { font-size: 0.72rem; font-weight: 600; color: var(--white); }
+                    .feed-shell .attachment-size { font-size: 0.68rem; color: var(--muted); }
+                    .feed-shell .structured-post-footer { display: flex; align-items: center; gap: 8px; padding-top: 2px; font-size: 0.78rem; flex-wrap: wrap; }
+                    .feed-shell .action-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 13px; border-radius: 999px; border: 1px solid rgba(214, 226, 248, 0.16); background: rgba(255, 255, 255, 0.06); color: rgba(239, 245, 255, 0.96); font-size: 0.78rem; font-weight: 700; text-decoration: none; }
+                    .feed-shell .action-btn i { font-size: 0.88rem; }
+                    .feed-shell .action-btn:hover { border-color: rgba(214, 226, 248, 0.3); background: rgba(255, 255, 255, 0.1); }
+                    .feed-shell .action-btn.is-active { color: var(--white); border-color: rgba(120, 150, 255, 0.4); background: rgba(120, 150, 255, 0.14); }
                     .feed-shell .bookmark-btn { margin-left: auto; }
-                    .feed-shell .comments-block { display: none; gap: 12px; border-top: 1px solid var(--border); padding-top: 14px; max-height: 260px; overflow-y: auto; padding-right: 4px; }
+                    .feed-shell .comments-block { display: none; gap: 10px; border-top: 1px solid rgba(255, 255, 255, 0.07); padding-top: 10px; max-height: 260px; overflow-y: auto; padding-right: 4px; }
                     .feed-shell .comments-block.is-open { display: grid; }
-                    .feed-shell .comment-wrap { display: grid; gap: 8px; }
+                    .feed-shell .comment-wrap { display: grid; gap: 6px; }
                     .feed-shell .comment-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-                    .feed-shell .comment-user { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
-                    .feed-shell .comment-avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 0.62rem; font-weight: 700; color: #e7efff; background: rgba(64, 110, 196, 0.38); border: 1px solid rgba(123, 167, 255, 0.42); flex: 0 0 auto; }
-                    .feed-shell .comment-header h3 { color: var(--white); font-size: 0.78rem; font-weight: 700; }
-                    .feed-shell .comment-content { padding: 0 0 0 38px; color: rgba(231, 239, 255, 0.82); font-size: 0.8rem; line-height: 1.45; }
+                    .feed-shell .comment-user { display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
+                    .feed-shell .comment-avatar { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 0.62rem; font-weight: 700; color: #e7efff; background: rgba(64, 110, 196, 0.38); border: 1px solid rgba(123, 167, 255, 0.42); flex: 0 0 auto; }
+                    .feed-shell .comment-header h3 { color: var(--white); font-size: 0.72rem; font-weight: 700; }
+                    .feed-shell .comment-content { padding: 0 0 0 32px; color: rgba(231, 239, 255, 0.82); font-size: 0.74rem; line-height: 1.45; }
                     .feed-shell .comment-time, .feed-shell .comment-header p { margin-top: 0; font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
-                    .feed-shell .comment-footer { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-left: 38px; flex-wrap: wrap; }
-                    .feed-shell .comment-footer a { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.74rem; text-decoration: none; }
+                    .feed-shell .comment-footer { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-left: 32px; flex-wrap: wrap; }
+                    .feed-shell .comment-footer a { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.64rem; text-decoration: none; }
                     .feed-shell .comment-footer a:hover { color: var(--accent); }
                     .feed-shell .comment-footer a.is-active { color: var(--white); font-weight: 700; }
                     .feed-shell .comment-input-row { display: flex; align-items: center; gap: 10px; position: sticky; bottom: 0; padding-top: 10px; background: linear-gradient(180deg, rgba(5, 6, 11, 0) 0%, rgba(5, 6, 11, 0.92) 35%, rgba(5, 6, 11, 0.98) 100%); z-index: 2; }
-                    .feed-shell .comment-input { flex: 1; min-height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--border); color: #e7efff; padding: calc(var(--spacing) * 1.5); font-family: var(--font-display); font-size: 0.76rem; }
+                    .feed-shell .comment-input { flex: 1; min-height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--border); color: #e7efff; padding: calc(var(--spacing) * 1.5); font-family: var(--font-display); font-size: 0.68rem; }
                     .feed-shell .comment-send { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(120, 150, 255, 0.35); background: rgba(120, 150, 255, 0.14); display: grid; place-items: center; }
                     .feed-shell .comment-input:focus { outline: none; border-color: rgba(120, 150, 255, 0.45); box-shadow: 0 0 0 3px rgba(120, 150, 255, 0.14); }
                 </style>
                  <div class="structured-feed">
                     {% for post in posts %}
-                    <article class="structured-post">
+                    <article class="structured-post" data-post-url="{% url 'Post Detail' post.id %}">
                         <div class="structured-post-head">
                             <div class="structured-post-meta">
                                 <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
@@ -341,40 +349,19 @@
                                 </div>
                             </div>
                             <div class="structured-post-tools">
-                                <span class="structured-badge badge-update">{{ post.get_post_type_display }}</span>
+                                <span class="structured-badge {% if post.post_type == 'update' %}badge-update{% elif post.post_type == 'ask' or post.post_type == 'ask_me_anything' %}badge-insight{% elif post.post_type == 'idea' %}badge-cofounder{% elif post.post_type == 'win' %}badge-opportunity{% else %}badge-update{% endif %}">{{ post.get_post_type_display }}</span>
                                 <button class="menu-btn" type="button" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                             </div>
                         </div>
-                        <div class="structured-post-body">{{ post.content }}</div>
+                        <a class="structured-post-link" href="{% url 'Post Detail' post.id %}">
+                            <div class="structured-post-heading">{{ post.feed_title }}</div>
+                            <div class="structured-post-body">{{ post.content }}</div>
+                        </a>
                         <div class="structured-post-footer">
-                            <button class="action-btn like-btn" type="button" data-count="{{ post.likes_number }}"><i class="fa-regular fa-thumbs-up"></i><span class="count">{{ post.likes_number }}</span></button>
-                            <button class="action-btn comment-toggle" type="button"><i class="fa-regular fa-comment"></i><span class="comment-count">{{ post.comments.count }}</span></button>
+                            <button class="action-btn like-btn" type="button" data-count="{{ post.likes_number }}" data-liked="false"><i class="fa-regular fa-thumbs-up"></i><span class="count">{{ post.likes_number }}</span></button>
+                            <button class="action-btn dislike-btn" type="button" data-count="0" data-disliked="false"><i class="fa-regular fa-thumbs-down"></i><span class="dislike-count">0</span></button>
+                            <a class="action-btn comment-toggle" href="{% url 'Post Detail' post.id %}"><i class="fa-regular fa-comment"></i><span class="comment-count">{{ post.comments.count }}</span></a>
                             <button class="action-btn bookmark-btn" type="button"><i class="fa-regular fa-bookmark"></i></button>
-                        </div>
-                        <div class="comments-block">
-                            {% for comment in post.comments.all %}
-                            <div class="comment-wrap">
-                                <div class="comment-header">
-                                    <div class="comment-user">
-                                        <a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link" aria-label="View {{ comment.user.full_name|default:comment.user.email }} profile"><div class="comment-avatar">{{ comment.user.avatar_initials }}</div></a>
-                                        <h3><a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link">{{ comment.user.full_name|default:comment.user.email }}</a></h3>
-                                    </div>
-                                    <p>{{ comment.created_at|timesince }} ago</p>
-                                </div>
-                                <div class="comment-content">{{ comment.content }}</div>
-                                <div class="comment-footer">
-                                    <a href="#" class="parameter-comment"><i class="fa-solid fa-ellipsis"></i></a>
-                                    <a href="#" class="parameter-comment"><span><i class="fa-solid fa-reply"></i>Reply</span></a>
-                                    <a href="#" class="arrow-up" data-comment-id="{{ comment.id }}"><i class="fa-solid fa-chevron-up"></i> <span class="up-count">{{ comment.up }}</span></a>
-                                    <a href="#" class="arrow-down" data-comment-id="{{ comment.id }}"><i class="fa-solid fa-chevron-down"></i> <span class="down-count">{{ comment.down }}</span></a>
-                                </div>
-                            </div>
-                            {% empty %}
-                            <div class="comment-wrap empty-comment">
-                                <div class="comment-content">No comments yet.</div>
-                            </div>
-                            {% endfor %}
-                            <div class="comment-input-row"><input class="comment-input" type="text" placeholder="Write a comment..." data-post-id="{{ post.id }}"><button class="comment-send" type="button" aria-label="Send comment" data-post-id="{{ post.id }}"><i class="fa-solid fa-paper-plane"></i></button></div>
                         </div>
                     </article>
                     {% empty %}
@@ -403,158 +390,351 @@
                         }
 
                         var csrftoken = getCookie('csrftoken');
-                        if (!document.getElementById('feed-fa-link')) {
-                            var faLink = document.createElement('link');
-                            faLink.id = 'feed-fa-link';
-                            faLink.rel = 'stylesheet';
-                            faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css';
-                            document.head.appendChild(faLink);
-                        }
                         feedSection.querySelectorAll('.like-btn').forEach(function(button) {
                             button.addEventListener('click', function() {
                                 var icon = button.querySelector('i');
                                 var countNode = button.querySelector('.count');
                                 var count = Number(button.getAttribute('data-count') || '0');
                                 var liked = button.getAttribute('data-liked') === 'true';
+                                var post = button.closest('.structured-post');
+                                var dislikeButton = post ? post.querySelector('.dislike-btn') : null;
                                 if (liked) {
                                     count -= 1;
                                     button.setAttribute('data-liked', 'false');
                                     icon.className = 'fa-regular fa-thumbs-up';
                                 } else {
+                                    if (dislikeButton && dislikeButton.getAttribute('data-disliked') === 'true') {
+                                        var dislikeIcon = dislikeButton.querySelector('i');
+                                        var dislikeCountNode = dislikeButton.querySelector('.dislike-count');
+                                        var dislikeCount = Number(dislikeButton.getAttribute('data-count') || '0');
+                                        dislikeButton.setAttribute('data-disliked', 'false');
+                                        dislikeButton.setAttribute('data-count', String(Math.max(0, dislikeCount - 1)));
+                                        dislikeCountNode.textContent = String(Math.max(0, dislikeCount - 1));
+                                        dislikeIcon.className = 'fa-regular fa-thumbs-down';
+                                        dislikeButton.classList.remove('is-active');
+                                    }
                                     count += 1;
                                     button.setAttribute('data-liked', 'true');
                                     icon.className = 'fa-solid fa-thumbs-up';
                                 }
                                 button.setAttribute('data-count', String(count));
                                 countNode.textContent = String(count);
+                                button.classList.toggle('is-active', !liked);
+                            });
+                        });
+                        feedSection.querySelectorAll('.dislike-btn').forEach(function(button) {
+                            button.addEventListener('click', function() {
+                                var icon = button.querySelector('i');
+                                var countNode = button.querySelector('.dislike-count');
+                                var count = Number(button.getAttribute('data-count') || '0');
+                                var disliked = button.getAttribute('data-disliked') === 'true';
+                                var post = button.closest('.structured-post');
+                                var likeButton = post ? post.querySelector('.like-btn') : null;
+                                if (disliked) {
+                                    count -= 1;
+                                    button.setAttribute('data-disliked', 'false');
+                                    icon.className = 'fa-regular fa-thumbs-down';
+                                } else {
+                                    if (likeButton && likeButton.getAttribute('data-liked') === 'true') {
+                                        var likeIcon = likeButton.querySelector('i');
+                                        var likeCountNode = likeButton.querySelector('.count');
+                                        var likeCount = Number(likeButton.getAttribute('data-count') || '0');
+                                        likeButton.setAttribute('data-liked', 'false');
+                                        likeButton.setAttribute('data-count', String(Math.max(0, likeCount - 1)));
+                                        likeCountNode.textContent = String(Math.max(0, likeCount - 1));
+                                        likeIcon.className = 'fa-regular fa-thumbs-up';
+                                        likeButton.classList.remove('is-active');
+                                    }
+                                    count += 1;
+                                    button.setAttribute('data-disliked', 'true');
+                                    icon.className = 'fa-solid fa-thumbs-down';
+                                }
+                                button.setAttribute('data-count', String(count));
+                                countNode.textContent = String(count);
+                                button.classList.toggle('is-active', !disliked);
                             });
                         });
                         feedSection.querySelectorAll('.comment-toggle').forEach(function(button) {
                             button.addEventListener('click', function() {
-                                var post = button.closest('.structured-post');
-                                var block = post ? post.querySelector('.comments-block') : null;
-                                if (block) block.classList.toggle('is-open');
+                                return;
                             });
                         });
-                        function updateReactionUI(button, data) {
-                            var footer = button.closest('.comment-footer');
-                            if (!footer) return;
-
-                            var upButton = footer.querySelector('.arrow-up');
-                            var downButton = footer.querySelector('.arrow-down');
-
-                            if (upButton) {
-                                upButton.querySelector('.up-count').textContent = data.upvotes;
-                                upButton.classList.toggle('is-active', data.user_reaction === 'up');
-                            }
-
-                            if (downButton) {
-                                downButton.querySelector('.down-count').textContent = data.downvotes;
-                                downButton.classList.toggle('is-active', data.user_reaction === 'down');
-                            }
-                        }
-
-                        function bindReactionButtons(scope) {
-                            scope.querySelectorAll('.arrow-up').forEach(function(button) {
-                                if (button.dataset.bound === 'true') return;
-                                button.dataset.bound = 'true';
-                                button.addEventListener('click', function(event) {
-                                    event.preventDefault();
-                                    var commentId = this.dataset.commentId;
-                                    fetch('/profile/' + commentId + '/upvote/', {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRFToken': csrftoken,
-                                            'Content-Type': 'application/json'
-                                        }
-                                    })
-                                    .then(function(response) { return response.json(); })
-                                    .then(function(data) {
-                                        updateReactionUI(button, data);
-                                    });
-                                });
-                            });
-
-                            scope.querySelectorAll('.arrow-down').forEach(function(button) {
-                                if (button.dataset.bound === 'true') return;
-                                button.dataset.bound = 'true';
-                                button.addEventListener('click', function(event) {
-                                    event.preventDefault();
-                                    var commentId = this.dataset.commentId;
-                                    fetch('/profile/' + commentId + '/downvote/', {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRFToken': csrftoken,
-                                            'Content-Type': 'application/json'
-                                        }
-                                    })
-                                    .then(function(response) { return response.json(); })
-                                    .then(function(data) {
-                                        updateReactionUI(button, data);
-                                    });
-                                });
-                            });
-                        }
-
-                        bindReactionButtons(feedSection);
-                        feedSection.querySelectorAll('.comment-send').forEach(function(button) {
-                            button.addEventListener('click', function() {
-                                var postId = button.getAttribute('data-post-id');
-                                var row = button.closest('.comment-input-row');
-                                var input = row ? row.querySelector('.comment-input') : null;
-                                var post = button.closest('.structured-post');
-                                var commentsBlock = post ? post.querySelector('.comments-block') : null;
-                                var countNode = post ? post.querySelector('.comment-count') : null;
-                                if (!input || !commentsBlock || !postId) return;
-
-                                var content = input.value.trim();
-                                if (!content) return;
-
-                                fetch('/posts/' + postId + '/comment/', {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRFToken': csrftoken,
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({ content: content })
-                                })
-                                .then(function(response) { return response.json(); })
-                                .then(function(data) {
-                                    if (data.error || !data.comment) return;
-
-                                    var emptyState = commentsBlock.querySelector('.empty-comment');
-                                    if (emptyState) {
-                                        emptyState.remove();
-                                    }
-
-                                    var commentRow = document.createElement('div');
-                                    commentRow.className = 'comment-wrap';
-                                    commentRow.innerHTML =
-                                        '<div class="comment-header">' +
-                                            '<div class="comment-user">' +
-                                                '<a href="/profile/user/' + data.comment.user_id + '/" class="unstyled-link" aria-label="View profile"><div class="comment-avatar">' + data.comment.avatar_initials + '</div></a>' +
-                                                '<h3><a href="/profile/user/' + data.comment.user_id + '/" class="unstyled-link">' + data.comment.author + '</a></h3>' +
-                                            '</div>' +
-                                            '<p>' + data.comment.created_at + '</p>' +
-                                        '</div>' +
-                                        '<div class="comment-content">' + data.comment.content + '</div>' +
-                                        '<div class="comment-footer">' +
-                                            '<a href="#" class="parameter-comment"><i class="fa-solid fa-ellipsis"></i></a>' +
-                                            '<a href="#" class="parameter-comment"><span><i class="fa-solid fa-reply"></i>Reply</span></a>' +
-                                            '<a href="#" class="arrow-up" data-comment-id="' + data.comment.id + '"><i class="fa-solid fa-chevron-up"></i> <span class="up-count">0</span></a>' +
-                                            '<a href="#" class="arrow-down" data-comment-id="' + data.comment.id + '"><i class="fa-solid fa-chevron-down"></i> <span class="down-count">0</span></a>' +
-                                        '</div>';
-
-                                    commentsBlock.insertBefore(commentRow, row);
-                                    bindReactionButtons(commentRow);
-                                    input.value = '';
-                                    if (countNode) countNode.textContent = String(data.comments_count);
-                                });
+                        feedSection.querySelectorAll('.structured-post').forEach(function(card) {
+                            card.addEventListener('click', function(event) {
+                                if (event.target.closest('a, button, input, textarea, label')) return;
+                                var postUrl = card.getAttribute('data-post-url');
+                                if (postUrl) window.location.href = postUrl;
                             });
                         });
                     })();
                 </script>
+                    </section>
+                </div>
+
+                <aside class="home-secondary" aria-label="Community insights">
+                    <article class="dashboard-card widget create-post-card">
+                        <div class="widget-header">
+                            <div class="widget-title">Create Post</div>
+                            <div class="widget-action">Draft</div>
+                        </div>
+                        <form class="create-post-form" action="#" method="post">
+                            <input class="create-post-input" type="text" placeholder="Share an update, ask a question, or post a founder win...">
+                            <div class="create-post-controls" style="display: flex; justify-content: space-between;">
+
+                                <div class="create-post-tag-wrap">
+                                    <select class="create-post-tag create-post-tag-ask" id="createPostTag" aria-label="Select post tag">
+                                        <option value="update">Update</option>
+                                        <option value="idea">Idea</option>
+                                        <option value="ask" selected>Ask</option>
+                                        <option value="ask_me_anything">Ask Me Anything</option>
+                                        <option value="win">Win</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down create-post-tag-icon" aria-hidden="true"></i>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <label class="create-post-file" for="createPostFile" aria-label="Add file">
+                                        <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+                                    </label>
+                                    <input id="createPostFile" type="file" hidden>
+                                    <button class="create-post-submit" type="button" aria-label="Post">
+                                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </article>
+
+                    <article class="dashboard-card widget community-pulse-card">
+                        <div class="widget-header">
+                            <div class="widget-title">Community Pulse</div>
+                            <div class="widget-action">Live</div>
+                        </div>
+                        <div class="activity-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">247</div>
+                                <div class="stat-label">Verified Founders</div>
+                                <div class="stat-delta">+14 this week</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">42</div>
+                                <div class="stat-label">Open Opportunities</div>
+                                <div class="stat-delta">+6 today</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">18</div>
+                                <div class="stat-label">New Matches</div>
+                                <div class="stat-delta">+3 yesterday</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">91%</div>
+                                <div class="stat-label">Avg Match Score</div>
+                                <div class="stat-delta">Across active pairs</div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="dashboard-card widget">
+                        <div class="widget-header">
+                            <div class="widget-title">Quick Requests</div>
+                            <div class="widget-action">Review</div>
+                        </div>
+                        <div class="match-cards" style="gap: 0;">
+                            <div class="match-card request-match-card" style="grid-template-columns: auto 1fr auto; padding: calc(var(--spacing) * 1) 0; background: transparent; border: 0; border-bottom: 1px solid rgba(120, 150, 255, 0.16); border-radius: 0; min-height: 52px;">
+                                <div class="match-avatar c">LA</div>
+                                <div class="match-info" style="gap: 2px;">
+                                    <div class="match-name" style="padding-bottom: 0;">Lama Al-Salem</div>
+                                    <div class="match-role">Received · 91% match</div>
+                                </div>
+                                <div class="decision-actions">
+                                    <button class="decision-btn accept" type="button" aria-label="Accept request">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M5 12.5 9.5 17 19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="decision-btn reject" type="button" aria-label="Decline request">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M7 7l10 10M17 7 7 17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="match-card request-match-card" style="grid-template-columns: auto 1fr auto; padding: calc(var(--spacing) * 1) 0 0; background: transparent; border: 0; border-radius: 0; min-height: 52px;">
+                                <div class="match-avatar b">FH</div>
+                                <div class="match-info" style="gap: 2px;">
+                                    <div class="match-name" style="padding-bottom: 0;">Founders Hub MVP</div>
+                                    <div class="match-role">Sent · Awaiting response</div>
+                                </div>
+                                <span class="status accepted" style="padding: 4px 8px;">Accepted</span>
+                            </div>
+                        </div>
+                    </article>
+                </aside>
             </section>
+
+            <style>
+                .home-secondary .dashboard-card {
+                    gap: calc(var(--spacing) * 1.15);
+                    padding: calc(var(--spacing) * 1.75);
+                }
+                .home-secondary .widget-header {
+                    margin-top: 0;
+                }
+                .home-secondary .widget-title {
+                    font-size: 0.74rem;
+                }
+                .home-secondary .widget-action {
+                    font-size: 0.62rem;
+                }
+                .home-secondary .stat-value {
+                    font-size: 0.88rem;
+                }
+                .home-secondary .stat-label,
+                .home-secondary .stat-delta,
+                .home-secondary .match-name,
+                .home-secondary .match-role,
+                .home-secondary .score-pct,
+                .home-secondary .feed-text,
+                .home-secondary .feed-time,
+                .home-secondary .status {
+                    font-size: 0.74rem;
+                }
+                .home-secondary .match-card {
+                    padding-top: calc(var(--spacing) * 0.8);
+                    padding-bottom: calc(var(--spacing) * 0.8);
+                }
+                .home-secondary .match-avatar {
+                    width: 28px;
+                    height: 28px;
+                    font-size: 0.58rem;
+                }
+                .home-secondary .decision-btn {
+                    width: 24px;
+                    height: 24px;
+                }
+                .home-secondary .community-pulse-card .stat-value {
+                    font-size: 0.76rem;
+                }
+                .home-secondary .community-pulse-card .stat-label,
+                .home-secondary .community-pulse-card .stat-delta {
+                    font-size: 0.62rem;
+                    line-height: 1.25;
+                }
+                .home-secondary .create-post-form {
+                    display: grid;
+                    gap: calc(var(--spacing) * 1);
+                }
+                .home-secondary .create-post-input {
+                    width: 100%;
+                    min-width: 0;
+                    min-height: 38px;
+                    border-radius: 999px;
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    background: rgba(255, 255, 255, 0.04);
+                    color: var(--text);
+                    padding: 0 14px;
+                    font: inherit;
+                    font-size: 0.74rem;
+                    line-height: 1;
+                }
+                .home-secondary .create-post-input::placeholder {
+                    color: var(--muted);
+                }
+                .home-secondary .create-post-input:focus {
+                    outline: none;
+                    border-color: rgba(120, 150, 255, 0.4);
+                    box-shadow: 0 0 0 3px rgba(120, 150, 255, 0.14);
+                }
+                .home-secondary .create-post-controls {
+                    display: flex;
+                    align-items: center;
+                    gap: calc(var(--spacing) * 1);
+                }
+                .home-secondary .create-post-file,
+                .home-secondary .create-post-submit {
+                    min-height: 34px;
+                    border-radius: 999px;
+                    font: inherit;
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                }
+                .home-secondary .create-post-file {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid rgba(214, 226, 248, 0.16);
+                    background: rgba(255, 255, 255, 0.05);
+                    color: rgba(239, 245, 255, 0.96);
+                    cursor: pointer;
+                    width: 34px;
+                    padding: 0;
+                }
+                .home-secondary .create-post-tag-wrap {
+                    position: relative;
+                    min-width: 0;
+                    width: 124px;
+                    flex: 0 0 124px;
+                    border: 1px solid rgba(214, 226, 248, 0.12);
+                    background: var(--bg);
+                    border-radius: 999px;
+                    overflow: hidden;
+                }
+                .home-secondary .create-post-tag {
+                    width: 100%;
+                    min-height: 34px;
+                    border: 0;
+                    border-radius: 999px;
+                    padding: 0 34px 0 12px;
+                    font: inherit;
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                    color: #ffffff;
+                    background: transparent;
+                    appearance: none;
+                    cursor: pointer;
+                }
+                .home-secondary .create-post-tag:focus {
+                    outline: none;
+                    box-shadow: 0 0 0 3px rgba(120, 150, 255, 0.14);
+                }
+                .home-secondary .create-post-tag option {
+                    color: #ffffff;
+                    background: var(--bg);
+                }
+                .home-secondary .create-post-tag-icon {
+                    position: absolute;
+                    right: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    font-size: 0.62rem;
+                    color: rgba(239, 245, 255, 0.82);
+                    pointer-events: none;
+                }
+                .home-secondary .create-post-tag-idea {
+                    background: rgba(124, 58, 237, 0.22);
+                    color: #efe4ff;
+                }
+                .home-secondary .create-post-tag-ask,
+                .home-secondary .create-post-tag-ask_me_anything {
+                    background: rgba(217, 119, 6, 0.22);
+                    color: #ffe8c2;
+                }
+                .home-secondary .create-post-tag-update {
+                    background: rgba(28, 45, 107, 0.22);
+                    color: #dce7ff;
+                }
+                .home-secondary .create-post-tag-win {
+                    background: rgba(5, 150, 105, 0.22);
+                    color: #dbfff1;
+                }
+                .home-secondary .create-post-submit {
+                    border: 1px solid rgba(120, 150, 255, 0.4);
+                    background: rgba(120, 150, 255, 0.14);
+                    color: var(--white);
+                    cursor: pointer;
+                    width: 34px;
+                    padding: 0;
+                }
+            </style>
 
         <!-- Footer -->
 
@@ -581,6 +761,33 @@
 </script>
 <script>
     (function() {
+        var tagSelect = document.getElementById('createPostTag');
+        if (!tagSelect) return;
+
+        var tagClasses = [
+            'create-post-tag-update',
+            'create-post-tag-idea',
+            'create-post-tag-ask',
+            'create-post-tag-ask_me_anything',
+            'create-post-tag-win'
+        ];
+
+        function syncTagColor() {
+            tagClasses.forEach(function(cls) {
+                tagSelect.classList.remove(cls);
+            });
+            tagSelect.classList.add('create-post-tag-' + tagSelect.value);
+        }
+
+        tagSelect.addEventListener('change', syncTagColor);
+        syncTagColor();
+    })();
+</script>
+<script>
+    (function() {
+        // Interactive demo is temporarily disabled.
+        return;
+
         var demoTargets = Array.prototype.slice.call(document.querySelectorAll('[data-demo]'));
         if (!demoTargets.length) return;
 

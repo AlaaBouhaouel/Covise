@@ -16,7 +16,12 @@ class WaitlistEntry(models.Model):
     country = models.CharField(max_length=100, blank=True)
     non_gcc_business = models.BooleanField(default=False)
     custom_country = models.CharField(max_length=100, blank=True)
+    description = models.CharField(max_length=100, blank=True)
+    custom_description = models.CharField(max_length=255, blank=True)
     linkedin = models.URLField(max_length=300)
+    no_linkedin = models.BooleanField(default=False)
+    venture_summary = models.TextField(blank=True)
+    referral_code = models.CharField(max_length=20, blank=True)
     cv_s3_key = models.CharField(max_length=500, blank=True, null=True)
     my_referral_code = models.CharField(max_length=20, unique=True, blank=True, null=True)
     referred_by = models.ForeignKey(
@@ -34,6 +39,21 @@ class WaitlistEntry(models.Model):
 
     def __str__(self):
         return f"{self.full_name} ({self.email})"
+
+
+class WaitlistEmailVerification(models.Model):
+    email = models.EmailField(unique=True)
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    verification_code = models.CharField(max_length=6, blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"WaitlistEmailVerification<{self.email}>"
 
 
 class OnboardingResponse(models.Model):

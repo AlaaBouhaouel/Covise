@@ -6,16 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoVise</title>
     <meta name="description" content="CoVise is where bold ideas meet the right partners. We connect cofounders across the GCC who are ready to build, commit, and grow together. هي المساحة التي تلتقي فيها الأفكار الطموحة بالشركاء المناسبين. نربط بين رواد الأعمال في دول الخليج المستعدين للبناء والالتزام والنمو معًا COVISE.">
-    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="icon" href="{% static 'images/index/covise_logo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'landing.css' %}">
     <link rel="stylesheet" href="{% static 'site_nav.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        (function() {
-            var theme = localStorage.getItem('covise-theme');
-            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
-        })();
-    </script>
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RDN1TCMRNR"></script>
@@ -30,12 +24,12 @@
 <body>
     <div class="container">
         <!-- Navigation -->
-        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href='/waitlist/' nav_cta_label='GET STARTED' nav_classes='nav--overlay nav--mobile-compact nav--font-body' show_home=False %}
+        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href='/login/' nav_cta_label='Login' nav_classes='nav--overlay nav--mobile-compact nav--font-body nav--no-theme' show_home=False %}
 
         <!-- Hero Section -->
         <section class="hero">
             <div class="hero-globe-canvas-wrap" aria-hidden="true">
-                <canvas class="landing-globe-canvas" data-globe-canvas="hero"></canvas>
+                <div class="landing-globe" data-globe-container="hero"></div>
             </div>
 
             <div class="hero-content">
@@ -43,14 +37,13 @@
                     BUILD YOUR<br>
                     FUTURE
                 </h1>
-                <p class="hero-subtitle">
-                    Shared vision. Structured collaboration. Real execution.<br>
-                    Where serious founders align, connect, and execute.
+                <p class="hero-subtitle" id="typing" aria-label="Shared vision. Structured collaboration. Real execution. Where serious founders align, connect, and execute.">
+                    <span id="typingLineOne"></span><span class="typing-cursor" id= "cursor-up" aria-hidden="true"></span><br><span id="typingLineTwo"></span><span class="typing-cursor"  id= "cursor-down"  aria-hidden="true"></span>
                 </p>
             </div>
             
             <div class="hero-cta">
-                <a href="/waitlist/" class="btn-primary reserve-spot-btn">Get Started</a>
+                <a href="/signin/" class="btn-primary reserve-spot-btn">Get Started<img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
                 <div class="scroll-indicator">
                     <a href="#cta-section"><span>Scroll</span></a>
                     <div class="scroll-line"></div>
@@ -86,13 +79,13 @@
             <div class="feature reveal-up" style="--reveal-delay: 0ms;">
                 <div class="feature-number">01</div>
                 <h3 class="feature-title">CONNECT</h3>
-                <p class="feature-desc">Network with ambitious founders across the Middle East. Share ideas. Build together.</p>
+                <p class="feature-desc">Network with ambitious founders. Share ideas. Build together.</p>
             </div>
             
             <div class="feature reveal-up" style="--reveal-delay: 120ms;">
                 <div class="feature-number">02</div>
                 <h3 class="feature-title">COLLABORATE</h3>
-                <p class="feature-desc">Find co-founders, investors, and partners. Turn concepts into companies.</p>
+                <p class="feature-desc">Post about your venture journey, find co-founders, and have real conversations with serious entrepreneurs.</p>
             </div>
             
             <div class="feature reveal-up" style="--reveal-delay: 240ms;">
@@ -101,12 +94,11 @@
                 <p class="feature-desc">A focused platform designed for work, not scrolling. Get things done.</p>
             </div>
         </section>
-
-        <section class="collab-showcase">
+<section class="collab-showcase">
             <div class="collab-showcase-media reveal-up" style="--reveal-delay: 0ms;">
                 <img src="{% static 'images/index/homepic.png' %}" alt="Covise collaboration workspace preview">
             </div>
-            <div class="collab-showcase-content reveal-up" style="--reveal-delay: 140ms;">
+            <div class="collab-showcase-content text-area reveal-up" style="--reveal-delay: 140ms;">
                 <h2>Everything You Need<br> To Build Faster</h2>
                 <p>Built for serious founder collaboration from first match to launch.</p>
                 <ul class="collab-feature-list">
@@ -122,7 +114,7 @@
         <!-- CTA Section -->
         <section id="cta-section" class="cta-section">
             <div class="cta-globe-canvas-wrap" aria-hidden="true">
-                <canvas class="landing-globe-canvas" data-globe-canvas="cta"></canvas>
+                <div class="landing-globe" data-globe-container="cta"></div>
             </div>
             <div class="cta-content reveal-up" style="--reveal-delay: 0ms;">
                 <h2 class="cta-title">READY TO BUILD?</h2>
@@ -162,14 +154,58 @@
     <div class="footer-bottom reveal-up" style="--reveal-delay: 100ms;">
         <p>- 2026 CoVise. All rights reserved.</p>
         <div class="footer-legal">
-            <a href="{% url 'Terms' %}">Terms</a>
-            <a href="{% url 'Privacy' %}">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Privacy</a>
             <a href="#">Security</a>
         </div>
     </div>
 </footer>
     </div>
     <script>
+        (function() {
+            var lines = [
+                "Shared vision. Structured collaboration. Real execution.",
+                "Where serious founders align, connect, and execute."
+            ];
+            var cursor_up = document.getElementById('cursor-up');
+            var cursor_down = document.getElementById('cursor-down');
+            var lineElements = [
+                document.getElementById('typingLineOne'),
+                document.getElementById('typingLineTwo')
+            ];
+            if (!lineElements[0] || !lineElements[1]) return;
+
+            var lineIndex = 0;
+            var charIndex = 0;
+
+            function type() {
+                if (lineIndex >= lines.length) return;
+
+                if (charIndex < lines[lineIndex].length) {
+                    if (lineIndex === 1) {
+                        cursor_up.style.display = 'none';
+                        cursor_down.style.display = 'inline-block';
+                    } else {
+                        cursor_up.style.display = 'inline-block';
+                        cursor_down.style.display = 'none';
+                    }
+                    lineElements[lineIndex].textContent += lines[lineIndex].charAt(charIndex);
+                    charIndex += 1;
+                    setTimeout(type, 38);
+
+                    return;
+                }
+
+                if (lineIndex < lines.length - 1) {
+                    lineIndex += 1;
+                    charIndex = 0;
+                    setTimeout(type, 520);
+                }
+            }
+
+            type();
+        })();
+
         const nav = document.querySelector('.nav');
         function onScroll() {
             if (window.scrollY > 10) {
@@ -203,7 +239,9 @@
                 observer.observe(item);
             });
         })();
+
     </script>
+    <script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
     <script src="{% static 'landing-globe.js' %}"></script>
 </body>
 </html>
