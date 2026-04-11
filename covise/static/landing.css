@@ -856,9 +856,11 @@ body {
     font-family:  var(--text-heavy);
     font-size: clamp(2.35rem, 3.6vw, 4.6rem);
     font-weight: 700;
-    line-height: 0.85;
+    line-height: 1.1;
+    max-width: 600px;
+    align-self: center;
     letter-spacing: -0.04em;
-    margin: calc(var(--spacing) * 4);
+    margin: calc(var(--spacing) * 4) auto;
 }
 
 .cta-text {
