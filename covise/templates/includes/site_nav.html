@@ -15,6 +15,7 @@
             <line x1="16" y1="4" x2="4" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
     </button>
+    {% if show_theme_toggle != False %}
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
         <svg class="icon-sun" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="4.5"></circle>
@@ -24,6 +25,7 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
     </button>
+    {% endif %}
     <div class="nav-links">
         {% if show_home %}
         <a href="/" class="nav-link{% if active_page == 'home' %} nav-link-active{% endif %}">HOME</a>
@@ -39,6 +41,7 @@
         <a href="/about/" class="mobile-nav-link{% if active_page == 'about' %} mobile-nav-link-active{% endif %}">ABOUT</a>
         <a href="/features/" class="mobile-nav-link{% if active_page == 'features' %} mobile-nav-link-active{% endif %}">FEATURES</a>
         <a href="{% if active_page == 'landing' %}/waitlist/{% else %}{{ nav_cta_href }}{% endif %}" class="mobile-nav-link mobile-nav-link-demo{% if active_page == 'cta' %} mobile-nav-link-active{% endif %}">{% if active_page == 'landing' %}JOIN NOW{% else %}{{ nav_cta_label }}{% endif %}</a>
+        {% if show_theme_toggle != False %}
         <button class="mobile-nav-link mobile-theme-link" id="mobileThemeToggle" type="button">
             <svg class="mobile-theme-icon mobile-theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="12" r="4.5"></circle>
@@ -49,5 +52,6 @@
             </svg>
             <span class="mobile-theme-label">LIGHT MODE</span>
         </button>
+        {% endif %}
     </div>
 </nav>

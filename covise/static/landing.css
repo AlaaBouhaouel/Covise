@@ -584,19 +584,46 @@ body {
 
 /* Features Section */
 .features {
+    --glow-x: 50%;
+    --glow-y: 50%;
+    --glow-opacity: 0;
+    position: relative;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: calc(var(--spacing) * 8);
     padding: calc(var(--spacing) * 6) calc(var(--spacing) * 6);
     max-width: 1400px;
     margin: 0 auto;
+    overflow: hidden;
+    cursor: none;
+}
+
+.features::after {
+    content: '';
+    position: absolute;
+    inset: -14%;
+    background:
+        radial-gradient(circle at var(--glow-x) var(--glow-y),
+        rgba(255, 255, 255, calc(var(--glow-opacity) * 0.68)) 0%,
+        rgba(255, 255, 255, calc(var(--glow-opacity) * 0.34)) 8%,
+        rgba(184, 214, 255, calc(var(--glow-opacity) * 0.2)) 18%,
+        rgba(91, 145, 255, calc(var(--glow-opacity) * 0.12)) 28%,
+        rgba(14, 26, 58, 0) 42%);
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+    z-index: 0;
+}
+
+.features.is-glow-active::after {
+    opacity: 1;
 }
 
 .feature {
+    position: relative;
+    z-index: 1;
     padding: calc(var(--spacing) * 6);
     border: 3px solid calc(var(--grey));
     transition: all 0.4s ease;
-    position: relative;
     overflow: hidden;
 }
 
@@ -658,10 +685,13 @@ body {
 
 /* Collaboration Showcase */
 .collab-showcase {
+    --glow-x: 50%;
+    --glow-y: 50%;
+    --glow-opacity: 0;
     position: relative;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: calc(var(--spacing) * 4);
+    gap: calc(var(--spacing) * 6);
     align-items: stretch;
     padding: calc(var(--spacing) * 7);
     border: 1px solid rgba(17, 37, 71, 0.28);
@@ -670,6 +700,28 @@ body {
         radial-gradient(600px 340px at 8% 18%, rgba(17, 61, 137, 0.35), rgba(0, 0, 0, 0) 65%),
         radial-gradient(700px 320px at 90% 80%, #000, rgba(0, 0, 0, 0) 68%),
         linear-gradient(135deg, #03060f 0%, #050c1e 44%, #081733 100%);
+    cursor: none;
+}
+
+.collab-showcase::after {
+    content: '';
+    position: absolute;
+    inset: -18%;
+    background:
+        radial-gradient(circle at var(--glow-x) var(--glow-y),
+        rgba(255, 255, 255, calc(var(--glow-opacity) * 0.72)) 0%,
+        rgba(255, 255, 255, calc(var(--glow-opacity) * 0.4)) 8%,
+        rgba(196, 220, 255, calc(var(--glow-opacity) * 0.24)) 18%,
+        rgba(115, 165, 255, calc(var(--glow-opacity) * 0.14)) 28%,
+        rgba(14, 26, 58, 0) 42%);
+    opacity: 1;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+    z-index: 0;
+}
+
+.collab-showcase.is-glow-active::after {
+    opacity: 1;
 }
 
 .collab-showcase-card {
@@ -684,14 +736,16 @@ body {
 }
 
 .collab-showcase-media {
+    position: relative;
+    z-index: 1;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    min-height: 220px;
+    align-items: center;
+    min-height: 100%;
 }
 
 .collab-showcase-media img {
-    width: auto;
+    width: min(100%, 860px);
     max-width: 100%;
     height: auto;
     border-radius: 16px;
@@ -699,21 +753,82 @@ body {
     box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
 }
 
+.collab-showcase-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: calc(var(--spacing) * 0.9);
+    min-height: 70%;
+    padding: calc(var(--spacing) * 1.2) 0;
+}
+
 .collab-showcase-content h2 {
     font-family: var(--text-header);
-    font-size: clamp(1.35rem, 2vw, 1.8rem);
-    line-height: 1.05;
+    font-size: clamp(2.4rem, 3.5vw, 4rem);
+    line-height: 1.1;
     text-transform: uppercase;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.02em;
-    margin-bottom: calc(var(--spacing) * 1.25);
+    margin-bottom: calc(var(--spacing) * 0.5);
+    padding-left: calc(var(--spacing) * 3);
+
+
+}
+
+.collab-showcase-content h2 span {
+    color: var(--black);
+    background-color: var(--white);
 }
 
 .collab-showcase-content p {
-    font-size: 1rem;
+    font-size: clamp(1.3rem, 1.8vw, 1.7rem);
+    text-align: center;
     color: #a4b3cb;
     margin-bottom: 0;
-    line-height: 1.7;
+}
+
+.collab-feature-list {
+    display: grid;
+    margin: calc(var(--spacing) * 2) 0;
+    padding-left: calc(var(--spacing) * 6);
+    font-size: clamp(1.2rem, 1.55vw, 1.5rem);
+    line-height: 1.45;
+    color: var(--white);
+    flex: 1 1 auto;
+    align-content: center;
+}
+
+.collab-feature-list li {
+    padding-left: calc(var(--spacing) * 0.5);
+}
+
+.collab-try-btn {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 2.5);
+    min-width: clamp(160px, 20vw, 210px);
+    margin-top: calc(var(--spacing) * 2);
+}
+
+.btn-access{
+    width: 70%;
+    min-width: clamp(180px, 20vw, 240px);
+}
+.btn-learn{
+    width: 30%;
+}
+
+.collab-showcase-cta-wrap{
+    width: 80%;
+    display: flex;
+    margin: auto;
+    gap: calc(var(--spacing) * 4);
+    justify-content: center;
+
 }
 /* CTA Section */
 .cta-section {
@@ -1035,6 +1150,11 @@ body {
 
     .features {
         grid-template-columns: 1fr;
+        cursor: default;
+    }
+
+    .features::after {
+        display: none;
     }
 
     .home-shot {
@@ -1046,6 +1166,35 @@ body {
         gap: calc(var(--spacing) * 4);
         margin: calc(var(--spacing) * 3) calc(var(--spacing) * 4) calc(var(--spacing) * 7);
         padding: calc(var(--spacing) * 5);
+        cursor: default;
+    }
+
+    .collab-showcase::after {
+        display: none;
+    }
+
+    .collab-showcase-content {
+        gap: calc(var(--spacing) * 2.5);
+        text-align: left;
+    }
+
+    .collab-showcase-content h2 {
+        font-size: clamp(2.2rem, 8vw, 3.6rem);
+        line-height: 0.98;
+    }
+
+    .collab-showcase-content p {
+        font-size: clamp(1.1rem, 3vw, 1.35rem);
+        max-width: none;
+    }
+
+    .collab-feature-list {
+        font-size: clamp(1.05rem, 2.6vw, 1.25rem);
+        gap: calc(var(--spacing) * 1.5);
+    }
+
+    .collab-try-btn {
+        margin-top: calc(var(--spacing) * 1.5);
     }
 
     .footer-top {
@@ -1153,7 +1302,27 @@ body {
     }
 
     .collab-showcase-content {
-        text-align: left;
+        gap: calc(var(--spacing) * 2);
+    }
+
+    .collab-showcase-content h2 {
+        font-size: clamp(2rem, 10vw, 2.7rem);
+    }
+
+    .collab-showcase-content p {
+        font-size: 1.02rem;
+        line-height: 1.55;
+    }
+
+    .collab-feature-list {
+        font-size: 1rem;
+        line-height: 1.5;
+        padding-left: calc(var(--spacing) * 2.5);
+    }
+
+    .collab-try-btn {
+        width: 100%;
+        max-width: 280px;
     }
 
     .footer {

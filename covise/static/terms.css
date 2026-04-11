@@ -1,6 +1,8 @@
 .terms-main {
     grid-template-rows: auto 1fr;
     padding-bottom: calc(var(--spacing) * 10);
+    padding-top: 96px;
+
 }
 
 .terms-shell {

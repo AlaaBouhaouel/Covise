@@ -91,23 +91,26 @@
             <div class="feature reveal-up" style="--reveal-delay: 240ms;">
                 <div class="feature-number">03</div>
                 <h3 class="feature-title">EXECUTE</h3>
-                <p class="feature-desc">A focused platform designed for work, not scrolling. Get things done.</p>
+                <p class="feature-desc">Move from conversation to real collaboration.</p>
             </div>
         </section>
-<section class="collab-showcase">
+        <section class="collab-showcase">
             <div class="collab-showcase-media reveal-up" style="--reveal-delay: 0ms;">
                 <img src="{% static 'images/index/homepic.png' %}" alt="Covise collaboration workspace preview">
             </div>
             <div class="collab-showcase-content reveal-up" style="--reveal-delay: 140ms;">
-                <h2>Everything You Need<br> To Build Faster</h2>
-                <p>Built for serious founder collaboration from first match to launch.</p>
+                <h2>An <span>exclusive network</span> of serious builders.</h2>
+                <p>Access founders who are actually building, not just exploring.</p>
                 <ul class="collab-feature-list">
-                    <li>Founder matching based on skills, commitment, and goals</li>
-                    <li>Private project spaces for focused execution</li>
-                    <li>Structured milestones to keep teams accountable</li>
-                    <li>Clear communication threads with no social noise</li>
+                    <li>Curated, invite-only founder network</li>
+                    <li>Verified members with real intent</li>
+                    <li>No noise, no random outreach</li>
+                    <li>Conversations that lead to real builds</li>
                 </ul>
-                <a href="/waitlist/" class="btn-primary collab-try-btn">TRY IT <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
+                <div class="collab-showcase-cta-wrap">
+                    <a href="/waitlist/" class="btn-primary collab-try-btn btn-access">REQUEST ACCESS <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
+                    <a href="/features/" class="btn-primary collab-try-btn btn-learn">LEARN MORE <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
+                </div>
             </div>
         </section>
 
@@ -136,7 +139,6 @@
         <div class="footer-col">
             <h4>Product</h4>
             <a href="/features/">Features</a>
-            <a href="/pricing/">Pricing</a>
         </div>
         <div class="footer-col">
             <h4>Resources</h4>
@@ -154,9 +156,9 @@
     <div class="footer-bottom reveal-up" style="--reveal-delay: 100ms;">
         <p>- 2026 CoVise. All rights reserved.</p>
         <div class="footer-legal">
-            <a href="#">Terms</a>
-            <a href="#">Privacy</a>
-            <a href="#">Security</a>
+            <a href="{% url 'Terms' %}">Terms</a>
+            <a href="{% url 'Privacy' %}">Privacy</a>
+            <a href="{% url 'Security' %}">Security</a>
         </div>
     </div>
 </footer>
@@ -238,6 +240,42 @@
             revealItems.forEach(function(item) {
                 observer.observe(item);
             });
+        })();
+
+        (function() {
+            if (!window.matchMedia('(pointer: fine)').matches) return;
+
+            function attachSectionGlow(selector) {
+                var section = document.querySelector(selector);
+                if (!section) return;
+
+                function updateGlow(event) {
+                    var bounds = section.getBoundingClientRect();
+                    var x = ((event.clientX - bounds.left) / bounds.width) * 100;
+                    var y = ((event.clientY - bounds.top) / bounds.height) * 100;
+
+                    section.style.setProperty('--glow-x', x + '%');
+                    section.style.setProperty('--glow-y', y + '%');
+                }
+
+                section.addEventListener('pointerenter', function(event) {
+                    section.classList.add('is-glow-active');
+                    section.style.setProperty('--glow-opacity', '1');
+                    updateGlow(event);
+                });
+
+                section.addEventListener('pointermove', function(event) {
+                    updateGlow(event);
+                });
+
+                section.addEventListener('pointerleave', function() {
+                    section.classList.remove('is-glow-active');
+                    section.style.setProperty('--glow-opacity', '0');
+                });
+            }
+
+            attachSectionGlow('.features');
+            attachSectionGlow('.collab-showcase');
         })();
 
     </script>

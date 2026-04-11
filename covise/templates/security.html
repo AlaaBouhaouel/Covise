@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Security</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'settings.css' %}">
+    <link rel="stylesheet" href="{% static 'terms.css' %}">
+    <link rel="stylesheet" href="{% static 'site_nav.css' %}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+</head>
+{% include 'includes/site_nav.html' with active_page='' nav_cta_href='/waitlist/' nav_cta_label='JOIN NOW' nav_classes='nav--overlay nav--mobile-wide nav--font-body' show_home=True show_theme_toggle=False %}
+
+<style>
+    .nav{
+        display: flex;
+        flex-direction: row;
+        align-content: center;
+        justify-content: space-between;
+        
+    }
+    
+</style>
+<script>
+    (function () {
+        var nav = document.querySelector('.nav');
+        if (!nav) return;
+
+        function syncNavScroll() {
+            nav.classList.toggle('is-scrolled', window.scrollY > 10);
+        }
+
+        window.addEventListener('scroll', syncNavScroll, { passive: true });
+        syncNavScroll();
+    })();
+</script>
+
+<body>
+    <div class="layout">
+        <main class="main terms-main" id="top">
+            <div class="terms-shell">
+                <div class="terms-content-wrap">
+                    <header class="page-header terms-page-header">
+                        <h1>Security</h1>
+                        <p>Last updated: April 2026</p>
+                        <div class="terms-note">How CoVise protects accounts, data, and platform operations.</div>
+                    </header>
+
+                    <div class="terms-layout">
+                        <aside class="terms-toc panel" aria-label="Table of contents">
+                            <div class="terms-toc-title">Contents</div>
+                            <ol class="terms-toc-list">
+                                <li><a href="#section-1">Security Principles</a></li>
+                                <li><a href="#section-2">Infrastructure Protection</a></li>
+                                <li><a href="#section-3">Data Protection</a></li>
+                                <li><a href="#section-4">Access Controls</a></li>
+                                <li><a href="#section-5">Monitoring and Response</a></li>
+                                <li><a href="#section-6">User Responsibilities</a></li>
+                                <li><a href="#section-7">Reporting a Concern</a></li>
+                            </ol>
+                        </aside>
+
+                        <div class="terms-mobile-jump panel">
+                            <label for="securityJump">Jump to section</label>
+                            <select id="securityJump">
+                                <option value="#top">Select a section</option>
+                                <option value="#section-1">1. Security Principles</option>
+                                <option value="#section-2">2. Infrastructure Protection</option>
+                                <option value="#section-3">3. Data Protection</option>
+                                <option value="#section-4">4. Access Controls</option>
+                                <option value="#section-5">5. Monitoring and Response</option>
+                                <option value="#section-6">6. User Responsibilities</option>
+                                <option value="#section-7">7. Reporting a Concern</option>
+                            </select>
+                        </div>
+
+                        <div class="terms-sections">
+                            <section class="panel terms-card" id="section-1"><div class="terms-card-head"><span class="terms-card-number">1</span><h2>Security Principles</h2></div><p>CoVise is designed around layered security controls intended to protect user accounts, platform availability, and sensitive venture information. We continuously review our controls as the product evolves.</p></section>
+                            <section class="panel terms-card" id="section-2"><div class="terms-card-head"><span class="terms-card-number">2</span><h2>Infrastructure Protection</h2></div><p>We use managed hosting and cloud services with network-level protections, encrypted transport, and environment separation to reduce exposure. Administrative services are restricted to authorized personnel only.</p></section>
+                            <section class="panel terms-card" id="section-3"><div class="terms-card-head"><span class="terms-card-number">3</span><h2>Data Protection</h2></div><p>Data is protected in transit using HTTPS. We apply encryption and secure storage practices for platform data, uploaded files, and credentials, and we limit retention where practical.</p></section>
+                            <section class="panel terms-card" id="section-4"><div class="terms-card-head"><span class="terms-card-number">4</span><h2>Access Controls</h2></div><p>Internal access is granted on a least-privilege basis. Sensitive actions are limited to authorized team members, and account access is reviewed as roles change.</p></section>
+                            <section class="panel terms-card" id="section-5"><div class="terms-card-head"><span class="terms-card-number">5</span><h2>Monitoring and Response</h2></div><p>We monitor the platform for suspicious activity, service degradation, and operational issues. When needed, we investigate incidents, contain risk, and take corrective action as quickly as possible.</p></section>
+                            <section class="panel terms-card" id="section-6"><div class="terms-card-head"><span class="terms-card-number">6</span><h2>User Responsibilities</h2></div><p>Users should protect their passwords, avoid sharing account access, and report suspicious behavior promptly. Strong passwords and careful handling of shared venture information remain important parts of account security.</p></section>
+                            <section class="panel terms-card" id="section-7"><div class="terms-card-head"><span class="terms-card-number">7</span><h2>Reporting a Concern</h2></div><p>If you believe you have found a vulnerability or security issue, contact us at <a class="terms-link" href="mailto:support@covise.net">support@covise.net</a>. Include as much detail as possible so we can investigate quickly.</p></section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <button class="terms-top-btn" id="securityTopButton" type="button" aria-label="Back to top">
+        <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+    </button>
+
+    <script>
+        (function () {
+            var jump = document.getElementById('securityJump');
+            if (jump) {
+                jump.addEventListener('change', function () {
+                    if (!jump.value) return;
+                    var target = document.querySelector(jump.value);
+                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            }
+
+            var topButton = document.getElementById('securityTopButton');
+            function syncTopButton() {
+                if (!topButton) return;
+                topButton.classList.toggle('is-visible', window.scrollY > 300);
+            }
+            if (topButton) {
+                topButton.addEventListener('click', function () {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+            window.addEventListener('scroll', syncTopButton, { passive: true });
+            syncTopButton();
+        })();
+    </script>
+</body>
+</html>

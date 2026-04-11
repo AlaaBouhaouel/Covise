@@ -36,6 +36,7 @@ urlpatterns = [
 #    path('settings/', views.settings, name='Settings'),
     path('terms/', views.terms, name='Terms'),
     path('privacy/', views.privacy, name='Privacy'),
+    path('security/', views.security, name='Security'),
 #    path('login/', views.login_view, name='Login'),
 #    path('signin/', views.signin, name='Sign In'),
 #    path('loading/', views.loading, name='Loading'),

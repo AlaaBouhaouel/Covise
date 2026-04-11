@@ -143,6 +143,9 @@ def terms(request):
 def privacy(request):
     return render(request, 'privacy.html')
 
+def security(request):
+    return render(request, 'security.html')
+
 def login_view(request):
     return render(request, 'login.html')
 
