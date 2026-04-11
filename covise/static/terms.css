@@ -5,6 +5,76 @@
 
 }
 
+.nav {
+    color: var(--text);
+}
+
+.nav--overlay {
+    background: rgba(7, 12, 22, 0.72);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.nav--overlay.is-scrolled {
+    background: rgba(7, 12, 22, 0.82);
+}
+
+.logo,
+.nav-link,
+.mobile-nav-link,
+.mobile-theme-link,
+.mobile-nav-icon {
+    color: var(--text);
+}
+
+.nav-link::after {
+    background: currentColor;
+}
+
+.mobile-nav-toggle {
+    color: var(--text);
+    border-color: var(--border);
+    background: var(--panel-soft);
+}
+
+.mobile-nav-toggle:hover {
+    border-color: rgba(120, 150, 255, 0.35);
+    background: rgba(120, 150, 255, 0.12);
+}
+
+.mobile-nav-menu {
+    background: rgba(7, 12, 22, 0.9);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link-demo,
+.mobile-nav-link-active,
+.mobile-theme-link {
+    background: rgba(120, 150, 255, 0.1);
+}
+
+[data-theme="light"] .nav--overlay {
+    background: rgba(240, 245, 255, 0.78);
+}
+
+[data-theme="light"] .nav--overlay.is-scrolled {
+    background: rgba(240, 245, 255, 0.88);
+}
+
+[data-theme="light"] .mobile-nav-menu {
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 18px 40px rgba(60, 90, 160, 0.14);
+}
+
+[data-theme="light"] .mobile-nav-toggle {
+    background: rgba(255, 255, 255, 0.9);
+}
+
 .terms-shell {
     display: flex;
     justify-content: center;
@@ -124,6 +194,13 @@
     background: #0f1626;
     color: #e9edf5;
 }
+.nav{
+    display: flex;
+    flex-direction: row;
+    align-content: center;
+    justify-content: space-between;
+    
+}
 
 [data-theme="light"] .terms-mobile-jump select {
     background-color: rgba(255, 255, 255, 0.84);
@@ -218,6 +295,17 @@
     transform: translateY(10px);
     transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease, background 0.2s ease;
     cursor: pointer;
+    z-index: 1002;
+}
+
+.terms-top-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
 }
 
 .terms-top-btn.is-visible {
