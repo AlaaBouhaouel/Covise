@@ -1,0 +1,271 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Complete Your Profile</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'waitlist.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .private-profile-page {
+            min-height: 100vh;
+            padding: 36px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(circle at top left, rgba(43, 71, 166, 0.22), transparent 36%),
+                radial-gradient(circle at bottom right, rgba(18, 48, 130, 0.28), transparent 34%),
+                #05070d;
+        }
+
+        .private-profile-card {
+            width: min(100%, 560px);
+            padding: 28px 24px 24px;
+        }
+
+        .private-profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+
+        .private-profile-steps {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .private-profile-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .private-profile-dot.done {
+            background: rgba(255, 255, 255, 0.48);
+        }
+
+        .private-profile-dot.active {
+            background: #fff;
+        }
+
+        .private-profile-step-text {
+            margin-left: 6px;
+            color: rgba(255, 255, 255, 0.42);
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .private-profile-title {
+            margin: 0 0 10px;
+            font-size: clamp(1.9rem, 5.6vw, 2.6rem);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+        }
+
+        .private-profile-intro {
+            margin: 0 0 22px;
+            color: rgba(255, 255, 255, 0.62);
+            font-size: 0.98rem;
+            line-height: 1.4;
+        }
+
+        .private-profile-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .private-profile-field label {
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .private-profile-field input,
+        .private-profile-field textarea {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            padding: 12px 14px;
+            font: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .private-profile-field input:focus,
+        .private-profile-field textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .private-profile-field textarea {
+            resize: vertical;
+            min-height: 92px;
+        }
+
+        .private-profile-count {
+            text-align: right;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.75rem;
+        }
+
+        .private-profile-submit {
+            width: auto;
+            min-width: 168px;
+            margin-top: 2px;
+            align-self: center;
+        }
+
+        .private-profile-note {
+            margin: 12px 0 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.44);
+            font-size: 0.82rem;
+            line-height: 1.45;
+        }
+
+        .private-profile-success {
+            text-align: center;
+            padding: 20px 6px 6px;
+        }
+
+        .private-profile-success-mark {
+            width: 50px;
+            height: 50px;
+            border-radius: 999px;
+            margin: 0 auto 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 1.35rem;
+            color: #fff;
+        }
+
+        .private-profile-success h2 {
+            margin: 0 0 10px;
+            font-size: clamp(1.7rem, 5vw, 2.2rem);
+            line-height: 1;
+        }
+
+        .private-profile-success p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.62);
+            font-size: 0.96rem;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 640px) {
+            .private-profile-card {
+                padding: 24px 18px 20px;
+            }
+        }
+    </style>
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+</head>
+<body>
+    <main class="waitlist-page private-profile-page">
+        <section class="waitlist-card private-profile-card">
+            <div class="private-profile-header">
+                <div class="brand">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+                    <span>CoVise</span>
+                </div>
+                <a class="back-link" href="{% url 'Landing Page' %}">Home</a>
+            </div>
+
+            {% if submitted %}
+                <div class="private-profile-success">
+                    <div class="private-profile-steps">
+                        <span class="private-profile-dot done"></span>
+                        <span class="private-profile-dot done"></span>
+                        <span class="private-profile-dot active"></span>
+                        <span class="private-profile-step-text">Profile received</span>
+                    </div>
+                    <div class="private-profile-success-mark">&#10003;</div>
+                    <h2 class="waitlist-title">You're all set.</h2>
+                    <p>We've received your details for {{ success_email }} and will complete your verification shortly. You'll hear from us soon.</p>
+                </div>
+            {% else %}
+                <div class="private-profile-steps">
+                    <span class="private-profile-dot done"></span>
+                    <span class="private-profile-dot active"></span>
+                    <span class="private-profile-dot"></span>
+                    <span class="private-profile-step-text">Complete your profile</span>
+                </div>
+
+                <h1 class="waitlist-title private-profile-title">Complete your<br>profile.</h1>
+                <p class="private-profile-intro">Your application is being reviewed. To make sure nothing gets missed on our end, we're asking a small number of applicants to reconfirm a few details. You're almost there.</p>
+
+                {% if error_message %}
+                    <p class="form-error" role="alert">{{ error_message }}</p>
+                {% endif %}
+
+                <form class="waitlist-form" method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="private-profile-field">
+                        <label for="email">Email</label>
+                        <input id="email" name="email" type="email" value="{{ form_values.email }}" placeholder="you@example.com" required>
+                    </div>
+
+                    <div class="private-profile-field">
+                        <label for="full_name">Full Name</label>
+                        <input id="full_name" name="full_name" type="text" value="{{ form_values.full_name }}" placeholder="Your full name" required>
+                    </div>
+
+                    <div class="private-profile-field">
+                        <label for="linkedin_url">LinkedIn URL</label>
+                        <input id="linkedin_url" name="linkedin_url" type="url" value="{{ form_values.linkedin_url }}" placeholder="https://linkedin.com/in/yourname" required>
+                    </div>
+
+                    <div class="private-profile-field">
+                        <label for="venture_summary">What are you building or looking for?</label>
+                        <textarea id="venture_summary" name="venture_summary" maxlength="150" placeholder="One line - your venture, idea, or what you're looking for on CoVise." required>{{ form_values.venture_summary }}</textarea>
+                        <p class="private-profile-count"><span id="venture-count">0</span> / 150</p>
+                    </div>
+
+                    <button class="process private-profile-submit" type="submit">
+                        <span class="btn-label">Submit</span>
+                        <span class="btn-spinner" aria-hidden="true"></span>
+                    </button>
+                </form>
+
+                <p class="private-profile-note">Your information is used only for verification purposes. We do not share your data with third parties.</p>
+            {% endif %}
+        </section>
+    </main>
+
+    <script>
+        const ventureSummaryField = document.getElementById('venture_summary');
+        const ventureCount = document.getElementById('venture-count');
+
+        if (ventureSummaryField && ventureCount) {
+            const updateVentureCount = () => {
+                ventureCount.textContent = ventureSummaryField.value.length;
+            };
+
+            ventureSummaryField.addEventListener('input', updateVentureCount);
+            updateVentureCount();
+        }
+    </script>
+</body>
+</html>

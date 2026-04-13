@@ -44,8 +44,10 @@ urlpatterns = [
     path('features/', views.features, name='Features'),
     path('about/', views.about, name='About'),
 #    path('workspace/', views.workspace, name='Workspace'),
+    path('complete-profile/123e4567-e89b-12d3-a456-426614174000/', views.private_profile_completion, name='Private Profile Completion'),
     path('waitlist/', views.waitlist, name='Waitlist'),
     path('waitlist/verify-email/send/', views.waitlist_verify_email_send, name='Waitlist Email Verify Send'),
+    path('waitlist/verified-email-abandoned/', views.waitlist_verified_email_abandoned, name='Waitlist Verified Email Abandoned'),
     path('waitlist/success/', views.waitlist_success, name='Waitlist Success'),
 
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),

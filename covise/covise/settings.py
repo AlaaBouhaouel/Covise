@@ -2,6 +2,13 @@ from pathlib import Path
 import os
 from decouple import config
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
+from django.utils import timezone
+
+try:
+    import resend
+except ImportError:
+    resend = None
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -101,6 +108,42 @@ if DEBUG:
 
 
 DATABASE_URL = config('DATABASE_URL', default='')
+LOCAL_SQLITE_PATH = config('LOCAL_SQLITE_PATH', default='').strip()
+RESEND_API = config('RESEND_API', default='')
+WAITLIST_FAILURE_ALERT_EMAIL = config('WAITLIST_FAILURE_ALERT_EMAIL', default='ellabouhawel@gmail.com')
+PRIVATE_PROFILE_COMPLETION_TOKEN = config('PRIVATE_PROFILE_COMPLETION_TOKEN', default='').strip()
+
+
+def _send_configuration_alert(subject, message):
+    if not RESEND_API or not WAITLIST_FAILURE_ALERT_EMAIL or resend is None:
+        return
+
+    resend.api_key = RESEND_API
+    payload = {
+        'from': 'CoVise Alerts <founders@covise.net>',
+        'to': [WAITLIST_FAILURE_ALERT_EMAIL],
+        'subject': subject,
+        'html': (
+            '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111827;">'
+            f'<h1 style="font-size: 22px; margin: 0 0 16px;">{subject}</h1>'
+            f'<p style="margin: 0 0 10px;"><strong>Date:</strong> {timezone.now().isoformat()}</p>'
+            f'<p style="margin: 0;">{message}</p>'
+            '</div>'
+        ),
+    }
+    try:
+        resend.Emails.send(payload)
+    except Exception:
+        pass
+
+if not DEBUG and not DATABASE_URL:
+    _send_configuration_alert(
+        'CoVise production boot blocked: missing DATABASE_URL',
+        'DEBUG is false but DATABASE_URL is empty. Django refused to fall back to local SQLite in production.',
+    )
+    raise ImproperlyConfigured(
+        "DATABASE_URL must be set when DEBUG is false. Refusing to fall back to local SQLite in production."
+    )
 
 if DATABASE_URL:
     db_ssl_require_raw = str(config('DB_SSL_REQUIRE', default='')).strip().lower()
@@ -124,10 +167,12 @@ if DATABASE_URL:
     }
     DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 else:
+    sqlite_path = Path(LOCAL_SQLITE_PATH) if LOCAL_SQLITE_PATH else Path.home() / '.covise' / 'data' / 'db.sqlite3'
+    sqlite_path.parent.mkdir(parents=True, exist_ok=True)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': sqlite_path,
         }
     }
 
@@ -141,5 +186,3 @@ AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='')
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='eu-central-1')
 
 
-#EMAIL SETTINGS:
-RESEND_API=config('RESEND_API', default='')

@@ -4,20 +4,25 @@ import random
 import uuid
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
+from django.core.validators import URLValidator, validate_email
 from pathlib import Path
 from django.http import Http404, JsonResponse
 from django.db import IntegrityError, OperationalError, close_old_connections
 from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import OnboardingResponse, WaitlistEmailVerification, WaitlistEntry
+from .models import OnboardingResponse, PrivateProfileCompletion, WaitlistEmailVerification, WaitlistEntry
 from covise_app.utils import generate_referral_code, upload_cv_to_s3
 from covise_app.project_details import PROJECT_DETAILS
-import resend
+try:
+    import resend
+except ImportError:
+    resend = None
 
 logger = logging.getLogger(__name__)
 RESEND_API_KEY = settings.RESEND_API
+WAITLIST_FAILURE_ALERT_EMAIL = getattr(settings, "WAITLIST_FAILURE_ALERT_EMAIL", "ellabouhawel@gmail.com")
+url_validator = URLValidator(schemes=["http", "https"])
 
 
 def _normalize_email(value):
@@ -28,7 +33,126 @@ def _generate_verification_code():
     return f"{random.randint(0, 999999):06d}"
 
 
+def _integrity_error_text(exc):
+    parts = [str(exc)]
+    if getattr(exc, "__cause__", None):
+        parts.append(str(exc.__cause__))
+    if getattr(exc, "__context__", None):
+        parts.append(str(exc.__context__))
+    return " ".join(part for part in parts if part).lower()
+
+
+def _log_waitlist_submission_failure(email, reason, *, verified_already, cv_uploaded, cv_s3_key="", extra=None):
+    details = {
+        "email": email,
+        "reason": reason,
+        "verified_already": verified_already,
+        "cv_uploaded": cv_uploaded,
+    }
+    if cv_s3_key:
+        details["cv_s3_key"] = cv_s3_key
+    if extra:
+        details.update(extra)
+    logger.warning("Waitlist submission incomplete: %s", details)
+    if reason in {"referral_code_collision", "unexpected_integrity_error", "operational_error"}:
+        _send_waitlist_failure_alert(email, reason, details)
+
+
+def _send_waitlist_failure_alert(user_email, reason, details):
+    if resend is None or not RESEND_API_KEY or not WAITLIST_FAILURE_ALERT_EMAIL:
+        logger.warning(
+            "Skipped waitlist failure alert for %s because email alerts are not configured.",
+            user_email,
+        )
+        return
+
+    resend.api_key = RESEND_API_KEY
+    timestamp = timezone.now().isoformat()
+    payload = {
+        "from": "CoVise Alerts <founders@covise.net>",
+        "to": [WAITLIST_FAILURE_ALERT_EMAIL],
+        "subject": f"ERROR: waitlist submission failed after email verification for {user_email}",
+        "html": (
+            '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111827;">'
+            '<h1 style="font-size: 22px; margin: 0 0 16px;">Error after email verification</h1>'
+            f'<p style="margin: 0 0 10px;"><strong>User email:</strong> {user_email}</p>'
+            f'<p style="margin: 0 0 10px;"><strong>Date:</strong> {timestamp}</p>'
+            f'<p style="margin: 0 0 10px;"><strong>Reason:</strong> {reason}</p>'
+            f'<p style="margin: 0 0 10px;"><strong>Details:</strong> {json.dumps(details, default=str)}</p>'
+            '</div>'
+        ),
+    }
+
+    try:
+        resend.Emails.send(payload)
+    except Exception:
+        logger.exception("Failed to send waitlist failure alert email for %s", user_email)
+
+
+def _send_waitlist_abandonment_alert(user_email):
+    if resend is None or not RESEND_API_KEY or not WAITLIST_FAILURE_ALERT_EMAIL:
+        logger.warning(
+            "Skipped waitlist abandonment alert for %s because email alerts are not configured.",
+            user_email,
+        )
+        return
+
+    resend.api_key = RESEND_API_KEY
+    timestamp = timezone.now().isoformat()
+    payload = {
+        "from": "CoVise Alerts <founders@covise.net>",
+        "to": [WAITLIST_FAILURE_ALERT_EMAIL],
+        "subject": f"WITHDRAWN: user verified email but left before full waitlist submission for {user_email}",
+        "html": (
+            '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111827;">'
+            '<h1 style="font-size: 22px; margin: 0 0 16px;">User withdrew after email verification</h1>'
+            f'<p style="margin: 0 0 10px;"><strong>User email:</strong> {user_email}</p>'
+            f'<p style="margin: 0 0 10px;"><strong>Date:</strong> {timestamp}</p>'
+            '<p style="margin: 0;">The user completed email verification but left the waitlist flow before submitting the full form.</p>'
+            '</div>'
+        ),
+    }
+
+    try:
+        resend.Emails.send(payload)
+    except Exception:
+        logger.exception("Failed to send waitlist abandonment alert email for %s", user_email)
+
+
+def _send_private_profile_failure_alert(user_email, reason, details):
+    if resend is None or not RESEND_API_KEY or not WAITLIST_FAILURE_ALERT_EMAIL:
+        logger.warning(
+            "Skipped private profile failure alert for %s because email alerts are not configured.",
+            user_email,
+        )
+        return
+
+    resend.api_key = RESEND_API_KEY
+    timestamp = timezone.now().isoformat()
+    payload = {
+        "from": "CoVise Alerts <founders@covise.net>",
+        "to": [WAITLIST_FAILURE_ALERT_EMAIL],
+        "subject": f"ERROR: private profile submission failed for {user_email}",
+        "html": (
+            '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111827;">'
+            '<h1 style="font-size: 22px; margin: 0 0 16px;">Private profile submission failed</h1>'
+            f'<p style="margin: 0 0 10px;"><strong>User email:</strong> {user_email}</p>'
+            f'<p style="margin: 0 0 10px;"><strong>Date:</strong> {timestamp}</p>'
+            f'<p style="margin: 0 0 10px;"><strong>Reason:</strong> {reason}</p>'
+            f'<p style="margin: 0 0 10px;"><strong>Details:</strong> {json.dumps(details, default=str)}</p>'
+            '</div>'
+        ),
+    }
+
+    try:
+        resend.Emails.send(payload)
+    except Exception:
+        logger.exception("Failed to send private profile failure alert email for %s", user_email)
+
+
 def _send_waitlist_verification_email(email_verification):
+    if resend is None:
+        raise RuntimeError("resend is not installed.")
     if not RESEND_API_KEY:
         raise RuntimeError("RESEND_API is not configured.")
 
@@ -127,6 +251,101 @@ def profile(request):
 
 def profile_card(request):
     return render(request, 'profile_card.html')
+
+
+@ensure_csrf_cookie
+def private_profile_completion(request):
+    success_email = request.session.pop("private_profile_completion_success_email", "")
+    context = {
+        "error_message": "",
+        "submitted": bool(success_email),
+        "success_email": success_email,
+        "form_values": {
+            "email": "",
+            "full_name": "",
+            "linkedin_url": "",
+            "venture_summary": "",
+        },
+    }
+
+    if request.method == "POST":
+        email = _normalize_email(request.POST.get("email"))
+        full_name = request.POST.get("full_name", "").strip()
+        linkedin_url = request.POST.get("linkedin_url", "").strip()
+        venture_summary = request.POST.get("venture_summary", "").strip()
+
+        context["form_values"] = {
+            "email": email,
+            "full_name": full_name,
+            "linkedin_url": linkedin_url,
+            "venture_summary": venture_summary,
+        }
+
+        if not email or not full_name or not linkedin_url or not venture_summary:
+            context["error_message"] = "Please complete all fields before submitting."
+            return render(request, "private_profile_completion.html", context)
+
+        try:
+            validate_email(email)
+            url_validator(linkedin_url)
+        except ValidationError:
+            context["error_message"] = "Please enter a valid email and LinkedIn URL."
+            return render(request, "private_profile_completion.html", context)
+
+        submission = None
+        for attempt in range(2):
+            try:
+                submission = PrivateProfileCompletion.objects.create(
+                    email=email,
+                    full_name=full_name,
+                    linkedin_url=linkedin_url,
+                    venture_summary=venture_summary[:150],
+                )
+                break
+            except IntegrityError as exc:
+                error_text = _integrity_error_text(exc)
+                if "email" in error_text and PrivateProfileCompletion.objects.filter(email=email).exists():
+                    context["error_message"] = "This email has already submitted this form."
+                    return render(request, "private_profile_completion.html", context)
+
+                logger.exception("Unexpected integrity error while creating private profile submission for %s", email)
+                _send_private_profile_failure_alert(
+                    email,
+                    "unexpected_integrity_error",
+                    {"attempt": attempt + 1, "error": str(exc)},
+                )
+                context["error_message"] = "Temporary submission issue. Please try again in a moment."
+                return render(request, "private_profile_completion.html", context)
+            except OperationalError as exc:
+                close_old_connections()
+                logger.warning(
+                    "OperationalError while creating private profile submission for %s on attempt %s: %s",
+                    email,
+                    attempt + 1,
+                    exc,
+                )
+                if attempt == 1:
+                    _send_private_profile_failure_alert(
+                        email,
+                        "operational_error",
+                        {"attempts": attempt + 1, "error": str(exc)},
+                    )
+                    context["error_message"] = "Temporary database issue. Please try again in a moment."
+                    return render(request, "private_profile_completion.html", context)
+
+        if submission is None:
+            _send_private_profile_failure_alert(
+                email,
+                "unknown_submission_failure",
+                {"message": "Submission object was not created and no explicit exception path returned."},
+            )
+            context["error_message"] = "Temporary submission issue. Please try again in a moment."
+            return render(request, "private_profile_completion.html", context)
+
+        request.session["private_profile_completion_success_email"] = submission.email
+        return redirect("Private Profile Completion")
+
+    return render(request, "private_profile_completion.html", context)
 
 def map_view(request):
     return render(request, 'map.html')
@@ -313,7 +532,8 @@ def waitlist_verify_email_send(request):
         validate_email(email)
     except ValidationError:
         return JsonResponse({"error": "Please enter a valid email address."}, status=400)
-
+    
+    # if the email is already on the waitlist:
     if WaitlistEntry.objects.filter(email=email).exists():
         return JsonResponse({"error": "This email is already registered on CoVise."}, status=400)
 
@@ -321,7 +541,7 @@ def waitlist_verify_email_send(request):
         email=email,
         verified_at__isnull=False,
     ).first()
-    if existing_verification:
+    if existing_verification: #If the email was verified before:
         request.session["verified_waitlist_email"] = email
         return JsonResponse(
             {
@@ -330,14 +550,16 @@ def waitlist_verify_email_send(request):
                 "message": "Email verified. You can submit now.",
             }
         )
-
     email_verification = WaitlistEmailVerification.objects.filter(email=email).first()
+
+    #If the email is not verified and new to both WaitlistEmailVerification and WaitlistEntry:
     if email_verification is None:
         email_verification = WaitlistEmailVerification.objects.create(
             email=email,
             token=uuid.uuid4(),
             verification_code=_generate_verification_code(),
         )
+    #If the email is not verified and already has a WaitlistEmailVerification record (e.g. from a previous verification attempt), generate a new code and token:
     elif not email_verification.verification_code:
         email_verification.token = uuid.uuid4()
         email_verification.verification_code = _generate_verification_code()
@@ -394,6 +616,41 @@ def waitlist_verify_email_code(request):
     request.session["waitlist_verification_notice"] = "Email verified. You can submit now."
     return JsonResponse({"ok": True, "message": "Email verified. You can submit now."})
 
+
+@ensure_csrf_cookie
+def waitlist_verified_email_abandoned(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed."}, status=405)
+
+    email = _normalize_email(request.POST.get("email"))
+    if not email and request.body:
+        try:
+            payload = json.loads(request.body.decode("utf-8") or "{}")
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            payload = {}
+        email = _normalize_email(payload.get("email"))
+
+    if not email:
+        return JsonResponse({"ok": False, "error": "Email is required."}, status=400)
+
+    if WaitlistEntry.objects.filter(email=email).exists():
+        return JsonResponse({"ok": True, "skipped": "entry_exists"})
+
+    verification = WaitlistEmailVerification.objects.filter(
+        email=email,
+        verified_at__isnull=False,
+    ).first()
+    if verification is None:
+        return JsonResponse({"ok": True, "skipped": "not_verified"})
+
+    if request.session.get("waitlist_abandon_alerted_email") == email:
+        return JsonResponse({"ok": True, "skipped": "already_alerted"})
+
+    request.session["waitlist_abandon_alerted_email"] = email
+    _send_waitlist_abandonment_alert(email)
+    return JsonResponse({"ok": True})
+
+
 @ensure_csrf_cookie
 def waitlist(request):
     context = {
@@ -401,11 +658,23 @@ def waitlist(request):
             "waitlist_initial_email",
             request.session.get("verified_waitlist_email", ""),
         ),
+        "initial_full_name": request.session.pop("waitlist_full_name", ""),
+        "initial_phone_number": request.session.pop("waitlist_phone_number", ""),
+        "initial_email_verification_code": request.session.pop("waitlist_email_verification_code", ""),
         "initial_verified_email": request.session.get("verified_waitlist_email", ""),
         "initial_verification_notice": request.session.pop("waitlist_verification_notice", ""),
         "initial_verification_pending_email": request.session.pop("waitlist_pending_email", ""),
+        "initial_country": request.session.pop("waitlist_country", ""),
+        "initial_non_gcc_business": request.session.pop("waitlist_non_gcc_business", False),
+        "initial_custom_country": request.session.pop("waitlist_custom_country", ""),
+        "initial_description": request.session.pop("waitlist_description", ""),
+        "initial_custom_description": request.session.pop("waitlist_custom_description", ""),
+        "initial_linkedin": request.session.pop("waitlist_linkedin", ""),
+        "initial_no_linkedin": request.session.pop("waitlist_no_linkedin", False),
+        "initial_venture_summary": request.session.pop("waitlist_venture_summary", ""),
         "initial_referral_code": request.session.pop("waitlist_referral_code", ""),
         "error_message": request.session.pop("waitlist_error_message", ""),
+        "show_second_step": request.session.pop("waitlist_show_second_step", False),
     }
 
     if request.method == 'POST':
@@ -424,11 +693,35 @@ def waitlist(request):
         venture_summary = request.POST.get('venture_summary', '').strip()
         cv_file = request.FILES.get('cv')
 
-        def redirect_with_error(message, *, pending_email=''):
+        def redirect_with_error(message, *, pending_email='', show_second_step=None):
             request.session["waitlist_error_message"] = message
+            request.session["waitlist_full_name"] = full_name
+            request.session["waitlist_phone_number"] = phone_number
             request.session["waitlist_initial_email"] = email
+            request.session["waitlist_email_verification_code"] = email_verification_code
             request.session["waitlist_pending_email"] = pending_email
+            request.session["waitlist_country"] = country
+            request.session["waitlist_non_gcc_business"] = non_gcc_business
+            request.session["waitlist_custom_country"] = custom_country
+            request.session["waitlist_description"] = description
+            request.session["waitlist_custom_description"] = custom_description
+            request.session["waitlist_linkedin"] = linkedin
+            request.session["waitlist_no_linkedin"] = no_linkedin
+            request.session["waitlist_venture_summary"] = venture_summary
             request.session["waitlist_referral_code"] = entered_referral_code
+            if show_second_step is None:
+                show_second_step = any([
+                    country,
+                    custom_country,
+                    description,
+                    custom_description,
+                    linkedin,
+                    venture_summary,
+                    entered_referral_code,
+                    non_gcc_business,
+                    no_linkedin,
+                ])
+            request.session["waitlist_show_second_step"] = show_second_step
             return redirect('Waitlist')
 
         linkedin_missing_when_required = (not no_linkedin) and (not linkedin)
@@ -483,7 +776,6 @@ def waitlist(request):
                 if cv_s3_key is None:
                     logger.warning("[waitlist] S3 upload failed for %s", email)
 
-            generated_referral_code = generate_referral_code()
             referred_by = None
             if entered_referral_code:
                 referred_by = WaitlistEntry.objects.filter(my_referral_code=entered_referral_code).first()
@@ -492,6 +784,7 @@ def waitlist(request):
 
             entry = None
             for attempt in range(2):
+                generated_referral_code = generate_referral_code()
                 try:
                     entry = WaitlistEntry.objects.create(
                         full_name=full_name,
@@ -511,18 +804,76 @@ def waitlist(request):
                         my_referral_code=generated_referral_code,
                     )
                     break
-                except IntegrityError:
-                    return redirect_with_error('This email is already registered on CoVise.')
-                except OperationalError:
+                except IntegrityError as exc:
+                    error_text = _integrity_error_text(exc)
+
+                    if (
+                        "email" in error_text
+                        and WaitlistEntry.objects.filter(email=email).exists()
+                    ):
+                        _log_waitlist_submission_failure(
+                            email,
+                            "duplicate_email",
+                            verified_already=is_email_verified,
+                            cv_uploaded=bool(cv_s3_key),
+                            cv_s3_key=cv_s3_key or "",
+                            extra={"attempt": attempt + 1},
+                        )
+                        return redirect_with_error('This email is already registered on CoVise.')
+
+                    if "my_referral_code" in error_text:
+                        logger.warning(
+                            "Referral code collision while creating waitlist entry for %s on attempt %s",
+                            email,
+                            attempt + 1,
+                        )
+                        if attempt == 1:
+                            _log_waitlist_submission_failure(
+                                email,
+                                "referral_code_collision",
+                                verified_already=is_email_verified,
+                                cv_uploaded=bool(cv_s3_key),
+                                cv_s3_key=cv_s3_key or "",
+                                extra={"attempts": attempt + 1},
+                            )
+                            return redirect_with_error('Temporary database issue. Please try again in a moment.')
+                        continue
+
+                    logger.exception("Unexpected integrity error while creating waitlist entry for %s", email)
+                    _log_waitlist_submission_failure(
+                        email,
+                        "unexpected_integrity_error",
+                        verified_already=is_email_verified,
+                        cv_uploaded=bool(cv_s3_key),
+                        cv_s3_key=cv_s3_key or "",
+                        extra={"attempt": attempt + 1, "error": str(exc)},
+                    )
+                    return redirect_with_error('Temporary database issue. Please try again in a moment.')
+                except OperationalError as exc:
                     # Handle transient DB disconnects (e.g., SSL EOF) by refreshing the connection once.
                     close_old_connections()
+                    logger.warning(
+                        "OperationalError while creating waitlist entry for %s on attempt %s: %s",
+                        email,
+                        attempt + 1,
+                        exc,
+                    )
                     if attempt == 1:
                         logger.exception("Failed to create waitlist entry after retry for %s", email)
+                        _log_waitlist_submission_failure(
+                            email,
+                            "operational_error",
+                            verified_already=is_email_verified,
+                            cv_uploaded=bool(cv_s3_key),
+                            cv_s3_key=cv_s3_key or "",
+                            extra={"attempts": attempt + 1, "error": str(exc)},
+                        )
                         return redirect_with_error('Temporary database issue. Please try again in a moment.')
 
             request.session["waitlist_email"] = email
             request.session["waitlist_entry_id"] = entry.id
             request.session["my_referral_code"] = entry.my_referral_code
+            request.session.pop("waitlist_abandon_alerted_email", None)
             return redirect('Waitlist Success')
 
     return render(request, 'waitlist.html', context)

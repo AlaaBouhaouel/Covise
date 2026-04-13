@@ -56,6 +56,22 @@ class WaitlistEmailVerification(models.Model):
         return f"WaitlistEmailVerification<{self.email}>"
 
 
+class PrivateProfileCompletion(models.Model):
+    email = models.EmailField(unique=True)
+    full_name = models.CharField(max_length=150)
+    linkedin_url = models.URLField(max_length=300)
+    venture_summary = models.CharField(max_length=150)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-submitted_at"]
+
+    def __str__(self):
+        return f"PrivateProfileCompletion<{self.email}>"
+
+
 class OnboardingResponse(models.Model):
     waitlist_entry = models.OneToOneField(
         WaitlistEntry,

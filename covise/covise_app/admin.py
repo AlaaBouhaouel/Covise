@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import OnboardingResponse, Profile, WaitlistEmailVerification, WaitlistEntry, User
+from django.conf import settings
+from django.urls import reverse
+from django.utils.html import format_html
+from .models import OnboardingResponse, PrivateProfileCompletion, Profile, WaitlistEmailVerification, WaitlistEntry, User
 
 
 @admin.register(User)
@@ -147,3 +150,21 @@ class ProfileAdmin(admin.ModelAdmin):
         }),
         ("Timestamps", {"fields": ("created_at", "updated_at")}),
     )
+
+
+@admin.register(PrivateProfileCompletion)
+class PrivateProfileCompletionAdmin(admin.ModelAdmin):
+    list_display = ("email", "full_name", "submitted_at", "created_at")
+    list_filter = ("submitted_at", "created_at")
+    search_fields = ("email", "full_name", "linkedin_url", "venture_summary")
+    readonly_fields = ("shared_private_link", "submitted_at", "created_at", "updated_at")
+    fieldsets = (
+        ("Access", {"fields": ("shared_private_link",)}),
+        ("Submission", {"fields": ("email", "full_name", "linkedin_url", "venture_summary", "submitted_at")}),
+        ("Timestamps", {"fields": ("created_at", "updated_at")}),
+    )
+
+    @admin.display(description="Shared private link")
+    def shared_private_link(self, obj):
+        path = reverse("Private Profile Completion")
+        return format_html('<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>', path, path)

@@ -45,11 +45,11 @@
                 {% endif %}
 
                     <label for="full_name">Name</label>
-                    <input id="full_name" name="full_name" type="text" required>
+                    <input id="full_name" name="full_name" type="text" value="{{ initial_full_name }}" required>
 
                     <label for="phone_number">Phone number</label>
                     <div class="phone-wrapper">
-                        <input id="phone_number" name="phone_number" type="tel" inputmode="tel" placeholder="" required>
+                        <input id="phone_number" name="phone_number" type="tel" inputmode="tel" placeholder="" value="{{ initial_phone_number }}" required>
                     </div>
 
                     <label for="email">Email</label>
@@ -61,7 +61,7 @@
                             <p class="field-helper" >This should not take more than a few seconds.</p>
                         </div>
                         <div class="email-verification-panel">
-                            <input id="emailVerificationCode" name="email_verification_code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+                            <input id="emailVerificationCode" name="email_verification_code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="{{ initial_email_verification_code }}" placeholder="000000">
                         </div>
                     </div>
                     <button class="process" type="button" id="next-btn">
@@ -85,43 +85,43 @@
                 <label for="country">Country</label>
                 <select id="country" name="country" required>
                     <option value="">Select your country</option>
-                    <option value="bahrain">Bahrain</option>
-                    <option value="kuwait">Kuwait</option>
-                    <option value="oman">Oman</option>
-                    <option value="qatar">Qatar</option>
-                    <option value="saudi_arabia">Saudi Arabia</option>
-                    <option value="united_arab_emirates">United Arab Emirates</option>
+                    <option value="bahrain" {% if initial_country == 'bahrain' %}selected{% endif %}>Bahrain</option>
+                    <option value="kuwait" {% if initial_country == 'kuwait' %}selected{% endif %}>Kuwait</option>
+                    <option value="oman" {% if initial_country == 'oman' %}selected{% endif %}>Oman</option>
+                    <option value="qatar" {% if initial_country == 'qatar' %}selected{% endif %}>Qatar</option>
+                    <option value="saudi_arabia" {% if initial_country == 'saudi_arabia' %}selected{% endif %}>Saudi Arabia</option>
+                    <option value="united_arab_emirates" {% if initial_country == 'united_arab_emirates' %}selected{% endif %}>United Arab Emirates</option>
                 </select>
 
                 <label class="non-gcc-toggle" for="non_gcc_business">
-                    <input id="non_gcc_business" name="non_gcc_business" type="checkbox">
+                    <input id="non_gcc_business" name="non_gcc_business" type="checkbox" {% if initial_non_gcc_business %}checked{% endif %}>
                     Not based in the GCC.
                 </label>
 
                 <div id="custom-country-field" class="custom-country-field" hidden>
                     <label for="custom_country">Enter your country</label>
-                    <input id="custom_country" name="custom_country" type="text" >
+                    <input id="custom_country" name="custom_country" type="text" value="{{ initial_custom_country }}">
                 </div>
 
                 
                 <label for="description">What best describes you?</label>
                 <select id="description" name="description" required>
                     <option value="">Select what best describes you</option>
-                    <option value="founder_idea">Founder with an idea</option>
-                    <option value="developer">Developer or technical builder</option>
-                    <option value="operator">Operator or specialist</option>
-                    <option value="other">Other</option>
+                    <option value="founder_idea" {% if initial_description == 'founder_idea' %}selected{% endif %}>Founder with an idea</option>
+                    <option value="developer" {% if initial_description == 'developer' %}selected{% endif %}>Developer or technical builder</option>
+                    <option value="operator" {% if initial_description == 'operator' %}selected{% endif %}>Operator or specialist</option>
+                    <option value="other" {% if initial_description == 'other' %}selected{% endif %}>Other</option>
                 </select>
                 <div id="custom-description-field" class="custom-country-field" hidden>
                     <label for="custom_description">Tell us more</label>
-                    <input id="custom_description" name="custom_description" type="text">
+                    <input id="custom_description" name="custom_description" type="text" value="{{ initial_custom_description }}">
                 </div>
 
 
                 <label for="linkedin">LinkedIn</label>
-                <input id="linkedin" name="linkedin" type="url" placeholder="https://linkedin.com/in/username" required>
+                <input id="linkedin" name="linkedin" type="url" value="{{ initial_linkedin }}" placeholder="https://linkedin.com/in/username" required>
                 <label class="non-gcc-toggle linkedin-toggle" for="no_linkedin">
-                    <input id="no_linkedin" name="no_linkedin" type="checkbox">
+                    <input id="no_linkedin" name="no_linkedin" type="checkbox" {% if initial_no_linkedin %}checked{% endif %}>
                     I do not have a LinkedIn
                 </label>
 
@@ -131,7 +131,7 @@
 
                 <label for="venture_summary">Tell us about your venture briefly <span class="recommended-tag">(Recommended)</span></label>
                 <p class="field-helper">Your information stays private and is only used to ensure a better experience within the platform. <a href="/privacy/">Read our privacy policy.</a></p>
-                <textarea id="venture_summary" name="venture_summary" rows="2" placeholder="A short summary of what you're building, or hoping to launch"></textarea>
+                <textarea id="venture_summary" name="venture_summary" rows="2" placeholder="A short summary of what you're building, or hoping to launch">{{ initial_venture_summary }}</textarea>
 
                 <label for="referral_code">Referred by someone?</label>
                 <input id="referral_code" name="referral_code" type="text" value="{{ initial_referral_code }}" placeholder="Enter their referral code">
@@ -167,6 +167,7 @@
         const initialVerifiedEmail = "{{ initial_verified_email|escapejs }}";
         const initialVerificationNotice = "{{ initial_verification_notice|escapejs }}";
         const initialPendingVerificationEmail = "{{ initial_verification_pending_email|escapejs }}";
+        const showSecondStepOnLoad = {{ show_second_step|yesno:"true,false" }};
 
         const nextBtn= document.getElementById('next-btn');
         const secondCard = document.getElementById('waitlist-card-second');
@@ -175,6 +176,7 @@
         let verifiedEmail = initialVerifiedEmail;
         let verificationSentEmail = initialVerifiedEmail || initialPendingVerificationEmail;
         let verificationSendTimeout = null;
+        let waitlistSubmissionStarted = false;
 
         function showSecondCard() {
             firstCard.hidden = true;
@@ -417,7 +419,28 @@
         if (initialVerificationNotice && verifiedEmail) {
             setEmailVerificationState(initialVerificationNotice, 'success');
         }
+        if (showSecondStepOnLoad) {
+            showSecondCard();
+        }
         updateSubmitState();
+
+        function reportVerifiedEmailAbandonment() {
+            const currentEmail = normalizeEmail(emailInput.value);
+            if (!currentEmail || currentEmail !== verifiedEmail || waitlistSubmissionStarted) {
+                return;
+            }
+
+            const storageKey = 'covise-waitlist-abandon-alert:' + currentEmail;
+            if (window.sessionStorage.getItem(storageKey) === '1') {
+                return;
+            }
+            window.sessionStorage.setItem(storageKey, '1');
+
+            const payload = new FormData();
+            payload.append('email', currentEmail);
+            payload.append('csrfmiddlewaretoken', csrfToken);
+            navigator.sendBeacon("{% url 'Waitlist Verified Email Abandoned' %}", payload);
+        }
     </script>
 
     <script>
@@ -440,7 +463,10 @@
             if (onboardBtnLabel) {
                 onboardBtnLabel.textContent = 'Processing...';
             }
+            waitlistSubmissionStarted = true;
         });
+
+        window.addEventListener('pagehide', reportVerifiedEmailAbandonment);
 
     </script>
 </body>
