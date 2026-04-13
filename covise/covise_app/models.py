@@ -461,9 +461,19 @@ class Post(models.Model):
         WIN = "win", "Win"
         AMA = "ask_me_anything", "Ask Me Anything"
 
+    class ThemeColor(models.TextChoices):
+        DEFAULT = "default", "Default"
+        BLUE = "blue", "Blue"
+        AMBER = "amber", "Amber"
+        GREEN = "green", "Green"
+        RED = "red", "Red"
+
 
     user=models.ForeignKey(User, on_delete=models.CASCADE, related_name="posts")
+    title=models.CharField(max_length=255, blank=True, default="")
     post_type=models.CharField(max_length=20, choices=PostType.choices)
+    theme_color=models.CharField(max_length=20, choices=ThemeColor.choices, default=ThemeColor.DEFAULT)
+    image=models.ImageField(upload_to="post_images/", blank=True, null=True)
     content=models.TextField()
     likes_number=models.IntegerField(default=0)
     comments_number=models.IntegerField(default=0)

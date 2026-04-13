@@ -235,7 +235,7 @@ class UserPreferenceAdmin(admin.ModelAdmin):
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ("user", "post_type", "content","likes_number", "comments_number","created_at")
+    list_display = ("user", "title", "post_type", "theme_color", "image", "likes_number", "comments_number", "created_at")
 
 
 @admin.register(Comment)

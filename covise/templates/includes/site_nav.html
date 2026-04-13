@@ -1,5 +1,5 @@
 {% load static %}
-<nav class="nav{% if nav_classes %} {{ nav_classes }}{% endif %}">
+<nav class="nav{% if nav_classes %} {{ nav_classes }}{% endif %}{% if nav_join_href and nav_join_label %} nav--split-cta{% endif %}">
     <a href="/" class="logo">
         <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
         <span>CoVise</span>
@@ -24,21 +24,99 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
     </button>
-    <div class="nav-links">
-        {% if show_home %}
-        <a href="/" class="nav-link{% if active_page == 'home' %} nav-link-active{% endif %}">HOME</a>
-        {% endif %}
-        <a href="/about/" class="nav-link{% if active_page == 'about' %} nav-link-active{% endif %}">ABOUT</a>
-        <a href="/features/" class="nav-link{% if active_page == 'features' %} nav-link-active{% endif %}">FEATURES</a>
-        <a href="/login/" class="nav-link nav-link-demo{% if active_page == 'cta' %} nav-link-active{% endif %}">LOGIN</a>
+    <div class="nav-links{% if nav_join_href and nav_join_label %} nav-links--center{% endif %}">
+        <div class="nav-link-group">
+            {% if show_home %}
+            <a href="/" class="nav-link{% if active_page == 'home' %} nav-link-active{% endif %}">HOME</a>
+            {% endif %}
+            <a href="/about/" class="nav-link{% if active_page == 'about' %} nav-link-active{% endif %}">ABOUT</a>
+            <a href="/features/" class="nav-link{% if active_page == 'features' %} nav-link-active{% endif %}">FEATURES</a>
+            <a href="/login/" class="nav-link nav-link-demo{% if active_page == 'cta' %} nav-link-active{% endif %}">LOGIN</a>
+        </div>
     </div>
+    {% if nav_join_href and nav_join_label %}
+    <div class="nav-header-cta-wrap">
+        <a href="{{ nav_join_href }}" class="nav-header-cta nav-rocket-btn" data-rocket-link>
+            <span class="btn-text">{{ nav_join_label }}</span>
+            <span class="btn-text-loading">{{ nav_join_label }}</span>
+            <span class="rocket-anchor" aria-hidden="true">
+                <svg class="rocket-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C12 2 7 7.5 7 13c0 2.2 1 4 2.5 5l.5-3h4l.5 3c1.5-1 2.5-2.8 2.5-5 0-5.5-5-11-5-11z" fill="url(#navRocketDesktop)"/>
+                    <ellipse cx="12" cy="12.5" rx="1.5" ry="1.8" fill="#1e293b"/>
+                    <path d="M7 13c-1.5.5-2.5 2-2.5 2s1.5.5 2.5-.5" fill="rgba(139,92,246,0.5)"/>
+                    <path d="M17 13c1.5.5 2.5 2 2.5 2s-1.5.5-2.5-.5" fill="rgba(59,130,246,0.5)"/>
+                    <path d="M9.5 18c-.3 1-.8 2.5-1 3.5.8-.2 1.8-.8 2.5-1.5" fill="#f59e0b" opacity="0.8"/>
+                    <path d="M14.5 18c.3 1 .8 2.5 1 3.5-.8-.2-1.8-.8-2.5-1.5" fill="#ef4444" opacity="0.8"/>
+                    <path d="M11 19h2l.3 2.5c-.4.3-.9.5-1.3.5s-.9-.2-1.3-.5z" fill="#fbbf24" opacity="0.9"/>
+                    <defs>
+                        <linearGradient id="navRocketDesktop" x1="12" y1="2" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#e2e8f0"/>
+                            <stop offset="100%" stop-color="#94a3b8"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </span>
+        </a>
+    </div>
+    {% endif %}
     <div class="mobile-nav-menu" id="mobileNavMenu" hidden>
         {% if show_home %}
-        <a href="/" class="mobile-nav-link{% if active_page == 'home' %} mobile-nav-link-active{% endif %}">HOME</a>
+        <a href="/" class="mobile-nav-link{% if active_page == 'home' %} mobile-nav-link-active{% endif %}">
+            <svg class="mobile-nav-link-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 10.5 12 3l9 7.5"></path>
+                <path d="M5 9.5V21h14V9.5"></path>
+            </svg>
+            <span>HOME</span>
+        </a>
         {% endif %}
-        <a href="/about/" class="mobile-nav-link{% if active_page == 'about' %} mobile-nav-link-active{% endif %}">ABOUT</a>
-        <a href="/features/" class="mobile-nav-link{% if active_page == 'features' %} mobile-nav-link-active{% endif %}">FEATURES</a>
-        <a href="/login/" class="mobile-nav-link mobile-nav-link-demo{% if active_page == 'cta' %} mobile-nav-link-active{% endif %}">LOGIN</a>
+        <a href="/about/" class="mobile-nav-link{% if active_page == 'about' %} mobile-nav-link-active{% endif %}">
+            <svg class="mobile-nav-link-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="3.5"></circle>
+                <path d="M5 20a7 7 0 0 1 14 0"></path>
+            </svg>
+            <span>ABOUT</span>
+        </a>
+        <a href="/features/" class="mobile-nav-link{% if active_page == 'features' %} mobile-nav-link-active{% endif %}">
+            <svg class="mobile-nav-link-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="5" width="6" height="6" rx="1.5"></rect>
+                <rect x="14" y="5" width="6" height="6" rx="1.5"></rect>
+                <rect x="4" y="13" width="6" height="6" rx="1.5"></rect>
+                <rect x="14" y="13" width="6" height="6" rx="1.5"></rect>
+            </svg>
+            <span>FEATURES</span>
+        </a>
+        <a href="/login/" class="mobile-nav-link mobile-nav-link-demo{% if active_page == 'cta' %} mobile-nav-link-active{% endif %}">
+            <svg class="mobile-nav-link-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 17l5-5-5-5"></path>
+                <path d="M15 12H4"></path>
+                <path d="M20 4v16"></path>
+            </svg>
+            <span>LOGIN</span>
+        </a>
+
+        {% if nav_join_href and nav_join_label %}
+        <a href="{{ nav_join_href }}" class="mobile-nav-link nav-header-cta-mobile nav-rocket-btn" data-rocket-link>
+            <span class="btn-text">{{ nav_join_label }}</span>
+            <span class="btn-text-loading">{{ nav_join_label }}</span>
+            <span class="rocket-anchor" aria-hidden="true">
+                <svg class="rocket-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C12 2 7 7.5 7 13c0 2.2 1 4 2.5 5l.5-3h4l.5 3c1.5-1 2.5-2.8 2.5-5 0-5.5-5-11-5-11z" fill="url(#navRocketMobile)"/>
+                    <ellipse cx="12" cy="12.5" rx="1.5" ry="1.8" fill="#1e293b"/>
+                    <path d="M7 13c-1.5.5-2.5 2-2.5 2s1.5.5 2.5-.5" fill="rgba(139,92,246,0.5)"/>
+                    <path d="M17 13c1.5.5 2.5 2 2.5 2s-1.5.5-2.5-.5" fill="rgba(59,130,246,0.5)"/>
+                    <path d="M9.5 18c-.3 1-.8 2.5-1 3.5.8-.2 1.8-.8 2.5-1.5" fill="#f59e0b" opacity="0.8"/>
+                    <path d="M14.5 18c.3 1 .8 2.5 1 3.5-.8-.2-1.8-.8-2.5-1.5" fill="#ef4444" opacity="0.8"/>
+                    <path d="M11 19h2l.3 2.5c-.4.3-.9.5-1.3.5s-.9-.2-1.3-.5z" fill="#fbbf24" opacity="0.9"/>
+                    <defs>
+                        <linearGradient id="navRocketMobile" x1="12" y1="2" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#e2e8f0"/>
+                            <stop offset="100%" stop-color="#94a3b8"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </span>
+        </a>
+        {% endif %}
         <button class="mobile-nav-link mobile-theme-link" id="mobileThemeToggle" type="button">
             <svg class="mobile-theme-icon mobile-theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="12" r="4.5"></circle>

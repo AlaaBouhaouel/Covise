@@ -46,28 +46,57 @@ def _display_value(value, fallback=""):
     return str(value).strip() if value else fallback
 
 
+def _top_skill_labels(value, limit=3):
+    if isinstance(value, list):
+        items = [str(item).strip() for item in value if str(item).strip()]
+    elif isinstance(value, dict):
+        items = [str(item).strip() for item in value.values() if str(item).strip()]
+    elif value:
+        items = [str(value).strip()]
+    else:
+        items = []
+
+    deduped = []
+    for item in items:
+        if item and item not in deduped:
+            deduped.append(item)
+    return deduped[:limit]
+
+
 def _relative_time_label(value):
     if not value:
         return "New"
 
     delta = timesince(value)
     if not delta:
-        return "Now"
+        return "Right Now"
 
     first_part = delta.split(",")[0].strip().lower()
     if first_part.startswith("0 "):
-        return "Now"
+        return "Right Now"
 
     return f"{first_part} ago"
 
 
 def _build_post_feed_title(post):
+    explicit_title = " ".join((getattr(post, "title", "") or "").split())
+    if explicit_title:
+        return explicit_title
+
     raw_text = " ".join((post.content or "").split())
     if not raw_text:
         return post.get_post_type_display()
     sentence_break = raw_text.find(". ")
     title_source = raw_text if sentence_break == -1 else raw_text[:sentence_break + 1]
     return (title_source[:110].rstrip() + "…") if len(title_source) > 110 else title_source
+
+
+def _post_theme_class(post):
+    theme_color = (getattr(post, "theme_color", "") or Post.ThemeColor.DEFAULT).strip()
+    valid_theme_colors = {choice for choice, _label in Post.ThemeColor.choices}
+    if theme_color not in valid_theme_colors:
+        theme_color = Post.ThemeColor.DEFAULT
+    return f"post-tone-{theme_color}"
 
 
 def _conversation_partner(conversation, current_user):
@@ -246,18 +275,29 @@ def _project_card_context(project):
 def landing(request):
     return render(request, 'landing.html')
 
+@login_required
 def home(request):
     if not request.user.is_authenticated:
         return HttpResponsePermanentRedirect(reverse('Landing Page'))
 
     posts = list(
-        Post.objects.select_related("user").prefetch_related("comments__user").order_by("-created_at")
+        Post.objects.select_related("user", "user__profile").prefetch_related("comments__user").order_by("-created_at")
     )
     for post in posts:
         post.feed_title = _build_post_feed_title(post)
+        post.feed_skills = _top_skill_labels(getattr(getattr(post.user, "profile", None), "skills", None))
+        post.theme_class = _post_theme_class(post)
+        post.relative_time = _relative_time_label(post.created_at)
 
+    full_name = (request.user.full_name or "").strip()
+    first_name = full_name.split()[0] if full_name else "User"
+    profile = getattr(request.user, "profile", None)
+    raw_skills = getattr(profile, "skills", None) if profile else []
+    tags = set(raw_skills or [])
     response = render(request, 'home.html', {
-        "posts": posts
+        "posts": posts,
+        "first_name": first_name,
+        "tags": tags,
     })
     response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     return response
@@ -270,6 +310,8 @@ def post_detail(request, post_id):
         id=post_id,
     )
     post.feed_title = _build_post_feed_title(post)
+    post.theme_class = _post_theme_class(post)
+    post.relative_time = _relative_time_label(post.created_at)
     response = render(request, "post_detail.html", {"post": post})
     response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     return response
@@ -308,6 +350,64 @@ def add_comment(request, post_id):
         },
         "comments_count": post.comments_number,
     })
+
+
+@login_required
+def create_post(request):
+    full_name = (request.user.full_name or "").strip()
+    first_name = full_name.split()[0] if full_name else "User"
+
+    context = {
+        "first_name": first_name,
+        "post_type_choices": Post.PostType.choices,
+        "form_data": {
+            "title": "",
+            "post_type": Post.PostType.UPDATE,
+            "theme_color": Post.ThemeColor.DEFAULT,
+            "content": "",
+        },
+    }
+
+    if request.method != "POST":
+        response = render(request, "create_post.html", context)
+        response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+        return response
+
+    title = request.POST.get("title", "").strip()
+    post_type = request.POST.get("post_type", Post.PostType.UPDATE).strip()
+    theme_color = request.POST.get("theme_color", Post.ThemeColor.DEFAULT).strip()
+    content = request.POST.get("content", "").strip()
+    image = request.FILES.get("image")
+
+    context["form_data"] = {
+        "title": title,
+        "post_type": post_type,
+        "theme_color": theme_color,
+        "content": content,
+    }
+
+    valid_post_types = {choice for choice, _label in Post.PostType.choices}
+    valid_theme_colors = {choice for choice, _label in Post.ThemeColor.choices}
+    if not title or not content:
+        context["error_message"] = "Title and post content are required."
+        return render(request, "create_post.html", context, status=400)
+
+    if post_type not in valid_post_types:
+        context["error_message"] = "Select a valid post type."
+        return render(request, "create_post.html", context, status=400)
+
+    if theme_color not in valid_theme_colors:
+        theme_color = Post.ThemeColor.DEFAULT
+
+    post = Post.objects.create(
+        user=request.user,
+        title=title,
+        post_type=post_type,
+        theme_color=theme_color,
+        image=image,
+        content=content,
+    )
+    return redirect("Post Detail", post_id=post.id)
 
 @login_required
 def messages(request):
@@ -402,8 +502,9 @@ def respond_to_conversation_request(request, request_id, action):
 
 @login_required
 def projects(request):
-    project_cards = [_project_card_context(project) for project in Project.objects.filter(is_active=True)]
-    return render(request, 'project.html', {"projects": project_cards})
+    response = render(request, "coming_soon.html", {"page_name": "Projects"})
+    response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return response
 
 
 @login_required
@@ -572,7 +673,9 @@ def map_view(request):
     return render(request, 'map.html')
 @login_required
 def chatbot(request):
-    return render(request, 'chatbot.html')
+    response = render(request, "coming_soon.html", {"page_name": "CoVise Advisor"})
+    response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return response
 @login_required
 def settings(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
@@ -754,13 +857,16 @@ def terms(request):
 def privacy(request):
     return render(request, 'privacy.html')
 
+def security(request):
+    return render(request, 'security.html')
+
 def login_view(request):
     next_url = request.POST.get('next') or request.GET.get('next')
 
 
     if request.method == 'GET':
         return render(request, 'login.html', {'next': next_url})
-    email = request.POST.get('email', '').strip()
+    email = request.POST.get('email', '').strip().lower()
     password = request.POST.get('password', '').strip()
     context = {
         "form_data": {
@@ -771,13 +877,26 @@ def login_view(request):
         context["error_message"] = "Both email and password are required."
         return render(request, 'login.html', context, status=400)
 
+    existing_user = User.objects.filter(email=email).first()
+    if existing_user is None:
+        approved_waitlist_entry = WaitlistEntry.objects.filter(
+            email=email,
+            status=WaitlistEntry.Status.APPROVED,
+        ).first()
+        if approved_waitlist_entry is not None:
+            context["error_message"] = "Your email is approved. Create your account from sign in first."
+        else:
+            context["error_message"] = "This is a private community. You can only access it if your application has been approved. Please request access to become a member."
+        return render(request, 'login.html', context, status=400)
+
     user = authenticate(request, email=email, password=password)
     if user is None:
-        context["error_message"] = "Invalid email or password."
+        context["error_message"] = "Incorrect password. Please try again."
         return render(request, 'login.html', context, status=400)
 
     if not hasattr(user, "profile"):
         sync_profile_for_user(user)
+    UserPreference.objects.get_or_create(user=user)
     login(request, user)
     _record_successful_sign_in(user)
     return redirect(next_url or "Home")
@@ -787,7 +906,7 @@ def signin(request):
     if request.method != 'POST':
         return render(request, 'signin.html')
     
-    email = request.POST.get('email', '').strip()
+    email = request.POST.get('email', '').strip().lower()
     password = request.POST.get('password', '').strip()
     confirm_password = request.POST.get('confirm_password', '').strip()
     context = {
@@ -814,6 +933,10 @@ def signin(request):
     if password != confirm_password:
         context["error_message"] = "Passwords do not match."
         return render(request, 'signin.html', context, status=400)
+    
+    if password and len(password) < 8:
+        context["error_message"] = "Passwords must be at least 8 characters long."
+        return render(request, 'signin.html', context, status=400)
 
 
     try:
@@ -827,6 +950,10 @@ def signin(request):
         return render(request, 'signin.html', context, status=400)
 
     sync_profile_for_user(user, waitlist_entry=approved_waitlist_entry)
+    UserPreference.objects.get_or_create(user=user)
+    if approved_waitlist_entry.status != WaitlistEntry.Status.ACTIVATED:
+        approved_waitlist_entry.status = WaitlistEntry.Status.ACTIVATED
+        approved_waitlist_entry.save(update_fields=["status"])
     user = authenticate(request, email=email, password=password)
     if user is None:
         context["error_message"] = "Your account was created, but we could not sign you in automatically. Please try logging in."
@@ -930,7 +1057,9 @@ def about(request):
     return render(request, 'about.html')
 @login_required
 def workspace(request):
-    return render(request, 'workspace.html')
+    response = render(request, "coming_soon.html", {"page_name": "Workspace"})
+    response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return response
 
 @ensure_csrf_cookie
 def waitlist(request):

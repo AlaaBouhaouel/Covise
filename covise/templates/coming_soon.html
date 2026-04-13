@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>CoVise | Coming Soon</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'home.css' %}">
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg-dark: #0a0a0a;
+        }
+
+        body {
+            font-family: sans-serif;
+            background: var(--bg-dark);
+        }
+
+        .coming-soon-main {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-self: center;
+            min-height: 100vh;
+        }
+
+        .coming-soon-main::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(8, 18, 46, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .coming-soon-shell {
+            position: relative;
+            z-index: 1;
+            justify-self: center;
+            align-self: center;
+            margin: 0;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .coming-soon-copy {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar" aria-label="Primary">
+            <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home" title="Go to Home">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 18l-6-6 6-6"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects" title="Open Projects">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <rect x="3" y="4" width="7" height="7"></rect>
+                    <rect x="14" y="4" width="7" height="7"></rect>
+                    <rect x="3" y="15" width="7" height="7"></rect>
+                    <rect x="14" y="15" width="7" height="7"></rect>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Messages' %}" aria-label="Messages" title="Open Messages">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <path d="M4 6h16v10H7l-3 3V6z"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Workspace' %}" aria-label="Workspace" title="Open Workspace">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <path d="M3 7h18v12H3z"></path>
+                    <path d="M9 7V5h6v2"></path>
+                    <path d="M3 12h18"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo" title="Open CoVise Advisor">
+                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+            </a>
+            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <circle cx="12" cy="8" r="4"></circle>
+                    <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Settings' %}" aria-label="Settings" title="Open settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </a>
+        </aside>
+
+        <main class="main coming-soon-main">
+            <section class="coming-soon-shell" aria-label="Coming soon message">
+                <p class="coming-soon-copy">Coming Soon ...</p>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

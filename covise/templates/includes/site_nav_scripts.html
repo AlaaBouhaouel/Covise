@@ -64,3 +64,145 @@
         setTheme(html.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
     })();
 </script>
+<script>
+    (function() {
+        var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-rocket-link]'));
+        if (buttons.length === 0) return;
+
+        var ANGLE_DEG = 30;
+        var ANGLE_RAD = ANGLE_DEG * Math.PI / 180;
+        var FLY_X = Math.sin(ANGLE_RAD);
+        var FLY_Y = -Math.cos(ANGLE_RAD);
+        var EX_X = -FLY_X;
+        var EX_Y = -FLY_Y;
+        var flameColors = ['#fbbf24', '#f59e0b', '#ef4444', '#fb923c', '#fde68a', '#ff6b35', '#fcd34d', '#dc2626', '#f97316'];
+
+        function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+        function easeIn(t) { return t * t; }
+
+        buttons.forEach(function(btn) {
+            var anchor = btn.querySelector('.rocket-anchor');
+            if (!anchor) return;
+            var particleLayer = btn.querySelector('.rocket-particles');
+            if (!particleLayer) {
+                particleLayer = document.createElement('span');
+                particleLayer.className = 'rocket-particles';
+                btn.insertBefore(particleLayer, btn.firstChild);
+            }
+
+            var busy = false;
+            var hoverShaking = false;
+            var hoverRAF = null;
+
+            function getRocketCenter() {
+                var ar = anchor.getBoundingClientRect();
+                var br = btn.getBoundingClientRect();
+                return {
+                    x: ar.left + ar.width / 2 - br.left,
+                    y: ar.top + ar.height / 2 - br.top
+                };
+            }
+
+            function spawnSpark(cx, cy) {
+                var el = document.createElement('span');
+                el.className = 'particle';
+                var size = 4 + Math.random() * 8;
+                var spread = (Math.random() - 0.5) * 0.5;
+                var dirX = EX_X + spread * FLY_Y;
+                var dirY = EX_Y - spread * FLY_X;
+                var dist = 14 + Math.random() * 42;
+                var tx = dirX * dist;
+                var ty = dirY * dist;
+                var dur = 240 + Math.random() * 260;
+                var glow = flameColors[Math.floor(Math.random() * flameColors.length)];
+
+                el.style.cssText =
+                    'width:' + size + 'px;height:' + size + 'px;' +
+                    'left:' + (cx - size / 2) + 'px;' +
+                    'top:' + (cy - size / 2) + 'px;' +
+                    'background:' + glow + ';' +
+                    'box-shadow:0 0 ' + (size * 2.4) + 'px ' + (size * 0.55) + 'px ' + glow + ';';
+
+                particleLayer.appendChild(el);
+
+                var start = performance.now();
+                function tick(now) {
+                    var t = Math.min((now - start) / dur, 1);
+                    var e = easeOut(t);
+                    el.style.transform = 'translate(' + (tx * e) + 'px,' + (ty * e) + 'px) scale(' + (1 - e * 0.8) + ')';
+                    el.style.opacity = 1 - easeIn(t);
+                    if (t < 1) requestAnimationFrame(tick);
+                    else if (el.parentNode) el.parentNode.removeChild(el);
+                }
+                requestAnimationFrame(tick);
+            }
+
+            function hoverRumble() {
+                if (!hoverShaking || busy) return;
+                var now = performance.now();
+                var rocketOsc = Math.sin(now * 0.025) * 1.8;
+                anchor.style.transform = 'translate(' + (FLY_X * rocketOsc) + 'px,' + (FLY_Y * rocketOsc) + 'px)';
+
+                if (Math.random() < 0.18) {
+                    var pos = getRocketCenter();
+                    spawnSpark(pos.x + ((Math.random() - 0.5) * 6), pos.y + ((Math.random() - 0.5) * 6));
+                }
+
+                hoverRAF = requestAnimationFrame(hoverRumble);
+            }
+
+            btn.addEventListener('mouseenter', function() {
+                if (busy) return;
+                hoverShaking = true;
+                hoverRumble();
+            });
+
+            btn.addEventListener('mouseleave', function() {
+                hoverShaking = false;
+                if (hoverRAF) cancelAnimationFrame(hoverRAF);
+                if (!busy) anchor.style.transform = '';
+            });
+
+            btn.addEventListener('click', function(event) {
+                if (busy) return;
+                event.preventDefault();
+                busy = true;
+                hoverShaking = false;
+                if (hoverRAF) cancelAnimationFrame(hoverRAF);
+                btn.classList.add('is-launching');
+
+                var startPos = getRocketCenter();
+                var flightDist = window.innerWidth <= 768 ? 150 : 210;
+                var flightDur = 900;
+                var launchStart = performance.now();
+
+                function animate(now) {
+                    var elapsed = now - launchStart;
+                    var t = Math.min(elapsed / flightDur, 1);
+                    var progress = easeOut(t);
+                    var dx = FLY_X * flightDist * progress;
+                    var dy = FLY_Y * flightDist * progress;
+                    var scale = t < 0.75 ? 1.08 : 1.08 - 0.5 * easeOut((t - 0.75) / 0.25);
+                    var opacity = t > 0.85 ? 1 - easeIn((t - 0.85) / 0.15) : 1;
+
+                    anchor.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + Math.max(0.3, scale) + ')';
+                    anchor.style.opacity = opacity;
+
+                    if (t < 0.9) {
+                        var rocketX = startPos.x + dx;
+                        var rocketY = startPos.y + dy;
+                        spawnSpark(rocketX, rocketY);
+                    }
+
+                    if (t < 1) requestAnimationFrame(animate);
+                }
+
+                requestAnimationFrame(animate);
+
+                window.setTimeout(function() {
+                    window.location.href = btn.getAttribute('href');
+                }, flightDur + 80);
+            });
+        });
+    })();
+</script>

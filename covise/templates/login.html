@@ -37,7 +37,7 @@
             </header>
 
             <div class="auth-card">
-                <div>
+                <div class="auth-header">
                     <h1>Member Access</h1>
                     <p>Great to see you again!</p>
                 </div>
@@ -61,6 +61,11 @@
                         </label>
                         <a class="ghost-link" href="{% url 'Forgot Password' %}">Forgot password?</a>
                     </div>
+                    {% if error_message %}
+                        <div class="auth-error">
+                            {{ error_message }}
+                        </div>
+                    {% endif %}
                     <button class="auth-button" type="submit">Log in</button>
                 </form>
 
@@ -85,11 +90,9 @@
             <div class="footer-col">
                 <h4>Product</h4>
                 <a href="/features/">Features</a>
-                <a href="/pricing/">Pricing</a>
             </div>
             <div class="footer-col">
                 <h4>Resources</h4>
-                <a href="/waitlist/">Events</a>
                 <a href="mailto:support@covise.com">Support</a>
             </div>
             <div class="footer-col">

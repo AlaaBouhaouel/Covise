@@ -1,5 +1,6 @@
 .terms-main {
     grid-template-rows: auto 1fr;
+    padding-top: calc(var(--spacing) * 14);
     padding-bottom: calc(var(--spacing) * 10);
 }
 
@@ -176,6 +177,16 @@
     cursor: pointer;
 }
 
+.terms-top-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
 .terms-top-btn.is-visible {
     opacity: 1;
     visibility: visible;
@@ -202,6 +213,7 @@
 
 @media (max-width: 520px) {
     .terms-main {
+        padding-top: calc(var(--spacing) * 12);
         padding-bottom: calc(var(--spacing) * 12);
     }
 

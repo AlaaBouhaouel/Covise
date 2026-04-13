@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,7 +25,7 @@
 </script>
 <body>
     <div class="container">
-        {% include 'includes/site_nav.html' with active_page='about' nav_cta_href='/waitlist/' nav_cta_label='JOIN NOW' nav_classes='nav--overlay nav--mobile-wide nav--font-body' show_home=True %}
+        {% include 'includes/site_nav.html' with active_page='about' nav_cta_href='/login/' nav_cta_label='LOGIN' nav_join_href='/signin/' nav_join_label='JOIN THE COMMUNITY' nav_classes='nav--overlay nav--mobile-wide nav--font-body' show_home=True %}
 
         <main class="page-content">
             <div class="section-layout">
@@ -93,7 +93,7 @@
             <section class="cta-block animate-in" style="transition-delay: 0.95s;">
                 <div class="cta-title">Want to be part of the first cohort?</div>
                 <div class="cta-sub">We're onboarding verified founders in batches. Apply for early access.</div>
-                <a href="/waitlist/" class="cta-btn">Join the Waitlist <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
+                <a href="/signin/" class="cta-btn">Request Access <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
             </section>
         </main>
 
@@ -109,11 +109,9 @@
                 <div class="footer-col">
                     <h4>Product</h4>
                     <a href="/features/">Features</a>
-                    <a href="/pricing/">Pricing</a>
                 </div>
                 <div class="footer-col">
                     <h4>Resources</h4>
-                    <a href="/waitlist/">Events</a>
                     <a href="mailto:support@covise.com">Support</a>
                 </div>
                 <div class="footer-col">
@@ -127,9 +125,9 @@
             <div class="footer-bottom reveal-up" style="--reveal-delay: 100ms;">
                 <p>- 2026 CoVise. All rights reserved.</p>
                 <div class="footer-legal">
-                    <a href="#">Terms</a>
-                    <a href="#">Privacy</a>
-                    <a href="#">Security</a>
+                    <a href="{% url 'Terms' %}">Terms</a>
+                    <a href="{% url 'Privacy' %}">Privacy</a>
+                    <a href="{% url 'Security' %}">Security</a>
                 </div>
             </div>
         </footer>

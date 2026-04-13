@@ -20,12 +20,12 @@
 <body>
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
-            <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
+            <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home" title="Go to Home">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M15 18l-6-6 6-6"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects">
+            <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects" title="Open Projects">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <rect x="3" y="4" width="7" height="7"></rect>
                     <rect x="14" y="4" width="7" height="7"></rect>
@@ -33,28 +33,28 @@
                     <rect x="14" y="15" width="7" height="7"></rect>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Messages' %}" aria-label="Messages">
+            <a class="sidebar-link" href="{% url 'Messages' %}" aria-label="Messages" title="Open Messages">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <path d="M4 6h16v10H7l-3 3V6z"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Workspace' %}" aria-label="Workspace">
+            <a class="sidebar-link" href="{% url 'Workspace' %}" aria-label="Workspace" title="Open Workspace">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <path d="M3 7h18v12H3z"></path>
                     <path d="M9 7V5h6v2"></path>
                     <path d="M3 12h18"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
+            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo" title="Open CoVise Advisor">
                 <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
-            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
+            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="8" r="4"></circle>
                     <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Settings' %}" aria-label="Settings">
+            <a class="sidebar-link" href="{% url 'Settings' %}" aria-label="Settings" title="Open settings">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="12" r="3"></circle>
                     <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2"/>
@@ -70,7 +70,7 @@
                     <span>CoVise</span>
                 </a>
                 <div class="home-header-actions">
-                    <a class="profile-button" href="{% url 'Home' %}" aria-label="Back to home">
+                    <a class="profile-button" href="{% url 'Home' %}" aria-label="Back to home" title="Back to Home">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M15 18l-6-6 6-6"></path>
                         </svg>
@@ -79,14 +79,14 @@
             </header>
 
             <section class="post-detail-shell">
-                <article class="post-detail-card">
+                <article class="post-detail-card {{ post.theme_class }}">
                     <div class="post-detail-meta">
                         <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
                             <div class="post-detail-avatar">{{ post.user.avatar_initials }}</div>
                         </a>
                         <div class="post-detail-meta-copy">
                             <div class="post-detail-author"><a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a></div>
-                            <div class="post-detail-sub">{{ post.get_post_type_display }} · {{ post.created_at|timesince }} ago</div>
+                            <div class="post-detail-sub">{{ post.get_post_type_display }} · {{ post.relative_time }}</div>
                         </div>
                         <div class="post-detail-tools">
                             <span class="structured-badge {% if post.post_type == 'update' %}badge-update{% elif post.post_type == 'ask' or post.post_type == 'ask_me_anything' %}badge-insight{% elif post.post_type == 'idea' %}badge-cofounder{% elif post.post_type == 'win' %}badge-opportunity{% else %}badge-update{% endif %}">{{ post.get_post_type_display }}</span>
@@ -94,20 +94,25 @@
                     </div>
                     <h1 class="post-detail-title">{{ post.feed_title }}</h1>
                     <div class="post-detail-content">{{ post.content }}</div>
+                    {% if post.image %}
+                    <div class="post-detail-image">
+                        <img src="{{ post.image.url }}" alt="{{ post.feed_title }}">
+                    </div>
+                    {% endif %}
                     <div class="post-detail-actions">
-                        <button class="action-btn like-btn" type="button" data-count="{{ post.likes_number }}" data-liked="false">
+                        <button class="action-btn like-btn" type="button" title="Like this post" data-count="{{ post.likes_number }}" data-liked="false">
                             <i class="fa-regular fa-thumbs-up"></i>
                             <span class="count">{{ post.likes_number }}</span>
                         </button>
-                        <button class="action-btn dislike-btn" type="button" data-count="0" data-disliked="false">
+                        <button class="action-btn dislike-btn" type="button" title="Dislike this post" data-count="0" data-disliked="false">
                             <i class="fa-regular fa-thumbs-down"></i>
                             <span class="dislike-count">0</span>
                         </button>
-                        <button class="action-btn comment-jump-btn" type="button" aria-label="Jump to comments">
+                        <button class="action-btn comment-jump-btn" type="button" aria-label="Jump to comments" title="Jump to comments">
                             <i class="fa-regular fa-comment"></i>
                             <span>{{ post.comments.count }}</span>
                         </button>
-                        <button class="action-btn bookmark-btn" type="button" aria-label="Save post">
+                        <button class="action-btn bookmark-btn" type="button" aria-label="Save post" title="Save this post">
                             <i class="fa-regular fa-bookmark"></i>
                         </button>
                     </div>
@@ -128,18 +133,18 @@
                             </div>
                             <div class="post-comment-body">{{ comment.content }}</div>
                             <div class="post-comment-actions">
-                                <button class="action-btn comment-reaction like-btn" type="button" data-count="{{ comment.up }}" data-liked="false" aria-label="Like comment">
+                                <button class="action-btn comment-reaction like-btn" type="button" title="Like this comment" data-count="{{ comment.up }}" data-liked="false" aria-label="Like comment">
                                     <i class="fa-regular fa-thumbs-up"></i>
                                     <span class="count">{{ comment.up }}</span>
                                 </button>
-                                <button class="action-btn comment-reaction dislike-btn" type="button" data-count="{{ comment.down }}" data-disliked="false" aria-label="Dislike comment">
+                                <button class="action-btn comment-reaction dislike-btn" type="button" title="Dislike this comment" data-count="{{ comment.down }}" data-disliked="false" aria-label="Dislike comment">
                                     <i class="fa-regular fa-thumbs-down"></i>
                                     <span class="dislike-count">{{ comment.down }}</span>
                                 </button>
-                                <button class="action-btn comment-reaction" type="button" aria-label="Comment on comment">
+                                <button class="action-btn comment-reaction" type="button" aria-label="Comment on comment" title="Reply to this comment">
                                     <i class="fa-regular fa-comment"></i>
                                 </button>
-                                <button class="action-btn comment-reaction comment-more-btn" type="button" aria-label="More comment actions">
+                                <button class="action-btn comment-reaction comment-more-btn" type="button" aria-label="More comment actions" title="Open more comment actions">
                                     <i class="fa-solid fa-ellipsis-vertical"></i>
                                 </button>
                             </div>
@@ -151,7 +156,7 @@
 
                     <div class="post-comment-compose">
                         <input id="postCommentInput" type="text" placeholder="Write a comment..." data-post-id="{{ post.id }}">
-                        <button id="postCommentSend" type="button" aria-label="Send comment">
+                        <button id="postCommentSend" type="button" aria-label="Send comment" title="Send your comment">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
                                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -268,6 +273,31 @@
             line-height: 1.5;
             color: rgba(231, 239, 255, 0.92);
             white-space: pre-wrap;
+        }
+        .post-detail-image {
+            margin-top: 14px;
+        }
+        .post-detail-image img {
+            width: 100%;
+            max-height: 360px;
+            object-fit: cover;
+            border-radius: 16px;
+            border: 1px solid rgba(120, 150, 255, 0.2);
+        }
+        .post-detail-card.post-tone-default {
+            background: transparent;
+        }
+        .post-detail-card.post-tone-blue {
+            background: linear-gradient(180deg, rgba(31, 56, 118, 0.18), rgba(10, 16, 28, 0.12));
+        }
+        .post-detail-card.post-tone-amber {
+            background: linear-gradient(180deg, rgba(125, 78, 13, 0.16), rgba(21, 15, 10, 0.08));
+        }
+        .post-detail-card.post-tone-green {
+            background: linear-gradient(180deg, rgba(15, 95, 72, 0.16), rgba(8, 20, 18, 0.08));
+        }
+        .post-detail-card.post-tone-red {
+            background: linear-gradient(180deg, rgba(130, 24, 53, 0.16), rgba(27, 10, 16, 0.08));
         }
         .post-detail-actions {
             display: flex;
@@ -599,3 +629,4 @@
     </script>
 </body>
 </html>
+

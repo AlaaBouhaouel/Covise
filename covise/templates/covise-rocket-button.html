@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoVise — Button</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0c10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Darker Grotesque', sans-serif;
+}
+
+.rocket-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 38px;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(139,92,246,0.12));
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 60px;
+  cursor: pointer;
+  overflow: visible;
+  transition: background 0.3s, border-color 0.3s, transform 0.15s;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rocket-btn:hover {
+  background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.2));
+  border-color: rgba(139,92,246,0.4);
+  transform: translateY(-1px);
+}
+
+.rocket-btn:active { transform: translateY(0); }
+
+.rocket-btn::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 60px;
+  background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15));
+  filter: blur(16px);
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: -1;
+}
+
+.rocket-btn:hover::before { opacity: 1; }
+
+.btn-text {
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.btn-text-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s 0.25s, transform 0.3s 0.25s;
+  z-index: 1;
+}
+
+.rocket-btn.launched .btn-text { opacity: 0; transform: translateY(-8px); }
+.rocket-btn.launched .btn-text-loading { opacity: 1; transform: translateY(0); }
+
+/* Navigation destination — set via JS */
+
+/* Rocket — NO rotation on the wrapper, rotation only on the SVG visual */
+.rocket-anchor {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  z-index: 2;
+  will-change: transform, opacity;
+}
+
+.rocket-svg {
+  width: 34px;
+  height: 34px;
+  display: block;
+  transform: rotate(30deg);
+}
+
+/* Fire particles live in BUTTON space, positioned at rocket's computed location */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform, opacity;
+}
+
+.check-icon { width: 16px; height: 16px; }
+
+.loading-dots::after {
+  content: '';
+  animation: dots 1.2s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+</style>
+</head>
+<body>
+
+<button class="rocket-btn" id="rocketBtn">
+  <span class="btn-text">Onboard</span>
+  <span class="btn-text-loading">Onboarding<span class="loading-dots"></span></span>
+
+  <div class="rocket-anchor" id="rocketAnchor">
+    <svg class="rocket-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C12 2 7 7.5 7 13c0 2.2 1 4 2.5 5l.5-3h4l.5 3c1.5-1 2.5-2.8 2.5-5 0-5.5-5-11-5-11z" fill="url(#rb)"/>
+      <ellipse cx="12" cy="12.5" rx="1.5" ry="1.8" fill="#1e293b"/>
+      <path d="M7 13c-1.5.5-2.5 2-2.5 2s1.5.5 2.5-.5" fill="rgba(139,92,246,0.5)"/>
+      <path d="M17 13c1.5.5 2.5 2 2.5 2s-1.5.5-2.5-.5" fill="rgba(59,130,246,0.5)"/>
+      <path d="M9.5 18c-.3 1-.8 2.5-1 3.5.8-.2 1.8-.8 2.5-1.5" fill="#f59e0b" opacity="0.8"/>
+      <path d="M14.5 18c.3 1 .8 2.5 1 3.5-.8-.2-1.8-.8-2.5-1.5" fill="#ef4444" opacity="0.8"/>
+      <path d="M11 19h2l.3 2.5c-.4.3-.9.5-1.3.5s-.9-.2-1.3-.5z" fill="#fbbf24" opacity="0.9"/>
+      <defs>
+        <linearGradient id="rb" x1="12" y1="2" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#e2e8f0"/>
+          <stop offset="100%" stop-color="#94a3b8"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- Add your destination page here -->
+  <!-- <a href="/onboarding/" id="rocketLink" style="display:none;"></a> -->
+</button>
+
+<script>
+(function() {
+  var btn = document.getElementById('rocketBtn');
+  var anchor = document.getElementById('rocketAnchor');
+  var busy = false;
+
+  // Flight angle from vertical: 30deg = 60deg from horizontal
+  var ANGLE_DEG = 30;
+  var ANGLE_RAD = ANGLE_DEG * Math.PI / 180;
+  // Flight direction unit vector (up-right)
+  var FLY_X = Math.sin(ANGLE_RAD);   // positive = right
+  var FLY_Y = -Math.cos(ANGLE_RAD);  // negative = up
+  // Exhaust direction = opposite of flight
+  var EX_X = -FLY_X;
+  var EX_Y = -FLY_Y;
+
+  var FLIGHT_DIST = 220;
+  var FLIGHT_DUR = 1400;
+
+  var flameColors = ['#fbbf24','#f59e0b','#ef4444','#fb923c','#fde68a','#ff6b35','#fcd34d','#dc2626','#f97316'];
+  var smokeColors = ['rgba(130,120,140,0.2)','rgba(100,95,110,0.15)','rgba(80,75,90,0.1)'];
+
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+  function easeIn(t) { return t * t; }
+
+  // Get the rocket's current center position relative to the button
+  function getRocketCenter() {
+    var ar = anchor.getBoundingClientRect();
+    var br = btn.getBoundingClientRect();
+    return {
+      x: ar.left + ar.width / 2 - br.left,
+      y: ar.top + ar.height / 2 - br.top
+    };
+  }
+
+  // Spawn fire at an absolute position in button space
+  function spawnSpark(cx, cy) {
+    var el = document.createElement('div');
+    el.className = 'particle';
+    var size = 4 + Math.random() * 12;
+
+    // Exhaust travels in world-space opposite to flight direction
+    var spread = (Math.random() - 0.5) * 0.5; // tight spread
+    var dirX = EX_X + spread * FLY_Y; // perpendicular spread
+    var dirY = EX_Y - spread * FLY_X;
+    var dist = 18 + Math.random() * 55;
+    var tx = dirX * dist;
+    var ty = dirY * dist;
+
+    var dur = 250 + Math.random() * 400;
+
+    el.style.cssText =
+      'width:' + size + 'px;height:' + size + 'px;' +
+      'left:' + (cx - size / 2) + 'px;' +
+      'top:' + (cy - size / 2) + 'px;' +
+      'background:' + flameColors[Math.floor(Math.random() * flameColors.length)] + ';' +
+      'box-shadow:0 0 ' + (size * 2.5) + 'px ' + (size * 0.6) + 'px ' + flameColors[Math.floor(Math.random() * flameColors.length)] + ';';
+
+    btn.appendChild(el);
+
+    var start = performance.now();
+    function tick(now) {
+      var t = Math.min((now - start) / dur, 1);
+      var e = easeOut(t);
+      el.style.transform = 'translate(' + (tx * e) + 'px,' + (ty * e) + 'px) scale(' + (1 - e * 0.8) + ')';
+      el.style.opacity = 1 - easeIn(t);
+      if (t < 1) requestAnimationFrame(tick);
+      else if (el.parentNode) el.parentNode.removeChild(el);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function spawnSmoke(cx, cy) {
+    var el = document.createElement('div');
+    el.className = 'particle';
+    var size = 10 + Math.random() * 16;
+
+    var spread = (Math.random() - 0.5) * 0.7;
+    var dirX = EX_X + spread * FLY_Y;
+    var dirY = EX_Y - spread * FLY_X;
+    var dist = 12 + Math.random() * 35;
+    var tx = dirX * dist;
+    var ty = dirY * dist;
+
+    var dur = 450 + Math.random() * 500;
+
+    el.style.cssText =
+      'width:' + size + 'px;height:' + size + 'px;' +
+      'left:' + (cx - size / 2) + 'px;' +
+      'top:' + (cy - size / 2) + 'px;' +
+      'background:' + smokeColors[Math.floor(Math.random() * smokeColors.length)] + ';' +
+      'border-radius:50%;';
+
+    btn.appendChild(el);
+
+    var start = performance.now();
+    function tick(now) {
+      var t = Math.min((now - start) / dur, 1);
+      var e = easeOut(t);
+      el.style.transform = 'translate(' + (tx * e) + 'px,' + (ty * e) + 'px) scale(' + (0.5 + e * 2.5) + ')';
+      el.style.opacity = 0.25 * (1 - t);
+      if (t < 1) requestAnimationFrame(tick);
+      else if (el.parentNode) el.parentNode.removeChild(el);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  btn.addEventListener('click', function() {
+    if (busy) return;
+    busy = true;
+    hoverShaking = false;
+    if (hoverRAF) cancelAnimationFrame(hoverRAF);
+
+    btn.classList.remove('success', 'returning');
+    btn.classList.add('launched');
+
+    var startPos = getRocketCenter();
+
+    // === PHASE 1: Pre-launch charge-up (600ms) ===
+    var preShakeStart = performance.now();
+    var PRE_SHAKE_DUR = 600;
+
+    function preShake(now) {
+      var elapsed = now - preShakeStart;
+      var t = Math.min(elapsed / PRE_SHAKE_DUR, 1);
+
+      // Rocket: small back-and-forth on flight axis, speeds up over time
+      var freq = 0.03 + t * 0.04;
+      var amp = 1.5 + t * 1.5;
+      var rocketOsc = Math.sin(now * freq) * amp;
+
+      // Slight squat as it charges
+      var squatY = t * 3;
+
+      anchor.style.transform = 'translate(' + (FLY_X * rocketOsc) + 'px,' + (FLY_Y * rocketOsc + squatY) + 'px) scale(' + (1 + t * 0.1) + ')';
+
+      // Fire: vibrates wildly — more sparks, bigger jitter as launch approaches
+      var fireChance = 0.15 + t * 0.7;
+      if (Math.random() < fireChance) {
+        var pos = getRocketCenter();
+        var jitter = 4 + t * 12;
+        var jx = (Math.random() - 0.5) * jitter;
+        var jy = (Math.random() - 0.5) * jitter;
+        spawnSpark(pos.x + jx, pos.y + jy);
+        if (Math.random() < 0.25 + t * 0.3) {
+          spawnSmoke(pos.x + jx * 0.5, pos.y + jy * 0.5);
+        }
+      }
+
+      // Button: subtle vibration
+      var btnI = 0.3 + t * 1;
+      btn.style.transform = 'translate(' + (Math.sin(now * 0.04) * btnI) + 'px, 0px)';
+
+      if (t < 1) {
+        requestAnimationFrame(preShake);
+      } else {
+        // === PHASE 2: Launch ===
+        launchRocket(startPos);
+      }
+    }
+
+    requestAnimationFrame(preShake);
+  });
+
+  function launchRocket(startPos) {
+    var launchStart = performance.now();
+
+    function animate(now) {
+      var elapsed = now - launchStart;
+      var t = Math.min(elapsed / FLIGHT_DUR, 1);
+
+      var progress = easeOut(t);
+
+      // Position along flight path
+      var dx = FLY_X * FLIGHT_DIST * progress;
+      var dy = FLY_Y * FLIGHT_DIST * progress;
+
+      // Scale: full size until 75%, shrink last 25%
+      var scale;
+      if (t < 0.75) {
+        scale = 1.12;
+      } else {
+        scale = 1.12 - 0.52 * easeOut((t - 0.75) / 0.25);
+      }
+
+      // Fade last 15%
+      var opacity = t > 0.85 ? 1 - easeIn((t - 0.85) / 0.15) : 1;
+
+      anchor.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + Math.max(0.3, scale) + ')';
+      anchor.style.opacity = opacity;
+
+      // Spawn fire at rocket's current world position
+      if (t < 0.92) {
+        var rocketX = startPos.x + dx;
+        var rocketY = startPos.y + dy;
+
+        var sparkCount = Math.max(1, Math.round(5 * (1 - t * 0.7)));
+        for (var i = 0; i < sparkCount; i++) {
+          spawnSpark(rocketX, rocketY);
+        }
+
+        if (Math.random() < 0.35) {
+          spawnSmoke(rocketX, rocketY);
+        }
+      }
+
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      }
+    }
+
+    requestAnimationFrame(animate);
+
+    // Button shake during launch
+    var shakeStart = performance.now();
+    function shake(now) {
+      var t = (now - shakeStart) / 500;
+      if (t > 1) { btn.style.transform = ''; return; }
+      var i = (1 - t) * 2.5;
+      btn.style.transform = 'translate(' + (Math.sin(t * 30) * i) + 'px,' + (Math.cos(t * 24) * i * 0.4) + 'px)';
+      requestAnimationFrame(shake);
+    }
+    requestAnimationFrame(shake);
+
+    // Navigate after rocket flies away
+    // Replace '/your-page/' with your destination
+    setTimeout(function() {
+      // window.location.href = '/your-page/';
+    }, FLIGHT_DUR + 200);
+  }
+
+  // Hover — rocket does small back-and-forth on flight axis, fire vibrates
+  var hoverShaking = false;
+  var hoverRAF = null;
+
+  function hoverRumble() {
+    if (!hoverShaking || busy) return;
+    var now = performance.now();
+
+    // Rocket: gentle back-and-forth along flight axis only
+    var rocketOsc = Math.sin(now * 0.025) * 1.8;
+    anchor.style.transform = 'translate(' + (FLY_X * rocketOsc) + 'px,' + (FLY_Y * rocketOsc) + 'px)';
+
+    // Fire: vibrating sparks — spawn with extra jitter
+    if (Math.random() < 0.25) {
+      var pos = getRocketCenter();
+      // Offset spark position with vibration
+      var jx = (Math.random() - 0.5) * 8;
+      var jy = (Math.random() - 0.5) * 8;
+      spawnSpark(pos.x + jx, pos.y + jy);
+    }
+
+    hoverRAF = requestAnimationFrame(hoverRumble);
+  }
+
+  btn.addEventListener('mouseenter', function() {
+    if (busy) return;
+    hoverShaking = true;
+    hoverRumble();
+  });
+
+  btn.addEventListener('mouseleave', function() {
+    hoverShaking = false;
+    if (hoverRAF) cancelAnimationFrame(hoverRAF);
+    if (!busy) anchor.style.transform = '';
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,385 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>CoVise | Create Post</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'home.css' %}">
+    <link rel="stylesheet" href="{% static 'create_post.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+</head>
+<body class="create-post-page">
+    <div class="layout">
+        <main class="main">
+            <header class="home-header" aria-label="Create post top bar">
+                <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
+                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
+                    <span>CoVise</span>
+                </a>
+                <div class="home-header-actions">
+                    <div style="position: relative;">
+                        <button class="notification-bell" id="notifBell" aria-label="Toggle notifications" title="Open notifications" style="border: 0; cursor: pointer;">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M15 17H9M18 17V11a6 6 0 1 0-12 0v6l-2 2h16l-2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            <span class="notification-badge" aria-hidden="true">4</span>
+                        </button>
+                        <div id="notifPanel" class="notif-panel">
+                            <div class="notif-panel-head">
+                                <span class="notif-panel-title">Network Activity</span>
+                                <span class="notif-panel-meta">4 new</span>
+                            </div>
+                            <div class="activity-feed" style="border: 0; border-radius: 0; background: transparent;">
+                                <div class="feed-item">
+                                    <div class="feed-text"><strong>Ahmed K.</strong><br>joined from Riyadh - looking for a tech co-founder</div>
+                                    <div class="feed-time">2h ago</div>
+                                </div>
+                                <div class="feed-item">
+                                    <div class="feed-text"><strong>New project posted</strong><br>B2B logistics platform, UAE expansion</div>
+                                    <div class="feed-time">4h ago</div>
+                                </div>
+                                <div class="feed-item">
+                                    <div class="feed-text"><strong>Sara M. &amp; Faisal A.</strong><br>started a Trial Build together</div>
+                                    <div class="feed-time">6h ago</div>
+                                </div>
+                                <div class="feed-item" style="border-bottom: 0;">
+                                    <div class="feed-text"><strong>Nora H.</strong><br>joined from Dubai - open to cross-border partnerships</div>
+                                    <div class="feed-time">9h ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Switch light or dark mode">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </button>
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
+                        </svg>
+                    </a>
+                </div>
+            </header>
+
+            <section class="create-post-shell feed-shell" aria-label="Create post">
+                <form class="structured-post create-post-form-card" action="{% url 'Create Post' %}" method="post" enctype="multipart/form-data">
+                    <div class="create-post-field-header">
+                        <label for="post-editor-title">POST</label>
+                        <a class="create-post-back-link" href="{% url 'Home' %}" title="Back to Home">
+                            <span aria-hidden="true">&lt;</span>
+                            <span>Back</span>
+                        </a>
+                    </div>
+
+                    {% csrf_token %}
+                    <div class="create-post-topbar">
+                        <div>
+                            <div class="widget-title">Post something worth building on, {{ first_name }}</div>
+                            <p class="create-post-subtitle">Share your thoughts with the community</p>
+                        </div>
+                        <div class="post-tools-wrap">
+                            <label for="post-type">Post Tools</label>
+                            <div class="create-post-topbar-actions">
+                                <div class="tools">
+                                    <button class="add-picture" id="postImageTrigger" type="button" aria-label="Add picture to post" title="Add an image to this post">
+                                        <i class="fa-solid fa-image" aria-hidden="true"></i>
+                                    </button>
+                                    <button class="pic-post-color" id="postColorTrigger" type="button" aria-label="Pick post color" title="Choose a post color" aria-expanded="false" aria-controls="postColorMenu">
+                                        <i class="fa-solid fa-palette" aria-hidden="true"></i>
+                                    </button>
+                                    <input id="postImageInput" name="image" type="file" accept="image/*" hidden>
+                                </div>
+                                <div class="type">
+                                    <div class="create-post-select-wrap create-post-dropdown">
+                                        <input id="post-type" name="post_type" type="hidden" value="{{ form_data.post_type|default:'update' }}">
+                                        <button class="create-post-select-button" id="postTypeTrigger" type="button" title="Choose a post type" aria-haspopup="listbox" aria-expanded="false" aria-controls="postTypeMenu">
+                                            <span id="postTypeLabel">
+                                                {% for value, label in post_type_choices %}{% if form_data.post_type == value or forloop.first and not form_data.post_type %}{{ label }}{% endif %}{% endfor %}
+                                            </span>
+                                            <i class="fa-solid fa-chevron-down create-post-select-icon" aria-hidden="true"></i>
+                                        </button>
+                                        <div class="create-post-select-menu" id="postTypeMenu" role="listbox" hidden>
+                                            {% for value, label in post_type_choices %}
+                                            <button class="create-post-select-option{% if form_data.post_type == value or forloop.first and not form_data.post_type %} is-selected{% endif %}" type="button" role="option" data-value="{{ value }}" data-label="{{ label }}" aria-selected="{% if form_data.post_type == value or forloop.first and not form_data.post_type %}true{% else %}false{% endif %}">
+                                                <span class="create-post-select-option-title">{{ label }}</span>
+                                                <span class="create-post-select-option-sub">
+                                                    {% if value == 'idea' %}Pitch a concept worth teaming up around.{% elif value == 'update' %}Share momentum, progress, or a real shift.{% elif value == 'ask' %}Ask for advice, feedback, or a sharp answer.{% elif value == 'win' %}Share a milestone your network can build on.{% else %}Open the floor and invite the community in.{% endif %}
+                                                </span>
+                                            </button>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="post-color-menu" id="postColorMenu" hidden>
+                                <button class="post-color-swatch{% if form_data.theme_color|default:'default' == 'default' %} is-active{% endif %}" type="button" data-editor-tone="default" aria-label="Use default post color" title="Use the default post color"></button>
+                                <button class="post-color-swatch post-color-swatch-blue{% if form_data.theme_color == 'blue' %} is-active{% endif %}" type="button" data-editor-tone="blue" aria-label="Use blue post color" title="Use a blue post color"></button>
+                                <button class="post-color-swatch post-color-swatch-amber{% if form_data.theme_color == 'amber' %} is-active{% endif %}" type="button" data-editor-tone="amber" aria-label="Use amber post color" title="Use an amber post color"></button>
+                                <button class="post-color-swatch post-color-swatch-green{% if form_data.theme_color == 'green' %} is-active{% endif %}" type="button" data-editor-tone="green" aria-label="Use green post color" title="Use a green post color"></button>
+                                <button class="post-color-swatch post-color-swatch-red{% if form_data.theme_color == 'red' %} is-active{% endif %}" type="button" data-editor-tone="red" aria-label="Use red post color" title="Use a red post color"></button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {% if error_message %}
+                    <div class="create-post-error" role="alert">
+                        {{ error_message }}
+                    </div>
+                    {% endif %}
+
+                    <div class="create-post-field">
+                        <label for="post-editor-title">Write</label>
+                        <div class="create-post-editor editor-tone-{{ form_data.theme_color|default:'default' }}" id="createPostEditor">
+                            <div
+                                id="post-editor-title"
+                                class="create-post-editor-title"
+                                contenteditable="true"
+                                role="textbox"
+                                aria-label="Post title"
+                                data-placeholder="Give your post a sharp title"
+                            >{{ form_data.title|default:'' }}</div>
+                            <div
+                                id="post-editor-body"
+                                class="create-post-editor-body"
+                                contenteditable="true"
+                                role="textbox"
+                                aria-label="Post content"
+                                data-placeholder="Share your update, question, idea, or win..."
+                            >{{ form_data.content|default:'' }}</div>
+                        </div>
+                        <div class="create-post-image-preview" id="postImagePreview" hidden>
+                            <img id="postImagePreviewImg" alt="Selected post image preview">
+                            <button class="create-post-image-remove" id="postImageRemove" type="button" title="Remove the selected image">Remove image</button>
+                        </div>
+                        <input id="post-title" name="title" type="hidden" value="{{ form_data.title|default:'' }}">
+                        <input id="post-theme-color" name="theme_color" type="hidden" value="{{ form_data.theme_color|default:'default' }}">
+                        <input id="post-content" name="content" type="hidden" value="{{ form_data.content|default:'' }}">
+                    </div>
+
+                    <div class="create-post-actions">
+                        <button class="create-post-primary" type="submit" title="Publish this post">
+                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                            <span>Publish post</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        (function() {
+            var form = document.querySelector('.create-post-form-card');
+            var titleEditor = document.getElementById('post-editor-title');
+            var bodyEditor = document.getElementById('post-editor-body');
+            var titleInput = document.getElementById('post-title');
+            var contentInput = document.getElementById('post-content');
+            var imageTrigger = document.getElementById('postImageTrigger');
+            var imageInput = document.getElementById('postImageInput');
+            var imagePreview = document.getElementById('postImagePreview');
+            var imagePreviewImg = document.getElementById('postImagePreviewImg');
+            var imageRemove = document.getElementById('postImageRemove');
+            var colorTrigger = document.getElementById('postColorTrigger');
+            var colorMenu = document.getElementById('postColorMenu');
+            var typeTrigger = document.getElementById('postTypeTrigger');
+            var typeMenu = document.getElementById('postTypeMenu');
+            var typeInput = document.getElementById('post-type');
+            var typeLabel = document.getElementById('postTypeLabel');
+            var themeColorInput = document.getElementById('post-theme-color');
+            var editor = document.getElementById('createPostEditor');
+            if (!form || !titleEditor || !bodyEditor || !titleInput || !contentInput) return;
+
+            function sanitizeText(value) {
+                return (value || '').replace(/\u00a0/g, ' ').replace(/\r/g, '').trim();
+            }
+
+            function syncFields() {
+                titleInput.value = sanitizeText(titleEditor.textContent);
+                contentInput.value = sanitizeText(bodyEditor.textContent);
+            }
+
+            titleEditor.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    bodyEditor.focus();
+                }
+            });
+
+            ['input', 'blur'].forEach(function(eventName) {
+                titleEditor.addEventListener(eventName, syncFields);
+                bodyEditor.addEventListener(eventName, syncFields);
+            });
+
+            function closeTypeMenu() {
+                if (!typeMenu || !typeTrigger) return;
+                typeMenu.hidden = true;
+                typeTrigger.setAttribute('aria-expanded', 'false');
+            }
+
+            function closeColorMenu() {
+                if (!colorMenu || !colorTrigger) return;
+                colorMenu.hidden = true;
+                colorTrigger.setAttribute('aria-expanded', 'false');
+            }
+
+            function syncImagePreviewVisibility() {
+                if (!imagePreview || !imagePreviewImg) return;
+                var hasImage = !!imagePreviewImg.getAttribute('src');
+                imagePreview.hidden = !hasImage;
+            }
+
+            if (typeTrigger && typeMenu && typeInput && typeLabel) {
+                typeTrigger.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var willOpen = typeMenu.hidden;
+                    closeColorMenu();
+                    typeMenu.hidden = !willOpen;
+                    typeTrigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                });
+
+                typeMenu.querySelectorAll('.create-post-select-option').forEach(function(option) {
+                    option.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        var value = option.getAttribute('data-value') || '';
+                        var label = option.getAttribute('data-label') || '';
+                        typeInput.value = value;
+                        typeLabel.textContent = label;
+                        closeTypeMenu();
+                        typeMenu.querySelectorAll('.create-post-select-option').forEach(function(item) {
+                            var isSelected = item === option;
+                            item.classList.toggle('is-selected', isSelected);
+                            item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                        });
+                    });
+                });
+            }
+
+            if (imageTrigger && imageInput && imagePreview && imagePreviewImg) {
+                imageTrigger.addEventListener('click', function() {
+                    imageInput.click();
+                });
+
+                imageInput.addEventListener('change', function() {
+                    var file = imageInput.files && imageInput.files[0];
+                    if (!file) {
+                        imagePreviewImg.removeAttribute('src');
+                        syncImagePreviewVisibility();
+                        return;
+                    }
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                        imagePreviewImg.src = event.target && event.target.result ? event.target.result : '';
+                        syncImagePreviewVisibility();
+                    };
+                    reader.readAsDataURL(file);
+                });
+
+                if (imageRemove) {
+                    imageRemove.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        imageInput.value = '';
+                        imagePreviewImg.removeAttribute('src');
+                        syncImagePreviewVisibility();
+                    });
+                }
+            }
+
+            if (colorTrigger && colorMenu) {
+                colorTrigger.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var willOpen = colorMenu.hidden;
+                    closeTypeMenu();
+                    colorMenu.hidden = !willOpen;
+                    colorTrigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                });
+
+                colorMenu.querySelectorAll('.post-color-swatch').forEach(function(swatch) {
+                    swatch.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        var tone = swatch.getAttribute('data-editor-tone') || 'default';
+                        var tones = ['default', 'blue', 'amber', 'green', 'red'];
+                        tones.forEach(function(item) {
+                            if (editor) editor.classList.remove('editor-tone-' + item);
+                        });
+                        if (editor) editor.classList.add('editor-tone-' + tone);
+                        if (themeColorInput) themeColorInput.value = tone;
+                        colorMenu.querySelectorAll('.post-color-swatch').forEach(function(item) {
+                            item.classList.toggle('is-active', item === swatch);
+                        });
+                        closeColorMenu();
+                    });
+                });
+            }
+
+            document.addEventListener('click', function(event) {
+                if (typeMenu && typeTrigger && !typeMenu.hidden && !typeMenu.contains(event.target) && !typeTrigger.contains(event.target)) {
+                    closeTypeMenu();
+                }
+                if (colorMenu && colorTrigger && !colorMenu.hidden && !colorMenu.contains(event.target) && !colorTrigger.contains(event.target)) {
+                    closeColorMenu();
+                }
+            });
+
+            form.addEventListener('submit', syncFields);
+            syncImagePreviewVisibility();
+            syncFields();
+        })();
+    </script>
+    <script>
+        (function() {
+            var bell = document.getElementById('notifBell');
+            var panel = document.getElementById('notifPanel');
+            if (!bell || !panel) return;
+            bell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var open = panel.style.display === 'block';
+                panel.style.display = open ? 'none' : 'block';
+            });
+            document.addEventListener('click', function(e) {
+                if (!panel.contains(e.target) && e.target !== bell) {
+                    panel.style.display = 'none';
+                }
+            });
+        })();
+    </script>
+    <script>
+        (function() {
+            var btn = document.getElementById('themeToggle');
+            var html = document.documentElement;
+            if (!btn) return;
+
+            function setTheme(theme) {
+                if (theme === 'light') {
+                    html.setAttribute('data-theme', 'light');
+                    localStorage.setItem('covise-theme', 'light');
+                } else {
+                    html.removeAttribute('data-theme');
+                    localStorage.setItem('covise-theme', 'dark');
+                }
+            }
+
+            btn.addEventListener('click', function() {
+                var current = html.getAttribute('data-theme');
+                setTheme(current === 'light' ? 'dark' : 'light');
+            });
+        })();
+    </script>
+</body>
+</html>

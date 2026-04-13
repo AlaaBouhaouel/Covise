@@ -127,6 +127,9 @@ a {
     justify-content: space-between;
     gap: calc(var(--spacing) * 2);
 }
+.auth-header h1, .auth-header p {
+    text-align: center;
+}
 
 .auth-header-search {
     flex: 1;

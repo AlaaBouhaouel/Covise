@@ -27,6 +27,7 @@ urlpatterns = [
 
     path('', views.landing, name='Landing Page'),
     path('home/', views.home, name='Home'),
+    path('posts/create/', views.create_post, name='Create Post'),
     path('posts/<int:post_id>/', views.post_detail, name='Post Detail'),
     path('posts/<int:post_id>/comment/', views.add_comment, name='add_comment'),
     path('projects/', views.projects, name='Projects'),
@@ -44,6 +45,7 @@ urlpatterns = [
     path('terms/', views.terms, name='Terms'),
     path('privacy/', views.privacy, name='Privacy'),
     path('login/', views.login_view, name='Login'),
+    path('security/', views.security, name='Security'),
     path('signin/', views.signin, name='Sign In'),
     path(
         'forgot-password/',
@@ -81,8 +83,10 @@ urlpatterns = [
     path('features/', views.features, name='Features'),
     path('about/', views.about, name='About'),
     path('workspace/', views.workspace, name='Workspace'),
-#    path('waitlist/', views.waitlist, name='Waitlist'),
-#    path('waitlist/success/', views.waitlist_success, name='Waitlist Success'),
+    # path('waitlist/', views.waitlist, name='Waitlist'),
+    # path('waitlist/verify-email/send/', views.waitlist_verify_email_send, name='Waitlist Email Verify Send'),
+    # path('waitlist/verify-email/code/', views.waitlist_verify_email_code, name='Waitlist Email Verify Code'),
+    # path('waitlist/success/', views.waitlist_success, name='Waitlist Success'),
 
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 

@@ -42,7 +42,7 @@
             <p class="form-error" role="alert">{{ error_message }}</p>
             {% endif %}
 
-            <form class="waitlist-form" method="post" action="{% url 'Waitlist' %}" enctype="multipart/form-data">
+            <form class="waitlist-form" method="post" action="/signin/" enctype="multipart/form-data">
                 {% csrf_token %}
                 <label for="full_name">Name</label>
                 <input id="full_name" name="full_name" type="text" required>
