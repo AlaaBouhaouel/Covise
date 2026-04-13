@@ -24,7 +24,7 @@
 <body>
     <div class="container">
         <!-- Navigation -->
-        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href='/home/' nav_cta_label='DEMO' nav_classes='nav--overlay nav--mobile-compact nav--font-body nav--no-theme' show_home=False %}
+        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href='mailto:support@covise.com' nav_cta_label='CONTACT' nav_join_href='/waitlist/' nav_join_label='JOIN THE COMMUNITY' nav_classes='nav--overlay nav--mobile-compact nav--font-body nav--no-theme' show_home=False %}
 
         <!-- Hero Section -->
         <section class="hero">
@@ -43,7 +43,27 @@
             </div>
             
             <div class="hero-cta">
-                <a href="/waitlist/" class="btn-primary reserve-spot-btn">Reserve a spot  <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
+                <a href="/waitlist/" class="btn-primary btn-rocket reserve-spot-btn" data-rocket-link>
+                    <span class="btn-primary-label">Get Started</span>
+                    <span class="btn-primary-label-loading">Get Started</span>
+                    <span class="rocket-anchor" aria-hidden="true">
+                        <svg class="rocket-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C12 2 7 7.5 7 13c0 2.2 1 4 2.5 5l.5-3h4l.5 3c1.5-1 2.5-2.8 2.5-5 0-5.5-5-11-5-11z" fill="url(#landingRocketHero)"/>
+                            <ellipse cx="12" cy="12.5" rx="1.5" ry="1.8" fill="#1e293b"/>
+                            <path d="M7 13c-1.5.5-2.5 2-2.5 2s1.5.5 2.5-.5" fill="rgba(139,92,246,0.5)"/>
+                            <path d="M17 13c1.5.5 2.5 2 2.5 2s-1.5.5-2.5-.5" fill="rgba(59,130,246,0.5)"/>
+                            <path d="M9.5 18c-.3 1-.8 2.5-1 3.5.8-.2 1.8-.8 2.5-1.5" fill="#f59e0b" opacity="0.8"/>
+                            <path d="M14.5 18c.3 1 .8 2.5 1 3.5-.8-.2-1.8-.8-2.5-1.5" fill="#ef4444" opacity="0.8"/>
+                            <path d="M11 19h2l.3 2.5c-.4.3-.9.5-1.3.5s-.9-.2-1.3-.5z" fill="#fbbf24" opacity="0.9"/>
+                            <defs>
+                                <linearGradient id="landingRocketHero" x1="12" y1="2" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#e2e8f0"/>
+                                    <stop offset="100%" stop-color="#94a3b8"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </span>
+                </a>
                 <div class="scroll-indicator">
                     <a href="#cta-section"><span>Scroll</span></a>
                     <div class="scroll-line"></div>
@@ -51,55 +71,157 @@
             </div>
         </section>
 
-        <!-- 
-        <section class="stats">
-            <div class="stat-item">
-                <div class="stat-number">1,247</div>
-                <div class="stat-label">Founders</div>
+        <section class="inside-network">
+            <div class="section-intro reveal-up" style="--reveal-delay: 0ms;">
+                <p class="section-kicker">Inside The Network</p>
+                <h2 class="section-title">A network of serious entrepreneurs kept intentional.</h2>
+                <p class="section-copy">Share what you're working on, get advice, and find people to build with.</p>
             </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div class="stat-number">23</div>
-                <div class="stat-label">Active collaborations</div>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div class="stat-number">142</div>
-                <div class="stat-label">Successful matches</div>
+            <div class="network-feed" aria-label="Recent Covise network activity">
+                <article class="network-card network-card-top reveal-up" style="--reveal-delay: 80ms;">
+                    <div class="network-card-avatar" aria-hidden="true">CN</div>
+                    <div class="network-card-body">
+                        <div class="network-card-meta">
+                            <p class="network-card-source">CoVise Network</p>
+                            <span class="network-card-time">just now</span>
+                        </div>
+                        <p class="network-card-message">Launching UAE's first sovereign real estate infrastructure platform</p>
+                    </div>
+                </article>
+                <article class="network-card network-card-main reveal-up" style="--reveal-delay: 180ms;">
+                    <div class="network-card-avatar" aria-hidden="true">CN</div>
+                    <div class="network-card-body">
+                        <div class="network-card-meta">
+                            <p class="network-card-source">CoVise Network</p>
+                            <span class="network-card-time">2 min ago</span>
+                        </div>
+                        <p class="network-card-message">Building an agentic AI system for workflow automation</p>
+                    </div>
+                </article>
+                <article class="network-card network-card-bottom reveal-up" style="--reveal-delay: 280ms;">
+                    <div class="network-card-avatar" aria-hidden="true">CN</div>
+                    <div class="network-card-body">
+                        <div class="network-card-meta">
+                            <p class="network-card-source">CoVise Network</p>
+                            <span class="network-card-time">5 min ago</span>
+                        </div>
+                        <p class="network-card-message">Looking for a cofounder to start building immediately</p>
+                    </div>
+                </article>
             </div>
         </section>
 
-        Home Image 
-        <section class="home-shot">
-            <img src="{% static 'images/index/homepic.png' %}" alt="Covise workspace preview">
+        <section class="who-inside">
+            <div class="who-inside-stage">
+                <div class="section-intro reveal-up" style="--reveal-delay: 0ms;">
+                    <p class="section-kicker">Who's Inside</p>
+                    <h2 class="section-title">It's easier when you're not doing it alone.</h2>
+                </div>
+                <div class="inside-rail-shell reveal-up" style="--reveal-delay: 100ms;">
+                    <div class="inside-rail-glow" aria-hidden="true"></div>
+                    <div class="inside-rail" data-scroll-rail>
+                        <article class="inside-card">
+                            <span class="inside-card-icon" aria-hidden="true">01</span>
+                            <p>AI founders building automation systems</p>
+                        </article>
+                        <article class="inside-card">
+                            <span class="inside-card-icon" aria-hidden="true">02</span>
+                            <p>Operators launching fintech and infrastructure products</p>
+                        </article>
+                        <article class="inside-card">
+                            <span class="inside-card-icon" aria-hidden="true">03</span>
+                            <p>Founders behind UAE-first platforms</p>
+                        </article>
+                        <article class="inside-card">
+                            <span class="inside-card-icon" aria-hidden="true">04</span>
+                            <p>Creative entrepreneurs building agencies and brands</p>
+                        </article>
+                        <article class="inside-card">
+                            <span class="inside-card-icon" aria-hidden="true">05</span>
+                            <p>Multi-business owners scaling across the region</p>
+                        </article>
+                        <article class="inside-card">
+                            <span class="inside-card-icon" aria-hidden="true">06</span>
+                            <p>Experienced operators with 10+ years across growth and ops</p>
+                        </article>
+                    </div>
+                </div>
+            </div>
         </section>
 
-         Features Section -->
-        <section class="features">
-            <div class="feature reveal-up" style="--reveal-delay: 0ms;">
-                <div class="feature-number">01</div>
-                <h3 class="feature-title">CONNECT</h3>
-                <p class="feature-desc">Network with ambitious founders. Share ideas. Build together.</p>
+        <section class="network-process">
+            <div class="section-intro reveal-up" style="--reveal-delay: 0ms;">
+                <p class="section-kicker">How The Network Works</p>
+                <h2 class="section-title"><span class="section-title-lead">We curate the community,</span> so every connection is worth your time.</h2>
+                <p class="section-copy">A deliberate path from access to alignment, built to reduce noise before anything serious begins.</p>
             </div>
-            
-            <div class="feature reveal-up" style="--reveal-delay: 120ms;">
-                <div class="feature-number">02</div>
-                <h3 class="feature-title">COLLABORATE</h3>
-                <p class="feature-desc">Post about your venture journey, find co-founders, and have real conversations with serious entrepreneurs.</p>
-            </div>
-            
-            <div class="feature reveal-up" style="--reveal-delay: 240ms;">
-                <div class="feature-number">03</div>
-                <h3 class="feature-title">EXECUTE</h3>
-                <p class="feature-desc">Move from conversation to real collaboration.</p>
+            <div class="process-story" data-process-story>
+                <div class="process-steps">
+                    <article class="process-step reveal-up" style="--reveal-delay: 60ms;" data-process-step>
+                        <span class="process-step-number">01</span>
+                        <div class="process-step-copy">
+                            <h3>Apply</h3>
+                            <p>Only serious founders get access.</p>
+                        </div>
+                    </article>
+                    <article class="process-step reveal-up" style="--reveal-delay: 120ms;" data-process-step>
+                        <span class="process-step-number">02</span>
+                        <div class="process-step-copy">
+                            <h3>Get verified</h3>
+                            <p>No anonymous users. No low-intent profiles.</p>
+                        </div>
+                    </article>
+                    <article class="process-step reveal-up" style="--reveal-delay: 180ms;" data-process-step>
+                        <span class="process-step-number">03</span>
+                        <div class="process-step-copy">
+                            <h3>Enter the network</h3>
+                            <p>Connect with founders already building.</p>
+                        </div>
+                    </article>
+                    <article class="process-step reveal-up" style="--reveal-delay: 240ms;" data-process-step>
+                        <span class="process-step-number">04</span>
+                        <div class="process-step-copy">
+                            <h3>Align before committing</h3>
+                            <p>Test compatibility before partnerships.</p>
+                        </div>
+                    </article>
+                </div>
+                <div class="process-rail" aria-hidden="true">
+                    <div class="process-rail-line"></div>
+                    <div class="process-rail-progress"></div>
+                    <span class="process-node" data-process-node></span>
+                    <span class="process-node" data-process-node></span>
+                    <span class="process-node" data-process-node></span>
+                    <span class="process-node" data-process-node></span>
+                </div>
             </div>
         </section>
+
+        <section class="network-why">
+            <div class="why-panel reveal-up" style="--reveal-delay: 0ms;">
+                <p class="section-kicker">Why This Exists</p>
+                <div class="why-grid">
+                    <article class="why-card">
+                        <h3>Who We Serve</h3>
+                        <p>GCC Founders &amp; Global Partners</p>
+                        <span class="why-card-note">Every industry. Every stage. Serious people only.</span>
+                    </article>
+                    <article class="why-card">
+                        <h3>Where We're Going</h3>
+                        <p>The Region's Most Trusted Founder Network</p>
+                        <span class="why-card-note">Invite-only. Growing with intention.</span>
+                    </article>
+                </div>
+            </div>
+        </section>
+
         <section class="collab-showcase">
             <div class="collab-showcase-media reveal-up" style="--reveal-delay: 0ms;">
                 <img src="{% static 'images/index/homepic.png' %}" alt="Covise collaboration workspace preview">
             </div>
             <div class="collab-showcase-content reveal-up" style="--reveal-delay: 140ms;">
-                <h2>An <span>exclusive network</span> of serious builders.</h2>
+                <p class="section-kicker">What You Get</p>
+                <h2 class="section-title">A focused network for people who are ready to build.</h2>
                 <p>Access founders who are actually building, not just exploring.</p>
                 <ul class="collab-feature-list">
                     <li>Curated, invite-only founder network</li>
@@ -108,8 +230,28 @@
                     <li>Conversations that lead to real builds</li>
                 </ul>
                 <div class="collab-showcase-cta-wrap">
-                    <a href="/waitlist/" class="btn-primary collab-try-btn btn-access">REQUEST ACCESS <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
-                    <a href="/features/" class="btn-primary collab-try-btn btn-learn">LEARN MORE <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
+                    <a href="/waitlist/" class="btn-primary btn-rocket collab-try-btn btn-access" data-rocket-link>
+                        <span class="btn-primary-label">REQUEST ACCESS</span>
+                        <span class="btn-primary-label-loading">REQUEST ACCESS</span>
+                        <span class="rocket-anchor" aria-hidden="true">
+                            <svg class="rocket-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C12 2 7 7.5 7 13c0 2.2 1 4 2.5 5l.5-3h4l.5 3c1.5-1 2.5-2.8 2.5-5 0-5.5-5-11-5-11z" fill="url(#landingRocketAccess)"/>
+                                <ellipse cx="12" cy="12.5" rx="1.5" ry="1.8" fill="#1e293b"/>
+                                <path d="M7 13c-1.5.5-2.5 2-2.5 2s1.5.5 2.5-.5" fill="rgba(139,92,246,0.5)"/>
+                                <path d="M17 13c1.5.5 2.5 2 2.5 2s-1.5.5-2.5-.5" fill="rgba(59,130,246,0.5)"/>
+                                <path d="M9.5 18c-.3 1-.8 2.5-1 3.5.8-.2 1.8-.8 2.5-1.5" fill="#f59e0b" opacity="0.8"/>
+                                <path d="M14.5 18c.3 1 .8 2.5 1 3.5-.8-.2-1.8-.8-2.5-1.5" fill="#ef4444" opacity="0.8"/>
+                                <path d="M11 19h2l.3 2.5c-.4.3-.9.5-1.3.5s-.9-.2-1.3-.5z" fill="#fbbf24" opacity="0.9"/>
+                                <defs>
+                                    <linearGradient id="landingRocketAccess" x1="12" y1="2" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#e2e8f0"/>
+                                        <stop offset="100%" stop-color="#94a3b8"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </span>
+                    </a>
+                    <a href="/waitlist/" class="btn-primary collab-try-btn btn-learn"><span class="btn-primary-label">LEARN MORE</span><img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
                 </div>
             </div>
         </section>
@@ -120,9 +262,29 @@
                 <div class="landing-globe" data-globe-container="cta"></div>
             </div>
             <div class="cta-content reveal-up" style="--reveal-delay: 0ms;">
-                <h2 class="cta-title">WANT TO BE PART OF THE FIRST COHORT?</h2>
+                <h2 class="section-title">WANT TO BE PART OF THE FIRST COHORT?</h2>
                 <p class="cta-text">We are onboarding verified founders in batches. Apply for early access.</p>
-                <a href="/waitlist/" class="btn-primary">JOIN THE WAITLIST <img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
+                <a href="/waitlist/" class="btn-primary btn-rocket cta-primary-button" data-rocket-link>
+                    <span class="btn-primary-label">JOIN THE NETWORK</span>
+                    <span class="btn-primary-label-loading">JOIN THE NETWORK</span>
+                    <span class="rocket-anchor" aria-hidden="true">
+                        <svg class="rocket-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C12 2 7 7.5 7 13c0 2.2 1 4 2.5 5l.5-3h4l.5 3c1.5-1 2.5-2.8 2.5-5 0-5.5-5-11-5-11z" fill="url(#landingRocketJoin)"/>
+                            <ellipse cx="12" cy="12.5" rx="1.5" ry="1.8" fill="#1e293b"/>
+                            <path d="M7 13c-1.5.5-2.5 2-2.5 2s1.5.5 2.5-.5" fill="rgba(139,92,246,0.5)"/>
+                            <path d="M17 13c1.5.5 2.5 2 2.5 2s-1.5.5-2.5-.5" fill="rgba(59,130,246,0.5)"/>
+                            <path d="M9.5 18c-.3 1-.8 2.5-1 3.5.8-.2 1.8-.8 2.5-1.5" fill="#f59e0b" opacity="0.8"/>
+                            <path d="M14.5 18c.3 1 .8 2.5 1 3.5-.8-.2-1.8-.8-2.5-1.5" fill="#ef4444" opacity="0.8"/>
+                            <path d="M11 19h2l.3 2.5c-.4.3-.9.5-1.3.5s-.9-.2-1.3-.5z" fill="#fbbf24" opacity="0.9"/>
+                            <defs>
+                                <linearGradient id="landingRocketJoin" x1="12" y1="2" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#e2e8f0"/>
+                                    <stop offset="100%" stop-color="#94a3b8"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </span>
+                </a>
             </div>
         </section>
 
@@ -142,7 +304,6 @@
         </div>
         <div class="footer-col">
             <h4>Resources</h4>
-            <a href="/waitlist/">Events</a>
             <a href="mailto:support@covise.com">Support</a>
         </div>
         <div class="footer-col">
@@ -243,6 +404,173 @@
         })();
 
         (function() {
+            var networkFeed = document.querySelector('.network-feed');
+            var networkCards = Array.prototype.slice.call(document.querySelectorAll('.network-card'));
+            if (!('IntersectionObserver' in window) || !networkFeed || networkCards.length === 0) {
+                networkCards.forEach(function(card) { card.classList.add('is-popped'); });
+                return;
+            }
+
+            var hasPopped = false;
+            var popObserver = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (!entry.isIntersecting || hasPopped) return;
+
+                    hasPopped = true;
+                    networkCards.forEach(function(card, index) {
+                        window.setTimeout(function() {
+                            card.classList.add('is-popped');
+                        }, index * 120);
+                    });
+                    popObserver.unobserve(networkFeed);
+                });
+            }, { threshold: 0.22, rootMargin: '0px 0px -6% 0px' });
+
+            popObserver.observe(networkFeed);
+        })();
+
+        (function() {
+            var buttons = Array.prototype.slice.call(document.querySelectorAll('.btn-rocket[data-rocket-link]'));
+            if (buttons.length === 0) return;
+
+            var ANGLE_DEG = 30;
+            var ANGLE_RAD = ANGLE_DEG * Math.PI / 180;
+            var FLY_X = Math.sin(ANGLE_RAD);
+            var FLY_Y = -Math.cos(ANGLE_RAD);
+            var EX_X = -FLY_X;
+            var EX_Y = -FLY_Y;
+            var flameColors = ['#fbbf24', '#f59e0b', '#ef4444', '#fb923c', '#fde68a', '#ff6b35', '#fcd34d', '#dc2626', '#f97316'];
+
+            function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+            function easeIn(t) { return t * t; }
+
+            buttons.forEach(function(btn) {
+                var anchor = btn.querySelector('.rocket-anchor');
+                if (!anchor) return;
+                var particleLayer = btn.querySelector('.rocket-particles');
+                if (!particleLayer) {
+                    particleLayer = document.createElement('span');
+                    particleLayer.className = 'rocket-particles';
+                    btn.insertBefore(particleLayer, btn.firstChild);
+                }
+
+                var busy = false;
+                var hoverShaking = false;
+                var hoverRAF = null;
+
+                function getRocketCenter() {
+                    var ar = anchor.getBoundingClientRect();
+                    var br = btn.getBoundingClientRect();
+                    return {
+                        x: ar.left + ar.width / 2 - br.left,
+                        y: ar.top + ar.height / 2 - br.top
+                    };
+                }
+
+                function spawnSpark(cx, cy) {
+                    var el = document.createElement('span');
+                    el.className = 'rocket-particle';
+                    var size = 4 + Math.random() * 8;
+                    var spread = (Math.random() - 0.5) * 0.5;
+                    var dirX = EX_X + spread * FLY_Y;
+                    var dirY = EX_Y - spread * FLY_X;
+                    var dist = 14 + Math.random() * 42;
+                    var tx = dirX * dist;
+                    var ty = dirY * dist;
+                    var dur = 240 + Math.random() * 260;
+                    var glow = flameColors[Math.floor(Math.random() * flameColors.length)];
+
+                    el.style.cssText =
+                        'width:' + size + 'px;height:' + size + 'px;' +
+                        'left:' + (cx - size / 2) + 'px;' +
+                        'top:' + (cy - size / 2) + 'px;' +
+                        'background:' + glow + ';' +
+                        'box-shadow:0 0 ' + (size * 2.4) + 'px ' + (size * 0.55) + 'px ' + glow + ';';
+
+                    particleLayer.appendChild(el);
+
+                    var start = performance.now();
+                    function tick(now) {
+                        var t = Math.min((now - start) / dur, 1);
+                        var e = easeOut(t);
+                        el.style.transform = 'translate(' + (tx * e) + 'px,' + (ty * e) + 'px) scale(' + (1 - e * 0.8) + ')';
+                        el.style.opacity = 1 - easeIn(t);
+                        if (t < 1) requestAnimationFrame(tick);
+                        else if (el.parentNode) el.parentNode.removeChild(el);
+                    }
+                    requestAnimationFrame(tick);
+                }
+
+                function hoverRumble() {
+                    if (!hoverShaking || busy) return;
+                    var now = performance.now();
+                    var rocketOsc = Math.sin(now * 0.025) * 1.8;
+                    anchor.style.transform = 'translate(' + (FLY_X * rocketOsc) + 'px,' + (FLY_Y * rocketOsc) + 'px)';
+
+                    if (Math.random() < 0.18) {
+                        var pos = getRocketCenter();
+                        spawnSpark(pos.x + ((Math.random() - 0.5) * 6), pos.y + ((Math.random() - 0.5) * 6));
+                    }
+
+                    hoverRAF = requestAnimationFrame(hoverRumble);
+                }
+
+                btn.addEventListener('mouseenter', function() {
+                    if (busy) return;
+                    hoverShaking = true;
+                    hoverRumble();
+                });
+
+                btn.addEventListener('mouseleave', function() {
+                    hoverShaking = false;
+                    if (hoverRAF) cancelAnimationFrame(hoverRAF);
+                    if (!busy) anchor.style.transform = '';
+                });
+
+                btn.addEventListener('click', function(event) {
+                    if (busy) return;
+                    event.preventDefault();
+                    busy = true;
+                    hoverShaking = false;
+                    if (hoverRAF) cancelAnimationFrame(hoverRAF);
+                    btn.classList.add('is-launching');
+
+                    var startPos = getRocketCenter();
+                    var flightDist = window.innerWidth <= 768 ? 150 : 210;
+                    var flightDur = 900;
+                    var launchStart = performance.now();
+
+                    function animate(now) {
+                        var elapsed = now - launchStart;
+                        var t = Math.min(elapsed / flightDur, 1);
+                        var progress = easeOut(t);
+                        var dx = FLY_X * flightDist * progress;
+                        var dy = FLY_Y * flightDist * progress;
+                        var scale = t < 0.75 ? 1.08 : 1.08 - 0.5 * easeOut((t - 0.75) / 0.25);
+                        var opacity = t > 0.85 ? 1 - easeIn((t - 0.85) / 0.15) : 1;
+
+                        anchor.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + Math.max(0.3, scale) + ')';
+                        anchor.style.opacity = opacity;
+
+                        if (t < 0.9) {
+                            var rocketX = startPos.x + dx;
+                            var rocketY = startPos.y + dy;
+                            spawnSpark(rocketX, rocketY);
+                        }
+
+                        if (t < 1) requestAnimationFrame(animate);
+                    }
+
+                    requestAnimationFrame(animate);
+
+                    window.setTimeout(function() {
+                        window.location.href = btn.getAttribute('href');
+                    }, flightDur + 80);
+                });
+            });
+        })();
+
+        (function() {
             if (!window.matchMedia('(pointer: fine)').matches) return;
 
             function attachSectionGlow(selector) {
@@ -274,8 +602,119 @@
                 });
             }
 
-            attachSectionGlow('.features');
-            attachSectionGlow('.collab-showcase');
+        })();
+
+        (function() {
+            var railSection = document.querySelector('.who-inside');
+            var railShell = document.querySelector('.inside-rail-shell');
+            var rail = document.querySelector('[data-scroll-rail]');
+            if (!railSection || !railShell || !rail) return;
+            var cards = Array.prototype.slice.call(rail.querySelectorAll('.inside-card'));
+
+            function updateFocusState() {
+                if (cards.length === 0) return;
+
+                if (window.innerWidth <= 768) {
+                    cards.forEach(function(card, index) {
+                        card.classList.toggle('is-focus', index === 0);
+                        card.classList.remove('is-near-focus');
+                    });
+                    return;
+                }
+
+                var shellRect = railShell.getBoundingClientRect();
+                var shellCenter = shellRect.left + (shellRect.width / 2);
+                var closestIndex = 0;
+                var closestDistance = Infinity;
+
+                cards.forEach(function(card, index) {
+                    var cardRect = card.getBoundingClientRect();
+                    var cardCenter = cardRect.left + (cardRect.width / 2);
+                    var distance = Math.abs(shellCenter - cardCenter);
+
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestIndex = index;
+                    }
+                });
+
+                cards.forEach(function(card, index) {
+                    card.classList.toggle('is-focus', index === closestIndex);
+                    card.classList.toggle('is-near-focus', Math.abs(index - closestIndex) === 1);
+                });
+            }
+
+            function updateRail() {
+                if (window.innerWidth <= 768) {
+                    rail.style.transform = 'translate3d(0, 0, 0)';
+                    updateFocusState();
+                    return;
+                }
+
+                var rect = railSection.getBoundingClientRect();
+                var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+                var scrollRange = Math.max(railSection.offsetHeight - viewportHeight, 1);
+                var progress = Math.min(Math.max((-rect.top) / scrollRange, 0), 1);
+                var maxShift = Math.max(rail.scrollWidth - railShell.clientWidth, 0);
+                var shift = -maxShift * progress;
+                rail.style.transform = 'translate3d(' + shift.toFixed(2) + 'px, 0, 0)';
+                updateFocusState();
+            }
+
+            window.addEventListener('scroll', updateRail, { passive: true });
+            window.addEventListener('resize', updateRail);
+            updateRail();
+        })();
+
+        (function() {
+            var processStory = document.querySelector('[data-process-story]');
+            if (!processStory) return;
+
+            var processSteps = Array.prototype.slice.call(processStory.querySelectorAll('[data-process-step]'));
+            var processNodes = Array.prototype.slice.call(processStory.querySelectorAll('[data-process-node]'));
+            if (processSteps.length === 0 || processNodes.length !== processSteps.length) return;
+
+            function clamp(value, min, max) {
+                return Math.min(Math.max(value, min), max);
+            }
+
+            function updateProcessStory() {
+                var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+                var storyRect = processStory.getBoundingClientRect();
+                var progress = clamp((viewportHeight * 0.72 - storyRect.top) / (storyRect.height * 0.82), 0, 1);
+                var segmentCount = processSteps.length - 1;
+                var scaled = progress * segmentCount;
+                var activeIndex = Math.round(scaled);
+                var fractional = scaled - Math.floor(scaled);
+                var eased = 0.5 - (Math.cos(Math.PI * fractional) / 2);
+                var railRect = processStory.querySelector('.process-rail').getBoundingClientRect();
+                var progressPercent;
+
+                if (progress >= 1) {
+                    var finalRect = processNodes[processNodes.length - 1].getBoundingClientRect();
+                    progressPercent = ((finalRect.top + (finalRect.height / 2) - railRect.top) / railRect.height) * 100;
+                } else {
+                    var nodeIndex = Math.min(Math.floor(scaled), segmentCount - 1);
+                    var startNode = processNodes[nodeIndex];
+                    var endNode = processNodes[Math.min(nodeIndex + 1, processNodes.length - 1)];
+                    var startRect = startNode.getBoundingClientRect();
+                    var endRect = endNode.getBoundingClientRect();
+                    var startPercent = ((startRect.top + (startRect.height / 2) - railRect.top) / railRect.height) * 100;
+                    var endPercent = ((endRect.top + (endRect.height / 2) - railRect.top) / railRect.height) * 100;
+                    progressPercent = startPercent + ((endPercent - startPercent) * eased);
+                }
+
+                processStory.style.setProperty('--process-progress', progressPercent.toFixed(2));
+
+                processSteps.forEach(function(step, index) {
+                    step.classList.toggle('is-active', index === activeIndex);
+                    step.classList.toggle('is-near-active', Math.abs(index - activeIndex) === 1);
+                });
+            }
+
+            window.addEventListener('scroll', updateProcessStory, { passive: true });
+            window.addEventListener('resize', updateProcessStory);
+            updateProcessStory();
         })();
 
     </script>
