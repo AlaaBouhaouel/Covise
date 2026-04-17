@@ -24,7 +24,8 @@
 <body>
     <div class="container">
         <!-- Navigation -->
-        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href='mailto:info@covise.com' nav_cta_label='CONTACT' nav_join_href='/signin/' nav_join_label='JOIN THE COMMUNITY' nav_classes='nav--overlay nav--mobile-compact nav--font-body nav--no-theme' show_home=False login_url=True %}
+        {% url 'Waitlist' as waitlist_url %}
+        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href=waitlist_url nav_cta_label='CONTACT' nav_join_href=waitlist_url nav_join_label='JOIN THE COMMUNITY' nav_classes='nav--overlay nav--mobile-compact nav--font-body nav--no-theme' show_home=False login_url=True %}
 
         <!-- Hero Section -->
         <section class="hero">
@@ -43,7 +44,7 @@
             </div>
             
             <div class="hero-cta">
-                <a href="/signin/" class="btn-primary btn-rocket reserve-spot-btn" data-rocket-link>
+                <a href="{{ waitlist_url }}" class="btn-primary btn-rocket reserve-spot-btn" data-rocket-link>
                     <span class="btn-primary-label">Get Started</span>
                     <span class="btn-primary-label-loading">Get Started</span>
                     <span class="rocket-anchor" aria-hidden="true">
@@ -252,7 +253,7 @@
                     <li>Conversations that lead to real builds</li>
                 </ul>
                 <div class="collab-showcase-cta-wrap">
-                    <a href="/waitlist/" class="btn-primary btn-rocket collab-try-btn btn-access" data-rocket-link>
+                    <a href="{{ waitlist_url }}" class="btn-primary btn-rocket collab-try-btn btn-access" data-rocket-link>
                         <span class="btn-primary-label">REQUEST ACCESS</span>
                         <span class="btn-primary-label-loading">REQUEST ACCESS</span>
                         <span class="rocket-anchor" aria-hidden="true">
@@ -273,7 +274,7 @@
                             </svg>
                         </span>
                     </a>
-                    <a href="/features/" class="btn-primary collab-try-btn btn-learn"><span class="btn-primary-label">LEARN MORE</span><img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
+                    <a href="{{ waitlist_url }}" class="btn-primary collab-try-btn btn-learn"><span class="btn-primary-label">LEARN MORE</span><img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
                 </div>
             </div>
         </section>
@@ -286,7 +287,7 @@
             <div class="cta-content reveal-up" style="--reveal-delay: 0ms;">
                 <h2 class="section-title">WANT TO BE PART OF THE FIRST COHORT?</h2>
                 <p class="cta-text">We are onboarding verified founders in batches. Apply for early access.</p>
-                <a href="/waitlist/" class="btn-primary btn-rocket cta-primary-button" data-rocket-link>
+                <a href="{{ waitlist_url }}" class="btn-primary btn-rocket cta-primary-button" data-rocket-link>
                     <span class="btn-primary-label">JOIN THE NETWORK</span>
                     <span class="btn-primary-label-loading">JOIN THE NETWORK</span>
                     <span class="rocket-anchor" aria-hidden="true">
