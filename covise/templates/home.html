@@ -8,6 +8,7 @@
     <title>CoVise | Home</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'home.css' %}">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -29,7 +30,7 @@
 
   gtag('config', 'G-RDN1TCMRNR');
 </script>
-<body>
+<body class="has-app-mobile-nav">
     <div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
@@ -58,9 +59,6 @@
                     <path d="M3 12h18"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo" title="Open CoVise Advisor">
-                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
-            </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile" data-demo="Start here: finish your profile so CoVise can recommend stronger matches, sharper intros, and better next steps." data-demo-pos="side">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="8" r="4"></circle>
@@ -79,16 +77,14 @@
         <main class="main">
             <header class="home-header" aria-label="Home top bar">
                 <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
-                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
-                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
-                    <span>CoVise</span>
+                    <span class="home-brand-wordmark">CoVise</span>
                 </a>
-                <div class="home-header-search" aria-hidden="true">
+                <div class="home-header-search">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="11" cy="11" r="7"></circle>
                             <path d="M20 20l-3.5-3.5"></path>
                         </svg>
-                        <input type="search" placeholder="Search Anything">
+                        <input id="homeHeaderSearch" type="search" placeholder="Search posts, founders, or topics..." aria-label="Search posts">
                 </div>
                 <div class="home-header-actions">
                     
@@ -106,33 +102,13 @@
                         <div id="notifPanel" class="notif-panel">
                             <div class="notif-panel-head">
                                 <span class="notif-panel-title">Network Activity</span>
-                                <span class="notif-panel-meta">4 new</span>
+                                <span class="notif-panel-meta"></span>
                             </div>
-                            <div class="activity-feed" style="border: 0; border-radius: 0; background: transparent;">
-                                <div class="feed-item">
-                                    <div class="feed-text"><strong>Ahmed K.</strong><br>joined from Riyadh - looking for a tech co-founder</div>
-                                    <div class="feed-time">2h ago</div>
-                                </div>
-                                <div class="feed-item">
-                                    <div class="feed-text"><strong>New project posted</strong><br>B2B logistics platform, UAE expansion</div>
-                                    <div class="feed-time">4h ago</div>
-                                </div>
-                                <div class="feed-item">
-                                    <div class="feed-text"><strong>Sara M. &amp; Faisal A.</strong><br>started a Trial Build together</div>
-                                    <div class="feed-time">6h ago</div>
-                                </div>
-                                <div class="feed-item" style="border-bottom: 0;">
-                                    <div class="feed-text"><strong>Nora H.</strong><br>joined from Dubai - open to cross-border partnerships</div>
-                                    <div class="feed-time">9h ago</div>
-                                </div>
-                            </div>
+                            <div class="activity-feed" style="border: 0; border-radius: 0; background: transparent;"></div>
                         </div>
                     </div>
                     <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="8" r="4"></circle>
-                            <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
-                        </svg>
+                        <span>{{ request.user.avatar_initials }}</span>
                     </a>
                 </div>
             </header>
@@ -280,44 +256,123 @@
 -->
             <section class="home-content-grid" aria-label="Home content">
                 <div class="home-primary">
+                    <div class="home-section-head">
+                        <h1 class="home-section-title">Network</h1>
+                        <button class="mobile-filter-toggle" id="mobileFilterToggle" type="button" aria-expanded="false" aria-controls="mobileFilterDrawer">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M4 7h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                <path d="M7 12h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                <path d="M10 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                            <span>Filter</span>
+                        </button>
+                    </div>
+                    <div class="mobile-filter-backdrop" id="mobileFilterBackdrop" hidden></div>
+                    <div class="post-filter-row" id="mobileFilterDrawer">
+                        <div class="mobile-filter-drawer-head">
+                            <div class="mobile-filter-drawer-title">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 7h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M7 12h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M10 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                <span>Filter</span>
+                            </div>
+                            <button class="mobile-filter-close" id="mobileFilterClose" type="button" aria-label="Close filters">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <select id="postSortFilter" aria-label="Sort posts">
+                            <option value="date">By date</option>
+                            <option value="reactions">By reactions</option>
+                        </select>
+                        <select id="postTypeFilter" aria-label="Filter posts by type">
+                            <option value="">All types</option>
+                            <option value="idea">Idea</option>
+                            <option value="update">Update</option>
+                            <option value="ask">Ask</option>
+                            <option value="win">Win</option>
+                            <option value="ask_me_anything">Ask Me Anything</option>
+                        </select>
+                        <select id="postCountryFilter" aria-label="Filter posts by country">
+                            <option value="">All countries</option>
+                            {% for country in home_filter_countries %}
+                                <option value="{{ country|lower }}">{{ country }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="postScopeFilter" aria-label="Filter by network scope">
+                            <option value="all">All</option>
+                            <option value="contacts">Contacts only</option>
+                        </select>
+                    </div>
 
                     <section class="feed-shell" data-demo="The feed keeps you close to founder momentum, product progress, and community updates in one wide stream." style="width: 100%; padding: 0 0 24px;">
                  <div class="structured-feed">
                     {% for post in posts %}
-                    <article class="structured-post {{ post.theme_class }}" data-post-url="{% url 'Post Detail' post.id %}">
+                    <article class="structured-post {{ post.theme_class }}" data-post-url="{% url 'Post Detail' post.id %}" data-post-type="{{ post.post_type }}" data-post-owner="{{ post.owner_display_name|lower }}" data-post-country="{{ post.feed_country|lower }}">
                         <div class="structured-post-head">
-                            <div class="structured-post-meta">
-                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
-                                    <div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div>
-                                </a>
-                                <div>
-                                    <div class="structured-post-title"><a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a></div>
-                                    <div class="structured-post-subtitle">{{ post.get_post_type_display }} · {{ post.relative_time }}</div>
-                                </div>
-                            </div>
-                            <div class="structured-post-tools">
-                                <div class="structured-badges">
-                                    {% for skill in post.feed_skills %}
-                                    <span class="structured-badge">{{ skill }}</span>
-                                    {% endfor %}
+                            <div class="structured-post-head-main">
+                                <div class="structured-post-meta">
+                                    <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
+                                        <div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div>
+                                    </a>
+                                    <div class="structured-post-meta-copy">
+                                        <div class="structured-post-title">
+                                            <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a>
+                                            {% if post.show_cofounder_badge %}
+                                            <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
+                                                <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="structured-post-subtitle">
+                                            {{ post.get_post_type_display }}
+                                            {% if post.feed_country %} · {{ post.feed_country }}{% endif %}
+                                            · {{ post.relative_time }}
+                                        </div>
+                                    </div>
                                 </div>
                                 <button class="menu-btn" type="button" aria-label="More actions" title="Open post actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                             </div>
-                        </div>
-                        <a class="structured-post-link" href="{% url 'Post Detail' post.id %}">
-                            <div class="structured-post-heading">{{ post.feed_title }}</div>
-                            <div class="structured-post-body">{{ post.content }}</div>
-                            {% if post.image %}
-                            <div class="structured-post-image">
-                                <img src="{{ post.image.url }}" alt="{{ post.feed_title }}">
+                            <div class="structured-post-tools">
+                                    <div class="structured-badges">
+                                    {% for skill in post.feed_skills %}
+                                    <span class="home-skill-badge home-skill-badge--{{ skill.tone }}" data-tone="{{ skill.tone }}">{{ skill.label }}</span>
+                                    {% endfor %}
+                                </div>
                             </div>
+                        </div>
+                        <div class="structured-post-link">
+                            <a class="unstyled-link" href="{% url 'Post Detail' post.id %}">
+                                <div class="structured-post-heading">{{ post.feed_title }}</div>
+                            </a>
+                            <div class="structured-post-body-wrap">
+                                <div class="structured-post-body is-clamped" data-post-body>{{ post.content_html|safe }}</div>
+                                <a class="post-read-more" href="{% url 'Post Detail' post.id %}" data-read-more hidden>Read all</a>
+                            </div>
+                            {% if post.feed_images %}
+                            <a class="unstyled-link" href="{% url 'Post Detail' post.id %}">
+                                <div class="post-gallery post-gallery-count-{% if post.feed_image_count > 4 %}4{% else %}{{ post.feed_image_count }}{% endif %}">
+                                    {% for image in post.feed_images|slice:":4" %}
+                                    <div class="post-gallery-item{% if forloop.counter == 4 and post.feed_image_count > 4 %} post-gallery-item-more{% endif %}">
+                                        <img src="{{ image.url }}" alt="{{ image.alt }}">
+                                        {% if forloop.counter == 4 and post.feed_image_count > 4 %}
+                                        <span class="post-gallery-more-label">See all</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </a>
                             {% endif %}
-                        </a>
+                        </div>
                         <div class="structured-post-footer">
                             <button class="action-btn like-btn" type="button" title="Like this post" data-count="{{ post.likes_number }}" data-liked="false"><i class="fa-regular fa-thumbs-up"></i><span class="count">{{ post.likes_number }}</span></button>
                             <button class="action-btn dislike-btn" type="button" title="Dislike this post" data-count="0" data-disliked="false"><i class="fa-regular fa-thumbs-down"></i><span class="dislike-count">0</span></button>
                             <a class="action-btn comment-toggle" href="{% url 'Post Detail' post.id %}" title="Open comments"><i class="fa-regular fa-comment"></i><span class="comment-count">{{ post.comments.count }}</span></a>
-                            <button class="action-btn bookmark-btn" type="button" title="Save this post"><i class="fa-regular fa-bookmark"></i></button>
+                            <button class="action-btn bookmark-btn{% if post.is_saved %} is-active{% endif %}" type="button" title="Save this post" data-post-id="{{ post.id }}" data-saved="{% if post.is_saved %}true{% else %}false{% endif %}"><i class="{% if post.is_saved %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i></button>
                         </div>
                     </article>
                     {% empty %}
@@ -325,8 +380,9 @@
                         <div class="structured-post-body">No posts yet.</div>
                     </article>
                     {% endfor %}
-                </div>
-                <script>
+    </div>
+    {% include "includes/app_mobile_nav.html" with active_page='home' show_mobile_back=True %}
+<script>
                     (function() {
                         var feedSection = document.querySelector('.feed-shell');
                         if (!feedSection) return;
@@ -415,6 +471,28 @@
                                 return;
                             });
                         });
+                        feedSection.querySelectorAll('.bookmark-btn').forEach(function(button) {
+                            button.addEventListener('click', function() {
+                                var postId = button.getAttribute('data-post-id');
+                                if (!postId) return;
+                                fetch('/posts/' + postId + '/save/', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRFToken': csrftoken,
+                                        'Content-Type': 'application/json'
+                                    }
+                                }).then(function(response) {
+                                    if (!response.ok) throw new Error('Request failed');
+                                    return response.json();
+                                }).then(function(data) {
+                                    if (typeof data.saved === 'undefined') return;
+                                    button.setAttribute('data-saved', data.saved ? 'true' : 'false');
+                                    button.classList.toggle('is-active', !!data.saved);
+                                    var icon = button.querySelector('i');
+                                    if (icon) icon.className = (data.saved ? 'fa-solid' : 'fa-regular') + ' fa-bookmark';
+                                });
+                            });
+                        });
                         feedSection.querySelectorAll('.structured-post').forEach(function(card) {
                             card.addEventListener('click', function(event) {
                                 if (event.target.closest('a, button, input, textarea, label')) return;
@@ -441,11 +519,11 @@
                         <div class="welcome-post-card">
                             <div class="welcome-post-copy">
                                 <h2>Welcome, {{ first_name }}</h2>
-                                <p>Your network is active.</p>
+                                <p>{{ home_welcome_subtitle }}</p>
                             </div>
                             <a class="welcome-post-button" href="{% url 'Create Post' %}" aria-label="Create a post" title="Open the create post page">
                                 <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                                <span>Create a post</span>
+                                <span>POST</span>
                             </a>
                         </div>
                     </article>
@@ -457,24 +535,24 @@
                         </div>
                         <div class="activity-grid">
                             <div class="stat-card">
-                                <div class="stat-value">247</div>
+                                <div class="stat-value">{{ home_sidebar_metrics.verified_founders_count }}</div>
                                 <div class="stat-label">Verified Founders</div>
-                                <div class="stat-delta">+14 this week</div>
+                                <div class="stat-delta">+ {{ home_sidebar_metrics.verified_founders_today }} today</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-value">42</div>
+                                <div class="stat-value">{{ home_sidebar_metrics.open_opportunities_count }}</div>
                                 <div class="stat-label">Open Opportunities</div>
-                                <div class="stat-delta">+6 today</div>
+                                <div class="stat-delta">+ {{ home_sidebar_metrics.open_opportunities_week }} this week</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-value">18</div>
-                                <div class="stat-label">New Matches</div>
-                                <div class="stat-delta">+3 yesterday</div>
+                                <div class="stat-value">{{ home_sidebar_metrics.new_matches_count }}</div>
+                                <div class="stat-label">New Members</div>
+                                <div class="stat-delta">+ {{ home_sidebar_metrics.new_matches_today }} today</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-value">91%</div>
-                                <div class="stat-label">Avg Match Score</div>
-                                <div class="stat-delta">Across active pairs</div>
+                                <div class="stat-value">{{ home_sidebar_metrics.waitlist_count }}</div>
+                                <div class="stat-label">People In the waitlist</div>
+                                <div class="stat-delta">+ {{ home_sidebar_metrics.same_domain_week }} this week</div>
                             </div>
                         </div>
                     </article>
@@ -485,33 +563,38 @@
                             <div class="widget-action">Review</div>
                         </div>
                         <div class="match-cards" style="gap: 0;">
-                            <div class="match-card request-match-card" style="grid-template-columns: auto 1fr auto; padding: calc(var(--spacing) * 1) 0; background: transparent; border: 0; border-bottom: 1px solid rgba(120, 150, 255, 0.16); border-radius: 0; min-height: 52px;">
-                                <div class="match-avatar c">LA</div>
+                            {% for request_item in home_quick_requests %}
+                            <div class="match-card request-match-card" style="grid-template-columns: auto 1fr auto; padding: calc(var(--spacing) * 1) 0; background: transparent; border: 0; {% if not forloop.last %}border-bottom: 1px solid rgba(120, 150, 255, 0.16);{% endif %} border-radius: 0; min-height: 52px;">
+                                <div class="match-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ request_item.avatar_initials }}</div>
                                 <div class="match-info" style="gap: 2px;">
-                                    <div class="match-name" style="padding-bottom: 0;">Lama Al-Salem</div>
-                                    <div class="match-role">Received · 91% match</div>
+                                    <div class="match-name" style="padding-bottom: 0;">{{ request_item.display_name }}</div>
+                                    <div class="match-role">{{ request_item.status_line }}</div>
                                 </div>
+                                {% if request_item.show_actions %}
                                 <div class="decision-actions">
-                                    <button class="decision-btn accept" type="button" aria-label="Accept request">
+                                    <button class="decision-btn accept home-request-action" type="button" aria-label="Accept request" data-request-id="{{ request_item.id }}" data-request-action="accept">
                                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <path d="M5 12.5 9.5 17 19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
                                         </svg>
                                     </button>
-                                    <button class="decision-btn reject" type="button" aria-label="Decline request">
+                                    <button class="decision-btn reject home-request-action" type="button" aria-label="Decline request" data-request-id="{{ request_item.id }}" data-request-action="decline">
                                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <path d="M7 7l10 10M17 7 7 17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
                                         </svg>
                                     </button>
                                 </div>
+                                {% else %}
+                                <span class="status {% if request_item.status == 'accepted' %}accepted{% elif request_item.status == 'pending' %}pending{% else %}rejected{% endif %}" style="padding: 4px 8px;">{{ request_item.status|title }}</span>
+                                {% endif %}
                             </div>
-                            <div class="match-card request-match-card" style="grid-template-columns: auto 1fr auto; padding: calc(var(--spacing) * 1) 0 0; background: transparent; border: 0; border-radius: 0; min-height: 52px;">
-                                <div class="match-avatar b">FH</div>
+                            {% empty %}
+                            <div class="match-card request-match-card" style="grid-template-columns: 1fr; padding: calc(var(--spacing) * 1) 0; background: transparent; border: 0; border-radius: 0; min-height: 52px;">
                                 <div class="match-info" style="gap: 2px;">
-                                    <div class="match-name" style="padding-bottom: 0;">Founders Hub MVP</div>
-                                    <div class="match-role">Sent · Awaiting response</div>
+                                    <div class="match-name" style="padding-bottom: 0;">No active requests</div>
+                                    <div class="match-role">New connection activity will show up here.</div>
                                 </div>
-                                <span class="status accepted" style="padding: 4px 8px;">Accepted</span>
                             </div>
+                            {% endfor %}
                         </div>
                     </article>
                 </aside>
@@ -526,7 +609,8 @@
                     margin-top: 0;
                 }
                 .home-secondary .widget-title {
-                    font-size: 0.74rem;
+                    font-size: 0.68rem;
+                    font-weight: 300;
                 }
                 .home-secondary .widget-action {
                     font-size: 0.62rem;
@@ -680,6 +764,10 @@
                     width: 34px;
                     padding: 0;
                 }
+                .feed-shell .structured-post-tools{
+                    align-items:end ;
+
+                }
             </style>
 
         <!-- Footer -->
@@ -688,8 +776,52 @@
 
 <script>
     (function() {
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        document.querySelectorAll('.home-request-action').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var requestId = button.getAttribute('data-request-id');
+                var action = button.getAttribute('data-request-action');
+                if (!requestId || !action) return;
+
+                fetch('/messages/requests/' + requestId + '/' + action + '/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Request failed');
+                    }
+                    return response.json();
+                }).then(function() {
+                    window.location.reload();
+                }).catch(function() {
+                    window.alert('We could not update that request right now. Please try again.');
+                });
+            });
+        });
+    })();
+</script>
+
+<script>
+    (function() {
         var secondary = document.getElementById('homeSecondary');
-        var toggle = document.getElementById('mobileSidebarToggle');
+        var toggle = document.getElementById('appMobileBackTrigger') || document.getElementById('mobileSidebarToggle');
         var backdrop = document.getElementById('sidebarBackdrop');
         var closeButton = document.getElementById('homeSecondaryClose');
         if (!secondary || !toggle || !backdrop) return;
@@ -936,6 +1068,215 @@
 </script>
 <script>
     (function() {
+        function normalizeRelativeTimes(root) {
+            var scope = root || document.body;
+            var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+            var node;
+            var pattern = /\b0\s*(?:mins?|minutes?)\s+ago\b/gi;
+            while ((node = walker.nextNode())) {
+                if (!node.nodeValue) continue;
+                pattern.lastIndex = 0;
+                if (!pattern.test(node.nodeValue)) continue;
+                node.nodeValue = node.nodeValue.replace(pattern, 'right now');
+            }
+        }
+        var input = document.getElementById('homeHeaderSearch');
+        var sortFilter = document.getElementById('postSortFilter');
+        var typeFilter = document.getElementById('postTypeFilter');
+        var countryFilter = document.getElementById('postCountryFilter');
+        var scopeFilter = document.getElementById('postScopeFilter');
+        var mobileFilterToggle = document.getElementById('mobileFilterToggle');
+        var mobileFilterDrawer = document.getElementById('mobileFilterDrawer');
+        var mobileFilterBackdrop = document.getElementById('mobileFilterBackdrop');
+        var mobileFilterClose = document.getElementById('mobileFilterClose');
+        var mobileFilterQuery = window.matchMedia('(max-width: 520px)');
+        var posts = Array.prototype.slice.call(document.querySelectorAll('.structured-feed .structured-post[data-post-url]'));
+        if (!input || !posts.length) return;
+
+        var feed = document.querySelector('.structured-feed');
+        var emptyState = document.createElement('p');
+        emptyState.className = 'muted-note';
+        emptyState.textContent = 'No posts match your search.';
+        emptyState.hidden = true;
+        if (feed) feed.appendChild(emptyState);
+        posts.forEach(function(post, index) {
+            post.dataset.originalIndex = String(index);
+        });
+        normalizeRelativeTimes(document.body);
+
+        document.querySelectorAll('[data-post-body]').forEach(function(body) {
+            var toggle = body.parentElement ? body.parentElement.querySelector('[data-read-more]') : null;
+            if (!toggle) return;
+            if (body.scrollHeight > body.clientHeight + 4) {
+                toggle.hidden = false;
+            }
+        });
+
+        function enhanceFilterSelect(select) {
+            if (!select || select.dataset.enhanced === 'true') return;
+            select.dataset.enhanced = 'true';
+
+            var wrapper = document.createElement('div');
+            wrapper.className = 'filter-dropdown';
+
+            var trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'filter-dropdown-btn';
+            trigger.setAttribute('aria-haspopup', 'listbox');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.textContent = select.options[select.selectedIndex] ? select.options[select.selectedIndex].textContent : '';
+
+            var menu = document.createElement('div');
+            menu.className = 'filter-dropdown-menu';
+            menu.hidden = true;
+            menu.setAttribute('role', 'listbox');
+
+            Array.prototype.slice.call(select.options).forEach(function(option) {
+                var optionButton = document.createElement('button');
+                optionButton.type = 'button';
+                optionButton.className = 'filter-dropdown-option' + (option.selected ? ' is-active' : '');
+                optionButton.textContent = option.textContent;
+                optionButton.setAttribute('data-value', option.value);
+                optionButton.addEventListener('click', function() {
+                    select.value = option.value;
+                    trigger.textContent = option.textContent;
+                    menu.querySelectorAll('.filter-dropdown-option').forEach(function(item) {
+                        item.classList.toggle('is-active', item === optionButton);
+                    });
+                    menu.hidden = true;
+                    wrapper.classList.remove('is-open');
+                    trigger.setAttribute('aria-expanded', 'false');
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                menu.appendChild(optionButton);
+            });
+
+            trigger.addEventListener('click', function(event) {
+                event.stopPropagation();
+                var isOpen = wrapper.classList.contains('is-open');
+                document.querySelectorAll('.filter-dropdown').forEach(function(item) {
+                    item.classList.remove('is-open');
+                    var itemMenu = item.querySelector('.filter-dropdown-menu');
+                    var itemTrigger = item.querySelector('.filter-dropdown-btn');
+                    if (itemMenu) itemMenu.hidden = true;
+                    if (itemTrigger) itemTrigger.setAttribute('aria-expanded', 'false');
+                });
+                if (!isOpen) {
+                    wrapper.classList.add('is-open');
+                    menu.hidden = false;
+                    trigger.setAttribute('aria-expanded', 'true');
+                }
+            });
+
+            select.parentNode.insertBefore(wrapper, select);
+            wrapper.appendChild(select);
+            wrapper.appendChild(trigger);
+            wrapper.appendChild(menu);
+        }
+
+        [sortFilter, typeFilter, countryFilter, scopeFilter].forEach(enhanceFilterSelect);
+
+        function closeMobileFilterDrawer() {
+            if (!mobileFilterDrawer || !mobileFilterToggle || !mobileFilterBackdrop) return;
+            mobileFilterDrawer.classList.remove('is-open');
+            mobileFilterToggle.setAttribute('aria-expanded', 'false');
+            mobileFilterBackdrop.hidden = true;
+            document.body.classList.remove('mobile-filter-open');
+        }
+
+        function openMobileFilterDrawer() {
+            if (!mobileFilterDrawer || !mobileFilterToggle || !mobileFilterBackdrop) return;
+            mobileFilterDrawer.classList.add('is-open');
+            mobileFilterToggle.setAttribute('aria-expanded', 'true');
+            mobileFilterBackdrop.hidden = false;
+            document.body.classList.add('mobile-filter-open');
+        }
+
+        if (mobileFilterToggle && mobileFilterDrawer && mobileFilterBackdrop) {
+            mobileFilterToggle.addEventListener('click', function() {
+                if (!mobileFilterQuery.matches) return;
+                if (mobileFilterDrawer.classList.contains('is-open')) {
+                    closeMobileFilterDrawer();
+                } else {
+                    openMobileFilterDrawer();
+                }
+            });
+
+            mobileFilterBackdrop.addEventListener('click', closeMobileFilterDrawer);
+            if (mobileFilterClose) {
+                mobileFilterClose.addEventListener('click', closeMobileFilterDrawer);
+            }
+            window.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') closeMobileFilterDrawer();
+            });
+            mobileFilterQuery.addEventListener('change', function(event) {
+                if (!event.matches) closeMobileFilterDrawer();
+            });
+        }
+
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.filter-dropdown').forEach(function(item) {
+                item.classList.remove('is-open');
+                var itemMenu = item.querySelector('.filter-dropdown-menu');
+                var itemTrigger = item.querySelector('.filter-dropdown-btn');
+                if (itemMenu) itemMenu.hidden = true;
+                if (itemTrigger) itemTrigger.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        function reactionScore(post) {
+            var likeCount = Number((post.querySelector('.like-btn .count') || {}).textContent || '0');
+            var dislikeCount = Number((post.querySelector('.dislike-btn .dislike-count') || {}).textContent || '0');
+            var commentCount = Number((post.querySelector('.comment-count') || {}).textContent || '0');
+            return likeCount + dislikeCount + commentCount;
+        }
+
+        function sortPosts(mode) {
+            if (!feed) return;
+            var sorted = posts.slice();
+            if (mode === 'reactions') {
+                sorted.sort(function(a, b) {
+                    return reactionScore(b) - reactionScore(a);
+                });
+            } else {
+                sorted.sort(function(a, b) {
+                    return Number(a.dataset.originalIndex || '0') - Number(b.dataset.originalIndex || '0');
+                });
+            }
+            sorted.forEach(function(post) {
+                feed.insertBefore(post, emptyState);
+            });
+        }
+
+        function applyPostFilters() {
+            var query = input.value.trim().toLowerCase();
+            var selectedSort = sortFilter ? sortFilter.value.trim().toLowerCase() : 'date';
+            var selectedType = typeFilter ? typeFilter.value.trim().toLowerCase() : '';
+            var selectedCountry = countryFilter ? countryFilter.value.trim().toLowerCase() : '';
+            var selectedScope = scopeFilter ? scopeFilter.value.trim().toLowerCase() : 'all';
+            sortPosts(selectedSort);
+            var matches = 0;
+            posts.forEach(function(post) {
+                var matchesText = !query || post.textContent.toLowerCase().indexOf(query) !== -1;
+                var matchesType = !selectedType || (post.dataset.postType || '').toLowerCase() === selectedType;
+                var matchesCountry = !selectedCountry || (post.dataset.postCountry || '').toLowerCase() === selectedCountry;
+                var matchesScope = selectedScope !== 'contacts';
+                var visible = matchesText && matchesType && matchesCountry && matchesScope;
+                post.hidden = !visible;
+                if (visible) matches += 1;
+            });
+            emptyState.hidden = (!query && !selectedType && !selectedCountry && selectedScope === 'all' && selectedSort === 'date') || matches > 0;
+        }
+
+        input.addEventListener('input', applyPostFilters);
+        if (sortFilter) sortFilter.addEventListener('change', applyPostFilters);
+        if (typeFilter) typeFilter.addEventListener('change', applyPostFilters);
+        if (countryFilter) countryFilter.addEventListener('change', applyPostFilters);
+        if (scopeFilter) scopeFilter.addEventListener('change', applyPostFilters);
+    })();
+</script>
+<script>
+    (function() {
         var bell = document.getElementById('notifBell');
         var panel = document.getElementById('notifPanel');
         if (!bell || !panel) return;
@@ -951,6 +1292,7 @@
         });
     })();
 </script>
+<script src="{% static 'notifications.js' %}"></script>
 <script>
     (function() {
         var input = document.getElementById('advisorInput');

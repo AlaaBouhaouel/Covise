@@ -24,7 +24,7 @@
 <body>
     <div class="container">
         <!-- Navigation -->
-        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href='/login/' nav_cta_label='LOGIN' nav_join_href='/signin/' nav_join_label='JOIN THE COMMUNITY' nav_classes='nav--overlay nav--mobile-compact nav--font-body nav--no-theme' show_home=False %}
+        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href='mailto:info@covise.com' nav_cta_label='CONTACT' nav_join_href='/signin/' nav_join_label='JOIN THE COMMUNITY' nav_classes='nav--overlay nav--mobile-compact nav--font-body nav--no-theme' show_home=False login_url=True %}
 
         <!-- Hero Section -->
         <section class="hero">
@@ -71,10 +71,32 @@
             </div>
         </section>
 
+        <section class="stats" aria-label="CoVise network statistics">
+            <article class="stat-item">
+                <p class="stat-number">100+</p>
+                <p class="stat-label">Founders in the waitlist</p>
+            </article>
+            <span class="stat-divider" aria-hidden="true"></span>
+            <article class="stat-item">
+                <p class="stat-number">90%+</p>
+                <p class="stat-label">Actively seeking a cofounder or serious collaboration</p>
+            </article>
+            <span class="stat-divider" aria-hidden="true"></span>
+            <article class="stat-item">
+                <p class="stat-number">70%+</p>
+                <p class="stat-label">Already building or validating a venture</p>
+            </article>
+            <span class="stat-divider" aria-hidden="true"></span>
+            <article class="stat-item">
+                <p class="stat-number">GCC + Global</p>
+                <p class="stat-label">Cross-border network</p>
+            </article>
+        </section>
+
         <section class="inside-network">
             <div class="section-intro reveal-up" style="--reveal-delay: 0ms;">
                 <p class="section-kicker">Inside The Network</p>
-                <h2 class="section-title">A network of serious entrepreneurs kept intentional.</h2>
+                <h2 class="section-title">A network of serious entrepreneurs<span class="mobile-text"><br>kept intentional.</span></h2>
                 <p class="section-copy">Share what you're working on, get advice, and find people to build with.</p>
             </div>
             <div class="network-feed" aria-label="Recent Covise network activity">
@@ -230,7 +252,7 @@
                     <li>Conversations that lead to real builds</li>
                 </ul>
                 <div class="collab-showcase-cta-wrap">
-                    <a href="/signin/" class="btn-primary btn-rocket collab-try-btn btn-access" data-rocket-link>
+                    <a href="/waitlist/" class="btn-primary btn-rocket collab-try-btn btn-access" data-rocket-link>
                         <span class="btn-primary-label">REQUEST ACCESS</span>
                         <span class="btn-primary-label-loading">REQUEST ACCESS</span>
                         <span class="rocket-anchor" aria-hidden="true">
@@ -406,27 +428,76 @@
         (function() {
             var networkFeed = document.querySelector('.network-feed');
             var networkCards = Array.prototype.slice.call(document.querySelectorAll('.network-card'));
-            if (!('IntersectionObserver' in window) || !networkFeed || networkCards.length === 0) {
-                networkCards.forEach(function(card) { card.classList.add('is-popped'); });
-                return;
+            var defaultCard = networkFeed ? networkFeed.querySelector('.network-card-main') : null;
+            var mobileQuery = window.matchMedia('(max-width: 520px)');
+            if (!networkFeed || networkCards.length === 0 || !defaultCard) return;
+
+            function setActiveCard(activeCard) {
+                networkCards.forEach(function(card) {
+                    card.classList.toggle('is-active', card === activeCard);
+                });
             }
 
-            var hasPopped = false;
-            var popObserver = new IntersectionObserver(function(entries) {
-                entries.forEach(function(entry) {
-                    if (!entry.isIntersecting || hasPopped) return;
+            setActiveCard(defaultCard);
 
-                    hasPopped = true;
-                    networkCards.forEach(function(card, index) {
-                        window.setTimeout(function() {
-                            card.classList.add('is-popped');
-                        }, index * 120);
-                    });
-                    popObserver.unobserve(networkFeed);
+            networkCards.forEach(function(card) {
+                card.addEventListener('mouseenter', function() {
+                    if (mobileQuery.matches) return;
+                    networkFeed.classList.add('is-hovering');
+                    setActiveCard(card);
                 });
-            }, { threshold: 0.22, rootMargin: '0px 0px -6% 0px' });
 
-            popObserver.observe(networkFeed);
+                card.addEventListener('focus', function() {
+                    if (mobileQuery.matches) return;
+                    networkFeed.classList.add('is-hovering');
+                    setActiveCard(card);
+                });
+            });
+
+            networkFeed.addEventListener('mouseleave', function() {
+                if (mobileQuery.matches) return;
+                networkFeed.classList.remove('is-hovering');
+                setActiveCard(defaultCard);
+            });
+
+            networkFeed.addEventListener('focusout', function(event) {
+                if (mobileQuery.matches) return;
+                if (networkFeed.contains(event.relatedTarget)) return;
+                networkFeed.classList.remove('is-hovering');
+                setActiveCard(defaultCard);
+            });
+
+            if ('IntersectionObserver' in window) {
+                var visibleRatios = new Map();
+                var scrollObserver = new IntersectionObserver(function(entries) {
+                    if (!mobileQuery.matches) return;
+
+                    entries.forEach(function(entry) {
+                        visibleRatios.set(entry.target, entry.intersectionRatio);
+                    });
+
+                    var activeCard = defaultCard;
+                    var bestRatio = 0;
+
+                    networkCards.forEach(function(card) {
+                        var ratio = visibleRatios.get(card) || 0;
+                        if (ratio > bestRatio) {
+                            bestRatio = ratio;
+                            activeCard = card;
+                        }
+                    });
+
+                    networkFeed.classList.remove('is-hovering');
+                    setActiveCard(activeCard);
+                }, {
+                    threshold: [0.25, 0.4, 0.55, 0.7, 0.85],
+                    rootMargin: '-10% 0px -10% 0px'
+                });
+
+                networkCards.forEach(function(card) {
+                    scrollObserver.observe(card);
+                });
+            }
         })();
 
         (function() {

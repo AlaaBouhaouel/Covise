@@ -9,6 +9,7 @@
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'home.css' %}">
     <link rel="stylesheet" href="{% static 'create_post.css' %}">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script>
@@ -18,14 +19,12 @@
         })();
     </script>
 </head>
-<body class="create-post-page">
+<body class="create-post-page has-app-mobile-nav">
     <div class="layout">
         <main class="main">
             <header class="home-header" aria-label="Create post top bar">
                 <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
-                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
-                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
-                    <span>CoVise</span>
+                    <span class="home-brand-wordmark">CoVise</span>
                 </a>
                 <div class="home-header-actions">
                     <div style="position: relative;">
@@ -65,10 +64,7 @@
                         <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                     </button>
                     <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="8" r="4"></circle>
-                            <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
-                        </svg>
+                        <span>{{ request.user.avatar_initials }}</span>
                     </a>
                 </div>
             </header>
@@ -87,7 +83,11 @@
                     <div class="create-post-topbar">
                         <div>
                             <div class="widget-title">Post something worth building on, {{ first_name }}</div>
-                            <p class="create-post-subtitle">Share your thoughts with the community</p>
+                            {% if is_first_post %}
+                            <p class="create-post-subtitle">Your first post on CoVise is your introduction. Fill it in, make it yours, and publish it to join the conversation.</p>
+                            {% else %}
+                            <p class="create-post-subtitle">Start from a template or write freely.</p>
+                            {% endif %}
                         </div>
                         <div class="post-tools-wrap">
                             <label for="post-type">Post Tools</label>
@@ -96,10 +96,7 @@
                                     <button class="add-picture" id="postImageTrigger" type="button" aria-label="Add picture to post" title="Add an image to this post">
                                         <i class="fa-solid fa-image" aria-hidden="true"></i>
                                     </button>
-                                    <button class="pic-post-color" id="postColorTrigger" type="button" aria-label="Pick post color" title="Choose a post color" aria-expanded="false" aria-controls="postColorMenu">
-                                        <i class="fa-solid fa-palette" aria-hidden="true"></i>
-                                    </button>
-                                    <input id="postImageInput" name="image" type="file" accept="image/*" hidden>
+                                    <input id="postImageInput" name="images" type="file" accept="image/*" multiple hidden>
                                 </div>
                                 <div class="type">
                                     <div class="create-post-select-wrap create-post-dropdown">
@@ -123,16 +120,36 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="post-color-menu" id="postColorMenu" hidden>
-                                <button class="post-color-swatch{% if form_data.theme_color|default:'default' == 'default' %} is-active{% endif %}" type="button" data-editor-tone="default" aria-label="Use default post color" title="Use the default post color"></button>
-                                <button class="post-color-swatch post-color-swatch-blue{% if form_data.theme_color == 'blue' %} is-active{% endif %}" type="button" data-editor-tone="blue" aria-label="Use blue post color" title="Use a blue post color"></button>
-                                <button class="post-color-swatch post-color-swatch-amber{% if form_data.theme_color == 'amber' %} is-active{% endif %}" type="button" data-editor-tone="amber" aria-label="Use amber post color" title="Use an amber post color"></button>
-                                <button class="post-color-swatch post-color-swatch-green{% if form_data.theme_color == 'green' %} is-active{% endif %}" type="button" data-editor-tone="green" aria-label="Use green post color" title="Use a green post color"></button>
-                                <button class="post-color-swatch post-color-swatch-red{% if form_data.theme_color == 'red' %} is-active{% endif %}" type="button" data-editor-tone="red" aria-label="Use red post color" title="Use a red post color"></button>
-                            </div>
                         </div>
                     </div>
 
+                    {% if is_first_post %}
+                    <section class="create-post-template-intro" aria-label="Mandatory introduction template">
+                        <div class="create-post-template-lock">
+                            <span class="create-post-template-lock-badge">Introduction</span>
+                            <p>This first post is required so others can understand who you are, what you are building, and how to connect with you.</p>
+                        </div>
+                    </section>
+                    {% else %}
+                    <section class="create-post-template-section" aria-label="Post templates">
+                        <div class="create-post-template-head">
+                            <span class="create-post-template-kicker">Templates</span>
+                            <h2>Start from a template or write freely</h2>
+                        </div>
+                        <div class="create-post-template-grid">
+                            {% for card in template_cards %}
+                            <button
+                                class="create-post-template-card{% if initial_template_key == card.key %} is-active{% endif %}"
+                                type="button"
+                                data-template-key="{{ card.key }}"
+                            >
+                                <span class="create-post-template-card-title">{{ card.label }}</span>
+                                <span class="create-post-template-card-copy">{{ card.description }}</span>
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </section>
+                    {% endif %}
 
                     {% if error_message %}
                     <div class="create-post-error" role="alert">
@@ -142,7 +159,7 @@
 
                     <div class="create-post-field">
                         <label for="post-editor-title">Write</label>
-                        <div class="create-post-editor editor-tone-{{ form_data.theme_color|default:'default' }}" id="createPostEditor">
+                        <div class="create-post-editor" id="createPostEditor">
                             <div
                                 id="post-editor-title"
                                 class="create-post-editor-title"
@@ -161,11 +178,13 @@
                             >{{ form_data.content|default:'' }}</div>
                         </div>
                         <div class="create-post-image-preview" id="postImagePreview" hidden>
-                            <img id="postImagePreviewImg" alt="Selected post image preview">
-                            <button class="create-post-image-remove" id="postImageRemove" type="button" title="Remove the selected image">Remove image</button>
+                            <div class="create-post-image-preview-head">
+                                <span id="postImagePreviewCount">0 / 6 images</span>
+                                <button class="create-post-image-remove" id="postImageRemove" type="button" title="Clear selected images">Clear all</button>
+                            </div>
+                            <div class="create-post-image-preview-grid" id="postImagePreviewGrid"></div>
                         </div>
                         <input id="post-title" name="title" type="hidden" value="{{ form_data.title|default:'' }}">
-                        <input id="post-theme-color" name="theme_color" type="hidden" value="{{ form_data.theme_color|default:'default' }}">
                         <input id="post-content" name="content" type="hidden" value="{{ form_data.content|default:'' }}">
                     </div>
 
@@ -180,6 +199,7 @@
         </main>
     </div>
 
+    {{ template_payloads|json_script:"create-post-templates" }}
     <script>
         (function() {
             var form = document.querySelector('.create-post-form-card');
@@ -190,17 +210,26 @@
             var imageTrigger = document.getElementById('postImageTrigger');
             var imageInput = document.getElementById('postImageInput');
             var imagePreview = document.getElementById('postImagePreview');
-            var imagePreviewImg = document.getElementById('postImagePreviewImg');
+            var imagePreviewGrid = document.getElementById('postImagePreviewGrid');
+            var imagePreviewCount = document.getElementById('postImagePreviewCount');
             var imageRemove = document.getElementById('postImageRemove');
-            var colorTrigger = document.getElementById('postColorTrigger');
-            var colorMenu = document.getElementById('postColorMenu');
             var typeTrigger = document.getElementById('postTypeTrigger');
             var typeMenu = document.getElementById('postTypeMenu');
             var typeInput = document.getElementById('post-type');
             var typeLabel = document.getElementById('postTypeLabel');
-            var themeColorInput = document.getElementById('post-theme-color');
-            var editor = document.getElementById('createPostEditor');
+            var templateDataNode = document.getElementById('create-post-templates');
+            var templateCards = document.querySelectorAll('[data-template-key]');
+            var isFirstPost = {{ is_first_post|yesno:"true,false" }};
+            var templatePayloads = {};
             if (!form || !titleEditor || !bodyEditor || !titleInput || !contentInput) return;
+
+            if (templateDataNode) {
+                try {
+                    templatePayloads = JSON.parse(templateDataNode.textContent || '{}');
+                } catch (_error) {
+                    templatePayloads = {};
+                }
+            }
 
             function sanitizeText(value) {
                 return (value || '').replace(/\u00a0/g, ' ').replace(/\r/g, '').trim();
@@ -229,16 +258,110 @@
                 typeTrigger.setAttribute('aria-expanded', 'false');
             }
 
-            function closeColorMenu() {
-                if (!colorMenu || !colorTrigger) return;
-                colorMenu.hidden = true;
-                colorTrigger.setAttribute('aria-expanded', 'false');
+            var selectedImageFiles = [];
+
+            function updateTemplateCardState(activeKey) {
+                templateCards.forEach(function(card) {
+                    var isActive = card.getAttribute('data-template-key') === activeKey;
+                    card.classList.toggle('is-active', isActive);
+                });
+            }
+
+            function setPostType(value, label) {
+                if (!typeInput || !typeLabel) return;
+                typeInput.value = value || 'update';
+                var resolvedLabel = label || 'Update';
+                if (typeMenu) {
+                    typeMenu.querySelectorAll('.create-post-select-option').forEach(function(item) {
+                        if (item.getAttribute('data-value') === typeInput.value) {
+                            resolvedLabel = item.getAttribute('data-label') || resolvedLabel;
+                        }
+                    });
+                }
+                typeLabel.textContent = resolvedLabel;
+                if (!typeMenu) return;
+                typeMenu.querySelectorAll('.create-post-select-option').forEach(function(item) {
+                    var isSelected = item.getAttribute('data-value') === typeInput.value;
+                    item.classList.toggle('is-selected', isSelected);
+                    item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                });
+            }
+
+            function applyTemplate(templateKey) {
+                var template = templatePayloads[templateKey];
+                if (!template) return;
+                titleEditor.textContent = template.title || '';
+                bodyEditor.textContent = template.content || '';
+                setPostType(template.post_type, template.label);
+                updateTemplateCardState(templateKey);
+                syncFields();
             }
 
             function syncImagePreviewVisibility() {
-                if (!imagePreview || !imagePreviewImg) return;
-                var hasImage = !!imagePreviewImg.getAttribute('src');
-                imagePreview.hidden = !hasImage;
+                if (!imagePreview) return;
+                imagePreview.hidden = selectedImageFiles.length === 0;
+                if (imagePreviewCount) {
+                    imagePreviewCount.textContent = selectedImageFiles.length + ' / 6 images';
+                }
+            }
+
+            function syncImageInputFiles() {
+                if (!imageInput) return;
+                var dataTransfer = new DataTransfer();
+                selectedImageFiles.forEach(function(file) {
+                    dataTransfer.items.add(file);
+                });
+                imageInput.files = dataTransfer.files;
+            }
+
+            function fileKey(file) {
+                return [
+                    file && file.name ? file.name : '',
+                    file && typeof file.size === 'number' ? file.size : 0,
+                    file && typeof file.lastModified === 'number' ? file.lastModified : 0
+                ].join('::');
+            }
+
+            function removeSelectedImage(index) {
+                selectedImageFiles = selectedImageFiles.filter(function(_file, fileIndex) {
+                    return fileIndex !== index;
+                });
+                syncImageInputFiles();
+                renderImagePreviews();
+            }
+
+            function renderImagePreviews() {
+                if (!imagePreviewGrid) return;
+                imagePreviewGrid.innerHTML = '';
+                selectedImageFiles.forEach(function(file, index) {
+                    var item = document.createElement('div');
+                    item.className = 'create-post-image-preview-item';
+
+                    var image = document.createElement('img');
+                    image.alt = file.name || ('Selected post image ' + (index + 1));
+                    item.appendChild(image);
+
+                    var removeButton = document.createElement('button');
+                    removeButton.type = 'button';
+                    removeButton.className = 'create-post-image-preview-remove';
+                    removeButton.title = 'Remove this image';
+                    removeButton.setAttribute('aria-label', 'Remove image ' + (index + 1));
+                    removeButton.innerHTML = '&times;';
+                    removeButton.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        removeSelectedImage(index);
+                    });
+                    item.appendChild(removeButton);
+
+                    imagePreviewGrid.appendChild(item);
+
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                        image.src = event.target && event.target.result ? event.target.result : '';
+                    };
+                    reader.readAsDataURL(file);
+                });
+                syncImagePreviewVisibility();
             }
 
             if (typeTrigger && typeMenu && typeInput && typeLabel) {
@@ -246,7 +369,6 @@
                     event.preventDefault();
                     event.stopPropagation();
                     var willOpen = typeMenu.hidden;
-                    closeColorMenu();
                     typeMenu.hidden = !willOpen;
                     typeTrigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
                 });
@@ -257,88 +379,71 @@
                         event.stopPropagation();
                         var value = option.getAttribute('data-value') || '';
                         var label = option.getAttribute('data-label') || '';
-                        typeInput.value = value;
-                        typeLabel.textContent = label;
+                        setPostType(value, label);
                         closeTypeMenu();
-                        typeMenu.querySelectorAll('.create-post-select-option').forEach(function(item) {
-                            var isSelected = item === option;
-                            item.classList.toggle('is-selected', isSelected);
-                            item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
-                        });
                     });
                 });
             }
 
-            if (imageTrigger && imageInput && imagePreview && imagePreviewImg) {
+            if (!isFirstPost && templateCards.length) {
+                templateCards.forEach(function(card) {
+                    card.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        applyTemplate(card.getAttribute('data-template-key') || '');
+                    });
+                });
+            }
+
+            if (imageTrigger && imageInput && imagePreview && imagePreviewGrid) {
                 imageTrigger.addEventListener('click', function() {
+                    imageInput.value = '';
                     imageInput.click();
                 });
 
                 imageInput.addEventListener('change', function() {
-                    var file = imageInput.files && imageInput.files[0];
-                    if (!file) {
-                        imagePreviewImg.removeAttribute('src');
+                    var files = Array.prototype.slice.call(imageInput.files || []);
+                    if (!files.length) {
                         syncImagePreviewVisibility();
                         return;
                     }
-                    var reader = new FileReader();
-                    reader.onload = function(event) {
-                        imagePreviewImg.src = event.target && event.target.result ? event.target.result : '';
-                        syncImagePreviewVisibility();
-                    };
-                    reader.readAsDataURL(file);
+
+                    var existingKeys = {};
+                    selectedImageFiles.forEach(function(file) {
+                        existingKeys[fileKey(file)] = true;
+                    });
+
+                    files.forEach(function(file) {
+                        if (selectedImageFiles.length >= 6) return;
+                        var key = fileKey(file);
+                        if (existingKeys[key]) return;
+                        existingKeys[key] = true;
+                        selectedImageFiles.push(file);
+                    });
+                    syncImageInputFiles();
+                    renderImagePreviews();
                 });
 
                 if (imageRemove) {
                     imageRemove.addEventListener('click', function(event) {
                         event.preventDefault();
-                        imageInput.value = '';
-                        imagePreviewImg.removeAttribute('src');
-                        syncImagePreviewVisibility();
+                        selectedImageFiles = [];
+                        syncImageInputFiles();
+                        renderImagePreviews();
                     });
                 }
-            }
-
-            if (colorTrigger && colorMenu) {
-                colorTrigger.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    var willOpen = colorMenu.hidden;
-                    closeTypeMenu();
-                    colorMenu.hidden = !willOpen;
-                    colorTrigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-                });
-
-                colorMenu.querySelectorAll('.post-color-swatch').forEach(function(swatch) {
-                    swatch.addEventListener('click', function(event) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        var tone = swatch.getAttribute('data-editor-tone') || 'default';
-                        var tones = ['default', 'blue', 'amber', 'green', 'red'];
-                        tones.forEach(function(item) {
-                            if (editor) editor.classList.remove('editor-tone-' + item);
-                        });
-                        if (editor) editor.classList.add('editor-tone-' + tone);
-                        if (themeColorInput) themeColorInput.value = tone;
-                        colorMenu.querySelectorAll('.post-color-swatch').forEach(function(item) {
-                            item.classList.toggle('is-active', item === swatch);
-                        });
-                        closeColorMenu();
-                    });
-                });
             }
 
             document.addEventListener('click', function(event) {
                 if (typeMenu && typeTrigger && !typeMenu.hidden && !typeMenu.contains(event.target) && !typeTrigger.contains(event.target)) {
                     closeTypeMenu();
                 }
-                if (colorMenu && colorTrigger && !colorMenu.hidden && !colorMenu.contains(event.target) && !colorTrigger.contains(event.target)) {
-                    closeColorMenu();
-                }
             });
 
             form.addEventListener('submit', syncFields);
             syncImagePreviewVisibility();
+            if (isFirstPost) {
+                applyTemplate('introduction');
+            }
             syncFields();
         })();
     </script>
@@ -359,6 +464,8 @@
             });
         })();
     </script>
+    <script src="{% static 'notifications.js' %}"></script>
+    {% include "includes/app_mobile_nav.html" with active_page='' show_mobile_back=False %}
     <script>
         (function() {
             var btn = document.getElementById('themeToggle');

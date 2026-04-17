@@ -588,6 +588,10 @@ img.waitlist-btn-icon {
     font-family: 'Syne', sans-serif;
 
 }
+.section-title .mobile-text {
+    font-size: 0.7em;
+    font-weight: 500;
+}
 
 .scroll-indicator {
     display: flex;
@@ -701,134 +705,36 @@ img.waitlist-btn-icon {
     box-shadow: 0 28px 70px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    transition: transform 0.5s ease, filter 0.5s ease, opacity 0.5s ease, box-shadow 0.5s ease;
-    animation: networkDrift 10s ease-in-out infinite;
+    transform: scale(0.96);
+    filter: blur(1px) saturate(0.82);
+    opacity: 0.58;
+    transition: transform 0.28s ease, filter 0.28s ease, opacity 0.28s ease, box-shadow 0.28s ease;
     cursor: pointer;
 }
 
-.network-card.is-popped {
-    animation-play-state: paused;
-}
-
-.network-card:hover {
-    animation-play-state: paused;
-    transform: translateY(-30px) translateX(var(--card-shift, 0px)) rotate(var(--card-rotation, 0deg)) scale(1.03);
+.network-card-main,
+.network-card.is-active {
+    transform: scale(1.05);
+    filter: none;
+    opacity: 1;
     box-shadow: 0 40px 96px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-.network-card-top,
-.network-card-bottom {
-    opacity: 0.66;
-    filter: blur(0.6px) saturate(0.84);
-}
-
-.network-card-top {
-    --card-rotation: -6deg;
-    --card-shift: -6px;
-    transform: rotate(-16deg) translateX(-18px);
-    z-index: 1;
-}
-
-.network-card-top.is-popped {
-    animation: networkCardPopTop 720ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
-    transform: rotate(-4deg) translateX(-18px) translateY(-18px) scale(1.03);
-    filter: blur(0.25px) saturate(0.95);
-    opacity: 0.9;
-    box-shadow: 0 34px 88px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-.network-card-main {
-    --card-rotation: 0deg;
-    transform: translateY(0);
-    z-index: 3;
-    width: min(100%, 500px);
-}
-
-.network-card-main.is-popped {
-    animation: networkCardPopMain 760ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
-    transform: translateY(-20px) scale(1.04);
-    box-shadow: 0 46px 110px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.network-card-bottom {
-    --card-rotation: 6deg;
-    --card-shift: 18px;
-    transform: rotate(6deg) translateX(18px);
     z-index: 2;
 }
 
-.network-card-bottom.is-popped {
-    animation: networkCardPopBottom 720ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
-    transform: rotate(4deg) translateX(18px) translateY(-16px) scale(1.03);
-    filter: blur(0.25px) saturate(0.95);
-    opacity: 0.9;
-    box-shadow: 0 34px 88px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+.network-feed.is-hovering .network-card {
+    transform: scale(0.96);
+    filter: blur(1.2px) saturate(0.8);
+    opacity: 0.5;
+    box-shadow: 0 20px 56px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    z-index: 1;
 }
 
-@media (pointer: fine) {
-    .network-feed:hover .network-card {
-        opacity: 0.78;
-        filter: blur(0.4px) saturate(0.88);
-    }
-
-    .network-feed:hover .network-card:hover {
-        opacity: 1;
-        filter: none;
-    }
-}
-
-@keyframes networkCardPopTop {
-    0% {
-        transform: rotate(-9deg) translateX(-28px) translateY(18px) scale(0.9);
-        opacity: 0.3;
-        filter: blur(1.4px) saturate(0.7);
-    }
-    68% {
-        transform: rotate(-2deg) translateX(-18px) translateY(-24px) scale(1.06);
-        opacity: 1;
-        filter: blur(0.1px) saturate(1);
-    }
-    100% {
-        transform: rotate(-4deg) translateX(-18px) translateY(-18px) scale(1.03);
-        opacity: 0.9;
-        filter: blur(0.25px) saturate(0.95);
-    }
-}
-
-@keyframes networkCardPopMain {
-    0% {
-        transform: translateY(26px) scale(0.9);
-        opacity: 0.35;
-        filter: blur(1px) saturate(0.75);
-    }
-    70% {
-        transform: translateY(-28px) scale(1.07);
-        opacity: 1;
-        filter: none;
-    }
-    100% {
-        transform: translateY(-20px) scale(1.04);
-        opacity: 1;
-        filter: none;
-    }
-}
-
-@keyframes networkCardPopBottom {
-    0% {
-        transform: rotate(9deg) translateX(28px) translateY(18px) scale(0.9);
-        opacity: 0.3;
-        filter: blur(1.4px) saturate(0.7);
-    }
-    68% {
-        transform: rotate(2deg) translateX(18px) translateY(-22px) scale(1.06);
-        opacity: 1;
-        filter: blur(0.1px) saturate(1);
-    }
-    100% {
-        transform: rotate(4deg) translateX(18px) translateY(-16px) scale(1.03);
-        opacity: 0.9;
-        filter: blur(0.25px) saturate(0.95);
-    }
+.network-feed.is-hovering .network-card.is-active {
+    transform: scale(1.05);
+    filter: none;
+    opacity: 1;
+    box-shadow: 0 40px 96px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    z-index: 2;
 }
 
 .network-card-avatar {
@@ -1208,8 +1114,11 @@ img.waitlist-btn-icon {
 .stats {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: calc(var(--spacing) * 20);
+    align-items: stretch;
+    gap: calc(var(--spacing) * 4);
+    width: min(1360px, calc(100% - 160px));
+    margin: calc(var(--spacing) * 4) auto 0;
+    padding: calc(var(--spacing) * 6) 0;
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
 }
@@ -1229,15 +1138,23 @@ img.waitlist-btn-icon {
 }
 
 .stat-item {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 2);
     text-align: center;
+    border-radius: 24px;
+    transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 }
 
 .stat-number {
     font-family: var(--text-heavy);
-    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-size: clamp(1.4rem, 2.8vw, 3rem);
     font-weight: 800;
     line-height: 1;
     margin-bottom: calc(var(--spacing) * 2);
+    letter-spacing: -0.03em;
 }
 
 .stat-label {
@@ -1245,14 +1162,28 @@ img.waitlist-btn-icon {
     font-size: 0.9rem;
     font-weight: 400;
     color: var(--gray);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+    max-width: 250px;
+    margin: 0 auto;
 }
 
 .stat-divider {
     width: 1px;
     height: 80px;
     background: var(--border);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .stat-item:hover {
+        transform: translateY(-4px);
+        background: var(--surface);
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.18);
+    }
+
+    [data-theme="light"] .stat-item:hover {
+        box-shadow: 0 18px 36px rgba(17, 17, 17, 0.08);
+    }
 }
 
 /* Features Section */
@@ -1869,13 +1800,40 @@ img.waitlist-btn-icon {
     }
 
     .stats {
-        flex-direction: column;
-        gap: calc(var(--spacing) * 6);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0;
+        width: calc(100% - 48px);
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        overflow: hidden;
+        background: var(--surface);
     }
 
     .stat-divider {
-        width: 60px;
-        height: 1px;
+        display: none;
+    }
+
+    .stat-item {
+        min-height: 160px;
+        padding: calc(var(--spacing) * 5);
+        border-radius: 0;
+        text-align: left;
+        align-items: flex-start;
+    }
+
+    .stats .stat-item:nth-of-type(odd) {
+        border-right: 1px solid var(--border);
+    }
+
+    .stats .stat-item:nth-of-type(-n + 2) {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .stat-label {
+        max-width: none;
+        margin: 0;
     }
 
     .features {
@@ -1890,26 +1848,6 @@ img.waitlist-btn-icon {
     .network-card,
     .network-card-main {
         width: min(100%, 420px);
-    }
-
-    .network-card-top {
-        --card-rotation: -6deg;
-        transform: rotate(-6deg) translateX(-10px);
-        filter: blur(0.8px) saturate(0.84);
-        opacity: 0.72;
-    }
-
-    .network-card-main {
-        transform: translateY(0);
-        filter: none;
-        opacity: 1;
-    }
-
-    .network-card-bottom {
-        --card-rotation: 6deg;
-        transform: rotate(6deg) translateX(10px);
-        filter: blur(0.8px) saturate(0.84);
-        opacity: 0.72;
     }
 
     .inside-rail-shell {
@@ -2129,7 +2067,8 @@ img.waitlist-btn-icon {
     .network-card-message,
     .why-copy p {
         font-size: 1.05rem;
-
+        max-width: 80%;
+        margin: 0 auto;
     }
     .why-copy{
         gap: calc(var(--spacing)*2 );
@@ -2142,16 +2081,6 @@ img.waitlist-btn-icon {
         padding: calc(var(--spacing) * 1.75) calc(var(--spacing) * 2);
         border-radius: 18px;
         gap: calc(var(--spacing) * 1.5);
-    }
-
-    .network-card-top {
-        --card-rotation: -6deg;
-        transform: rotate(-6deg) translateX(-6px);
-    }
-
-    .network-card-bottom {
-        --card-rotation: 6deg;
-        transform: rotate(6deg) translateX(6px);
     }
 
     .network-card-avatar {
@@ -2176,6 +2105,19 @@ img.waitlist-btn-icon {
         flex-direction: column;
         align-items: flex-start;
         gap: 4px;
+    }
+
+    .network-feed {
+        display: grid;
+        gap: calc(var(--spacing) * 2);
+        width: 100%;
+        padding: calc(var(--spacing) * 2) 0;
+        justify-items: center;
+    }
+
+    .network-card,
+    .network-card-main {
+        width: min(80%, 286px);
     }
 
     .inside-card {
@@ -2219,7 +2161,21 @@ img.waitlist-btn-icon {
     }
 
     .stats {
-        padding: calc(var(--spacing) * 5) calc(var(--spacing) * 3) calc(var(--spacing) * 6);
+        width: calc(100% - 24px);
+        border-radius: 24px;
+    }
+
+    .stat-item {
+        min-height: 138px;
+        padding: calc(var(--spacing) * 4);
+    }
+
+    .stat-number {
+        font-size: clamp(1.9rem, 8vw, 2.4rem);
+    }
+
+    .stat-label {
+        font-size: 0.95rem;
     }
 
     .collab-showcase {

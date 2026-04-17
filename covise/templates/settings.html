@@ -7,6 +7,7 @@
     <title>CoVise | Settings</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'settings.css' %}">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script>
         (function() {
@@ -15,7 +16,7 @@
         })();
     </script>
 </head>
-<body data-save-success="{% if save_success %}true{% else %}false{% endif %}">
+<body class="has-app-mobile-nav" data-save-success="{% if save_success %}true{% else %}false{% endif %}">
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
@@ -29,9 +30,6 @@
             </a>
             <a class="sidebar-link" href="{% url 'Workspace' %}" aria-label="Workspace">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 7h18v12H3z"></path><path d="M9 7V5h6v2"></path><path d="M3 12h18"></path></svg>
-            </a>
-            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
-                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path></svg>
@@ -47,10 +45,15 @@
         <main class="main">
             <header class="home-header" aria-label="Settings top bar">
                 <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
-                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
-                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
-                    <span>CoVise</span>
+                    <span class="home-brand-wordmark">CoVise</span>
                 </a>
+                <div class="home-header-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <path d="M20 20l-3.5-3.5"></path>
+                    </svg>
+                    <input id="settingsHeaderSearch" type="search" placeholder="Search settings" aria-label="Search settings sections and labels">
+                </div>
                 <div class="home-header-actions">
                     <button class="theme-toggle" id="settingsThemeToggle" aria-label="Toggle light dark mode" aria-pressed="false" type="button">
                         <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -72,7 +75,7 @@
                         </div>
                     </div>
                     <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path></svg>
+                        <span>{{ request.user.avatar_initials }}</span>
                     </a>
                 </div>
             </header>
@@ -93,7 +96,7 @@
                 <div class="profile-info">
                     <div><span>Email</span><strong>{{ settings_page.email }}</strong></div>
                     <div><span>Location</span><strong>{{ settings_page.location|default:"Add your location" }}</strong></div>
-                    <div><span>Plan</span><strong>{{ settings_page.plan|default:"Free" }}</strong></div>
+                    <!-- <div><span>Plan</span><strong>{{ settings_page.plan|default:"Free" }}</strong></div> -->
                 </div>
             </section>
 
@@ -144,10 +147,118 @@
                     <div class="settings-row"><div class="row-copy"><strong>Location</strong><span>Used across your profile and matching context.</span></div><div class="row-control input-action"><input type="text" name="location" value="{{ settings_page.location }}"></div></div>
                     <div class="settings-row"><div class="row-copy"><strong>Nationality</strong><span>Useful for cross-border founder and operator matching.</span></div><div class="row-control input-action"><input type="text" name="nationality" value="{{ settings_page.nationality }}"></div></div>
                     <div class="settings-row"><div class="row-copy"><strong>Bio</strong><span>Your top-line founder summary.</span></div><div class="row-control input-action"><input type="text" name="bio" value="{{ settings_page.bio }}"></div></div>
+                    <div class="settings-row settings-row-block">
+                        <div class="row-copy">
+                            <strong>Top Skills</strong>
+                            <span>Choose from the same canonical onboarding skills used for tagging across your posts.</span>
+                        </div>
+                        <div class="row-control skills-control">
+                            <input type="hidden" name="skills" value="{{ settings_page.skills_selected|join:'|' }}">
+                            <div class="skills-picker" id="settingsSkillsPicker" data-max-selected="{{ settings_page.skills_max_selected }}">
+                                <button class="skills-picker-toggle" type="button" aria-expanded="false">
+                                    <span>Select top skills</span>
+                                    <span class="skills-picker-chevron" aria-hidden="true">▾</span>
+                                </button>
+                                <div class="skills-picker-panel" hidden>
+                                    <input class="skills-search-input" type="search" placeholder="Search skills" aria-label="Search skills">
+                                    <div class="skills-picker-meta">
+                                        <span class="skills-picker-count">0 selected</span>
+                                        <span>Max {{ settings_page.skills_max_selected }}</span>
+                                    </div>
+                                    <div class="pill-grid skills-options-grid">
+                                        {% for skill in settings_page.skills_options %}
+                                        <button class="selector-pill{% if skill in settings_page.skills_selected %} is-active{% endif %}" type="button" data-skill-option="{{ skill }}">{{ skill }}</button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="skills-chip-list">
+                                    {% for skill in settings_page.skills_selected %}
+                                    <span class="skills-chip" data-skill-chip="{{ skill }}">
+                                        <span>{{ skill }}</span>
+                                        <button type="button" aria-label="Remove {{ skill }}" data-skill-remove="{{ skill }}">x</button>
+                                    </span>
+                                    {% empty %}
+                                    <span class="skills-empty-state">No skills selected yet.</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="professional_data">Save Changes</button></div>
                 </div>
             </section>
         </form>
+        <section class="panel settings-section" style="margin-top: calc(var(--spacing)*2);">
+            <div class="section-top">
+                <h2>SAVED POSTS</h2>
+                <div class="row-inline-actions">
+                    <span class="section-note">Posts you bookmarked to revisit later.</span>
+                    {% if settings_page.saved_posts_has_more %}
+                    <button class="outline-btn" id="savedPostsToggle" type="button" aria-expanded="false">View all</button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="settings-stack">
+                {% for saved_post in settings_page.saved_posts_preview %}
+                <div class="settings-row">
+                    <div class="row-copy">
+                        <strong>{{ saved_post.title }}</strong>
+                        <span>{{ saved_post.author }} · Saved {{ saved_post.saved_at }}</span>
+                    </div>
+                    <a class="outline-btn" href="{% url 'Post Detail' saved_post.id %}">Open</a>
+                </div>
+                {% empty %}
+                <div class="settings-row">
+                    <div class="row-copy">
+                        <strong>No saved posts yet</strong>
+                        <span>Bookmark posts from the feed or post page and they will show up here.</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if settings_page.saved_posts_has_more %}
+            <div class="settings-stack" id="savedPostsAll" hidden>
+                {% for saved_post in settings_page.saved_posts|slice:"2:" %}
+                <div class="settings-row">
+                    <div class="row-copy">
+                        <strong>{{ saved_post.title }}</strong>
+                        <span>{{ saved_post.author }} Â· Saved {{ saved_post.saved_at }}</span>
+                    </div>
+                    <a class="outline-btn" href="{% url 'Post Detail' saved_post.id %}">Open</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+  
+        </section>
+        <section class="panel settings-section" style="margin-top: calc(var(--spacing)*2);">
+            <div class="section-top">
+                <h2>BLOCKED USERS</h2>
+                <span class="section-note">People you block cannot message you, and their posts stay hidden from your feed.</span>
+            </div>
+            <div class="settings-stack">
+                {% for blocked_user in settings_page.blocked_users %}
+                <div class="settings-row">
+                    <div class="row-copy">
+                        <strong>{{ blocked_user.display_name }}</strong>
+                        <span>{{ blocked_user.email }} - Blocked {{ blocked_user.blocked_at }}</span>
+                    </div>
+                    <form method="post" action="{% url 'Toggle Block User' blocked_user.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button class="outline-btn" type="submit">Unblock</button>
+                    </form>
+                </div>
+                {% empty %}
+                <div class="settings-row">
+                    <div class="row-copy">
+                        <strong>No blocked users</strong>
+                        <span>Block someone from their profile or from the Messages page and they will appear here.</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
         <section class="panel settings-section" style="margin-top: calc(var(--spacing)*2);">
             <div class="section-top">
                 <h2>Experiences and Projects</h2>
@@ -235,6 +346,9 @@
                 <input type="hidden" name="show_linkedin_to_matches" value="{% if settings_page.preferences.show_linkedin_to_matches %}true{% else %}false{% endif %}">
                 <input type="hidden" name="appear_in_search" value="{% if settings_page.preferences.appear_in_search %}true{% else %}false{% endif %}">
                 <input type="hidden" name="pause_matching" value="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}">
+                {% if settings_page.cofounder_badge_available %}
+                <input type="hidden" name="show_cofounder_badge" value="{% if settings_page.show_cofounder_badge %}true{% else %}false{% endif %}">
+                {% endif %}
             <section class="panel settings-section">
                 <div class="section-top"><h2>PROFILE VISIBILITY</h2></div>
                 <div class="settings-stack">
@@ -244,6 +358,9 @@
                     <div class="settings-row"><div class="row-copy"><strong>Show LinkedIn to matches</strong><span>Your LinkedIn profile link will be shown to your matches.</span></div><button class="toggle-switch{% if settings_page.preferences.show_linkedin_to_matches %} active{% endif %}" data-field="show_linkedin_to_matches" type="button" aria-pressed="{% if settings_page.preferences.show_linkedin_to_matches %}true{% else %}false{% endif %}"></button></div>
                     <div class="settings-row"><div class="row-copy"><strong>Appear in search results</strong><span>Turn this off to become invisible in platform search.</span></div><button class="toggle-switch{% if settings_page.preferences.appear_in_search %} active{% endif %}" data-field="appear_in_search" type="button" aria-pressed="{% if settings_page.preferences.appear_in_search %}true{% else %}false{% endif %}"></button></div>
                     <div class="settings-row settings-row-block"><div class="row-copy"><strong>Pause matching</strong><span>Temporarily stop appearing in other users' match lists. Your existing matches are unaffected.</span></div><button class="toggle-switch{% if settings_page.preferences.pause_matching %} active{% endif %}" data-field="pause_matching" id="pauseMatchingToggle" type="button" aria-pressed="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}"></button></div>
+                    {% if settings_page.cofounder_badge_available %}
+                    <div class="settings-row"><div class="row-copy"><strong>Show "Looking for Cofounder" badge</strong><span>Display a cofounder badge beside your name on your posts and post details.</span></div><button class="toggle-switch{% if settings_page.show_cofounder_badge %} active{% endif %}" data-field="show_cofounder_badge" type="button" aria-pressed="{% if settings_page.show_cofounder_badge %}true{% else %}false{% endif %}"></button></div>
+                    {% endif %}
                     <div class="warning-banner" id="pauseMatchingBanner" hidden>You are currently paused. You will not appear in new match results.</div>
                     <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="profile_preferences">Save Changes</button></div>
 
@@ -294,6 +411,7 @@
         </form>
         <form method="post" action="{% url 'Settings' %}" style="margin-top: calc(var(--spacing)*2);">
             {% csrf_token %}    
+                <input type="hidden" name="receive_email_notifications" value="{% if settings_page.receive_email_notifications %}true{% else %}false{% endif %}">
                 <input type="hidden" name="email_new_match" value="{% if settings_page.preferences.email_new_match %}true{% else %}false{% endif %}">
                 <input type="hidden" name="email_new_message" value="{% if settings_page.preferences.email_new_message %}true{% else %}false{% endif %}">
                 <input type="hidden" name="email_connection_request" value="{% if settings_page.preferences.email_connection_request %}true{% else %}false{% endif %}">
@@ -318,6 +436,7 @@
                     <div class="inner-panel">
                         <h3>Email Notifications</h3>
                         <div class="settings-stack compact-stack">
+                            <div class="settings-row"><div class="row-copy"><strong>Allow email notifications</strong><span>Master switch for all CoVise notification emails.</span></div><button class="toggle-switch{% if settings_page.receive_email_notifications %} active{% endif %}" data-field="receive_email_notifications" type="button" aria-pressed="{% if settings_page.receive_email_notifications %}true{% else %}false{% endif %}"></button></div>
                             <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch{% if settings_page.preferences.email_new_match %} active{% endif %}" data-field="email_new_match" type="button" aria-pressed="{% if settings_page.preferences.email_new_match %}true{% else %}false{% endif %}"></button></div>
                             <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch{% if settings_page.preferences.email_new_message %} active{% endif %}" data-field="email_new_message" type="button" aria-pressed="{% if settings_page.preferences.email_new_message %}true{% else %}false{% endif %}"></button></div>
                             <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch{% if settings_page.preferences.email_connection_request %} active{% endif %}" data-field="email_connection_request" type="button" aria-pressed="{% if settings_page.preferences.email_connection_request %}true{% else %}false{% endif %}"></button></div>
@@ -403,6 +522,22 @@
             <section class="panel settings-section">
                 <div class="section-top"><h2>LEGAL &amp; COMPLIANCE</h2></div>
                 <div class="settings-stack">
+                    <div class="settings-row">
+                        <div class="row-copy with-icon">
+                            <i class="fa-solid fa-handshake" aria-hidden="true"></i>
+                            <div>
+                                <strong>Platform Agreement</strong>
+                                <span>
+                                    {% if settings_page.platform_agreement_accepted %}
+                                    Agreed to version {{ settings_page.platform_agreement_version }} on {{ settings_page.platform_agreement_accepted_at|date:"M j, Y, g:i a" }}
+                                    {% else %}
+                                    Not agreed yet
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <a class="outline-btn" href="{% url 'Agreement' %}">Read</a>
+                    </div>
                     <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Terms of Service</strong><span>Last updated March 2026</span></div></div><a class="outline-btn" href="{% url 'Terms' %}">View</a></div>
                     <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Privacy Policy</strong><span>How we collect and use your data</span></div></div><a class="outline-btn" href="{% url 'Privacy' %}">View</a></div>
                     <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-cookie-bite" aria-hidden="true"></i><div><strong>Cookie Policy</strong><span>Manage how we use cookies</span></div></div><a class="outline-btn" href="#">View</a></div>
@@ -412,7 +547,7 @@
                 </div>
             </section>
 
-            <section class="panel settings-section danger-zone">
+            <section class="panel settings-section danger-zone" id="danger-zone">
                 <div class="section-top"><h2>DANGER ZONE</h2></div>
                 <div class="settings-stack">
                     <div class="settings-row"><div class="row-copy"><strong>Pause My Account</strong><span>Temporarily hide your profile from the platform. Your data and matches are preserved. You can reactivate anytime.</span></div><button class="warning-outline-btn" id="pauseAccountButton" type="button">Pause Account</button></div>
@@ -424,12 +559,13 @@
         </main>
     </div>
 
-    <div class="modal-backdrop" id="accountDeleteModal" hidden><div class="modal-card"><div class="modal-head"><h3>Delete your account?</h3><button class="modal-close" type="button">x</button></div><p>This will permanently delete your account, all your data, matches, messages, and workspace. This cannot be undone.</p><input class="modal-input" id="deleteConfirmInput" type="text" placeholder='Type "DELETE" to confirm'><div class="modal-actions"><button class="danger-fill-btn disabled-delete" id="confirmDeleteButton" type="button" disabled>Permanently Delete</button><button class="outline-btn modal-close" type="button">Cancel</button></div></div></div>
-    <div class="modal-backdrop" id="dangerDeleteModal" hidden><div class="modal-card"><div class="modal-head"><h3>Delete your account?</h3><button class="modal-close" type="button">x</button></div><p>This will permanently delete your profile, matches, messages, workspace, and all data. This action cannot be reversed.</p><input class="modal-input" id="dangerDeleteInput" type="text" placeholder='Type "DELETE" to confirm'><div class="modal-actions"><button class="danger-fill-btn disabled-delete" id="dangerDeleteButton" type="button" disabled>Permanently Delete</button><button class="outline-btn modal-close" type="button">Cancel</button></div></div></div>
+    <div class="modal-backdrop" id="accountDeleteModal" hidden><div class="modal-card"><div class="modal-head"><h3>Delete your account?</h3><button class="modal-close" type="button">x</button></div><p>This will permanently delete your account, all your data, matches, messages, and workspace. This cannot be undone.</p><label class="modal-label" for="deleteFeedbackInput">Before you go, what went wrong?</label><textarea class="modal-input modal-textarea" id="deleteFeedbackInput" placeholder="Tell us what made you want to leave."></textarea><input class="modal-input" id="deleteConfirmInput" type="text" placeholder='Type "DELETE" to confirm'><div class="modal-actions"><button class="danger-fill-btn disabled-delete" id="confirmDeleteButton" type="button" disabled>Permanently Delete</button><button class="outline-btn modal-close" type="button">Cancel</button></div></div></div>
+    <div class="modal-backdrop" id="dangerDeleteModal" hidden><div class="modal-card"><div class="modal-head"><h3>Delete your account?</h3><button class="modal-close" type="button">x</button></div><p>This will permanently delete your profile, matches, messages, workspace, and all data. This action cannot be reversed.</p><form class="delete-account-form" method="post" action="{% url 'Delete Account' %}">{% csrf_token %}<label class="modal-label" for="dangerDeleteFeedback">Before you go, what went wrong?</label><textarea class="modal-input modal-textarea" id="dangerDeleteFeedback" name="delete_feedback" placeholder="Tell us what made you want to leave." required></textarea><input class="modal-input" id="dangerDeleteInput" name="confirm_delete" type="text" placeholder='Type "DELETE" to confirm'><div class="modal-actions"><button class="danger-fill-btn disabled-delete" id="dangerDeleteButton" type="submit" disabled>Permanently Delete</button><button class="outline-btn modal-close" type="button">Cancel</button></div></form></div></div>
     <div class="modal-backdrop" id="dataDeletionModal" hidden><div class="modal-card"><div class="modal-head"><h3>Request data deletion?</h3><button class="modal-close" type="button">x</button></div><p>Are you sure? This will schedule your account and all associated data for permanent deletion within 30 days. You can cancel this request within 30 days by logging in.</p><div class="modal-actions"><button class="danger-fill-btn" type="button">Confirm Request</button><button class="outline-btn modal-close" type="button">Cancel</button></div></div></div>
     <div class="modal-backdrop" id="comingSoonModal" hidden><div class="modal-card"><div class="modal-head"><h3>Two-Factor Authentication</h3><button class="modal-close" type="button">x</button></div><p>Coming Soon - 2FA will be available shortly.</p><div class="modal-actions"><button class="outline-btn modal-close" type="button">Close</button></div></div></div>
     <div class="modal-backdrop" id="aiActivityModal" hidden><div class="modal-card wide-modal"><div class="modal-head"><h3>AI Activity Log</h3><button class="modal-close" type="button">x</button></div><div class="table-wrap"><table class="settings-table"><thead><tr><th>Action</th><th>Date</th><th>Status</th><th>Undo</th></tr></thead><tbody><tr><td>Suggested profile improvement</td><td>Mar 13</td><td class="success">Completed</td><td>-</td></tr><tr><td>Generated milestone plan draft</td><td>Mar 12</td><td class="amber">Pending review</td><td><button class="text-link" type="button">Undo</button></td></tr><tr><td>Drafted post: MVP update</td><td>Mar 11</td><td class="success">Approved by you</td><td>-</td></tr></tbody></table></div></div></div>
 
+    {% include "includes/app_mobile_nav.html" with active_page='settings' show_mobile_back=False %}
     <script>
         (function () {
             var toggleButton = document.getElementById('settingsThemeToggle');
@@ -507,6 +643,129 @@
                 updateHiddenField(group.dataset.group, selected.join('|'), group);
             });
 
+            Array.prototype.slice.call(document.querySelectorAll('.skills-picker')).forEach(function (picker) {
+                var hiddenInput = picker.closest('.skills-control') ? picker.closest('.skills-control').querySelector('input[type="hidden"][name="skills"]') : null;
+                var toggle = picker.querySelector('.skills-picker-toggle');
+                var panel = picker.querySelector('.skills-picker-panel');
+                var search = picker.querySelector('.skills-search-input');
+                var count = picker.querySelector('.skills-picker-count');
+                var chipList = picker.querySelector('.skills-chip-list');
+                var options = Array.prototype.slice.call(picker.querySelectorAll('[data-skill-option]'));
+                var maxSelected = parseInt(picker.dataset.maxSelected || '8', 10);
+                var selected = new Set(
+                    options
+                        .filter(function (option) { return option.classList.contains('is-active'); })
+                        .map(function (option) { return option.getAttribute('data-skill-option'); })
+                );
+
+                function syncHiddenInput() {
+                    if (hiddenInput) {
+                        hiddenInput.value = Array.from(selected).join('|');
+                    }
+                }
+
+                function renderChips() {
+                    chipList.innerHTML = '';
+                    if (!selected.size) {
+                        var empty = document.createElement('span');
+                        empty.className = 'skills-empty-state';
+                        empty.textContent = 'No skills selected yet.';
+                        chipList.appendChild(empty);
+                        return;
+                    }
+
+                    Array.from(selected).forEach(function (skill) {
+                        var chip = document.createElement('span');
+                        chip.className = 'skills-chip';
+                        chip.setAttribute('data-skill-chip', skill);
+
+                        var label = document.createElement('span');
+                        label.textContent = skill;
+                        chip.appendChild(label);
+
+                        var remove = document.createElement('button');
+                        remove.type = 'button';
+                        remove.textContent = 'x';
+                        remove.setAttribute('aria-label', 'Remove ' + skill);
+                        remove.setAttribute('data-skill-remove', skill);
+                        remove.addEventListener('click', function () {
+                            selected.delete(skill);
+                            updateUi();
+                        });
+                        chip.appendChild(remove);
+                        chipList.appendChild(chip);
+                    });
+                }
+
+                function updateUi() {
+                    options.forEach(function (option) {
+                        var skill = option.getAttribute('data-skill-option');
+                        var isSelected = selected.has(skill);
+                        option.classList.toggle('is-active', isSelected);
+                        option.classList.toggle('is-disabled', !isSelected && selected.size >= maxSelected);
+                    });
+                    if (count) {
+                        count.textContent = selected.size + ' selected';
+                    }
+                    syncHiddenInput();
+                    renderChips();
+                }
+
+                function filterOptions() {
+                    var query = (search && search.value ? search.value : '').trim().toLowerCase();
+                    options.forEach(function (option) {
+                        var matches = !!query && option.getAttribute('data-skill-option').toLowerCase().indexOf(query) !== -1;
+                        option.hidden = !matches;
+                    });
+                }
+
+                options.forEach(function (option) {
+                    option.addEventListener('click', function () {
+                        var skill = option.getAttribute('data-skill-option');
+                        if (selected.has(skill)) {
+                            selected.delete(skill);
+                            updateUi();
+                            return;
+                        }
+                        if (selected.size >= maxSelected) {
+                            return;
+                        }
+                        selected.add(skill);
+                        updateUi();
+                    });
+                });
+
+                if (toggle && panel) {
+                    toggle.addEventListener('click', function () {
+                        var willOpen = panel.hidden;
+                        panel.hidden = !panel.hidden;
+                        toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                        if (willOpen && search) {
+                            search.focus();
+                        }
+                    });
+
+                    document.addEventListener('click', function (event) {
+                        if (!picker.contains(event.target)) {
+                            panel.hidden = true;
+                            toggle.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                }
+
+                if (search) {
+                    search.addEventListener('input', filterOptions);
+                    search.addEventListener('keydown', function (event) {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                        }
+                    });
+                }
+
+                updateUi();
+                filterOptions();
+            });
+
             Array.prototype.slice.call(document.querySelectorAll('[data-toggle-panel]')).forEach(function (button) {
                 button.addEventListener('click', function () {
                     var panel = document.getElementById(button.getAttribute('data-toggle-panel'));
@@ -530,6 +789,17 @@
                     });
                 });
             });
+
+            var savedPostsToggle = document.getElementById('savedPostsToggle');
+            var savedPostsAll = document.getElementById('savedPostsAll');
+            if (savedPostsToggle && savedPostsAll) {
+                savedPostsToggle.addEventListener('click', function () {
+                    var willShow = savedPostsAll.hidden;
+                    savedPostsAll.hidden = !savedPostsAll.hidden;
+                    savedPostsToggle.textContent = willShow ? 'Show less' : 'View all';
+                    savedPostsToggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+                });
+            }
 
             function syncBanner(toggleId, bannerId) {
                 var toggle = document.getElementById(toggleId);
@@ -612,18 +882,22 @@
                 });
             });
 
-            function bindDeleteInput(inputId, buttonId) {
+            function bindDeleteInput(inputId, buttonId, feedbackId) {
                 var input = document.getElementById(inputId);
                 var button = document.getElementById(buttonId);
+                var feedback = feedbackId ? document.getElementById(feedbackId) : null;
                 if (!input || !button) return;
-                input.addEventListener('input', function () {
-                    var enabled = input.value === 'DELETE';
+                function syncState() {
+                    var feedbackReady = !feedback || feedback.value.trim().length > 0;
+                    var enabled = input.value === 'DELETE' && feedbackReady;
                     button.disabled = !enabled;
                     button.classList.toggle('disabled-delete', !enabled);
-                });
+                }
+                input.addEventListener('input', syncState);
+                if (feedback) feedback.addEventListener('input', syncState);
             }
-            bindDeleteInput('deleteConfirmInput', 'confirmDeleteButton');
-            bindDeleteInput('dangerDeleteInput', 'dangerDeleteButton');
+            bindDeleteInput('deleteConfirmInput', 'confirmDeleteButton', 'deleteFeedbackInput');
+            bindDeleteInput('dangerDeleteInput', 'dangerDeleteButton', 'dangerDeleteFeedback');
 
             var exportButton = document.getElementById('requestExportButton');
             var exportFeedback = document.getElementById('requestExportFeedback');
@@ -636,7 +910,30 @@
                     pauseAccountButton.textContent = paused ? 'Reactivate Account' : 'Pause Account';
                 });
             }
+
+            var settingsSearchInput = document.getElementById('settingsHeaderSearch');
+            if (settingsSearchInput) {
+                var settingsSections = Array.prototype.slice.call(document.querySelectorAll('.settings-section'));
+                settingsSearchInput.addEventListener('input', function () {
+                    var query = settingsSearchInput.value.trim().toLowerCase();
+                    settingsSections.forEach(function (section) {
+                        var rows = Array.prototype.slice.call(section.querySelectorAll('.settings-row'));
+                        var header = section.querySelector('.section-top');
+                        var sectionMatches = !query || (header && header.textContent.toLowerCase().indexOf(query) !== -1);
+                        var visibleRows = 0;
+
+                        rows.forEach(function (row) {
+                            var visible = !query || sectionMatches || row.textContent.toLowerCase().indexOf(query) !== -1;
+                            row.hidden = !visible;
+                            if (visible) visibleRows += 1;
+                        });
+
+                        section.hidden = !!query && !sectionMatches && rows.length && visibleRows === 0 && section.textContent.toLowerCase().indexOf(query) === -1;
+                    });
+                });
+            }
         })();
     </script>
+    <script src="{% static 'notifications.js' %}"></script>
 </body>
 </html>

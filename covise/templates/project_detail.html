@@ -7,6 +7,7 @@
     <title>CoVise | {{ project.code }} Details</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'requests.css' %}">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script>
         (function() {
@@ -15,7 +16,7 @@
         })();
     </script>
 </head>
-<body>
+<body class="has-app-mobile-nav">
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
@@ -43,9 +44,6 @@
                     <path d="M9 7V5h6v2"></path>
                     <path d="M3 12h18"></path>
                 </svg>
-            </a>
-            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
-                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
@@ -333,6 +331,7 @@
         </main>
     </div>
 
+    {% include "includes/app_mobile_nav.html" with active_page='' show_mobile_back=False %}
     <script>
         (function () {
             var toggleButton = document.getElementById('projectThemeToggle');
@@ -378,5 +377,6 @@
             });
         })();
     </script>
+    <script src="{% static 'notifications.js' %}"></script>
 </body>
 </html>

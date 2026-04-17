@@ -1,4 +1,10 @@
+import json
 import re
+from functools import lru_cache
+from pathlib import Path
+from django.utils.timesince import timesince
+
+from covise_app.models import BlockedUser, SavedPost
 
 
 def _value_list(value):
@@ -83,6 +89,68 @@ def _preferences_dict(preferences):
         "minimum_commitment": getattr(preferences, "minimum_commitment", "Either"),
         "open_to_foreign_founders": getattr(preferences, "open_to_foreign_founders", True),
     }
+
+
+@lru_cache(maxsize=1)
+def get_onboarding_skill_config():
+    flow_path = Path(__file__).resolve().parent / "boarding.json"
+    default_config = {"options": [], "max_selected": 8}
+    try:
+        with flow_path.open(encoding="utf-8-sig") as handle:
+            flow = json.load(handle)
+    except (FileNotFoundError, OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return default_config
+
+    for step in flow.get("steps", []):
+        for field in step.get("fields", []):
+            if field.get("id") != "skills":
+                continue
+            options = [str(option).strip() for option in field.get("options", []) if str(option).strip()]
+            return {
+                "options": options,
+                "max_selected": int(field.get("max_selected") or 8),
+            }
+    return default_config
+
+
+def _cofounder_badge_state(profile):
+    if not profile:
+        return False, False
+
+    onboarding_answers = getattr(profile, "onboarding_answers", {}) or {}
+
+    def normalized_values(value):
+        if isinstance(value, dict):
+            raw_items = value.values()
+        elif isinstance(value, (list, tuple, set)):
+            raw_items = value
+        elif value in (None, "", [], {}, ()):
+            raw_items = []
+        else:
+            raw_items = [value]
+        return [
+            " ".join(str(item or "").strip().lower().replace("/", " ").replace("-", " ").split())
+            for item in raw_items
+            if str(item or "").strip()
+        ]
+
+    cofounder_count_values = (
+        normalized_values(getattr(profile, "cofounders_needed", None))
+        + normalized_values(onboarding_answers.get("cofounders_needed"))
+    )
+    eligible = any(value not in {"0", "none", "no"} for value in cofounder_count_values)
+    if not eligible:
+        desired_partner_values = (
+            normalized_values(getattr(profile, "looking_for_type", None))
+            + normalized_values(onboarding_answers.get("looking_for_type"))
+        )
+        eligible = any("cofounder" in value or "co founder" in value for value in desired_partner_values)
+
+    explicit_visibility = onboarding_answers.get("show_cofounder_badge")
+    if isinstance(explicit_visibility, str):
+        explicit_visibility = explicit_visibility.strip().lower() in {"1", "true", "yes", "on"}
+    visible = eligible and (True if explicit_visibility is None else bool(explicit_visibility))
+    return eligible, visible
 
 
 def build_ui_user_context(user):
@@ -321,15 +389,56 @@ def build_settings_context(user):
     preferences = getattr(user, "preferences", None)
     email = getattr(user, "email", "") or ""
     display_name = getattr(user, "full_name", "") or ""
+    blocked_user_ids = list(
+        BlockedUser.objects.filter(blocker=user).values_list("blocked_id", flat=True)
+    )
+    saved_posts = list(
+        SavedPost.objects.filter(user=user)
+        .exclude(post__user_id__in=blocked_user_ids)
+        .select_related("post", "post__user")
+        .order_by("-created_at")
+    )
+    blocked_relationships = list(
+        BlockedUser.objects.filter(blocker=user)
+        .select_related("blocked", "blocked__profile")
+        .order_by("-created_at")
+    )
 
     if not display_name and profile:
         display_name = getattr(profile, "full_name", "") or ""
     if not display_name and email:
         display_name = email.split("@")[0]
 
+    skill_config = get_onboarding_skill_config()
+    skill_options = skill_config["options"]
+    skill_option_set = set(skill_options)
+    selected_skills = [
+        skill for skill in _value_list(getattr(profile, "skills", None)) if skill in skill_option_set
+    ] if profile else []
     location = ""
     if profile:
         location = getattr(profile, "country", "") or _value_text(getattr(profile, "home_country", None))
+    cofounder_badge_available, show_cofounder_badge = _cofounder_badge_state(profile)
+
+    saved_post_items = [
+        {
+            "id": saved_post.post.id,
+            "title": getattr(saved_post.post, "title", "") or (getattr(saved_post.post, "content", "")[:80] or "Untitled post"),
+            "author": getattr(saved_post.post.user, "full_name", "") or getattr(saved_post.post.user, "email", ""),
+            "saved_at": f"{timesince(saved_post.created_at)} ago",
+        }
+        for saved_post in saved_posts
+    ]
+    blocked_user_items = [
+        {
+            "id": relationship.blocked.id,
+            "display_name": relationship.blocked.full_name or relationship.blocked.email.split("@")[0],
+            "email": relationship.blocked.email,
+            "avatar_initials": getattr(relationship.blocked, "avatar_initials", "CV"),
+            "blocked_at": f"{timesince(relationship.created_at)} ago",
+        }
+        for relationship in blocked_relationships
+    ]
 
     return {
         "display_name": display_name,
@@ -343,9 +452,23 @@ def build_settings_context(user):
         "linkedin_url": getattr(profile, "linkedin", "") if profile else "",
         "github_url": getattr(profile, "github", "") if profile else "",
         "proof_of_work_url": getattr(profile, "proof_of_work_url", "") if profile else "",
+        "skills_text": _value_text(getattr(profile, "skills", None)) if profile else "",
+        "skills_options": skill_options,
+        "skills_selected": selected_skills,
+        "skills_max_selected": skill_config["max_selected"],
         "location": location,
         "nationality": getattr(profile, "nationality", "") if profile else "",
         "bio": getattr(profile, "bio", "") if profile else "",
+        "cofounder_badge_available": cofounder_badge_available,
+        "show_cofounder_badge": show_cofounder_badge,
+        "saved_posts": saved_post_items,
+        "saved_posts_preview": saved_post_items[:2],
+        "saved_posts_has_more": len(saved_post_items) > 2,
+        "blocked_users": blocked_user_items,
+        "platform_agreement_accepted": getattr(profile, "has_accepted_platform_agreement", False) if profile else False,
+        "platform_agreement_accepted_at": getattr(profile, "platform_agreement_accepted_at", None) if profile else None,
+        "platform_agreement_version": getattr(profile, "platform_agreement_version", "2026.04") if profile else "2026.04",
+        "receive_email_notifications": getattr(profile, "receive_email_notifications", True) if profile else True,
         "preferences": _preferences_dict(preferences),
     }
 

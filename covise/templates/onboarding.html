@@ -270,6 +270,14 @@
             text-align: center;
         }
 
+        .completion-note.is-error {
+            color: var(--danger);
+        }
+
+        .completion-note.is-success {
+            color: var(--accent);
+        }
+
         .onboarding-warning {
             margin-top: calc(var(--spacing) * 1);
             margin-bottom: calc(var(--spacing) * 1.2);
@@ -338,9 +346,11 @@
     {% if not onboarding_unavailable %}
     {{ boarding_flow|json_script:"boarding-flow" }}
     {{ onboarding_initial_answers|json_script:"onboarding-initial-answers" }}
+    {{ onboarding_complete_redirect_url|json_script:"onboarding-complete-redirect-url" }}
     <script>
         const flow = JSON.parse(document.getElementById('boarding-flow').textContent);
         const initialAnswers = JSON.parse(document.getElementById('onboarding-initial-answers').textContent);
+        const completionRedirectUrl = JSON.parse(document.getElementById('onboarding-complete-redirect-url').textContent);
 
         const flowName = document.getElementById('flow-name');
         const progressLineFill = document.getElementById('progress-line-fill');
@@ -353,6 +363,13 @@
 
         const answers = { ...initialAnswers };
         let currentIndex = 0;
+
+        function setCompletionMessage(text, state) {
+            completionNote.textContent = normalizeText(text || '');
+            completionNote.classList.remove('is-error', 'is-success');
+            if (state === 'error') completionNote.classList.add('is-error');
+            if (state === 'success') completionNote.classList.add('is-success');
+        }
 
         function normalizeText(text) {
             return String(text || '')
@@ -684,6 +701,7 @@
         function renderStep() {
             const visibleSteps = ensureCurrentStepInBounds();
             const step = visibleSteps[currentIndex];
+            setCompletionMessage('', '');
 
             const progress = ((currentIndex + 1) / visibleSteps.length) * 100;
             progressLineFill.style.width = progress + '%';
@@ -762,7 +780,13 @@
             });
 
             if (!response.ok) {
-                throw new Error('Failed to save onboarding data.');
+                let payload = null;
+                try {
+                    payload = await response.json();
+                } catch (error) {
+                    payload = null;
+                }
+                throw new Error(payload && payload.error ? payload.error : 'We could not save your onboarding right now. Please try again.');
             }
         }
 
@@ -774,23 +798,24 @@
                 return;
             }
 
-            completionNote.textContent = normalizeText(flow.success_message || "You're in.");
+            setCompletionMessage(flow.success_message || "You're in.", 'success');
             nextBtn.disabled = true;
 
             try {
                 await submitOnboarding();
             } catch (error) {
-                completionNote.textContent = 'Could not save your onboarding answers. Please try again.';
+                setCompletionMessage(error.message || 'We could not save your onboarding right now. Please try again.', 'error');
                 nextBtn.disabled = false;
                 return;
             }
 
             window.setTimeout(() => {
-                window.location.href = "{% url 'Sign In' %}";
+                window.location.href = completionRedirectUrl || "{% url 'Sign In' %}";
             }, 600);
         }
 
         function goBack() {
+            setCompletionMessage('', '');
             if (currentIndex > 0) {
                 currentIndex -= 1;
                 renderStep();

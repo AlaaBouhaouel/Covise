@@ -8,6 +8,7 @@
     <title>CoVise | Coming Soon</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'home.css' %}">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
     <style>
         :root {
             color-scheme: dark;
@@ -53,7 +54,7 @@
         }
     </style>
 </head>
-<body>
+<body class="has-app-mobile-nav">
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home" title="Go to Home">
@@ -81,9 +82,6 @@
                     <path d="M3 12h18"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo" title="Open CoVise Advisor">
-                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
-            </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="8" r="4"></circle>
@@ -104,5 +102,6 @@
             </section>
         </main>
     </div>
+    {% include "includes/app_mobile_nav.html" with active_page='' show_mobile_back=False %}
 </body>
 </html>

@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Logout</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'waitlist.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+</head>
+<body>
+    <main class="waitlist-page">
+        <section class="waitlist-card">
+            <div class="waitlist-header">
+                <div class="brand">
+                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+                    <span>CoVise</span>
+                </div>
+                <a class="back-link" href="/">Home</a>
+            </div>
+
+            <div class="success-badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M8 12.5L10.8 15.2L16.2 9.8"></path>
+                </svg>
+                <span>Signed Out</span>
+            </div>
+
+            <h1 class="waitlist-title">You have been logged out</h1>
+            <p class="intro">Your session is closed. You can sign back in anytime to continue where you left off.</p>
+
+            <div class="success-actions">
+                <a class="success-btn" href="/">Back Home</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

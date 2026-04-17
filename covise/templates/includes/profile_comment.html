@@ -1,0 +1,65 @@
+<div class="comment-wrap comment-wrap-depth-{{ comment.thread_indent_depth }}" data-comment-id="{{ comment.id }}" style="--thread-depth: {{ comment.thread_indent_depth }};">
+    <div class="comment-header">
+        <div class="comment-user">
+            {% if comment.avatar_url %}
+            <a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link" aria-label="View {{ comment.author_name }} profile"><img class="avatar comment avatar-comment-image" src="{{ comment.avatar_url }}" alt="{{ comment.author_name }} avatar"></a>
+            {% else %}
+            <a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link" aria-label="View {{ comment.author_name }} profile"><div class="avatar comment">{{ comment.user.avatar_initials }}</div></a>
+            {% endif %}
+            <h3><a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link">{{ comment.author_name }}</a></h3>
+        </div>
+        <p>
+            {{ comment.relative_created_at }}
+            {% if comment.is_edited %}<span class="comment-state-badge">edited</span>{% endif %}
+            {% if comment.is_pinned %}<span class="comment-state-badge comment-state-badge-pinned">Pinned</span>{% endif %}
+        </p>
+        {% if comment.can_pin or comment.can_edit or comment.can_delete %}
+        <details class="comment-more-menu">
+            <summary class="comment-more-trigger" aria-label="Comment actions">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </summary>
+            <div class="comment-more-dropdown">
+                {% if comment.can_pin %}
+                <button type="button" class="comment-more-action comment-inline-action" data-comment-action="pin" data-comment-id="{{ comment.id }}"><i class="fa-solid fa-thumbtack"></i><span>{% if comment.is_pinned %}Unpin{% else %}Pin{% endif %}</span></button>
+                {% endif %}
+                {% if comment.can_edit %}
+                <button type="button" class="comment-more-action comment-inline-action" data-comment-action="edit" data-comment-id="{{ comment.id }}" data-comment-content="{{ comment.content|escapejs }}"><i class="fa-regular fa-pen-to-square"></i><span>Edit</span></button>
+                {% endif %}
+                {% if comment.can_delete %}
+                <button type="button" class="comment-more-action comment-inline-action" data-comment-action="delete" data-comment-id="{{ comment.id }}"><i class="fa-regular fa-trash-can"></i><span>Delete</span></button>
+                {% endif %}
+            </div>
+        </details>
+        {% endif %}
+    </div>
+    <div class="comment-content">{{ comment.content }}</div>
+    <div class="comment-footer">
+        <button type="button" class="parameter-comment comment-emoji-reaction comment-reaction-chip-main comment-primary-reaction{% if 'thumbs_up' in comment.viewer_reactions %} is-active{% endif %}" data-comment-id="{{ comment.id }}" data-reaction="thumbs_up"><span><i class="fa-regular fa-thumbs-up"></i> <span class="up-count">{{ comment.up }}</span></span></button>
+        <button type="button" class="parameter-comment comment-emoji-reaction comment-reaction-chip-main{% if 'thumbs_down' in comment.viewer_reactions %} is-active{% endif %}" data-comment-id="{{ comment.id }}" data-reaction="thumbs_down"><span><i class="fa-regular fa-thumbs-down"></i> <span class="down-count">{{ comment.down }}</span></span></button>
+        <div class="comment-reaction-extra-group" data-reaction-extra-group>
+            <button type="button" class="parameter-comment comment-emoji-reaction comment-reaction-chip-extra{% if 'fire' in comment.viewer_reactions %} is-active{% endif %}" data-comment-id="{{ comment.id }}" data-reaction="fire"{% if not comment.fire_count and 'fire' not in comment.viewer_reactions %} hidden{% endif %}><span>&#128293; <span class="reaction-count">{{ comment.fire_count|default:0 }}</span></span></button>
+            <button type="button" class="parameter-comment comment-emoji-reaction comment-reaction-chip-extra{% if 'rocket' in comment.viewer_reactions %} is-active{% endif %}" data-comment-id="{{ comment.id }}" data-reaction="rocket"{% if not comment.rocket_count and 'rocket' not in comment.viewer_reactions %} hidden{% endif %}><span>&#128640; <span class="reaction-count">{{ comment.rocket_count|default:0 }}</span></span></button>
+            <button type="button" class="parameter-comment comment-emoji-reaction comment-reaction-chip-extra{% if 'crazy' in comment.viewer_reactions %} is-active{% endif %}" data-comment-id="{{ comment.id }}" data-reaction="crazy"{% if not comment.crazy_count and 'crazy' not in comment.viewer_reactions %} hidden{% endif %}><span>&#129327; <span class="reaction-count">{{ comment.crazy_count|default:0 }}</span></span></button>
+        </div>
+        <button type="button" class="parameter-comment comment-reply-toggle" data-comment-id="{{ comment.id }}" data-comment-author="{{ comment.author_name }}"><span><i class="fa-solid fa-reply"></i>Reply</span></button>
+        <div class="comment-reaction-picker" hidden>
+            <button class="comment-reaction-picker-option" type="button" data-picker-reaction="fire" aria-label="React with fire">&#128293;</button>
+            <button class="comment-reaction-picker-option" type="button" data-picker-reaction="rocket" aria-label="React with rocket">&#128640;</button>
+            <button class="comment-reaction-picker-option" type="button" data-picker-reaction="crazy" aria-label="React with mind blown">&#129327;</button>
+        </div>
+    </div>
+    <div class="comment-reply-form" hidden data-parent-id="{{ comment.id }}">
+        <input class="comment-input comment-reply-input" type="text" placeholder="Write a reply..." data-post-id="{{ comment.post_id }}" data-parent-id="{{ comment.id }}">
+        <div class="comment-reply-actions">
+            <button class="comment-send comment-reply-send" type="button" aria-label="Send reply" data-post-id="{{ comment.post_id }}" data-parent-id="{{ comment.id }}"><i class="fa-solid fa-paper-plane"></i></button>
+            <button class="comment-reply-cancel" type="button">Cancel</button>
+        </div>
+    </div>
+    {% if comment.child_comments %}
+    <div class="comment-children">
+        {% for comment in comment.child_comments %}
+        {% include "includes/profile_comment.html" with comment=comment %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>

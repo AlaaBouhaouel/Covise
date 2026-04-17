@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import OnboardingResponse, Profile, UserPreference, WaitlistEmailVerification, WaitlistEntry, User, Post, Comment, Experiences, Active_projects, Project, Conversation, Message, ConversationRequest
+from .models import OnboardingResponse, Profile, UserPreference, WaitlistEmailVerification, WaitlistEntry, User, Post, PostImage, Comment, Experiences, Active_projects, Project, Conversation, Message, ConversationRequest
 
 
 @admin.register(User)
@@ -236,6 +236,11 @@ class UserPreferenceAdmin(admin.ModelAdmin):
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     list_display = ("user", "title", "post_type", "theme_color", "image", "likes_number", "comments_number", "created_at")
+
+
+@admin.register(PostImage)
+class PostImageAdmin(admin.ModelAdmin):
+    list_display = ("post", "sort_order", "created_at")
 
 
 @admin.register(Comment)

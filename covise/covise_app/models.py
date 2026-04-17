@@ -214,6 +214,10 @@ class Profile(models.Model):
     bio = models.TextField(blank=True)
     tools = models.TextField(blank=True)
     plan = models.CharField(max_length=50, default="Free")
+    receive_email_notifications = models.BooleanField(default=True)
+    has_accepted_platform_agreement = models.BooleanField(default=False)
+    platform_agreement_accepted_at = models.DateTimeField(null=True, blank=True)
+    platform_agreement_version = models.CharField(max_length=20, default="2026.04")
     waitlist_snapshot = models.JSONField(default=dict, blank=True)
     onboarding_answers = models.JSONField(default=dict, blank=True)
 
@@ -363,9 +367,69 @@ class UserPreference(models.Model):
         return f"Preferences for {self.user.email}"
 
 
+class Notification(models.Model):
+    class NotificationType(models.TextChoices):
+        NEW_MESSAGE = "new_message", "New message"
+        CONVERSATION_REQUEST = "conversation_request", "Conversation request"
+        REQUEST_ACCEPTED = "request_accepted", "Request accepted"
+        POST_MENTION = "post_mention", "Post mention"
+        NEW_POST = "new_post", "New post"
+
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
+    actor = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="triggered_notifications",
+    )
+    notification_type = models.CharField(max_length=40, choices=NotificationType.choices)
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    target_url = models.CharField(max_length=500, blank=True)
+    is_read = models.BooleanField(default=False)
+    emailed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Notification<{self.notification_type} to {self.recipient.email}>"
+
+
+class ConversationUserState(models.Model):
+    conversation = models.ForeignKey(
+        "Conversation",
+        on_delete=models.CASCADE,
+        related_name="user_states",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="conversation_states",
+    )
+    mute_notifications = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["conversation", "user"], name="unique_conversation_user_state")
+        ]
+
+    def __str__(self):
+        return f"ConversationUserState<{self.conversation_id}:{self.user.email}>"
+
+
 class Conversation(models.Model):
     class ConversationType(models.TextChoices):
         PRIVATE = "private", "Private"
+        GROUP = "group", "Group"
+
+    class RecordingMode(models.TextChoices):
+        RECORDED = "recorded", "Recorded"
+        EPHEMERAL = "ephemeral", "Ephemeral"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     conversation_type = models.CharField(
@@ -379,6 +443,12 @@ class Conversation(models.Model):
         related_name="created_conversations",
     )
     participants = models.ManyToManyField(User, related_name="conversations")
+    group_name = models.CharField(max_length=160, blank=True, default="")
+    recording_mode = models.CharField(
+        max_length=20,
+        choices=RecordingMode.choices,
+        default=RecordingMode.RECORDED,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_message_at = models.DateTimeField(blank=True, null=True)
@@ -391,6 +461,12 @@ class Conversation(models.Model):
 
 
 class Message(models.Model):
+    class MessageType(models.TextChoices):
+        TEXT = "text", "Text"
+        IMAGE = "image", "Image"
+        FILE = "file", "File"
+        VOICE = "voice", "Voice"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     conversation = models.ForeignKey(
         Conversation,
@@ -402,7 +478,16 @@ class Message(models.Model):
         on_delete=models.CASCADE,
         related_name="sent_messages",
     )
-    body = models.TextField()
+    message_type = models.CharField(
+        max_length=20,
+        choices=MessageType.choices,
+        default=MessageType.TEXT,
+    )
+    body = models.TextField(blank=True, default="")
+    attachment_file = models.FileField(upload_to="chat_media/", blank=True, null=True)
+    attachment_name = models.CharField(max_length=255, blank=True, default="")
+    attachment_content_type = models.CharField(max_length=120, blank=True, default="")
+    attachment_size = models.PositiveBigIntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -410,6 +495,36 @@ class Message(models.Model):
 
     def __str__(self):
         return f"Message<{self.sender.email}>"
+
+
+class MessageReceipt(models.Model):
+    class Status(models.TextChoices):
+        DELIVERED = "delivered", "Delivered"
+        SEEN = "seen", "Seen"
+
+    message = models.ForeignKey(
+        Message,
+        on_delete=models.CASCADE,
+        related_name="receipts",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="message_receipts",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DELIVERED,
+    )
+    delivered_at = models.DateTimeField(auto_now_add=True)
+    seen_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("message", "user")
+
+    def __str__(self):
+        return f"MessageReceipt<{self.message_id}:{self.user.email}:{self.status}>"
 
 
 class ConversationRequest(models.Model):
@@ -479,31 +594,117 @@ class Post(models.Model):
     comments_number=models.IntegerField(default=0)
     created_at=models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class PostImage(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="gallery_images")
+    image = models.ImageField(upload_to="post_images/")
+    sort_order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["sort_order", "created_at", "id"]
 
 
 class Comment(models.Model): 
     user = models.ForeignKey(User,on_delete=models.CASCADE, related_name="comments")
     post=models.ForeignKey(Post, on_delete=models.CASCADE,  related_name="comments" )
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="replies",
+    )
     content=models.CharField(max_length=200)
     up=models.IntegerField(default=0)
     down=models.IntegerField(default=0)
+    is_pinned = models.BooleanField(default=False)
+    edited_at = models.DateTimeField(null=True, blank=True)
     created_at=models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
 
 
 class CommentReaction(models.Model):
     class ReactionType(models.TextChoices):
-        UP = "up", "Upvote"
-        DOWN = "down", "Downvote"
+        THUMBS_UP = "thumbs_up", "Thumbs up"
+        THUMBS_DOWN = "thumbs_down", "Thumbs down"
+        FIRE = "fire", "Fire"
+        ROCKET = "rocket", "Rocket"
+        CRAZY = "crazy", "Crazy"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comment_reactions")
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name="reactions")
-    reaction = models.CharField(max_length=10, choices=ReactionType.choices)
+    reaction = models.CharField(max_length=20, choices=ReactionType.choices)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["user", "comment"], name="unique_user_comment_reaction")
+            models.UniqueConstraint(fields=["user", "comment", "reaction"], name="unique_user_comment_reaction")
         ]
+
+
+class MessageReaction(models.Model):
+    class ReactionType(models.TextChoices):
+        THUMBS_UP = "thumbs_up", "Thumbs up"
+        FIRE = "fire", "Fire"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="message_reactions")
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="reactions")
+    reaction = models.CharField(max_length=20, choices=ReactionType.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "message", "reaction"], name="unique_user_message_reaction")
+        ]
+        ordering = ["created_at"]
+
+
+class PostMention(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="mentions")
+    mentioned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="post_mentions")
+    handle_text = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["post", "mentioned_user", "handle_text"], name="unique_post_mention")
+        ]
+        ordering = ["created_at"]
+
+
+class SavedPost(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="saved_posts")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="saved_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "post"], name="unique_user_saved_post")
+        ]
+        ordering = ["-created_at"]
+
+
+class BlockedUser(models.Model):
+    blocker = models.ForeignKey(User, on_delete=models.CASCADE, related_name="blocked_relationships")
+    blocked = models.ForeignKey(User, on_delete=models.CASCADE, related_name="blocked_by_relationships")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["blocker", "blocked"], name="unique_user_block")
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        blocker_email = self.blocker.email if self.blocker_id else "unknown"
+        blocked_email = self.blocked.email if self.blocked_id else "unknown"
+        return f"{blocker_email} blocked {blocked_email}"
 
 class Experiences(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE, related_name="experiences")

@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVise | Community Guidelines</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'settings.css' %}">
+    <link rel="stylesheet" href="{% static 'agreement.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+</head>
+<body>
+    <main class="agreement-page">
+        <section class="agreement-shell">
+            <div class="agreement-brand">
+                <img src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
+                <span>CoVise</span>
+            </div>
+            <div class="agreement-card panel">
+                <div class="agreement-kicker">Required Before Entry</div>
+                <h1>Community Guidelines</h1>
+                <p class="agreement-intro">Before you enter CoVise, please review the standards for posting, outreach, and collaboration on the platform.</p>
+                {% if agreement_read_only %}
+                <div class="agreement-readonly-note">Accepted on {{ agreement_profile.platform_agreement_accepted_at|date:"M j, Y, g:i a" }}. This page is now read-only.</div>
+                {% endif %}
+
+                {% if agreement_error_message %}
+                <div class="agreement-feedback agreement-feedback--error">{{ agreement_error_message }}</div>
+                {% endif %}
+
+                <div class="agreement-grid">
+                    <article class="agreement-point">
+                        <strong>Purpose-driven participation</strong>
+                        <p>This network is for founders, operators, and builders actively working on ventures or committed to starting one.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>Execution over conversation</strong>
+                        <p>CoVise exists to create real outcomes. Connections here should lead to action, not just talk.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>Integrity in representation</strong>
+                        <p>Present your background, experience, and intentions accurately. Misrepresentation undermines trust.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>Purposeful communication</strong>
+                        <p>Reach out with clarity and relevance. Vague outreach and mass messaging do not belong here.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>Zero tolerance for noise</strong>
+                        <p>Spam, unsolicited promotion, and irrelevant outreach have no place in this network.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>Confidentiality and respect</strong>
+                        <p>Ideas, conversations, and private information shared here should be handled with discretion.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>Depth over volume</strong>
+                        <p>Meaningful relationships with the right people matter more than a large number of surface-level connections.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>No hate or discrimination</strong>
+                        <p>Discriminatory, hateful, or offensive content toward any person or group is not tolerated.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>No political or divisive content</strong>
+                        <p>CoVise is a professional building space. Political, religious, and divisive content is out of scope.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>No misinformation or rumours</strong>
+                        <p>Communicate with accuracy and responsibility. Do not spread false or unverified claims.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>Strictly no illegal activity</strong>
+                        <p>Fraud, IP theft, data misuse, misconduct, or illegal solicitation can result in permanent removal.</p>
+                    </article>
+                    <article class="agreement-point">
+                        <strong>No harassment or intimidation</strong>
+                        <p>Threats, harassment, or intimidatory behavior in public or private communication will not be tolerated.</p>
+                    </article>
+                </div>
+
+                <div class="agreement-links">
+                    <a class="agreement-link-card" href="{% url 'Terms' %}" target="_blank" rel="noopener">
+                        <strong>Terms of Service</strong>
+                        <span>Full legal terms</span>
+                    </a>
+                    <a class="agreement-link-card" href="{% url 'Privacy' %}" target="_blank" rel="noopener">
+                        <strong>Privacy Policy</strong>
+                        <span>How your data is handled</span>
+                    </a>
+                    <a class="agreement-link-card" href="{% url 'Security' %}" target="_blank" rel="noopener">
+                        <strong>Security Overview</strong>
+                        <span>How we protect the platform</span>
+                    </a>
+                </div>
+
+                {% if agreement_read_only %}
+                <div class="agreement-actions agreement-actions--readonly">
+                    <a class="agreement-logout" href="{% url 'Settings' %}">Back to settings</a>
+                    <a class="agreement-submit agreement-submit--link" href="{% url 'Home' %}">Back to platform</a>
+                </div>
+                {% else %}
+                <form class="agreement-form" method="post" action="{% url 'Agreement' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ agreement_next_url }}">
+                    <label class="agreement-check">
+                        <input type="checkbox" name="agree" required>
+                        <span>I have read the community guidelines and I agree to follow them while using CoVise.</span>
+                    </label>
+                    <div class="agreement-actions">
+                        <a class="agreement-logout" href="{% url 'Logout' %}">Log out</a>
+                        <button class="agreement-submit" type="submit">Agree and continue</button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+</body>
+</html>

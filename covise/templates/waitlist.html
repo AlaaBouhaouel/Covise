@@ -8,7 +8,6 @@
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'waitlist.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -27,85 +26,294 @@
 </script>
 <body>
     <main class="waitlist-page">
-        <section class="waitlist-card">
-            <div class="waitlist-header">
-                <div class="brand">
-                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
-                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
-                    <span>CoVise</span>
+    
+        <form class="waitlist-form" method="post" action="{% url 'Waitlist' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <section class="waitlist-card" id="waitlist-card-first">
+                <div class="waitlist-header">
+                    <div class="brand">
+                        <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                        <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+                        <span>CoVise</span>
+                    </div>
+                    <a class="back-link" href="{% url 'Landing Page' %}">Home</a>
                 </div>
-                <a class="back-link" href="{% url 'Landing Page' %}">Back</a>
-            </div>
-            <h1>Join the Waitlist</h1>
-            <p class="intro">Share your info and we will reach out soon.</p>
-            {% if error_message %}
-            <p class="form-error" role="alert">{{ error_message }}</p>
-            {% endif %}
+                <h1 class="waitlist-title">Reserve Your Spot</h1>
+                <p class="intro">Share your info and we will reach out soon.</p>
+                {% if error_message %}
+                <p class="form-error" role="alert">{{ error_message }}</p>
+                {% endif %}
 
-            <form class="waitlist-form" method="post" action="/signin/" enctype="multipart/form-data">
-                {% csrf_token %}
-                <label for="full_name">Name</label>
-                <input id="full_name" name="full_name" type="text" required>
+                    <label for="full_name">Name</label>
+                    <input id="full_name" name="full_name" type="text" value="{{ initial_full_name }}" required>
 
-                <label for="phone_number">Phone number</label>
-                <div class="phone-wrapper">
-                    <input id="phone_number" name="phone_number" type="tel" required>
+                    <label for="phone_number">Phone number</label>
+                    <div class="phone-wrapper">
+                        <input id="phone_number" name="phone_number" type="tel" inputmode="tel" placeholder="" value="{{ initial_phone_number }}" required>
+                    </div>
+
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" value="{{ initial_waitlist_email }}" required>
+                    <p class="email-verification-note" id="emailVerificationNote" hidden></p>
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; ">
+                            <p class="submit-verification-note">Enter the code sent to your email</p>
+                            <p class="field-helper" >This should not take more than a few seconds.</p>
+                        </div>
+                        <div class="email-verification-panel">
+                            <input id="emailVerificationCode" name="email_verification_code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="{{ initial_email_verification_code }}" placeholder="000000">
+                        </div>
+                    </div>
+                    <button class="process" type="button" id="next-btn">
+                        <span class="btn-label">Next</span>
+                    </button>
+            </section>
+            <section class="waitlist-card" id="waitlist-card-second" hidden>
+                <div class="waitlist-header">
+                    <div class="brand">
+                        <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
+                        <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
+                        <span>CoVise</span>
+                    </div>
+                    <a class="back-link" href="{% url 'Waitlist' %}">Back</a>
                 </div>
-
-                <label for="email">Email</label>
-                <input id="email" name="email" type="email"  required>
-
+                <h1 class="waitlist-title">Few Steps Away</h1>
+                <p class="intro">Join a community of entrepreneurs.</p>
+                {% if error_message %}
+                <p class="form-error" role="alert">{{ error_message }}</p>
+                {% endif %}
                 <label for="country">Country</label>
                 <select id="country" name="country" required>
                     <option value="">Select your country</option>
-                    <option value="bahrain">Bahrain</option>
-                    <option value="kuwait">Kuwait</option>
-                    <option value="oman">Oman</option>
-                    <option value="qatar">Qatar</option>
-                    <option value="saudi_arabia">Saudi Arabia</option>
-                    <option value="united_arab_emirates">United Arab Emirates</option>
+                    <option value="bahrain" {% if initial_country == 'bahrain' %}selected{% endif %}>Bahrain</option>
+                    <option value="kuwait" {% if initial_country == 'kuwait' %}selected{% endif %}>Kuwait</option>
+                    <option value="oman" {% if initial_country == 'oman' %}selected{% endif %}>Oman</option>
+                    <option value="qatar" {% if initial_country == 'qatar' %}selected{% endif %}>Qatar</option>
+                    <option value="saudi_arabia" {% if initial_country == 'saudi_arabia' %}selected{% endif %}>Saudi Arabia</option>
+                    <option value="united_arab_emirates" {% if initial_country == 'united_arab_emirates' %}selected{% endif %}>United Arab Emirates</option>
                 </select>
 
                 <label class="non-gcc-toggle" for="non_gcc_business">
-                    <input id="non_gcc_business" name="non_gcc_business" type="checkbox">
-                    Not based in the GCC, but looking to do business there.
+                    <input id="non_gcc_business" name="non_gcc_business" type="checkbox" {% if initial_non_gcc_business %}checked{% endif %}>
+                    Not based in the GCC.
                 </label>
 
                 <div id="custom-country-field" class="custom-country-field" hidden>
                     <label for="custom_country">Enter your country</label>
-                    <input id="custom_country" name="custom_country" type="text" >
+                    <input id="custom_country" name="custom_country" type="text" value="{{ initial_custom_country }}">
                 </div>
 
+                
+                <label for="description">What best describes you?</label>
+                <select id="description" name="description" required>
+                    <option value="">Select what best describes you</option>
+                    <option value="founder_idea" {% if initial_description == 'founder_idea' %}selected{% endif %}>Founder with an idea</option>
+                    <option value="developer" {% if initial_description == 'developer' %}selected{% endif %}>Developer or technical builder</option>
+                    <option value="operator" {% if initial_description == 'operator' %}selected{% endif %}>Operator or specialist</option>
+                    <option value="other" {% if initial_description == 'other' %}selected{% endif %}>Other</option>
+                </select>
+                <div id="custom-description-field" class="custom-country-field" hidden>
+                    <label for="custom_description">Tell us more</label>
+                    <input id="custom_description" name="custom_description" type="text" value="{{ initial_custom_description }}">
+                </div>
+
+
                 <label for="linkedin">LinkedIn</label>
-                <input id="linkedin" name="linkedin" type="url" placeholder="https://linkedin.com/in/username" required>
+                <input id="linkedin" name="linkedin" type="url" value="{{ initial_linkedin }}" placeholder="https://linkedin.com/in/username" required>
                 <label class="non-gcc-toggle linkedin-toggle" for="no_linkedin">
-                    <input id="no_linkedin" name="no_linkedin" type="checkbox">
+                    <input id="no_linkedin" name="no_linkedin" type="checkbox" {% if initial_no_linkedin %}checked{% endif %}>
                     I do not have a LinkedIn
                 </label>
 
-                <label id="cv-label" for="cv">CV <span class="optional-tag">(Optional)</span></label>
+                <label id="cv-label" for="cv">CV <span class="optional-tag" id="optional-cv-input">(Optional)</span></label>
                 <input id="cv" name="cv" type="file" accept=".pdf,.doc,.docx">
 
+
+                <label for="venture_summary">Tell us about your venture briefly <span class="recommended-tag">(Recommended)</span></label>
+                <p class="field-helper">Your information stays private and is only used to ensure a better experience within the platform. <a href="/privacy/">Read our privacy policy.</a></p>
+                <textarea id="venture_summary" name="venture_summary" rows="2" placeholder="A short summary of what you're building, or hoping to launch">{{ initial_venture_summary }}</textarea>
+
+                <label for="referral_code">Referred by someone?</label>
+                <input id="referral_code" name="referral_code" type="text" value="{{ initial_referral_code }}" placeholder="Enter their referral code">
+                
                 <button class="process" type="submit" id="onboard-btn">
                     <span class="btn-label">Onboard</span>
                     <span class="btn-spinner" aria-hidden="true"></span>
                 </button>
-            </form>
-            
-        </section>
+            </section>
+        </form>
     </main>
 
     <script>
         const countrySelect = document.getElementById('country');
+        const descriptionSelect = document.getElementById('description');
         const nonGccCheckbox = document.getElementById('non_gcc_business');
         const customCountryField = document.getElementById('custom-country-field');
         const customCountryInput = document.getElementById('custom_country');
+        const customDescriptionField = document.getElementById('custom-description-field');
+        const customDescriptionInput = document.getElementById('custom_description');
+        const emailInput = document.getElementById('email');
+        const emailVerificationNote = document.getElementById('emailVerificationNote');
+        const emailVerificationCode = document.getElementById('emailVerificationCode');
         const linkedinInput = document.getElementById('linkedin');
         const noLinkedinCheckbox = document.getElementById('no_linkedin');
         const cvInput = document.getElementById('cv');
         const cvLabel = document.getElementById('cv-label');
-        const cvNotice = document.getElementById('cv-notice');
-        const optionalTag = cvLabel.querySelector('.optional-tag');
+        const optionalTag = document.getElementById('optional-cv-input');
+        const waitlistForm = document.querySelector('.waitlist-form');
+        const onboardBtn = document.getElementById('onboard-btn');
+        const onboardBtnLabel = onboardBtn ? onboardBtn.querySelector('.btn-label') : null;
+        const csrfToken = waitlistForm.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        const initialVerifiedEmail = "{{ initial_verified_email|escapejs }}";
+        const initialVerificationNotice = "{{ initial_verification_notice|escapejs }}";
+        const initialPendingVerificationEmail = "{{ initial_verification_pending_email|escapejs }}";
+        const showSecondStepOnLoad = {{ show_second_step|yesno:"true,false" }};
+
+        const nextBtn= document.getElementById('next-btn');
+        const secondCard = document.getElementById('waitlist-card-second');
+        const firstCard = document.getElementById('waitlist-card-first');
+
+        let verifiedEmail = initialVerifiedEmail;
+        let verificationSentEmail = initialVerifiedEmail || initialPendingVerificationEmail;
+        let verificationSendTimeout = null;
+        let waitlistSubmissionStarted = false;
+
+        function showSecondCard() {
+            firstCard.hidden = true;
+            secondCard.hidden = false;
+        }
+        function showFirstCard() {
+            firstCard.hidden = false;
+            secondCard.hidden = true;
+        }
+
+        function validateFirstStep() {
+            const firstStepFields = firstCard.querySelectorAll('input, select, textarea');
+            for (const field of firstStepFields) {
+                if (typeof field.checkValidity === 'function' && !field.checkValidity()) {
+                    field.reportValidity();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function normalizeEmail(value) {
+            return (value || '').trim().toLowerCase();
+        }
+
+        function setEmailVerificationState(message, tone) {
+            if (!message) {
+                emailVerificationNote.hidden = true;
+                emailVerificationNote.textContent = '';
+                emailVerificationNote.dataset.state = '';
+
+                return;
+            }
+            
+            emailVerificationNote.hidden = false;
+            emailVerificationNote.textContent = message;
+            emailVerificationNote.dataset.state = tone || 'pending';
+        }
+
+
+
+        function updateSubmitState() {
+            const currentEmail = normalizeEmail(emailInput.value);
+            const hasPendingCode = currentEmail && currentEmail === verificationSentEmail && currentEmail !== verifiedEmail;
+            const canSubmit = currentEmail && (currentEmail === verifiedEmail || hasPendingCode);
+            onboardBtn.disabled = !canSubmit;
+            onboardBtn.classList.toggle('is-blocked', !canSubmit);
+        }
+
+        function clearVerificationSendTimeout() {
+            if (verificationSendTimeout) {
+                window.clearTimeout(verificationSendTimeout);
+                verificationSendTimeout = null;
+            }
+        }
+
+        async function sendVerificationEmail() {
+            const currentEmail = normalizeEmail(emailInput.value);
+            if (!currentEmail || !emailInput.checkValidity()) return;
+            if (currentEmail === verifiedEmail || currentEmail === verificationSentEmail) return;
+
+            const response = await fetch("{% url 'Waitlist Email Verify Send' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ email: currentEmail }),
+            });
+
+            const data = await response.json().catch(function () { return {}; });
+
+            if (!response.ok) {
+                setEmailVerificationState(data.error || 'Could not send verification email. Please try again.', 'error');
+                verifiedEmail = '';
+                verificationSentEmail = '';
+                updateSubmitState();
+                nextBtn.disabled = true;
+                return;
+            }
+
+            if (data.already_verified) {
+                verifiedEmail = currentEmail;
+                verificationSentEmail = currentEmail;
+                setEmailVerificationState(data.message || 'Email verified. You can submit now.', 'success');
+                updateSubmitState();
+                return;
+            }
+
+            verificationSentEmail = currentEmail;
+            verifiedEmail = '';
+            setEmailVerificationState(
+                data.message || 'A verification code was sent to your email. Enter it below before submitting.',
+                'pending'
+            );
+            nextBtn.disabled = false;
+            updateSubmitState();
+        }
+
+        function resetEmailVerificationIfNeeded() {
+            const currentEmail = normalizeEmail(emailInput.value);
+            if (!currentEmail) {
+                verifiedEmail = '';
+                verificationSentEmail = '';
+                setEmailVerificationState('', '');
+                clearVerificationSendTimeout();
+                updateSubmitState();
+                return;
+            }
+
+            if (currentEmail !== verifiedEmail) {
+                verifiedEmail = '';
+                updateSubmitState();
+            }
+
+            if (currentEmail !== verificationSentEmail) {
+                verificationSentEmail = '';
+                setEmailVerificationState('', '');
+                emailVerificationCode.value = '';
+            }
+        }
+
+        function scheduleVerificationEmail() {
+            clearVerificationSendTimeout();
+            const currentEmail = normalizeEmail(emailInput.value);
+            if (!currentEmail || !emailInput.checkValidity() || currentEmail === verifiedEmail || currentEmail === verificationSentEmail) {
+                return;
+            }
+
+            verificationSendTimeout = window.setTimeout(function () {
+                sendVerificationEmail().catch(function () {
+                    setEmailVerificationState('Could not send verification email. Please try again.', 'error');
+                    updateSubmitState();
+                });
+            }, 700);
+        }
 
         function syncCountryInputs() {
             const hasSelectedGccCountry = countrySelect.value !== '';
@@ -136,7 +344,6 @@
                 cvInput.disabled = false;
                 cvInput.required = true;
                 cvLabel.classList.add('warning');
-                cvNotice.classList.add('warning');
                 optionalTag.textContent = '(Required)';
                 return;
             }
@@ -144,8 +351,17 @@
             cvInput.disabled = false;
             cvInput.required = false;
             cvLabel.classList.remove('warning');
-            cvNotice.classList.remove('warning');
             optionalTag.textContent = '(Optional)';
+        }
+
+        function syncDescriptionInput() {
+            const showCustomDescription = descriptionSelect.value === 'other';
+            customDescriptionField.hidden = !showCustomDescription;
+            customDescriptionInput.required = showCustomDescription;
+
+            if (!showCustomDescription) {
+                customDescriptionInput.value = '';
+            }
         }
 
         function syncLinkedinInput() {
@@ -161,56 +377,84 @@
         }
 
         countrySelect.addEventListener('change', syncCountryInputs);
+        descriptionSelect.addEventListener('change', syncDescriptionInput);
         nonGccCheckbox.addEventListener('change', syncCountryInputs);
         noLinkedinCheckbox.addEventListener('change', syncLinkedinInput);
+        emailInput.addEventListener('input', function () {
+            resetEmailVerificationIfNeeded();
+            scheduleVerificationEmail();
+        });
+        emailInput.addEventListener('blur', function () {
+            clearVerificationSendTimeout();
+            sendVerificationEmail().catch(function () {
+                setEmailVerificationState('Could not send verification email. Please try again.', 'error');
+                updateSubmitState();
+            });
+        });
+        emailVerificationCode.addEventListener('input', function () {
+            emailVerificationCode.value = emailVerificationCode.value.replace(/[^\d]/g, '').slice(0, 6);
+        });
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function () {
+                if (!validateFirstStep()) {
+                    return;
+                }
+
+                const currentEmail = normalizeEmail(emailInput.value);
+                if (!currentEmail || (currentEmail !== verifiedEmail && currentEmail !== verificationSentEmail)) {
+                    setEmailVerificationState('A verification code was sent to your email. Enter it below before continuing.', 'error');
+                    sendVerificationEmail().catch(function () {
+                        setEmailVerificationState('Could not send verification email. Please try again.', 'error');
+                    });
+                    updateSubmitState();
+                    return;
+                }
+
+                showSecondCard();
+            });
+        }
         syncCountryInputs();
+        syncDescriptionInput();
         syncLinkedinInput();
+        if (initialVerificationNotice && verifiedEmail) {
+            setEmailVerificationState(initialVerificationNotice, 'success');
+        }
+        if (showSecondStepOnLoad) {
+            showSecondCard();
+        }
+        updateSubmitState();
+
+        function reportVerifiedEmailAbandonment() {
+            const currentEmail = normalizeEmail(emailInput.value);
+            if (!currentEmail || currentEmail !== verifiedEmail || waitlistSubmissionStarted) {
+                return;
+            }
+
+            const storageKey = 'covise-waitlist-abandon-alert:' + currentEmail;
+            if (window.sessionStorage.getItem(storageKey) === '1') {
+                return;
+            }
+            window.sessionStorage.setItem(storageKey, '1');
+
+            const payload = new FormData();
+            payload.append('email', currentEmail);
+            payload.append('csrfmiddlewaretoken', csrfToken);
+            navigator.sendBeacon("{% url 'Waitlist Verified Email Abandoned' %}", payload);
+        }
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
     <script>
-        const phoneInput = document.getElementById('phone_number');
-        const iti = window.intlTelInput(phoneInput, {
-            initialCountry: 'sa',
-            loadUtils: () => import('https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js'),
-            separateDialCode: true,
-        });
-
-        function normalizePhoneWithCountryCode(rawValue) {
-            const typedPhone = (rawValue || '').trim();
-            if (!typedPhone) return '';
-
-            // If user already entered an international number, keep it.
-            if (typedPhone.startsWith('+')) {
-                return '+' + typedPhone.slice(1).replace(/[^\d]/g, '');
+        waitlistForm.addEventListener('submit', function (event) {
+            const currentEmail = normalizeEmail(emailInput.value);
+            if (!currentEmail || (currentEmail !== verifiedEmail && currentEmail !== verificationSentEmail)) {
+                event.preventDefault();
+                setEmailVerificationState('A verification code was sent to your email. Enter it below before submitting.', 'error');
+                sendVerificationEmail().catch(function () {
+                    setEmailVerificationState('Could not send verification email. Please try again.', 'error');
+                });
+                updateSubmitState();
+                return;
             }
-
-            const selectedCountry = iti.getSelectedCountryData();
-            const dialCode = selectedCountry && selectedCountry.dialCode
-                ? String(selectedCountry.dialCode).replace(/[^\d]/g, '')
-                : '';
-            const localDigits = typedPhone.replace(/[^\d]/g, '');
-
-            if (!localDigits) return '';
-            if (!dialCode) return '+' + localDigits;
-            if (localDigits.startsWith(dialCode)) return '+' + localDigits;
-            return '+' + dialCode + localDigits;
-        }
-
-        const waitlistForm = document.querySelector('.waitlist-form');
-        const onboardBtn = document.getElementById('onboard-btn');
-        const onboardBtnLabel = onboardBtn ? onboardBtn.querySelector('.btn-label') : null;
-
-        waitlistForm.addEventListener('submit', function () {
-            let formattedPhone = '';
-            try {
-                formattedPhone = (iti.getNumber() || '').trim();
-            } catch (err) {
-                formattedPhone = '';
-            }
-
-            // Save with explicit country code from selected country when formatter is empty.
-            phoneInput.value = formattedPhone || normalizePhoneWithCountryCode(phoneInput.value);
 
             if (onboardBtn) {
                 onboardBtn.disabled = true;
@@ -219,8 +463,11 @@
             if (onboardBtnLabel) {
                 onboardBtnLabel.textContent = 'Processing...';
             }
+            waitlistSubmissionStarted = true;
         });
+
+        window.addEventListener('pagehide', reportVerifiedEmailAbandonment);
+
     </script>
 </body>
 </html>
-

@@ -7,6 +7,7 @@
     <title>CoVise | Messages</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'messages.css' %}">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script>
@@ -16,7 +17,7 @@
         })();
     </script>
 </head>
-<body>
+<body class="has-app-mobile-nav">
     <div class="messages-app" id="messagesApp">
 
         <aside class="sidebar" aria-label="Primary">
@@ -46,9 +47,6 @@
                     <path d="M3 12h18"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
-                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
-            </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile" data-demo="Open your personal profile card and founder summary." data-demo-pos="side">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="8" r="4"></circle>
@@ -66,24 +64,37 @@
 
         <section class="conversation-panel">
             <div class="conv-top">
-                <h1>Messages</h1>
-                <button class="mobile-close-chat" id="mobileCloseChat" type="button"><i class="fa-solid fa-arrow-left"></i></button>
+                <div class="conv-top-title">
+                    <h1>Messages</h1>
+                    <div class="conv-top-title-actions">
+                        <div class="menu-wrap conv-title-menu-wrap">
+                            <button class="icon-btn" id="panelMoreMenuBtn" type="button" aria-label="More"><i class="fa-solid fa-ellipsis"></i></button>
+                            <div class="more-menu" id="panelMoreMenu">
+                                <button type="button" data-action="create-group"><i class="fa-solid fa-user-group"></i><span>Create Group</span></button>
+                            </div>
+                        </div>
+                        <button class="mobile-close-chat" id="mobileCloseChat" type="button"><i class="fa-solid fa-arrow-left"></i></button>
+                    </div>
+                </div>
+                <div class="conv-top-controls">
+                    <div class="conv-search conv-search-header">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="conversationSearch" type="text" placeholder="Search messages and contacts..." aria-label="Search messages and contacts">
+                    </div>
+                </div>
             </div>
-            <div class="request-wrap">
-                <button class="requests-toggle" id="requestsToggle" type="button">
-                    <span>Message Requests</span>
-                    <i class="fa-solid fa-chevron-down"></i>
-                </button>
-                <div class="requests-list" id="requestsList"></div>
-            </div>
-            <div class="conv-search"><i class="fa-solid fa-magnifying-glass"></i><input id="conversationSearch" type="text" placeholder="Search conversations..."></div>
+            <div class="conv-tabs-shell">
             <div class="conv-tabs">
                 <button class="tab-btn is-active" id="directTabBtn" data-tab="direct">Direct</button>
                 <button class="tab-btn" id="groupsTabBtn" data-tab="groups">Groups</button>
+                <button class="tab-btn" id="requestsTabBtn" data-tab="requests">Requests <span class="tab-count" id="requestsTabCount" hidden>0</span></button>
             </div>
+            </div>
+            <button class="panel-btn create-group-btn" id="createGroupBtn" type="button" hidden>Create Group</button>
             <div class="conv-list-wrap">
                 <div class="conversation-list" id="directList"></div>
                 <div class="conversation-list is-hidden" id="groupsList"></div>
+                <div class="requests-list is-hidden" id="requestsList"></div>
             </div>
         </section>
 
@@ -92,20 +103,18 @@
                 <button class="mobile-back-btn" id="mobileBackBtn" type="button"><i class="fa-solid fa-arrow-left"></i></button>
                 <div class="chat-contact">
                     <div class="avatar avatar-lg" id="chatAvatar">L</div>
-                    <div>
-                        <h2 id="chatName">Leena Al-Sabah</h2>
-                        <p id="chatStatus"><span class="chat-status-dot" id="chatStatusDot" aria-hidden="true"></span>Active now</p>
+                    <div class="chat-contact-copy">
+                        <a id="chatNameLink" class="chat-name-link" href="#"><h2 id="chatName">Leena Al-Sabah</h2></a>
+                        <p id="chatStatus">Active now</p>
                     </div>
                 </div>
-                <span class="match-pill" id="chatMatchPill">Tech Co-founder Match</span>
                 <div class="chat-actions">
                     <button class="icon-btn" id="searchInChatBtn" type="button" data-tooltip="Search in chat"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    <button class="icon-btn" id="attachFileBtn" type="button" data-tooltip="Attach file"><i class="fa-solid fa-paperclip"></i></button>
                     <button class="icon-btn" id="videoCallBtn" type="button" data-tooltip="Video Call"><i class="fa-solid fa-video"></i></button>
-                    <button class="icon-btn" id="toggleDetailsBtn" type="button" data-tooltip="Details"><i class="fa-solid fa-circle-info"></i></button>
                     <div class="menu-wrap">
-                        <button class="icon-btn" id="moreMenuBtn" type="button" data-tooltip="More"><i class="fa-solid fa-ellipsis"></i></button>
+                        <button class="icon-btn" id="toggleDetailsBtn" type="button" data-tooltip="Details"><i class="fa-solid fa-circle-info"></i></button>
                         <div class="more-menu" id="moreMenu">
+                            <button type="button" data-action="details"><i class="fa-solid fa-circle-info"></i><span>View Details</span></button>
                             <button type="button" data-action="contract"><i class="fa-regular fa-file-lines"></i><span>Create Contract</span></button>
                             <button type="button" data-action="summary"><i class="fa-solid fa-sparkles"></i><span>Summarize with AI</span></button>
                         </div>
@@ -119,11 +128,32 @@
                 </div>
             </div>
             <form class="chat-input-bar" id="chatInputBar" onsubmit="return false;">
+                <input id="chatFileInput" type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,application/zip,application/x-zip-compressed,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,audio/webm,audio/mp4,audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/x-wav">
                 <button class="input-icon-btn" id="inputAttachBtn" type="button"><i class="fa-solid fa-paperclip"></i></button>
+                <button class="input-icon-btn" id="voiceRecordBtn" type="button" aria-label="Record voice message"><i class="fa-solid fa-microphone"></i></button>
+                <span class="recording-indicator" id="recordingIndicator" hidden><i class="fa-solid fa-circle"></i> Recording</span>
                 <input id="chatInput" type="text" placeholder="Type a message...">
                 <button class="input-icon-btn" id="emojiPickerBtn" type="button"><i class="fa-regular fa-face-smile"></i></button>
                 <button class="send-btn" id="sendBtn" type="submit" disabled><i class="fa-solid fa-paper-plane"></i></button>
             </form>
+            <div class="emoji-picker-panel" id="emojiPickerPanel" hidden>
+                <div class="emoji-picker-head">
+                    <strong>Emoji</strong>
+                    <span>Tap to insert</span>
+                </div>
+                <div class="emoji-picker-group">
+                    <span class="emoji-picker-label">Faces</span>
+                    <div class="emoji-picker-grid" id="emojiFacesGrid"></div>
+                </div>
+                <div class="emoji-picker-group">
+                    <span class="emoji-picker-label">Hands</span>
+                    <div class="emoji-picker-grid" id="emojiHandsGrid"></div>
+                </div>
+                <div class="emoji-picker-group">
+                    <span class="emoji-picker-label">Ideas</span>
+                    <div class="emoji-picker-grid" id="emojiIdeasGrid"></div>
+                </div>
+            </div>
         </main>
 
         <aside class="details-panel" id="detailsPanel">
@@ -131,50 +161,55 @@
                 <h3 id="detailsName">Leena Al-Sabah</h3>
                 <button class="icon-btn" id="closeDetailsBtn" type="button"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="details-tabs">
-                <button class="details-tab is-active" data-details-tab="info">Info</button>
-                <button class="details-tab" data-details-tab="files">Files</button>
-                <button class="details-tab" data-details-tab="agreements">Agreements</button>
-                <button class="details-tab" data-details-tab="settings">Settings</button>
+            <div class="details-tabs-shell">
+                <div class="details-tabs">
+                    <button class="details-tab is-active" data-details-tab="info">Info</button>
+                    <button class="details-tab" data-details-tab="files">Files</button>
+                    <button class="details-tab" data-details-tab="agreements">Agreements</button>
+                    <button class="details-tab" data-details-tab="settings">Settings</button>
+                </div>
             </div>
             <div class="details-content">
                 <section class="details-pane is-active" data-pane="info">
                     <div class="details-profile">
                         <div class="avatar avatar-xl" id="detailsAvatar">L</div>
-                        <h4 id="detailsPersonName">Leena Al-Sabah</h4>
-                        <span class="match-pill" id="detailsMatchPill">Conversation details</span>
-                        <p class="meta-row"><strong>Matched on:</strong> <span id="detailsMatchedOn">-</span></p>
-                        <p class="meta-row"><strong>User type:</strong> <span id="detailsUserType">-</span></p>
-                        <p class="meta-row"><strong>Industry:</strong> <span id="detailsIndustry">-</span></p>
-                        <p class="meta-row"><strong>Venture stage:</strong> <span id="detailsStage">-</span></p>
+                        <a id="detailsPersonLink" class="details-person-link" href="#"><h4 id="detailsPersonName">Leena Al-Sabah</h4></a>
+                        <div class="details-meta-stack">
+                            <p class="meta-row"><strong>Matched on:</strong> <span id="detailsMatchedOn">-</span></p>
+                            <p class="meta-row"><strong>User type:</strong> <span id="detailsUserType">-</span></p>
+                            <p class="meta-row"><strong>Industry:</strong> <span id="detailsIndustry">-</span></p>
+                            <p class="meta-row"><strong>Venture stage:</strong> <span id="detailsStage">-</span></p>
+                        </div>
                         <div class="score-wrap">
                             <div class="score-head"><span>Founder Conviction Score</span><span id="convictionValue">-</span></div>
                             <div class="score-track"><div class="score-fill" id="convictionFill"></div></div>
                         </div>
                         <p class="meta-row"><strong>Mutual connections:</strong> <span id="detailsMutual">-</span></p>
-                        <button class="panel-btn" type="button">View Full Profile</button>
+                        <a class="panel-btn details-primary-btn" id="viewFullProfileBtn" href="#">View Full Profile</a>
                     </div>
                 </section>
                 <section class="details-pane" data-pane="files">
-                    <p class="muted-note">No shared files yet.</p>
+                    <div id="sharedFilesList" class="shared-files-list">
+                        <p class="muted-note">No shared files yet.</p>
+                    </div>
                 </section>
                 <section class="details-pane" data-pane="agreements">
                     <p class="muted-note">No agreements yet.</p>
-                    <button class="panel-btn" id="createAgreementBtn" type="button">Create New Agreement</button>
+                    <button class="panel-btn details-primary-btn" id="createAgreementBtn" type="button">Create New Agreement</button>
                 </section>
                 <section class="details-pane" data-pane="settings">
-                    <label class="toggle-row"><span>Mute notifications</span><input type="checkbox"><span class="toggle-slider"></span></label>
-                    <label class="toggle-row"><span>Pin conversation</span><input type="checkbox"><span class="toggle-slider"></span></label>
+                    <label class="toggle-row"><span>Mute notifications</span><input id="muteNotificationsToggle" type="checkbox"><span class="toggle-slider"></span></label>
+                    <label class="toggle-row"><span>Record chat history</span><input id="recordingModeToggle" type="checkbox"><span class="toggle-slider"></span></label>
                     <div class="settings-actions">
-                        <button class="text-btn danger" id="removeContactBtn" type="button">Remove Contact</button>
                         <button class="text-btn danger" id="blockUserBtn" type="button">Block User</button>
                         <button class="text-btn" id="reportUserBtn" type="button">Report User</button>
-                        <button class="text-btn" id="clearChatBtn" type="button">Clear Chat History</button>
+                        <button class="text-btn danger" id="deleteConversationBtn" type="button">Delete Conversation</button>
                     </div>
                 </section>
             </div>
         </aside>
     </div>
+    {% include "includes/app_mobile_nav.html" with active_page='messages' show_mobile_back=False %}
 
     <div class="modal-backdrop" id="modalBackdrop">
         <div class="modal-card">
@@ -187,9 +222,12 @@
     {{ request.user.id|json_script:"current-user-id" }}
     {{ conversation_data|json_script:"conversation-data" }}
     {{ conversation_requests|json_script:"conversation-request-data" }}
+    {{ friend_options|json_script:"friend-options" }}
     {{ active_conversation_id|json_script:"active-conversation-id" }}
+    {{ message_error|json_script:"message-error" }}
 
     <script src="{% static 'messages.js' %}"></script>
+    <script src="{% static 'notifications.js' %}"></script>
 
 </body>
 </html>

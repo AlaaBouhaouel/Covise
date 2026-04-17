@@ -8,6 +8,7 @@
     <title>CoVise | Post</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'home.css' %}">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script>
@@ -17,7 +18,7 @@
         })();
     </script>
 </head>
-<body>
+<body class="has-app-mobile-nav">
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home" title="Go to Home">
@@ -45,9 +46,6 @@
                     <path d="M3 12h18"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo" title="Open CoVise Advisor">
-                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
-            </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="8" r="4"></circle>
@@ -65,38 +63,60 @@
         <main class="main">
             <header class="home-header" aria-label="Post top bar">
                 <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
-                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
-                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
-                    <span>CoVise</span>
+                    <span class="home-brand-wordmark">CoVise</span>
                 </a>
                 <div class="home-header-actions">
-                    <a class="profile-button" href="{% url 'Home' %}" aria-label="Back to home" title="Back to Home">
+                    <a class="header-nav-btn" href="{% url 'Home' %}" aria-label="Back to home" title="Back to Home">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M15 18l-6-6 6-6"></path>
                         </svg>
+                    </a>
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
+                        <span>{{ request.user.avatar_initials }}</span>
                     </a>
                 </div>
             </header>
 
             <section class="post-detail-shell">
                 <article class="post-detail-card {{ post.theme_class }}">
+                    <div class="post-detail-head">
+                        <div class="post-detail-head-main">
                     <div class="post-detail-meta">
                         <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
                             <div class="post-detail-avatar">{{ post.user.avatar_initials }}</div>
                         </a>
                         <div class="post-detail-meta-copy">
-                            <div class="post-detail-author"><a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a></div>
-                            <div class="post-detail-sub">{{ post.get_post_type_display }} · {{ post.relative_time }}</div>
+                            <div class="post-detail-author">
+                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a>
+                                {% if post.show_cofounder_badge %}
+                                <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
+                                    <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="post-detail-sub">
+                                {{ post.get_post_type_display }}
+                                {% if post.feed_country %} · {{ post.feed_country }}{% endif %}
+                                · {{ post.relative_time }}
+                            </div>
+                        </div>
+                        </div>
                         </div>
                         <div class="post-detail-tools">
-                            <span class="structured-badge {% if post.post_type == 'update' %}badge-update{% elif post.post_type == 'ask' or post.post_type == 'ask_me_anything' %}badge-insight{% elif post.post_type == 'idea' %}badge-cofounder{% elif post.post_type == 'win' %}badge-opportunity{% else %}badge-update{% endif %}">{{ post.get_post_type_display }}</span>
+                            {% for skill in post.feed_skills %}
+                            <span class="post-detail-skill-badge post-detail-skill-badge--{{ skill.tone }}" data-tone="{{ skill.tone }}">{{ skill.label }}</span>
+                            {% endfor %}
                         </div>
                     </div>
                     <h1 class="post-detail-title">{{ post.feed_title }}</h1>
-                    <div class="post-detail-content">{{ post.content }}</div>
-                    {% if post.image %}
-                    <div class="post-detail-image">
-                        <img src="{{ post.image.url }}" alt="{{ post.feed_title }}">
+                    <div class="post-detail-content">{{ post.content_html|safe }}</div>
+                    {% if post.feed_images %}
+                    <div class="post-gallery post-gallery-detail post-gallery-count-{{ post.feed_image_count }}">
+                        {% for image in post.feed_images %}
+                        <div class="post-gallery-item">
+                            <img src="{{ image.url }}" alt="{{ image.alt }}" class="post-detail-gallery-image" data-full-image="{{ image.url }}">
+                        </div>
+                        {% endfor %}
                     </div>
                     {% endif %}
                     <div class="post-detail-actions">
@@ -112,67 +132,52 @@
                             <i class="fa-regular fa-comment"></i>
                             <span>{{ post.comments.count }}</span>
                         </button>
-                        <button class="action-btn bookmark-btn" type="button" aria-label="Save post" title="Save this post">
-                            <i class="fa-regular fa-bookmark"></i>
+                        <button class="action-btn bookmark-btn{% if post.is_saved %} is-active{% endif %}" type="button" aria-label="Save post" title="Save this post" data-post-id="{{ post.id }}" data-saved="{% if post.is_saved %}true{% else %}false{% endif %}">
+                            <i class="{% if post.is_saved %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i>
                         </button>
                     </div>
                 </article>
 
-                <section class="post-comments-card">
+                <div class="post-comment-compose-shell">
+                    <form class="post-comment-compose" id="postCommentForm" data-author-name="{{ request.user.full_name|default:request.user.email }}" data-author-url="{% url 'Public Profile' request.user.id %}" data-avatar-initials="{{ request.user.avatar_initials }}" data-avatar-url="{% if request.user.profile.profile_image %}{{ request.user.profile.profile_image.url }}{% endif %}">
+                        <div class="post-comment-compose-row">
+                            <input id="postCommentInput" type="text" placeholder="Write a comment..." data-post-id="{{ post.id }}">
+                            <button id="postCommentSend" type="submit" aria-label="Send comment" title="Send your comment">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <section class="post-comments-card" id="postComments">
                     <div class="post-comment-list">
-                        {% for comment in post.comments.all %}
-                        <article class="post-comment">
-                            <div class="post-comment-head">
-                                <div class="post-comment-user">
-                                    <a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link" aria-label="View {{ comment.user.full_name|default:comment.user.email }} profile"><div class="post-comment-avatar">{{ comment.user.avatar_initials }}</div></a>
-                                    <div>
-                                        <h3><a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link">{{ comment.user.full_name|default:comment.user.email }}</a></h3>
-                                        <p>{{ comment.created_at|timesince }} ago</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="post-comment-body">{{ comment.content }}</div>
-                            <div class="post-comment-actions">
-                                <button class="action-btn comment-reaction like-btn" type="button" title="Like this comment" data-count="{{ comment.up }}" data-liked="false" aria-label="Like comment">
-                                    <i class="fa-regular fa-thumbs-up"></i>
-                                    <span class="count">{{ comment.up }}</span>
-                                </button>
-                                <button class="action-btn comment-reaction dislike-btn" type="button" title="Dislike this comment" data-count="{{ comment.down }}" data-disliked="false" aria-label="Dislike comment">
-                                    <i class="fa-regular fa-thumbs-down"></i>
-                                    <span class="dislike-count">{{ comment.down }}</span>
-                                </button>
-                                <button class="action-btn comment-reaction" type="button" aria-label="Comment on comment" title="Reply to this comment">
-                                    <i class="fa-regular fa-comment"></i>
-                                </button>
-                                <button class="action-btn comment-reaction comment-more-btn" type="button" aria-label="More comment actions" title="Open more comment actions">
-                                    <i class="fa-solid fa-ellipsis-vertical"></i>
-                                </button>
-                            </div>
-                        </article>
+                        {% for comment in post.comment_threads %}
+                        {% include "includes/post_detail_comment.html" with comment=comment %}
                         {% empty %}
                         <div class="post-comments-empty">No comments yet.</div>
                         {% endfor %}
-                    </div>
-
-                    <div class="post-comment-compose">
-                        <input id="postCommentInput" type="text" placeholder="Write a comment..." data-post-id="{{ post.id }}">
-                        <button id="postCommentSend" type="button" aria-label="Send comment" title="Send your comment">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                            </svg>
-                        </button>
                     </div>
                 </section>
             </section>
         </main>
     </div>
+    <div class="post-image-lightbox" id="postImageLightbox" hidden>
+        <button class="post-image-lightbox-close" id="postImageLightboxClose" type="button" aria-label="Close image viewer">&times;</button>
+        <div class="post-image-lightbox-backdrop" data-close-lightbox></div>
+        <div class="post-image-lightbox-content">
+            <img id="postImageLightboxImg" alt="Expanded post image">
+        </div>
+    </div>
 
     <style>
         html,
         body {
-            height: 100%;
-            overflow: hidden;
+            min-height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
         .unstyled-link,
         .unstyled-link:hover,
@@ -182,9 +187,8 @@
             text-decoration: none;
         }
         .post-detail-shell {
-            width: 80%;
+            width: min(820px, 100%);
             min-width: 0;
-            height: calc(100vh - 92px);
             margin: 0 auto;
             display: grid;
             grid-template-columns: minmax(0, 1fr);
@@ -193,11 +197,11 @@
         }
         .post-detail-card,
         .post-comments-card {
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
             border-radius: 18px;
             padding: 14px 10px 12px;
             min-width: 0;
-            background-color: var(--background);
+            background-color: var(--panel);
 
         }
         .post-detail-card {
@@ -206,12 +210,50 @@
             top: calc(var(--spacing) * 11);
             z-index: 5;
         }
+        .header-nav-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: rgba(211, 224, 255, 0.68);
+            display: inline-grid;
+            place-items: center;
+            text-decoration: none;
+            transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+        }
+        .header-nav-btn svg {
+            width: 17px;
+            height: 17px;
+            stroke: currentColor;
+        }
+        .header-nav-btn:hover {
+            border-color: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(243, 247, 255, 0.92);
+        }
+        [data-theme="light"] .header-nav-btn {
+            color: rgba(45, 58, 92, 0.66);
+        }
+        [data-theme="light"] .header-nav-btn:hover {
+            background: rgba(51, 86, 184, 0.08);
+            border-color: rgba(51, 86, 184, 0.12);
+            color: rgba(26, 33, 64, 0.94);
+        }
         .post-comments-card {
             background: var(--panel);
-            max-height: calc(100vh - 200px);
-            overflow: hidden;
+            overflow: visible;
+        }
+        .post-detail-head {
             display: grid;
-            grid-template-rows: 1fr;
+            gap: 10px;
+        }
+        .post-detail-head-main {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 0;
         }
         .post-detail-meta,
         .post-comment-user {
@@ -220,25 +262,46 @@
             gap: 10px;
         }
         .post-detail-meta {
-            justify-content: space-between;
+            flex: 1 1 auto;
+            min-width: 0;
         }
         .post-detail-meta-copy {
             min-width: 0;
             flex: 1;
         }
         .post-detail-tools {
-            flex: 0 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
+            min-width: 0;
+            margin-left: 38px;
         }
-        .structured-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 11px; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; color: #ffffff; }
+        .post-detail-skill-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 11px; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; color: var(--feed-chip-text); background: var(--feed-chip-bg); border: 1px solid var(--feed-chip-border); }
+        .post-detail-skill-badge--blue,
+        .post-detail-skill-badge[data-tone="blue"] { color: var(--skill-blue-text); background: var(--skill-blue-bg); border-color: var(--skill-blue-border); }
+        .post-detail-skill-badge--violet,
+        .post-detail-skill-badge[data-tone="violet"] { color: var(--skill-violet-text); background: var(--skill-violet-bg); border-color: var(--skill-violet-border); }
+        .post-detail-skill-badge--amber,
+        .post-detail-skill-badge[data-tone="amber"] { color: var(--skill-amber-text); background: var(--skill-amber-bg); border-color: var(--skill-amber-border); }
+        .post-detail-skill-badge--green,
+        .post-detail-skill-badge[data-tone="green"] { color: var(--skill-green-text); background: var(--skill-green-bg); border-color: var(--skill-green-border); }
+        .post-detail-skill-badge--red,
+        .post-detail-skill-badge[data-tone="red"] { color: var(--skill-red-text); background: var(--skill-red-bg); border-color: var(--skill-red-border); }
+        .post-detail-skill-badge[data-tone="default"] { color: var(--feed-chip-text); background: var(--feed-chip-bg); border-color: var(--feed-chip-border); }
         .badge-update { background: var(--accent); }
         .badge-cofounder { background: #7c3aed; }
         .badge-insight { background: #d97706; }
         .badge-opportunity { background: #059669; }
         .post-detail-avatar,
-        .post-comment-avatar {
-            width: 24px;
-            height: 24px;
+        .post-comment-avatar,
+        .post-comment-avatar-image {
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
+        }
+        .post-detail-avatar,
+        .post-comment-avatar {
             display: grid;
             place-items: center;
             font-size: 0.62rem;
@@ -247,23 +310,34 @@
             background: rgba(64, 110, 196, 0.38);
             border: 1px solid rgba(123, 167, 255, 0.42);
         }
+        .post-comment-avatar-image {
+            object-fit: cover;
+            border: 1px solid rgba(123, 167, 255, 0.42);
+            display: block;
+        }
         .post-detail-author,
         .post-comment-user h3 {
-            font-size: 0.72rem;
+            font-size: 0.82rem;
             font-weight: 700;
             color: var(--white);
+        }
+        .post-detail-author {
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .post-detail-sub,
         .post-comment-user p {
             margin-top: 2px;
-            font-size: 0.68rem;
+            font-size: 0.74rem;
             color: var(--muted);
         }
         .post-detail-title {
             margin-top: 14px;
-            font-size: 1.05rem;
+            font-size: 1.12rem;
             font-weight: 600;
-            color: #dbe8fb;
+            color: var(--white);
             line-height: 1.2;
             letter-spacing: -0.02em;
         }
@@ -271,18 +345,67 @@
             margin-top: 12px;
             font-size: 0.8rem;
             line-height: 1.5;
-            color: rgba(231, 239, 255, 0.92);
+            color: var(--text);
             white-space: pre-wrap;
         }
-        .post-detail-image {
+        .post-gallery-detail {
             margin-top: 14px;
         }
-        .post-detail-image img {
+        .post-detail-gallery-image {
+            cursor: zoom-in;
+        }
+        .post-image-lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .post-image-lightbox[hidden] {
+            display: none !important;
+        }
+        .post-image-lightbox-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(2, 4, 10, 0.82);
+            backdrop-filter: blur(8px);
+        }
+        .post-image-lightbox-content {
+            position: relative;
+            z-index: 1;
+            width: min(1080px, 100%);
+            max-height: calc(100vh - 48px);
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(120, 150, 255, 0.22);
+            background: rgba(6, 10, 18, 0.96);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .post-image-lightbox-content img {
             width: 100%;
-            max-height: 360px;
-            object-fit: cover;
-            border-radius: 16px;
-            border: 1px solid rgba(120, 150, 255, 0.2);
+            max-height: calc(100vh - 48px);
+            object-fit: contain;
+            background: rgba(6, 10, 18, 0.96);
+            display: block;
+        }
+        .post-image-lightbox-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            z-index: 2;
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(120, 150, 255, 0.24);
+            border-radius: 999px;
+            background: rgba(6, 10, 18, 0.88);
+            color: #f3f7ff;
+            font-size: 1.3rem;
+            line-height: 1;
+            cursor: pointer;
         }
         .post-detail-card.post-tone-default {
             background: transparent;
@@ -315,9 +438,9 @@
             min-height: 34px;
             padding: 0 13px;
             border-radius: 999px;
-            border: 1px solid rgba(214, 226, 248, 0.16);
+            border: 1px solid var(--border);
             background: rgba(255, 255, 255, 0.06);
-            color: rgba(239, 245, 255, 0.96);
+            color: var(--text);
             font: inherit;
             font-size: 0.78rem;
             font-weight: 700;
@@ -327,8 +450,9 @@
             font-size: 0.88rem;
         }
         .action-btn:hover {
-            border-color: rgba(214, 226, 248, 0.3);
-            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(120, 150, 255, 0.3);
+            background: color-mix(in srgb, var(--accent) 10%, transparent);
+            color: var(--white);
         }
         .action-btn.is-active {
             color: var(--white);
@@ -347,7 +471,6 @@
         .post-comment-list {
             display: grid;
             gap: 12px;
-            overflow-y: auto;
             padding: 0 22px;
             padding-bottom: 20px;
             scrollbar-width: none;
@@ -359,6 +482,7 @@
         .post-comment {
             border-top: 1px solid rgba(255, 255, 255, 0.06);
             padding-top: 12px;
+            padding-left: calc(var(--thread-depth, 0) * 18px);
         }
         .post-comment:first-child {
             border-top: 0;
@@ -369,7 +493,7 @@
             padding-left: 40px;
             font-size: 0.74rem;
             line-height: 1.5;
-            color: rgba(231, 239, 255, 0.84);
+            color: var(--text);
         }
         .post-comment-actions {
             display: flex;
@@ -377,6 +501,69 @@
             padding-left: 40px;
             margin-top: 10px;
             flex-wrap: wrap;
+            position: relative;
+        }
+        .post-comment-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .comment-more-menu {
+            position: relative;
+            margin-left: auto;
+        }
+        .comment-more-trigger {
+            list-style: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease;
+        }
+        .comment-more-trigger::-webkit-details-marker {
+            display: none;
+        }
+        .comment-more-trigger:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--white);
+        }
+        .comment-more-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 148px;
+            display: grid;
+            gap: 4px;
+            padding: 8px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--panel-elevated);
+            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34);
+            z-index: 30;
+        }
+        .comment-more-action {
+            width: 100%;
+            min-height: 36px;
+            border: 0;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 10px;
+            cursor: pointer;
+            text-align: left;
+            font: inherit;
+            font-size: 0.72rem;
+        }
+        .comment-more-action:hover {
+            background: rgba(120, 150, 255, 0.14);
+            color: var(--white);
         }
         .post-comment-actions .action-btn {
             min-height: 30px;
@@ -386,19 +573,158 @@
         .post-comment-actions .action-btn i {
             font-size: 0.8rem;
         }
-        .post-comment-compose {
+        .comment-reaction-chip.is-active,
+        .comment-inline-action.is-active {
+            color: var(--white);
+            border-color: rgba(120, 150, 255, 0.4);
+            background: rgba(120, 150, 255, 0.14);
+        }
+        .comment-reaction-chip-main {
+            min-width: 72px;
+            justify-content: center;
+        }
+        .comment-reaction-chip-main i {
+            font-size: 0.84rem;
+        }
+        .comment-reaction-extra-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .comment-reaction-chip-extra[hidden] {
+            display: none !important;
+        }
+        .comment-reaction-picker {
+            position: absolute;
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--panel-elevated);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+            transform: translateY(-100%);
+            z-index: 20;
+        }
+        .comment-reaction-picker[hidden] {
+            display: none !important;
+        }
+        .comment-reaction-picker-option {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--white);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+        }
+        .comment-reaction-picker-option:hover {
+            transform: translateY(-2px) scale(1.04);
+            background: rgba(120, 150, 255, 0.16);
+            border-color: rgba(120, 150, 255, 0.24);
+        }
+        .reaction-burst {
             position: fixed;
-            left: 52%;
-            bottom: 0;
-            transform: translateX(-50%);
-            width: 70%;
+            font-size: 1.15rem;
+            pointer-events: none;
+            z-index: 9999;
+            animation: reactionBurstFly 850ms ease-out forwards;
+            filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
+        }
+        @keyframes reactionBurstFly {
+            0% {
+                opacity: 0;
+                transform: translate3d(0, 0, 0) scale(0.5) rotate(0deg);
+            }
+            15% {
+                opacity: 1;
+                transform: translate3d(var(--drift-x), -8px, 0) scale(1) rotate(var(--tilt));
+            }
+            100% {
+                opacity: 0;
+                transform: translate3d(calc(var(--drift-x) * 1.55), -92px, 0) scale(1.08) rotate(var(--tilt));
+            }
+        }
+        .comment-state-badge {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 6px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+        .comment-state-badge-pinned {
+            background: color-mix(in srgb, var(--green) 14%, transparent);
+            color: var(--green);
+        }
+        .post-mention-link {
+            color: #a7c7ff;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .post-comment-children {
+            display: grid;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .post-inline-reply-form {
             display: flex;
             align-items: center;
             gap: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 14px 10px 18px;
-            background: linear-gradient(180deg, rgba(5, 6, 11, 0) 0%, rgba(5, 6, 11, 0.9) 24%, rgba(5, 6, 11, 0.98) 100%);
-            z-index: 30;
+            margin-top: 12px;
+            margin-left: 40px;
+            padding-top: 8px;
+        }
+        .post-inline-reply-form[hidden] {
+            display: none !important;
+        }
+        .post-inline-reply-input {
+            flex: 1;
+            min-height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            padding: 0 16px;
+            font: inherit;
+            font-size: 0.74rem;
+        }
+        .post-inline-reply-send {
+            width: 40px;
+            height: 40px;
+            flex: 0 0 auto;
+            border-radius: 10px;
+            border-color: rgba(120, 150, 255, 0.35);
+            background: rgba(120, 150, 255, 0.14);
+            border: 1px solid rgba(120, 150, 255, 0.35);
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+        .post-comment-compose-shell {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: var(--panel);
+            backdrop-filter: blur(16px);
+        }
+        .post-comment-compose {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px 16px 16px;
+        }
+        .post-comment-compose-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
         }
         .post-comment-compose input {
             flex: 1;
@@ -407,7 +733,7 @@
             border: 1px solid var(--border);
             background: rgba(255, 255, 255, 0.04);
             color: var(--text);
-            padding: 0 30px;
+            padding: 0 18px;
             font: inherit;
             font-size: 0.74rem;
         }
@@ -430,39 +756,73 @@
             }
             .post-detail-shell {
                 width: 100%;
-                height: auto;
             }
             .post-detail-card {
                 position: static;
             }
-            .post-comments-card {
-                max-height: none;
+            .post-comment-list { padding: 0 16px 18px; }
+            .post-comment { padding-left: calc(var(--thread-depth, 0) * 12px); }
+            .post-comment-children { gap: 10px; }
+            .post-inline-reply-form { margin-left: 0; }
+            .post-detail-head {
+                gap: 8px;
             }
-            .post-comment-list {
-                overflow: visible;
-                padding-bottom: 0;
-            }
-            .post-comment-compose {
-                position: static;
-                transform: none;
-                width: 100%;
-                padding-left: 0;
-                padding-right: 0;
+            .post-detail-tools {
+                margin-left: 38px;
             }
         }
     </style>
 
+    {% include "includes/app_mobile_nav.html" with active_page='' show_mobile_back=False %}
+    <script>
+        (function() {
+            var lightbox = document.getElementById('postImageLightbox');
+            var lightboxImage = document.getElementById('postImageLightboxImg');
+            var lightboxClose = document.getElementById('postImageLightboxClose');
+            if (!lightbox || !lightboxImage) return;
+
+            function closeLightbox() {
+                lightbox.hidden = true;
+                lightboxImage.removeAttribute('src');
+            }
+
+            document.querySelectorAll('.post-detail-gallery-image').forEach(function(image) {
+                image.addEventListener('click', function() {
+                    var source = image.getAttribute('data-full-image') || image.getAttribute('src') || '';
+                    if (!source) return;
+                    lightboxImage.src = source;
+                    lightboxImage.alt = image.getAttribute('alt') || 'Expanded post image';
+                    lightbox.hidden = false;
+                });
+            });
+
+            if (lightboxClose) {
+                lightboxClose.addEventListener('click', closeLightbox);
+            }
+
+            lightbox.querySelectorAll('[data-close-lightbox]').forEach(function(node) {
+                node.addEventListener('click', closeLightbox);
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && !lightbox.hidden) {
+                    closeLightbox();
+                }
+            });
+        })();
+    </script>
+
     <script>
         (function() {
             var commentJumpButton = document.querySelector('.comment-jump-btn');
-            var commentList = document.querySelector('.post-comments-card');
+            var commentList = document.getElementById('postComments');
             if (commentJumpButton && commentList) {
                 commentJumpButton.addEventListener('click', function() {
                     commentList.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
             }
 
-            document.querySelectorAll('.like-btn').forEach(function(button) {
+            document.querySelectorAll('.post-detail-actions .like-btn').forEach(function(button) {
                 button.addEventListener('click', function() {
                     var icon = button.querySelector('i');
                     var countNode = button.querySelector('.count');
@@ -491,10 +851,13 @@
                     button.setAttribute('data-count', String(count));
                     countNode.textContent = String(count);
                     button.classList.toggle('is-active', !liked);
+                    if (!liked) {
+                        spawnReactionBurst(button, 'thumbs_up');
+                    }
                 });
             });
 
-            document.querySelectorAll('.dislike-btn').forEach(function(button) {
+            document.querySelectorAll('.post-detail-actions .dislike-btn').forEach(function(button) {
                 button.addEventListener('click', function() {
                     var icon = button.querySelector('i');
                     var countNode = button.querySelector('.dislike-count');
@@ -523,6 +886,31 @@
                     button.setAttribute('data-count', String(count));
                     countNode.textContent = String(count);
                     button.classList.toggle('is-active', !disliked);
+                    if (!disliked) {
+                        spawnReactionBurst(button, 'thumbs_down');
+                    }
+                });
+            });
+            document.querySelectorAll('.post-detail-actions .bookmark-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var postId = button.getAttribute('data-post-id');
+                    if (!postId) return;
+                    fetch('/posts/' + postId + '/save/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(function(response) {
+                        if (!response.ok) throw new Error('Request failed');
+                        return response.json();
+                    }).then(function(data) {
+                        if (typeof data.saved === 'undefined') return;
+                        button.setAttribute('data-saved', data.saved ? 'true' : 'false');
+                        button.classList.toggle('is-active', !!data.saved);
+                        var icon = button.querySelector('i');
+                        if (icon) icon.className = (data.saved ? 'fa-solid' : 'fa-regular') + ' fa-bookmark';
+                    });
                 });
             });
 
@@ -604,29 +992,385 @@
                 }
                 return cookieValue;
             }
+            function normalizeRelativeTimes(root) {
+                var scope = root || document.body;
+                var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+                var node;
+                var pattern = /\b0\s*(?:mins?|minutes?)\s+ago\b/gi;
+                while ((node = walker.nextNode())) {
+                    if (!node.nodeValue) continue;
+                    pattern.lastIndex = 0;
+                    if (!pattern.test(node.nodeValue)) continue;
+                    node.nodeValue = node.nodeValue.replace(pattern, 'right now');
+                }
+            }
+            function reactionEmoji(reaction) {
+                return {
+                    thumbs_up: '\u{1F44D}',
+                    thumbs_down: '\u{1F44E}',
+                    fire: '\u{1F525}',
+                    rocket: '\u{1F680}',
+                    crazy: '\u{1F92F}'
+                }[reaction] || '\u{2728}';
+            }
+            function spawnReactionBurst(sourceNode, reaction) {
+                if (!sourceNode) return;
+                var rect = sourceNode.getBoundingClientRect();
+                var centerX = rect.left + (rect.width / 2);
+                var centerY = rect.top + (rect.height / 2);
+                for (var i = 0; i < 6; i += 1) {
+                    var burst = document.createElement('span');
+                    burst.className = 'reaction-burst';
+                    burst.textContent = reactionEmoji(reaction);
+                    burst.style.left = centerX + 'px';
+                    burst.style.top = centerY + 'px';
+                    burst.style.setProperty('--drift-x', ((Math.random() * 52) - 26) + 'px');
+                    burst.style.setProperty('--tilt', ((Math.random() * 40) - 20) + 'deg');
+                    document.body.appendChild(burst);
+                    window.setTimeout(function(node) {
+                        if (node && node.parentNode) node.parentNode.removeChild(node);
+                    }, 900, burst);
+                }
+            }
+            function closeReactionPickers(exceptPicker) {
+                document.querySelectorAll('.comment-reaction-picker').forEach(function(picker) {
+                    if (picker !== exceptPicker) picker.hidden = true;
+                });
+            }
+            function positionReactionPicker(picker, trigger) {
+                if (!picker || !trigger) return;
+                picker.hidden = false;
+                picker.style.left = Math.max(0, trigger.offsetLeft - 6) + 'px';
+                picker.style.top = Math.max(0, trigger.offsetTop - 12) + 'px';
+            }
+            function updateCommentReactionUI(commentCard, data) {
+                if (!commentCard || !data) return;
+                var counts = {
+                    thumbs_up: Number(data.thumbs_up || 0),
+                    thumbs_down: Number(data.thumbs_down || 0),
+                    fire: Number(data.fire || 0),
+                    rocket: Number(data.rocket || 0),
+                    crazy: Number(data.crazy || 0)
+                };
+                var viewerReactions = data.viewer_reactions || [];
+                ['thumbs_up', 'thumbs_down', 'fire', 'rocket', 'crazy'].forEach(function(reaction) {
+                    var button = commentCard.querySelector('.comment-reaction-chip[data-reaction="' + reaction + '"]');
+                    if (!button) return;
+                    var countNode = button.querySelector('.count');
+                    if (countNode) countNode.textContent = String(counts[reaction] || 0);
+                    button.classList.toggle('is-active', viewerReactions.indexOf(reaction) !== -1);
+                    if (reaction === 'fire' || reaction === 'rocket' || reaction === 'crazy') {
+                        button.hidden = !(counts[reaction] > 0 || viewerReactions.indexOf(reaction) !== -1);
+                    }
+                });
+                var extraGroup = commentCard.querySelector('[data-reaction-extra-group]');
+                if (extraGroup) {
+                    var hasVisibleExtra = Array.prototype.slice.call(extraGroup.querySelectorAll('.comment-reaction-chip-extra')).some(function(button) {
+                        return !button.hidden;
+                    });
+                    extraGroup.hidden = !hasVisibleExtra;
+                }
+            }
+            function sendCommentReaction(button, reaction) {
+                var reactionCommentId = button.getAttribute('data-comment-id');
+                if (!reactionCommentId || !reaction) return Promise.resolve();
+                return fetch('/profile/' + reactionCommentId + '/' + reaction + '/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function(response) {
+                    if (!response.ok) throw new Error('Request failed');
+                    return response.json();
+                }).then(function(data) {
+                    updateCommentReactionUI(button.closest('.post-comment'), data);
+                    spawnReactionBurst(button, reaction);
+                    return data;
+                });
+            }
+            normalizeRelativeTimes(document.body);
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#39;');
+            }
             var input = document.getElementById('postCommentInput');
-            var send = document.getElementById('postCommentSend');
-            if (!input || !send) return;
-            send.addEventListener('click', function() {
-                var content = input.value.trim();
-                var postId = input.getAttribute('data-post-id');
-                if (!content || !postId) return;
-                fetch('/posts/' + postId + '/comment/', {
+            var postCommentForm = document.getElementById('postCommentForm');
+            var commentListNode = document.querySelector('.post-comment-list');
+
+            function submitComment(postId, content, parentId) {
+                return fetch('/posts/' + postId + '/comment/', {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': getCookie('csrftoken'),
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ content: content })
+                    body: JSON.stringify({ content: content, parent_id: parentId || null })
                 }).then(function(response) {
                     if (!response.ok) throw new Error('Request failed');
                     return response.json();
-                }).then(function() {
-                    window.location.reload();
                 });
+            }
+
+            function createTopLevelCommentMarkup(data) {
+                if (!postCommentForm) return '';
+                var authorName = postCommentForm.getAttribute('data-author-name') || data.comment.author;
+                var authorUrl = postCommentForm.getAttribute('data-author-url') || ('/profile/user/' + data.comment.user_id + '/');
+                var avatarInitials = postCommentForm.getAttribute('data-avatar-initials') || data.comment.avatar_initials;
+                var avatarUrl = postCommentForm.getAttribute('data-avatar-url') || '';
+                var avatarMarkup = avatarUrl
+                    ? '<img class="post-comment-avatar-image" src="' + escapeHtml(avatarUrl) + '" alt="' + escapeHtml(authorName) + ' avatar">'
+                    : '<div class="post-comment-avatar">' + escapeHtml(avatarInitials) + '</div>';
+                return '' +
+                    '<article class="post-comment post-comment-depth-0" data-comment-id="' + data.comment.id + '" style="--thread-depth: 0;">' +
+                        '<div class="post-comment-head">' +
+                            '<div class="post-comment-user">' +
+                                '<a href="' + escapeHtml(authorUrl) + '" class="unstyled-link" aria-label="View ' + escapeHtml(authorName) + ' profile">' + avatarMarkup + '</a>' +
+                                '<div>' +
+                                    '<h3><a href="' + escapeHtml(authorUrl) + '" class="unstyled-link">' + escapeHtml(authorName) + '</a></h3>' +
+                                    '<p>' + data.comment.created_at + '</p>' +
+                                '</div>' +
+                            '</div>' +
+                            ((data.comment.can_pin || data.comment.can_edit || data.comment.can_delete) ? '<details class="comment-more-menu"><summary class="comment-more-trigger" aria-label="Comment actions"><i class="fa-solid fa-ellipsis-vertical"></i></summary><div class="comment-more-dropdown">' +
+                                (data.comment.can_pin ? '<button class="comment-more-action comment-inline-action" type="button" data-comment-action="pin" data-comment-id="' + data.comment.id + '"><i class="fa-solid fa-thumbtack"></i><span>Pin</span></button>' : '') +
+                                (data.comment.can_edit ? '<button class="comment-more-action comment-inline-action" type="button" data-comment-action="edit" data-comment-id="' + data.comment.id + '" data-comment-content="' + escapeHtml(data.comment.content) + '"><i class="fa-regular fa-pen-to-square"></i><span>Edit</span></button>' : '') +
+                                (data.comment.can_delete ? '<button class="comment-more-action comment-inline-action" type="button" data-comment-action="delete" data-comment-id="' + data.comment.id + '"><i class="fa-regular fa-trash-can"></i><span>Delete</span></button>' : '') +
+                            '</div></details>' : '') +
+                        '</div>' +
+                        '<div class="post-comment-body">' + escapeHtml(data.comment.content) + '</div>' +
+                        '<div class="post-comment-actions">' +
+                            '<button class="action-btn comment-reaction-chip" type="button" title="React with thumbs up" data-reaction="thumbs_up" data-comment-id="' + data.comment.id + '" aria-label="React with thumbs up">' +
+                                '<span>👍</span><span class="count">0</span>' +
+                            '</button>' +
+                            '<button class="action-btn comment-reaction-chip" type="button" title="React with fire" data-reaction="fire" data-comment-id="' + data.comment.id + '" aria-label="React with fire">' +
+                                '<span>🔥</span><span class="count">0</span>' +
+                            '</button>' +
+                            '<button class="action-btn comment-reaction comment-reply-toggle" type="button" aria-label="Reply to comment" title="Reply to this comment" data-comment-id="' + data.comment.id + '" data-comment-author="' + escapeHtml(authorName) + '">' +
+                                '<i class="fa-regular fa-comment"></i>' +
+                            '</button>' +
+                            (data.comment.can_pin ? '<button class="action-btn comment-inline-action" type="button" data-comment-action="pin" data-comment-id="' + data.comment.id + '" title="Pin comment"><i class="fa-solid fa-thumbtack"></i></button>' : '') +
+                            (data.comment.can_edit ? '<button class="action-btn comment-inline-action" type="button" data-comment-action="edit" data-comment-id="' + data.comment.id + '" data-comment-content="' + escapeHtml(data.comment.content) + '" title="Edit comment"><i class="fa-regular fa-pen-to-square"></i></button>' : '') +
+                            (data.comment.can_delete ? '<button class="action-btn comment-inline-action" type="button" data-comment-action="delete" data-comment-id="' + data.comment.id + '" title="Delete comment"><i class="fa-regular fa-trash-can"></i></button>' : '') +
+                        '</div>' +
+                        '<div class="post-inline-reply-form" hidden data-parent-id="' + data.comment.id + '">' +
+                            '<input class="post-inline-reply-input" type="text" placeholder="Write a reply..." data-post-id="' + data.comment.post_id + '" data-parent-id="' + data.comment.id + '">' +
+                            '<button class="post-inline-reply-send" type="button" aria-label="Send reply" title="Send reply" data-post-id="' + data.comment.post_id + '" data-parent-id="' + data.comment.id + '">' +
+                                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">' +
+                                    '<line x1="22" y1="2" x2="11" y2="13"></line>' +
+                                    '<polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>' +
+                                '</svg>' +
+                            '</button>' +
+                        '</div>' +
+                    '</article>';
+            }
+
+            function prependTopLevelComment(data) {
+                if (!commentListNode) return;
+                var emptyState = commentListNode.querySelector('.post-comments-empty');
+                if (emptyState) emptyState.remove();
+                commentListNode.insertAdjacentHTML('afterbegin', createTopLevelCommentMarkup(data));
+                var insertedComment = commentListNode.querySelector('.post-comment');
+                if (insertedComment) {
+                    upgradeInsertedCommentCard(insertedComment);
+                }
+            }
+
+            function upgradeInsertedCommentCard(commentCard) {
+                if (!commentCard || commentCard.querySelector('.comment-primary-reaction')) return;
+                var actionRow = commentCard.querySelector('.post-comment-actions');
+                if (!actionRow) return;
+                var commentId = commentCard.getAttribute('data-comment-id');
+                var replyButton = actionRow.querySelector('.comment-reply-toggle');
+                var editButton = actionRow.querySelector('[data-comment-action="edit"]');
+                var deleteButton = actionRow.querySelector('[data-comment-action="delete"]');
+                var pinButton = actionRow.querySelector('[data-comment-action="pin"]');
+                var authorName = replyButton ? replyButton.getAttribute('data-comment-author') || '' : '';
+                var editContent = editButton ? editButton.getAttribute('data-comment-content') || '' : '';
+                actionRow.innerHTML =
+                    '<button class="action-btn comment-reaction-chip comment-reaction-chip-main comment-primary-reaction" type="button" title="React with thumbs up" data-reaction="thumbs_up" data-comment-id="' + commentId + '" aria-label="React with thumbs up"><i class="fa-regular fa-thumbs-up"></i><span class="count">0</span></button>' +
+                    '<button class="action-btn comment-reaction-chip comment-reaction-chip-main" type="button" title="React with thumbs down" data-reaction="thumbs_down" data-comment-id="' + commentId + '" aria-label="React with thumbs down"><i class="fa-regular fa-thumbs-down"></i><span class="count">0</span></button>' +
+                    '<div class="comment-reaction-extra-group" data-reaction-extra-group hidden>' +
+                        '<button class="action-btn comment-reaction-chip comment-reaction-chip-extra" type="button" title="React with fire" data-reaction="fire" data-comment-id="' + commentId + '" aria-label="React with fire" hidden><span>&#128293;</span><span class="count">0</span></button>' +
+                        '<button class="action-btn comment-reaction-chip comment-reaction-chip-extra" type="button" title="React with rocket" data-reaction="rocket" data-comment-id="' + commentId + '" aria-label="React with rocket" hidden><span>&#128640;</span><span class="count">0</span></button>' +
+                        '<button class="action-btn comment-reaction-chip comment-reaction-chip-extra" type="button" title="React with mind blown" data-reaction="crazy" data-comment-id="' + commentId + '" aria-label="React with mind blown" hidden><span>&#129327;</span><span class="count">0</span></button>' +
+                    '</div>' +
+                    '<button class="action-btn comment-reaction comment-reply-toggle" type="button" aria-label="Reply to comment" title="Reply to this comment" data-comment-id="' + commentId + '" data-comment-author="' + escapeHtml(authorName) + '"><i class="fa-regular fa-comment"></i></button>' +
+                    '<div class="comment-reaction-picker" hidden>' +
+                        '<button class="comment-reaction-picker-option" type="button" data-picker-reaction="fire" aria-label="React with fire">&#128293;</button>' +
+                        '<button class="comment-reaction-picker-option" type="button" data-picker-reaction="rocket" aria-label="React with rocket">&#128640;</button>' +
+                        '<button class="comment-reaction-picker-option" type="button" data-picker-reaction="crazy" aria-label="React with mind blown">&#129327;</button>' +
+                    '</div>';
+                var head = commentCard.querySelector('.post-comment-head');
+                if (head && (pinButton || editButton || deleteButton)) {
+                    head.insertAdjacentHTML('beforeend',
+                        '<details class="comment-more-menu"><summary class="comment-more-trigger" aria-label="Comment actions"><i class="fa-solid fa-ellipsis-vertical"></i></summary><div class="comment-more-dropdown">' +
+                        (pinButton ? '<button class="comment-more-action comment-inline-action" type="button" data-comment-action="pin" data-comment-id="' + commentId + '"><i class="fa-solid fa-thumbtack"></i><span>Pin</span></button>' : '') +
+                        (editButton ? '<button class="comment-more-action comment-inline-action" type="button" data-comment-action="edit" data-comment-id="' + commentId + '" data-comment-content="' + escapeHtml(editContent) + '"><i class="fa-regular fa-pen-to-square"></i><span>Edit</span></button>' : '') +
+                        (deleteButton ? '<button class="comment-more-action comment-inline-action" type="button" data-comment-action="delete" data-comment-id="' + commentId + '"><i class="fa-regular fa-trash-can"></i><span>Delete</span></button>' : '') +
+                        '</div></details>'
+                    );
+                }
+            }
+
+            if (!input || !postCommentForm) return;
+            postCommentForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                var content = input.value.trim();
+                var postId = input.getAttribute('data-post-id');
+                if (!content || !postId) return;
+                submitComment(postId, content, null).then(function(data) {
+                    if (data.error || !data.comment) throw new Error(data.error || 'Unable to add comment');
+                    prependTopLevelComment(data);
+                    normalizeRelativeTimes(commentListNode);
+                    input.value = '';
+                    var countNode = document.querySelector('.comment-jump-btn span');
+                    if (countNode) countNode.textContent = String(data.comments_count);
+                });
+            });
+
+            var holdState = { timer: null };
+            document.addEventListener('pointerdown', function(event) {
+                var primaryButton = event.target.closest('.comment-primary-reaction');
+                if (!primaryButton) return;
+                window.clearTimeout(holdState.timer);
+                holdState.timer = window.setTimeout(function() {
+                    var commentCard = primaryButton.closest('.post-comment');
+                    var picker = commentCard ? commentCard.querySelector('.comment-reaction-picker') : null;
+                    if (!picker) return;
+                    closeReactionPickers(picker);
+                    positionReactionPicker(picker, primaryButton);
+                    primaryButton.dataset.longPressTriggered = 'true';
+                }, 420);
+            });
+            ['pointerup', 'pointercancel'].forEach(function(eventName) {
+                document.addEventListener(eventName, function() {
+                    window.clearTimeout(holdState.timer);
+                });
+            });
+
+            document.addEventListener('click', function(event) {
+                var commentReactionButton = event.target.closest('.comment-reaction-chip');
+                if (commentReactionButton) {
+                    var reaction = commentReactionButton.getAttribute('data-reaction');
+                    if (!reaction) return;
+                    if (commentReactionButton.dataset.longPressTriggered === 'true') {
+                        commentReactionButton.dataset.longPressTriggered = 'false';
+                        return;
+                    }
+                    closeReactionPickers();
+                    sendCommentReaction(commentReactionButton, reaction);
+                    return;
+                }
+
+                var pickerOption = event.target.closest('.comment-reaction-picker-option');
+                if (pickerOption) {
+                    var picker = pickerOption.closest('.comment-reaction-picker');
+                    var commentCard = pickerOption.closest('.post-comment');
+                    var anchorButton = commentCard ? commentCard.querySelector('.comment-primary-reaction') : null;
+                    var pickerReaction = pickerOption.getAttribute('data-picker-reaction');
+                    if (picker) picker.hidden = true;
+                    if (anchorButton && pickerReaction) {
+                        sendCommentReaction(anchorButton, pickerReaction);
+                    }
+                    return;
+                }
+                if (!event.target.closest('.comment-reaction-picker')) {
+                    closeReactionPickers();
+                }
+
+                var inlineActionButton = event.target.closest('.comment-inline-action');
+                if (inlineActionButton) {
+                    var action = inlineActionButton.getAttribute('data-comment-action');
+                    var actionCommentId = inlineActionButton.getAttribute('data-comment-id');
+                    if (!action || !actionCommentId) return;
+                    if (action === 'edit') {
+                        var currentContent = inlineActionButton.getAttribute('data-comment-content') || '';
+                        var nextContent = window.prompt('Edit your comment', currentContent);
+                        if (nextContent === null) return;
+                        fetch('/comments/' + actionCommentId + '/edit/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ content: nextContent })
+                        }).then(function(response) { return response.json(); }).then(function() {
+                            window.location.reload();
+                        });
+                        return;
+                    }
+                    if (action === 'delete') {
+                        if (!window.confirm('Delete this comment?')) return;
+                        fetch('/comments/' + actionCommentId + '/delete/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken')
+                            }
+                        }).then(function(response) { return response.json(); }).then(function() {
+                            window.location.reload();
+                        });
+                        return;
+                    }
+                    if (action === 'pin') {
+                        fetch('/comments/' + actionCommentId + '/pin/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken')
+                            }
+                        }).then(function(response) { return response.json(); }).then(function() {
+                            window.location.reload();
+                        });
+                        return;
+                    }
+                }
+
+                var toggleReplyButton = event.target.closest('.comment-reply-toggle');
+                if (toggleReplyButton) {
+                    var commentCard = toggleReplyButton.closest('.post-comment');
+                    var replyForm = commentCard ? commentCard.querySelector('.post-inline-reply-form') : null;
+                    if (!replyForm) return;
+                    document.querySelectorAll('.post-inline-reply-form').forEach(function(form) {
+                        if (form !== replyForm) form.hidden = true;
+                    });
+                    replyForm.hidden = !replyForm.hidden;
+                    if (!replyForm.hidden) {
+                        var replyInput = replyForm.querySelector('.post-inline-reply-input');
+                        if (replyInput) replyInput.focus();
+                    }
+                    return;
+                }
+
+                var sendReplyButton = event.target.closest('.post-inline-reply-send');
+                if (sendReplyButton) {
+                    var replyPostId = sendReplyButton.getAttribute('data-post-id');
+                    var replyParentId = sendReplyButton.getAttribute('data-parent-id');
+                    var replyFormNode = sendReplyButton.closest('.post-inline-reply-form');
+                    var replyInputNode = replyFormNode ? replyFormNode.querySelector('.post-inline-reply-input') : null;
+                    var replyContent = replyInputNode ? replyInputNode.value.trim() : '';
+                    if (!replyPostId || !replyParentId || !replyContent) return;
+                    submitComment(replyPostId, replyContent, replyParentId).then(function(data) {
+                        if (data.error || !data.comment) throw new Error(data.error || 'Unable to add reply');
+                        window.location.reload();
+                    });
+                }
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key !== 'Enter' || event.shiftKey) return;
+                var replyInput = event.target.closest('.post-inline-reply-input');
+                if (!replyInput) return;
+                event.preventDefault();
+                var replyForm = replyInput.closest('.post-inline-reply-form');
+                var sendReplyButton = replyForm ? replyForm.querySelector('.post-inline-reply-send') : null;
+                if (sendReplyButton) {
+                    sendReplyButton.click();
+                }
             });
         })();
     </script>
 </body>
 </html>
-

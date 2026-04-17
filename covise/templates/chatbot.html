@@ -7,6 +7,7 @@
     <title>CoVise | Chatbot</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'chatbot.css' %}">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
@@ -25,7 +26,7 @@
 
   gtag('config', 'G-RDN1TCMRNR');
 </script>
-<body>
+<body class="has-app-mobile-nav">
     <div class="chatbot-app">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
@@ -53,9 +54,6 @@
                     <path d="M9 7V5h6v2"></path>
                     <path d="M3 12h18"></path>
                 </svg>
-            </a>
-            <a class="sidebar-link" id="side_active" href="{% url 'Chatbot' %}" aria-label="Logo">
-                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
             </a>
             <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
@@ -509,6 +507,7 @@
         </section>
     </div>
 
+    {% include "includes/app_mobile_nav.html" with active_page='' show_mobile_back=False %}
     <script>
     (function() {
       var agentsPanel = document.getElementById('agentsPanel');

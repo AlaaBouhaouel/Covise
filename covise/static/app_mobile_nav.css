@@ -1,0 +1,114 @@
+:root {
+    --app-mobile-nav-height: 72px;
+}
+
+.app-mobile-nav {
+    display: none;
+}
+
+@media (max-width: 1100px) {
+    body.has-app-mobile-nav {
+        padding-bottom: calc(var(--app-mobile-nav-height) + env(safe-area-inset-bottom));
+    }
+
+    body.has-app-mobile-nav .sidebar {
+        display: none !important;
+    }
+
+    .app-mobile-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        gap: calc(var(--spacing) * 1);
+        min-height: calc(var(--app-mobile-nav-height) + env(safe-area-inset-bottom));
+        padding: calc(var(--spacing) * 1.25) calc(var(--spacing) * 2) calc(var(--spacing) * 1.25 + env(safe-area-inset-bottom));
+        background: var(--bg);
+        color: var(--text);
+        z-index: 240;
+    }
+
+    .app-mobile-nav__link,
+    .app-mobile-nav__button {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: currentColor;
+        opacity: 0.58;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition: opacity 0.18s ease, color 0.18s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .app-mobile-nav__link:hover,
+    .app-mobile-nav__button:hover,
+    .app-mobile-nav__link:focus-visible,
+    .app-mobile-nav__button:focus-visible,
+    .app-mobile-nav__link.is-active,
+    .app-mobile-nav__button.is-active {
+        opacity: 1;
+        outline: none;
+    }
+
+    .app-mobile-nav svg {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        fill: none;
+    }
+
+    .messages-app,
+    .workspace-app,
+    .chatbot-app {
+        height: calc(100vh - var(--app-mobile-nav-height) - env(safe-area-inset-bottom));
+        height: calc(100dvh - var(--app-mobile-nav-height) - env(safe-area-inset-bottom));
+    }
+
+    .messages-app,
+    .messages-app.details-open {
+        grid-template-columns: 340px minmax(0, 1fr) !important;
+    }
+
+    .workspace-app {
+        grid-template-columns: 200px minmax(0, 1fr) !important;
+    }
+
+    .chatbot-app {
+        grid-template-columns: 1fr !important;
+    }
+
+    .chatbot-app .agents-panel {
+        left: 0 !important;
+        height: calc(100vh - var(--app-mobile-nav-height) - env(safe-area-inset-bottom));
+        height: calc(100dvh - var(--app-mobile-nav-height) - env(safe-area-inset-bottom));
+    }
+
+    .home-secondary {
+        bottom: calc(var(--app-mobile-nav-height) + env(safe-area-inset-bottom));
+        height: calc(100vh - var(--app-mobile-nav-height) - env(safe-area-inset-bottom));
+        height: calc(100dvh - var(--app-mobile-nav-height) - env(safe-area-inset-bottom));
+        padding-bottom: calc(var(--spacing) * 4);
+    }
+}
+
+@media (max-width: 767px) {
+    .messages-app,
+    .messages-app.details-open {
+        grid-template-columns: 1fr !important;
+    }
+
+    .workspace-app {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto auto minmax(0, 1fr) !important;
+    }
+}

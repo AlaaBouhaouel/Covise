@@ -44,17 +44,37 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'covise_app.middleware.AgreementRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'covise.urls'
 CSRF_FAILURE_VIEW = 'covise_app.views.csrf_failure'
-CHANNEL_LAYERS={
+REDIS_URL = config('REDIS_URL', default='redis://127.0.0.1:6379/0')
+REDIS_SOCKET_CONNECT_TIMEOUT = config('REDIS_SOCKET_CONNECT_TIMEOUT', default=5, cast=int)
+REDIS_SOCKET_TIMEOUT = config('REDIS_SOCKET_TIMEOUT', default=5, cast=int)
+REDIS_HEALTH_CHECK_INTERVAL = config('REDIS_HEALTH_CHECK_INTERVAL', default=30, cast=int)
+REDIS_RETRY_ON_TIMEOUT = config('REDIS_RETRY_ON_TIMEOUT', default=True, cast=bool)
+REDIS_OPERATION_RETRY_ATTEMPTS = config('REDIS_OPERATION_RETRY_ATTEMPTS', default=3, cast=int)
+REDIS_OPERATION_RETRY_DELAY_MS = config('REDIS_OPERATION_RETRY_DELAY_MS', default=250, cast=int)
+
+CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG":{
-            "hosts":["redis://127.0.0.1:6379/0"],
+        "CONFIG": {
+            "hosts": [
+                {
+                    "address": REDIS_URL,
+                    "socket_connect_timeout": REDIS_SOCKET_CONNECT_TIMEOUT,
+                    "socket_timeout": REDIS_SOCKET_TIMEOUT,
+                    "health_check_interval": REDIS_HEALTH_CHECK_INTERVAL,
+                    "retry_on_timeout": REDIS_RETRY_ON_TIMEOUT,
+                }
+            ],
+            "expiry": 60,
+            "group_expiry": 86400,
+            "capacity": 1500,
         },
     },
 }
@@ -168,3 +188,6 @@ AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default='')
 AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='')
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='eu-central-1')
+RESEND_API = config('RESEND_API', default=config('RESEND_API_KEY', default=''))
+WAITLIST_FAILURE_ALERT_EMAIL = config('WAITLIST_FAILURE_ALERT_EMAIL', default='ellabouhawel@gmail.com')
+REPORT_ALERT_EMAIL = config('REPORT_ALERT_EMAIL', default=WAITLIST_FAILURE_ALERT_EMAIL)

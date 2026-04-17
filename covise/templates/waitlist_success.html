@@ -7,6 +7,7 @@
     <title>CoVise | Waitlist Success</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'waitlist.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -43,22 +44,22 @@
                 <span>Application Received</span>
             </div>
 
-            <h1>You're on the waitlist</h1>
-            <p class="notice success-note">Thanks for applying. Our team reviews every profile manually and will contact you with the next steps.</p>
+            <h1 class="waitlist-title">You're on the waitlist</h1>
+            <p class="intro">Thanks for applying. Our team reviews every profile manually and will contact you with the next steps.</p>
 
             <div class="success-panel">
                 <h2>What happens next</h2>
                 <ul class="success-list">
                     <li>Profile review and qualification.</li>
-                    <li>Invitation email with onboarding access.</li>
-                    <li>First curated founder matches after activation.</li>
+                    <li>Invitation email with your next access steps.</li>
+                    <li>Your network is active. You can connect with the community.</li>
                 </ul>
             </div>
 
             {% if my_referral_code %}
             <div class="success-panel referral-panel">
-                <h2>Refer a founder</h2>
-                <p class="referral-note">Share your code — people who sign up with it will be linked to your profile.</p>
+                <h2>Know someone who belongs here?</h2>
+                <p class="referral-note">Every referral moves you both closer to founding member access</p>
                 <div class="referral-code-row">
                     <span class="referral-code-value" id="refCode">{{ my_referral_code }}</span>
                     <button class="referral-copy-btn" type="button" id="copyRefBtn" aria-label="Copy referral code">
@@ -79,12 +80,9 @@
             {% endif %}
 
             <div class="success-actions">
-                <a class="success-btn primary" href="/">Back to Home</a>
-                <a class="success-btn secondary" href="/about/">Learn More</a>
+                <a class="success-btn success-btn-home" href="/">Back Home</a>
             </div>
         </section>
     </main>
 </body>
 </html>
-
-

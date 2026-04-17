@@ -7,6 +7,7 @@
     <title>CoVise | Profile</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'profile.css' %}">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -29,7 +30,7 @@
 
   gtag('config', 'G-RDN1TCMRNR');
 </script>
-<body>
+<body class="has-app-mobile-nav">
     <div class="layout">
         <aside class="sidebar" aria-label="Primary">
             <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
@@ -58,9 +59,6 @@
                     <path d="M3 12h18"></path>
                 </svg>
             </a>
-            <a class="sidebar-link" href="{% url 'Chatbot' %}" aria-label="Logo">
-                <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
-            </a>
             <a class="sidebar-link" id="side_active" href="{% url 'Profile' %}" aria-label="Profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
                     <circle cx="12" cy="8" r="4"></circle>
@@ -78,10 +76,15 @@
         <main class="main">
             <header class="home-header" aria-label="Profile top bar">
                 <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
-                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
-                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
-                    <span>CoVise</span>
+                    <span class="home-brand-wordmark">CoVise</span>
                 </a>
+                <div class="home-header-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <path d="M20 20l-3.5-3.5"></path>
+                    </svg>
+                    <input id="profileHeaderSearch" type="search" placeholder="Search profile sections" aria-label="Search profile sections">
+                </div>
                 <div class="home-header-actions">
                     <button class="theme-toggle" id="profileThemeToggle" aria-label="Toggle light/dark mode" aria-pressed="false" type="button">
                         <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -108,17 +111,16 @@
                         </div>
                     </div>
                     <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="8" r="4"></circle>
-                            <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
-                        </svg>
+                        <span>{{ request.user.avatar_initials }}</span>
                     </a>
                 </div>
             </header>
 
             <section class="profile-hero panel">
                 <div class="hero-body">
-                        <a href="{% url 'Public Profile' viewed_user_id %}" class="unstyled-link" aria-label="View {{ ui_user.display_name }} profile">
+                    {% if profile_error_message %}
+                    {% endif %}
+                           <a href="{% url 'Public Profile' viewed_user_id %}" class="unstyled-link" aria-label="View {{ ui_user.display_name }} profile">
                         {% if ui_user.avatar_url %}
                         <img class="avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }}'s avatar">
                         {% else %}
@@ -139,19 +141,31 @@
                         <p class="meta">{{ profile_page.location }}</p>
                         {% if is_own_profile %}
                         <div class="hero-actions">
+                            {% if not is_onboarded %}
+                            <a class="primary-action onboarding-action" href="{% url 'Onboarding' %}">Start onboarding</a>
+                            {% endif %}
                             <a class="primary-action" href="{% url 'Profile Card' %}">Profile Card</a>
-                            <a class="primary-action secondary" href="{% url 'Settings' %}">Edit my profile</a>
+                            <a class="primary-action secondary" href="{% url 'Settings' %}">Edit</a>
                         </div>
                         {% else %}
                         <div class="hero-actions">
                             <form action="{% url 'Start Private Conversation' viewed_user_id %}" method="post">
                                 {% csrf_token %}
-                                <button class="primary-action" type="submit">Request Private Chat</button>
+                                <button class="primary-action" type="submit"{% if messaging_blocked %} disabled{% endif %}>{% if is_friend %}Message{% else %}Request Private Chat{% endif %}</button>
                             </form>
+                            <div class="hero-actions-group">
+                                <button class="primary-action secondary report-action" id="openProfileReportModal" type="button">Report</button>
+                                <form action="{% url 'Toggle Block User' viewed_user_id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button class="primary-action secondary danger-action" type="submit">{% if is_blocked_user %}Unblock User{% else %}Block User{% endif %}</button>
+                                </form>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
                     <div class="social-cards">
+                        <div class="social-links-row">
                         {% if can_view_profile_data and ui_user.linkedin_url and profile_page.preferences.show_linkedin_to_matches %}
                         <a href="{{ ui_user.linkedin_url }}" class="social-card linkedin">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -178,10 +192,51 @@
                             <strong>Proof of Work</strong>
                         </a>
                         {% endif %}
+                        </div>
+                        {% if is_own_profile %}
+                        <div class="social-actions-row">
+                            <a class="social-card signout-card" href="{% url 'Logout' %}" aria-label="Sign out">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M14 16L18 12L14 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    <path d="M18 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </section>
-  
+            {% if profile_report_success_message %}
+            <div class="profile-inline-feedback profile-inline-feedback--success">
+                <div class="profile-inline-feedback__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 12.5L10 16.5L18 8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="profile-inline-feedback__content">
+                    <strong>Report sent</strong>
+                    <span>{{ profile_report_success_message }}</span>
+                </div>
+            </div>
+            {% endif %}
+            {% if profile_error_message %}
+            <div class="profile-inline-feedback profile-inline-feedback--error">
+                <div class="profile-inline-feedback__content">
+                    <strong>Message unavailable</strong>
+                    <span>{{ profile_error_message }}</span>
+                </div>
+            </div>
+            {% endif %}
+            {% if profile_report_error_message %}
+            <div class="profile-inline-feedback profile-inline-feedback--error">
+                <div class="profile-inline-feedback__content">
+                    <strong>Could not send report</strong>
+                    <span>{{ profile_report_error_message }}</span>
+                </div>
+            </div>
+            {% endif %}
+    
             <section class="content-grid">
                 {% if can_view_profile_data and profile_page.preferences.show_conviction_score %}
                 <article class="panel score-section">
@@ -302,53 +357,52 @@
                                 <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile"><div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div></a>
                                 {% endif %}
                                 <div>
-                                    <div class="structured-post-title"><a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a></div>
-                                    <div class="structured-post-subtitle">{{ post.get_post_type_display }} · {{ post.created_at|timesince }} ago</div>
+                                    <div class="structured-post-title">
+                                        <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a>
+                                        {% if post.show_cofounder_badge %}
+                                        <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
+                                            <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="structured-post-subtitle">
+                                        {{ post.get_post_type_display }}
+                                        {% if post.feed_country %} · {{ post.feed_country }}{% endif %}
+                                        · {{ post.created_at|timesince }} ago
+                                    </div>
                                 </div>
                             </div>
                             <div class="structured-post-tools">
-                                <span class="structured-badge badge-update">{{ post.get_post_type_display }}</span>
+                                {% for skill in post.feed_skills %}
+                                <span class="profile-skill-badge profile-skill-badge--{{ skill.tone }}" data-tone="{{ skill.tone }}">{{ skill.label }}</span>
+                                {% endfor %}
                                 <button class="menu-btn" type="button" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                             </div>
                         </div>
-                        <div class="structured-post-body">{{ post.content }}</div>
+                        <div class="structured-post-body">{{ post.content_html|safe }}</div>
+                        {% if post.feed_images %}
+                        <div class="post-gallery post-gallery-count-{{ post.feed_image_count }}">
+                            {% for image in post.feed_images %}
+                            <div class="post-gallery-item">
+                                <img src="{{ image.url }}" alt="{{ image.alt }}">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                         {% if is_own_profile %}
                         <div class="structured-post-footer">
                             <button class="action-btn like-btn" type="button" data-count="{{ post.likes_number }}"><i class="fa-regular fa-thumbs-up"></i><span class="count">{{ post.likes_number }}</span></button>
                             <button class="action-btn comments-toggle" type="button"><i class="fa-regular fa-comment"></i><span class="comment-count">{{ post.comments.count }}</span></button>
-                            <button class="action-btn bookmark-btn" type="button"><i class="fa-regular fa-bookmark"></i></button>
+                            <button class="action-btn bookmark-btn{% if post.is_saved %} is-active{% endif %}" type="button" data-post-id="{{ post.id }}" data-saved="{% if post.is_saved %}true{% else %}false{% endif %}"><i class="{% if post.is_saved %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i></button>
                         </div>
                         <div class="comments-section structured-comments">
-                            {% for comment in post.comments.all %}
-                            <div class="comment-wrap">
-                                <div class="comment-header">
-                                    <div class="comment-user">
-                                        {% if comment.user.profile.profile_image %}
-                                        <a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link" aria-label="View {{ comment.user.full_name|default:comment.user.email }} profile"><img class="avatar comment" src="{{ comment.user.profile.profile_image.url }}" alt="{{ comment.user.display_name }}'s avatar"></a>
-                                        {% else %}
-                                        <a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link" aria-label="View {{ comment.user.full_name|default:comment.user.email }} profile"><div class="avatar comment">{{ comment.user.avatar_initials }}</div></a>
-                                        {% endif %}
-                                        <h3><a href="{% url 'Public Profile' comment.user.id %}" class="unstyled-link">{{ comment.user.full_name|default:comment.user.email }}</a></h3>
-                                    </div>
-                                    <p>{{ comment.created_at|timesince }} ago</p>
-                                </div>
-                                <div class="comment-content">{{ comment.content }}</div>
-                                <div class="comment-footer">
-                                    <a href="#" class="parameter-comment"><i class="fa-solid fa-ellipsis"></i></a>
-                                    <a href="#" class="parameter-comment"><span><i class="fa-solid fa-reply"></i>Reply</span></a>
-                                    <a href="#" class="arrow-up" data-comment-id="{{ comment.id }}"><i class="fa-solid fa-chevron-up"></i> <span class="up-count">{{ comment.up }}</span></a>
-                                    <a href="#" class="arrow-down" data-comment-id="{{ comment.id }}"><i class="fa-solid fa-chevron-down"></i> <span class="down-count">{{ comment.down }}</span></a>
-                                </div>
-                            </div>
+                            {% for comment in post.comment_threads %}
+                            {% include "includes/profile_comment.html" with comment=comment %}
                             {% empty %}
                             <div class="comment-wrap empty-comment">
                                 <div class="comment-content">No comments yet.</div>
                             </div>
                             {% endfor %}
-                            <div class="comment-input-row">
-                                <input class="comment-input" type="text" placeholder="Write a comment..." data-post-id="{{ post.id }}">
-                                <button class="comment-send" type="button" aria-label="Send comment" data-post-id="{{ post.id }}"><i class="fa-solid fa-paper-plane"></i></button>
-                            </div>
                         </div>
                         {% else %}
                         <div class="structured-post-footer">
@@ -358,17 +412,99 @@
                     </article>
                     {% empty %}
                         <p>No posts yet.</p>
-                        {% if is_own_profile %}
-                        <a href="{% url 'Profile' %}" class="primary_btn">Create your first post</a>
-                        {% endif %}
  
                     {% endfor %}
 
                 </div>
             </section>
             {% endif %}
+
+            {% if is_own_profile %}
+            <section class="panel posts" style="margin-top: 24px;">
+                <h2>Blocked Users</h2>
+                <div class="structured-feed">
+                    {% for blocked_user in blocked_users %}
+                    <article class="structured-post">
+                        <div class="structured-post-head">
+                            <div class="structured-post-meta">
+                                <div class="structured-avatar">{{ blocked_user.avatar_initials }}</div>
+                                <div>
+                                    <div class="structured-post-title">{{ blocked_user.display_name }}</div>
+                                    <div class="structured-post-subtitle">{{ blocked_user.email }}</div>
+                                </div>
+                            </div>
+                            <form action="{% url 'Toggle Block User' blocked_user.id %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button class="action-btn" type="submit">Unblock</button>
+                            </form>
+                        </div>
+                    </article>
+                    {% empty %}
+                    <article class="structured-post">
+                        <div class="structured-post-body">No blocked users yet.</div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
         </main>
     </div>
+    {% if not is_own_profile %}
+    <div class="profile-report-modal" id="profileReportModal" hidden>
+        <div class="profile-report-modal__backdrop" data-close-report-modal></div>
+        <div class="profile-report-modal__card" role="dialog" aria-modal="true" aria-labelledby="profileReportTitle">
+            <div class="profile-report-modal__head">
+                <h3 id="profileReportTitle">Report {{ ui_user.display_name }}</h3>
+                <button class="profile-report-modal__close" type="button" aria-label="Close report dialog" data-close-report-modal>&times;</button>
+            </div>
+            <form class="profile-report-modal__form" action="{% url 'Report User Profile' viewed_user_id %}" method="post">
+                {% csrf_token %}
+                <div class="profile-report-choice-group">
+                    <span class="profile-report-label">Why are you reporting this user?</span>
+                    <label class="profile-report-choice">
+                        <input type="radio" name="report_reason" value="Spam or scam" required>
+                        <span>Spam or scam</span>
+                    </label>
+                    <label class="profile-report-choice">
+                        <input type="radio" name="report_reason" value="Harassment or abuse">
+                        <span>Harassment or abuse</span>
+                    </label>
+                    <label class="profile-report-choice">
+                        <input type="radio" name="report_reason" value="Fake or misleading profile">
+                        <span>Fake or misleading profile</span>
+                    </label>
+                    <label class="profile-report-choice">
+                        <input type="radio" name="report_reason" value="Inappropriate content">
+                        <span>Inappropriate content</span>
+                    </label>
+                    <label class="profile-report-choice">
+                        <input type="radio" name="report_reason" value="Other" data-report-other-toggle>
+                        <span>Other</span>
+                    </label>
+                </div>
+                <textarea
+                    class="profile-report-input profile-report-textarea"
+                    id="reportReason{{ viewed_user_id }}"
+                    name="report_reason_other"
+                    maxlength="250"
+                    placeholder="Tell us what happened"
+                    hidden
+                ></textarea>
+                <div class="profile-report-block-row" >
+                    <span class="profile-report-label">Do you want to block this user too?</span>
+                    <label class="profile-report-block-toggle">
+                        <input type="checkbox" name="block_user" value="true">
+                    </label>
+                </div>
+                <div class="profile-report-modal__actions">
+                    <button class="modal-action-btn modal-action-btn--secondary" type="button" data-close-report-modal>Cancel</button>
+                    <button class="modal-action-btn modal-action-btn--primary" type="submit">Send Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
     <script>
         (function () {
             var toggleButton = document.getElementById('profileThemeToggle');
@@ -398,6 +534,55 @@
     </script>
     <script>
         (function () {
+            var modal = document.getElementById('profileReportModal');
+            var openButton = document.getElementById('openProfileReportModal');
+            if (!modal || !openButton) return;
+
+            function closeModal() {
+                modal.hidden = true;
+            }
+
+            openButton.addEventListener('click', function () {
+                modal.hidden = false;
+                var checked = modal.querySelector('input[name="report_reason"]:checked');
+                if (!checked) {
+                    var firstOption = modal.querySelector('input[name="report_reason"]');
+                    if (firstOption) firstOption.focus();
+                }
+            });
+
+            modal.querySelectorAll('[data-close-report-modal]').forEach(function (button) {
+                button.addEventListener('click', closeModal);
+            });
+
+            var otherToggle = modal.querySelector('[data-report-other-toggle]');
+            var otherField = modal.querySelector('.profile-report-textarea');
+            var reasonInputs = modal.querySelectorAll('input[name="report_reason"]');
+
+            function syncOtherField() {
+                if (!otherToggle || !otherField) return;
+                var showOther = otherToggle.checked;
+                otherField.hidden = !showOther;
+                otherField.required = showOther;
+                if (!showOther) {
+                    otherField.value = '';
+                }
+            }
+
+            reasonInputs.forEach(function (input) {
+                input.addEventListener('change', syncOtherField);
+            });
+            syncOtherField();
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && !modal.hidden) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
+    <script>
+        (function () {
             var bell = document.getElementById('notifBell');
             var panel = document.getElementById('notifPanel');
             if (!bell || !panel) return;
@@ -416,6 +601,8 @@
 
         
     </script>
+    <script src="{% static 'notifications.js' %}"></script>
+    {% include "includes/app_mobile_nav.html" with active_page='profile' show_mobile_back=False %}
     <script>
         function getCookie(name) {
             let cookieValue = null;
@@ -435,26 +622,96 @@
         }
 
         const csrftoken = getCookie("csrftoken");
+        function normalizeRelativeTimes(root) {
+            const scope = root || document.body;
+            const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+            const pattern = /\b0\s*(?:mins?|minutes?)\s+ago\b/gi;
+            let node;
+            while ((node = walker.nextNode())) {
+                if (!node.nodeValue) continue;
+                pattern.lastIndex = 0;
+                if (!pattern.test(node.nodeValue)) continue;
+                node.nodeValue = node.nodeValue.replace(pattern, "right now");
+            }
+        }
+        function reactionEmoji(reaction) {
+            return {
+                thumbs_up: "\u{1F44D}",
+                thumbs_down: "\u{1F44E}",
+                fire: "\u{1F525}",
+                rocket: "\u{1F680}",
+                crazy: "\u{1F92F}"
+            }[reaction] || "\u{2728}";
+        }
+        function spawnReactionBurst(sourceNode, reaction) {
+            if (!sourceNode) return;
+            const rect = sourceNode.getBoundingClientRect();
+            const centerX = rect.left + (rect.width / 2);
+            const centerY = rect.top + (rect.height / 2);
+            for (let index = 0; index < 6; index += 1) {
+                const burst = document.createElement("span");
+                burst.className = "reaction-burst";
+                burst.textContent = reactionEmoji(reaction);
+                burst.style.left = `${centerX}px`;
+                burst.style.top = `${centerY}px`;
+                burst.style.setProperty("--drift-x", `${(Math.random() * 52) - 26}px`);
+                burst.style.setProperty("--tilt", `${(Math.random() * 40) - 20}deg`);
+                document.body.appendChild(burst);
+                window.setTimeout(() => burst.remove(), 900);
+            }
+        }
+        function closeReactionPickers(exceptPicker) {
+            document.querySelectorAll(".comment-reaction-picker").forEach(function (picker) {
+                if (picker !== exceptPicker) picker.hidden = true;
+            });
+        }
+        function positionReactionPicker(picker, trigger) {
+            if (!picker || !trigger) return;
+            picker.hidden = false;
+            picker.style.left = `${Math.max(0, trigger.offsetLeft - 6)}px`;
+            picker.style.top = `${Math.max(0, trigger.offsetTop - 12)}px`;
+        }
+        normalizeRelativeTimes(document.body);
 
         const commentButtons = document.querySelectorAll(".comments-toggle");
         const commentSendButtons = document.querySelectorAll(".comment-send");
-        const upButtons = document.querySelectorAll(".arrow-up");
-        const downButtons = document.querySelectorAll(".arrow-down");
+        const reactionButtons = document.querySelectorAll(".comment-emoji-reaction");
         function updateReactionUI(button, data) {
             const footer = button.closest(".comment-footer");
             if (!footer) return;
 
-            const upButton = footer.querySelector(".arrow-up");
-            const downButton = footer.querySelector(".arrow-down");
+            const upButton = footer.querySelector('[data-reaction="thumbs_up"]');
+            const downButton = footer.querySelector('[data-reaction="thumbs_down"]');
+            const reactionCounts = {
+                thumbs_up: Number(data.thumbs_up || 0),
+                thumbs_down: Number(data.thumbs_down || 0),
+                fire: Number(data.fire || 0),
+                rocket: Number(data.rocket || 0),
+                crazy: Number(data.crazy || 0)
+            };
 
             if (upButton) {
-                upButton.querySelector(".up-count").textContent = data.upvotes;
-                upButton.classList.toggle("is-active", data.user_reaction === "up");
+                upButton.querySelector(".up-count").textContent = reactionCounts.thumbs_up;
+                upButton.classList.toggle("is-active", (data.viewer_reactions || []).includes("thumbs_up"));
             }
 
             if (downButton) {
-                downButton.querySelector(".down-count").textContent = data.downvotes;
-                downButton.classList.toggle("is-active", data.user_reaction === "down");
+                downButton.querySelector(".down-count").textContent = reactionCounts.thumbs_down;
+                downButton.classList.toggle("is-active", (data.viewer_reactions || []).includes("thumbs_down"));
+            }
+
+            ["fire", "rocket", "crazy"].forEach(function (reaction) {
+                const reactionButton = footer.querySelector(`[data-reaction="${reaction}"]`);
+                if (!reactionButton) return;
+                const countNode = reactionButton.querySelector(".reaction-count");
+                if (countNode) countNode.textContent = reactionCounts[reaction];
+                reactionButton.classList.toggle("is-active", (data.viewer_reactions || []).includes(reaction));
+                reactionButton.hidden = !(reactionCounts[reaction] > 0 || (data.viewer_reactions || []).includes(reaction));
+            });
+
+            const extraGroup = footer.querySelector("[data-reaction-extra-group]");
+            if (extraGroup) {
+                extraGroup.hidden = !Array.from(extraGroup.querySelectorAll(".comment-reaction-chip-extra")).some(button => !button.hidden);
             }
         }
         commentButtons.forEach(function (button) {
@@ -473,107 +730,58 @@
                 }
             });
         });
+        function submitComment(postId, content, parentId) {
+            return fetch(`/posts/${postId}/comment/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ content: content, parent_id: parentId || null })
+            }).then(response => response.json());
+        }
+
         commentSendButtons.forEach(function (button) {
             button.addEventListener("click", function () {
                 const postId = button.getAttribute("data-post-id");
                 const row = button.closest(".comment-input-row");
                 const input = row ? row.querySelector(".comment-input") : null;
-                const postCard = button.closest(".structured-post");
-                const comments = postCard ? postCard.querySelector(".comments-section") : null;
-                const countNode = postCard ? postCard.querySelector(".comment-count") : null;
-                if (!input || !comments || !postId) return;
+                if (!input || !postId) return;
 
                 const content = input.value.trim();
                 if (!content) return;
 
-                fetch(`/posts/${postId}/comment/`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": csrftoken,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ content: content })
-                })
-                .then(response => response.json())
+                submitComment(postId, content, null)
                 .then(data => {
                     if (data.error || !data.comment) return;
-
-                    const emptyState = comments.querySelector(".empty-comment");
-                    if (emptyState) {
-                        emptyState.remove();
-                    }
-
-                    const commentWrap = document.createElement("div");
-                    commentWrap.className = "comment-wrap";
-                    commentWrap.innerHTML = `
-                        <div class="comment-header">
-                            <div class="comment-user">
-                                <a href="/profile/user/${data.comment.user_id}/" class="unstyled-link" aria-label="View profile"><div class="avatar comment">${data.comment.avatar_initials}</div></a>
-                                <h3><a href="/profile/user/${data.comment.user_id}/" class="unstyled-link">${data.comment.author}</a></h3>
-                            </div>
-                            <p>${data.comment.created_at}</p>
-                        </div>
-                        <div class="comment-content">${data.comment.content}</div>
-                        <div class="comment-footer">
-                            <a href="#" class="parameter-comment"><i class="fa-solid fa-ellipsis"></i></a>
-                            <a href="#" class="parameter-comment"><span><i class="fa-solid fa-reply"></i>Reply</span></a>
-                            <a href="#" class="arrow-up" data-comment-id="${data.comment.id}"><i class="fa-solid fa-chevron-up"></i> <span class="up-count">0</span></a>
-                            <a href="#" class="arrow-down" data-comment-id="${data.comment.id}"><i class="fa-solid fa-chevron-down"></i> <span class="down-count">0</span></a>
-                        </div>
-                    `;
-
-                    comments.insertBefore(commentWrap, row);
-                    input.value = "";
-                    if (countNode) countNode.textContent = String(data.comments_count);
-
-                    const newUpButton = commentWrap.querySelector(".arrow-up");
-                    const newDownButton = commentWrap.querySelector(".arrow-down");
-
-                    if (newUpButton) {
-                        newUpButton.addEventListener("click", function (event) {
-                            event.preventDefault();
-                            const commentId = this.dataset.commentId;
-                            fetch(`/profile/${commentId}/upvote/`, {
-                                method: "POST",
-                                headers: {
-                                    "X-CSRFToken": csrftoken,
-                                    "Content-Type": "application/json"
-                                }
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                updateReactionUI(this, data);
-                            });
-                        });
-                    }
-
-                    if (newDownButton) {
-                        newDownButton.addEventListener("click", function (event) {
-                            event.preventDefault();
-                            const commentId = this.dataset.commentId;
-                            fetch(`/profile/${commentId}/downvote/`, {
-                                method: "POST",
-                                headers: {
-                                    "X-CSRFToken": csrftoken,
-                                    "Content-Type": "application/json"
-                                }
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                updateReactionUI(this, data);
-                            });
-                        });
-                    }
+                    window.location.reload();
                 });
             });
         });
-        upButtons.forEach(function (button) {
-            button.addEventListener("click", function (event) {
-                event.preventDefault();
-
-                const commentId = this.dataset.commentId;
-
-                fetch(`/profile/${commentId}/upvote/`, {
+        const holdState = { timer: null };
+        document.addEventListener("pointerdown", function (event) {
+            const primaryButton = event.target.closest(".comment-primary-reaction");
+            if (!primaryButton) return;
+            window.clearTimeout(holdState.timer);
+            holdState.timer = window.setTimeout(function () {
+                const commentWrap = primaryButton.closest(".comment-wrap");
+                const picker = commentWrap ? commentWrap.querySelector(".comment-reaction-picker") : null;
+                if (!picker) return;
+                closeReactionPickers(picker);
+                positionReactionPicker(picker, primaryButton);
+                primaryButton.dataset.longPressTriggered = "true";
+            }, 420);
+        });
+        ["pointerup", "pointercancel"].forEach(function (eventName) {
+            document.addEventListener(eventName, function () {
+                window.clearTimeout(holdState.timer);
+            });
+        });
+        document.querySelectorAll(".bookmark-btn[data-post-id]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                const postId = button.getAttribute("data-post-id");
+                if (!postId) return;
+                fetch(`/posts/${postId}/save/`, {
                     method: "POST",
                     headers: {
                         "X-CSRFToken": csrftoken,
@@ -582,18 +790,25 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    updateReactionUI(this, data);
+                    if (typeof data.saved === "undefined") return;
+                    button.setAttribute("data-saved", data.saved ? "true" : "false");
+                    button.classList.toggle("is-active", !!data.saved);
+                    const icon = button.querySelector("i");
+                    if (icon) icon.className = `${data.saved ? "fa-solid" : "fa-regular"} fa-bookmark`;
                 });
             });
         });
-
-        downButtons.forEach(function (button) {
-            button.addEventListener("click", function (event) {
-                event.preventDefault();
-
-                const commentId = this.dataset.commentId;
-
-                fetch(`/profile/${commentId}/downvote/`, {
+        document.addEventListener("click", function (event) {
+            const commentReactionButton = event.target.closest(".comment-emoji-reaction");
+            if (commentReactionButton) {
+                if (commentReactionButton.dataset.longPressTriggered === "true") {
+                    commentReactionButton.dataset.longPressTriggered = "false";
+                    return;
+                }
+                closeReactionPickers();
+                const commentId = commentReactionButton.dataset.commentId;
+                const reaction = commentReactionButton.dataset.reaction;
+                fetch(`/profile/${commentId}/${reaction}/`, {
                     method: "POST",
                     headers: {
                         "X-CSRFToken": csrftoken,
@@ -602,10 +817,116 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    updateReactionUI(this, data);
+                    updateReactionUI(commentReactionButton, data);
+                    spawnReactionBurst(commentReactionButton, reaction);
                 });
-                });
-            });
+                return;
+            }
+
+            const pickerOption = event.target.closest(".comment-reaction-picker-option");
+            if (pickerOption) {
+                const picker = pickerOption.closest(".comment-reaction-picker");
+                const commentWrap = pickerOption.closest(".comment-wrap");
+                const anchorButton = commentWrap ? commentWrap.querySelector(".comment-primary-reaction") : null;
+                const reaction = pickerOption.getAttribute("data-picker-reaction");
+                if (picker) picker.hidden = true;
+                if (anchorButton && reaction) {
+                    fetch(`/profile/${anchorButton.dataset.commentId}/${reaction}/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrftoken,
+                            "Content-Type": "application/json"
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        updateReactionUI(anchorButton, data);
+                        spawnReactionBurst(anchorButton, reaction);
+                    });
+                }
+                return;
+            }
+
+            if (!event.target.closest(".comment-reaction-picker")) {
+                closeReactionPickers();
+            }
+
+            const toggleReplyButton = event.target.closest(".comment-reply-toggle");
+            if (toggleReplyButton) {
+                const commentWrap = toggleReplyButton.closest(".comment-wrap");
+                const replyForm = commentWrap ? commentWrap.querySelector(".comment-reply-form") : null;
+                if (!replyForm) return;
+                replyForm.hidden = !replyForm.hidden;
+                if (!replyForm.hidden) {
+                    const replyInput = replyForm.querySelector(".comment-reply-input");
+                    if (replyInput) replyInput.focus();
+                }
+                return;
+            }
+
+            const cancelReplyButton = event.target.closest(".comment-reply-cancel");
+            if (cancelReplyButton) {
+                const replyForm = cancelReplyButton.closest(".comment-reply-form");
+                if (replyForm) replyForm.hidden = true;
+                return;
+            }
+
+            const sendReplyButton = event.target.closest(".comment-reply-send");
+            if (sendReplyButton) {
+                const postId = sendReplyButton.getAttribute("data-post-id");
+                const parentId = sendReplyButton.getAttribute("data-parent-id");
+                const replyForm = sendReplyButton.closest(".comment-reply-form");
+                const replyInput = replyForm ? replyForm.querySelector(".comment-reply-input") : null;
+                const content = replyInput ? replyInput.value.trim() : "";
+                if (!postId || !parentId || !content) return;
+                submitComment(postId, content, parentId)
+                    .then(data => {
+                        if (data.error || !data.comment) return;
+                        window.location.reload();
+                    });
+                return;
+            }
+
+            const inlineActionButton = event.target.closest(".comment-inline-action");
+            if (inlineActionButton) {
+                const action = inlineActionButton.getAttribute("data-comment-action");
+                const commentId = inlineActionButton.getAttribute("data-comment-id");
+                if (!action || !commentId) return;
+                if (action === "edit") {
+                    const currentContent = inlineActionButton.getAttribute("data-comment-content") || "";
+                    const nextContent = window.prompt("Edit your comment", currentContent);
+                    if (nextContent === null) return;
+                    fetch(`/comments/${commentId}/edit/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrftoken,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ content: nextContent })
+                    }).then(response => response.json()).then(() => window.location.reload());
+                    return;
+                }
+                if (action === "delete") {
+                    if (!window.confirm("Delete this comment?")) return;
+                    fetch(`/comments/${commentId}/delete/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrftoken
+                        }
+                    }).then(response => response.json()).then(() => window.location.reload());
+                    return;
+                }
+                if (action === "pin") {
+                    fetch(`/comments/${commentId}/pin/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrftoken
+                        }
+                    }).then(response => response.json()).then(() => window.location.reload());
+                    return;
+                }
+            }
+        });
 
         (function () {
             Array.prototype.slice.call(document.querySelectorAll("[data-expandable]")).forEach(function (wrap) {
@@ -627,6 +948,34 @@
 
                 syncOverflow();
                 window.addEventListener("resize", syncOverflow);
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            var input = document.getElementById('profileHeaderSearch');
+            if (!input) return;
+
+            var contentPanels = Array.prototype.slice.call(document.querySelectorAll('.content-grid > .panel'));
+            var postsSection = document.querySelector('.panel.posts');
+            var posts = Array.prototype.slice.call(document.querySelectorAll('.panel.posts .structured-post'));
+
+            input.addEventListener('input', function () {
+                var query = input.value.trim().toLowerCase();
+
+                contentPanels.forEach(function (panel) {
+                    panel.hidden = !!query && panel.textContent.toLowerCase().indexOf(query) === -1;
+                });
+
+                if (postsSection) {
+                    var visiblePosts = 0;
+                    posts.forEach(function (post) {
+                        var visible = !query || post.textContent.toLowerCase().indexOf(query) !== -1;
+                        post.hidden = !visible;
+                        if (visible) visiblePosts += 1;
+                    });
+                    postsSection.hidden = !!query && visiblePosts === 0 && postsSection.textContent.toLowerCase().indexOf(query) === -1;
+                }
             });
         })();
     </script>
