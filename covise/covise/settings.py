@@ -26,6 +26,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 INSTALLED_APPS = [
     'daphne',
+    'anymail',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.sitemaps',
@@ -123,7 +124,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+RESEND_API = config('RESEND_API', default=config('RESEND_API_KEY', default=''))
+RESEND_API_KEY = RESEND_API
+
+EMAIL_BACKEND = config(
+    'EMAIL_BACKEND',
+    default='anymail.backends.resend.EmailBackend' if RESEND_API_KEY else 'django.core.mail.backends.console.EmailBackend',
+)
 EMAIL_HOST = config('EMAIL_HOST', default='')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
@@ -131,6 +138,9 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='support@covise.net')
+ANYMAIL = {
+    'RESEND_API_KEY': RESEND_API_KEY,
+}
 
 # HTTPS Security (only in production)
 if not DEBUG:
@@ -188,6 +198,5 @@ AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default='')
 AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='')
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='eu-central-1')
-RESEND_API = config('RESEND_API', default=config('RESEND_API_KEY', default=''))
 WAITLIST_FAILURE_ALERT_EMAIL = config('WAITLIST_FAILURE_ALERT_EMAIL', default='ellabouhawel@gmail.com')
 REPORT_ALERT_EMAIL = config('REPORT_ALERT_EMAIL', default=WAITLIST_FAILURE_ALERT_EMAIL)
