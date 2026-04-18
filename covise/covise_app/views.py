@@ -3567,57 +3567,42 @@ def login_view(request):
         context["error_message"] = "Both email and password are required."
         return render(request, 'login.html', context, status=400)
 
+    existing_user = User.objects.filter(email__iexact=email).first()
+    if existing_user is None: #There is no user with this email yet
+        approved_waitlist_entry = WaitlistEntry.objects.filter(
+            email__iexact=email,
+            status=WaitlistEntry.Status.APPROVED,
+        ).first()
+
+        if approved_waitlist_entry is not None:
+            context["error_message"] = "Your email is approved. But you need to create your account from sign in first."
+        else:
+            context["error_message"] = "This is a private community. You can only access it if your application has been approved. Please request access to become a member."
+        return render(request, 'login.html', context, status=400)
+    
     try:
-        logger.info("Login attempt for email=%s", email)
-        existing_user = User.objects.filter(email__iexact=email).first()
-        if existing_user is None: #There is no user with this email yet
-            approved_waitlist_entry = WaitlistEntry.objects.filter(
-                email__iexact=email,
-                status=WaitlistEntry.Status.APPROVED,
-            ).first()
-
-            if approved_waitlist_entry is not None:
-                logger.info("Login blocked because approved waitlist user has no account email=%s", email)
-                context["error_message"] = "Your email is approved. But you need to create your account from sign in first."
-            else:
-                logger.info("Login blocked because email=%s is not an approved user", email)
-                context["error_message"] = "This is a private community. You can only access it if your application has been approved. Please request access to become a member."
-            return render(request, 'login.html', context, status=400)
-        
-        logger.info("Login found user email=%s stored_email=%s", email, existing_user.email)
-        try:
-            identify_hasher(existing_user.password)
-        except Exception:
-            logger.error(
-                "User %s has a password value that is not a Django password hash. Reset or recreate this account with set_password().",
-                existing_user.email,
-            )
-        user = authenticate(request, email=existing_user.email, password=password)
-        if user is None:
-            logger.info("Login password mismatch email=%s stored_email=%s", email, existing_user.email)
-            context["error_message"] = "Incorrect password. Please try again."
-            return render(request, 'login.html', context, status=400)
-
-        logger.info("Login authentication passed email=%s user_id=%s", email, user.id)
-        if not hasattr(user, "profile"):
-            logger.info("Login syncing missing profile email=%s", email)
-            sync_profile_for_user(user)
-        Profile.objects.get_or_create(user=user)
-        UserPreference.objects.get_or_create(user=user)
-        logger.info("Login created profile/preferences email=%s", email)
-        login(request, user)
-        logger.info("Login session established email=%s", email)
-        _record_successful_sign_in(user)
-        if not user.profile.has_accepted_platform_agreement:
-            agreement_url = reverse("Agreement")
-            target = next_url or reverse("Home")
-            logger.info("Login redirecting to agreement email=%s target=%s", email, target)
-            return redirect(f"{agreement_url}?next={target}")
-        logger.info("Login redirecting to target email=%s target=%s", email, next_url or "Home")
-        return redirect(next_url or "Home")
+        identify_hasher(existing_user.password)
     except Exception:
-        logger.exception("login_view failed for email=%s", email)
-        raise
+        logger.error(
+            "User %s has a password value that is not a Django password hash. Reset or recreate this account with set_password().",
+            existing_user.email,
+        )
+    user = authenticate(request, email=existing_user.email, password=password)
+    if user is None:
+        context["error_message"] = "Incorrect password. Please try again."
+        return render(request, 'login.html', context, status=400)
+
+    if not hasattr(user, "profile"):
+        sync_profile_for_user(user)
+    Profile.objects.get_or_create(user=user)
+    UserPreference.objects.get_or_create(user=user)
+    login(request, user)
+    _record_successful_sign_in(user)
+    if not user.profile.has_accepted_platform_agreement:
+        agreement_url = reverse("Agreement")
+        target = next_url or reverse("Home")
+        return redirect(f"{agreement_url}?next={target}")
+    return redirect(next_url or "Home")
 
 
 def signin(request):
@@ -3658,44 +3643,29 @@ def signin(request):
 
 
     try:
-        logger.info("Sign up attempt for email=%s", email)
-        try:
-            user = User.objects.create_user(
-                email=email,
-                full_name=approved_waitlist_entry.full_name,
-                password=password,
-            )
-        except IntegrityError: #this error raises when there is a duplicate email in the database due to the unique constraint on the email field
-            logger.info("Sign up integrity error because email already exists email=%s", email)
-            context["error_message"] = "This email is already registered on CoVise. Please log in instead."
-            return render(request, 'signin.html', context, status=400)
+        user = User.objects.create_user(
+            email=email,
+            full_name=approved_waitlist_entry.full_name,
+            password=password,
+        )
+    except IntegrityError: #this error raises when there is a duplicate email in the database due to the unique constraint on the email field
+        context["error_message"] = "This email is already registered on CoVise. Please log in instead."
+        return render(request, 'signin.html', context, status=400)
 
-        logger.info("Sign up created user email=%s user_id=%s", email, user.id)
-        sync_profile_for_user(user, waitlist_entry=approved_waitlist_entry)
-        logger.info("Sign up synced profile email=%s", email)
-        UserPreference.objects.get_or_create(user=user)
-        logger.info("Sign up ensured preferences email=%s", email)
-        if approved_waitlist_entry.status != WaitlistEntry.Status.ACTIVATED:
-            approved_waitlist_entry.status = WaitlistEntry.Status.ACTIVATED
-            approved_waitlist_entry.save(update_fields=["status"])
-            logger.info("Sign up activated waitlist entry email=%s", email)
-        user = authenticate(request, email=email, password=password)
-        if user is None:
-            logger.error("Sign up created account but authenticate failed email=%s", email)
-            context["error_message"] = "Your account was created, but we could not sign you in automatically. Please try logging in."
-            return render(request, 'signin.html', context, status=500)
-        logger.info("Sign up authentication passed email=%s user_id=%s", email, user.id)
-        login(request, user)
-        logger.info("Sign up session established email=%s", email)
-        _record_successful_sign_in(user)
-        if not user.profile.has_accepted_platform_agreement:
-            logger.info("Sign up redirecting to agreement email=%s", email)
-            return redirect(f"{reverse('Agreement')}?next={reverse('Home')}")
-        logger.info("Sign up redirecting home email=%s", email)
-        return redirect("Home")
-    except Exception:
-        logger.exception("signin failed for email=%s", email)
-        raise
+    sync_profile_for_user(user, waitlist_entry=approved_waitlist_entry)
+    UserPreference.objects.get_or_create(user=user)
+    if approved_waitlist_entry.status != WaitlistEntry.Status.ACTIVATED:
+        approved_waitlist_entry.status = WaitlistEntry.Status.ACTIVATED
+        approved_waitlist_entry.save(update_fields=["status"])
+    user = authenticate(request, email=email, password=password)
+    if user is None:
+        context["error_message"] = "Your account was created, but we could not sign you in automatically. Please try logging in."
+        return render(request, 'signin.html', context, status=500)
+    login(request, user)
+    _record_successful_sign_in(user)
+    if not user.profile.has_accepted_platform_agreement:
+        return redirect(f"{reverse('Agreement')}?next={reverse('Home')}")
+    return redirect("Home")
 
 
 def onboarding_final(request):
