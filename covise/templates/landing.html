@@ -25,7 +25,7 @@
     <div class="container">
         <!-- Navigation -->
         {% url 'Waitlist' as waitlist_url %}
-        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href=waitlist_url nav_cta_label='CONTACT' nav_join_href=waitlist_url nav_join_label='JOIN THE COMMUNITY' nav_classes='nav--overlay nav--mobile-compact nav--font-body nav--no-theme' show_home=False login_url=True %}
+        {% include 'includes/site_nav.html' with active_page='landing' nav_cta_href='mailto:info@covise.com' nav_cta_label='CONTACT' nav_join_href=waitlist_url nav_join_label='JOIN THE COMMUNITY' nav_classes='nav--overlay nav--mobile-compact nav--font-body nav--no-theme' show_home=False login_url=True %}
 
         <!-- Hero Section -->
         <section class="hero">
@@ -274,7 +274,7 @@
                             </svg>
                         </span>
                     </a>
-                    <a href="{{ waitlist_url }}" class="btn-primary collab-try-btn btn-learn"><span class="btn-primary-label">LEARN MORE</span><img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
+                    <a href="/features/" class="btn-primary collab-try-btn btn-learn"><span class="btn-primary-label">LEARN MORE</span><img class="waitlist-btn-icon" src="{% static 'icon/arrow.svg' %}" alt="" aria-hidden="true"></a>
                 </div>
             </div>
         </section>
