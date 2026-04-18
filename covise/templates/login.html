@@ -38,35 +38,62 @@
 
             <div class="auth-card">
                 <div class="auth-header">
-                    <h1>Member Access</h1>
-                    <p>Great to see you again!</p>
+                    {% if two_factor_required %}
+                        <h1>Security Check</h1>
+                        <p>Enter the 6-digit code sent to {{ challenge_email }}.</p>
+                    {% else %}
+                        <h1>Member Access</h1>
+                        <p>Great to see you again!</p>
+                    {% endif %}
                 </div>
 
                 <form class="auth-form" action="#" method="post">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ next|default:'' }}">
-
-                    <div class="auth-field">
-                        <label for="login-email">Email</label>
-                        <input id="login-email" name="email" type="email" value="{{ form_data.email|default:'' }}" placeholder="User@covise.com" required>
-                    </div>
-                    <div class="auth-field">
-                        <label for="login-password">Password</label>
-                        <input id="login-password" name="password" type="password" placeholder="Enter your password" required>
-                    </div>
-                    <div class="auth-row">
-                        <label>
-                            <input type="checkbox" name="remember">
-                            Remember me
-                        </label>
-                        <a class="ghost-link" href="{% url 'Forgot Password' %}">Forgot password?</a>
-                    </div>
+                    {% if two_factor_required %}
+                        <input type="hidden" name="challenge_id" value="{{ challenge_id }}">
+                        <div class="auth-field">
+                            <label for="login-2fa-code">Security code</label>
+                            <input id="login-2fa-code" name="two_factor_code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" required>
+                        </div>
+                    {% else %}
+                        <div class="auth-field">
+                            <label for="login-email">Email</label>
+                            <input id="login-email" name="email" type="email" value="{{ form_data.email|default:'' }}" placeholder="User@covise.com" required>
+                        </div>
+                        <div class="auth-field">
+                            <label for="login-password">Password</label>
+                            <input id="login-password" name="password" type="password" placeholder="Enter your password" required>
+                        </div>
+                        <div class="auth-row">
+                            <label>
+                                <input type="checkbox" name="remember">
+                                Remember me
+                            </label>
+                            <a class="ghost-link" href="{% url 'Forgot Password' %}">Forgot password?</a>
+                        </div>
+                    {% endif %}
+                    {% if success_message %}
+                        <div class="auth-status">
+                            {{ success_message }}
+                        </div>
+                    {% endif %}
+                    {% if info_message %}
+                        <div class="auth-status">
+                            {{ info_message }}
+                        </div>
+                    {% endif %}
                     {% if error_message %}
                         <div class="auth-error">
                             {{ error_message }}
                         </div>
                     {% endif %}
-                    <button class="auth-button" type="submit">Log in</button>
+                    {% if two_factor_required %}
+                        <button class="auth-button" type="submit">Verify Code</button>
+                        <button class="ghost-link" type="submit" name="resend_2fa" value="1" style="justify-self:center; background:none; border:none; cursor:pointer;">Send a new code</button>
+                    {% else %}
+                        <button class="auth-button" type="submit">Log in</button>
+                    {% endif %}
                 </form>
 
                 <div class="auth-helper">

@@ -1,14 +1,19 @@
+import io
 import json
 import logging
 import random
 import re
 import uuid
+import zipfile
+from datetime import timedelta
 from pathlib import Path
 from django.conf import settings
+from django.core.mail import EmailMessage
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, validate_email
 from django.http import Http404, HttpResponsePermanentRedirect, JsonResponse
-from django.db import IntegrityError, OperationalError, close_old_connections, transaction
+from django.db import models, IntegrityError, OperationalError, close_old_connections, transaction
 from django.db.models import Case, Count, IntegerField, Q, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -17,9 +22,9 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.html import escape
 from django.utils.timesince import timesince
-from .models import OnboardingResponse, Profile, User, UserPreference, WaitlistEmailVerification, WaitlistEntry, Post, PostImage, PostMention, Comment, CommentReaction, SavedPost, BlockedUser, Notification, ConversationUserState, Experiences, Active_projects, Project, Conversation, Message, MessageReaction, ConversationRequest
-from covise_app.utils import generate_referral_code, upload_cv_to_s3
-from covise_app.user_context import build_profile_card_context, build_profile_context, build_settings_context, build_ui_user_context, get_onboarding_skill_config
+from .models import OnboardingResponse, Profile, User, UserPreference, WaitlistEmailVerification, WaitlistEntry, Post, PostImage, PostMention, Comment, CommentReaction, SavedPost, BlockedUser, Notification, ConversationUserState, Experiences, Active_projects, Project, Conversation, Message, MessageReceipt, MessageReaction, ConversationRequest, AccountDeletionRequest, AccountPauseRequest, DataDeletionRequest, DataExportRequest, SignInEvent, TwoFactorChallenge
+from covise_app.utils import delete_s3_object, generate_referral_code, upload_cv_to_s3
+from covise_app.user_context import build_profile_card_context, build_profile_context, build_saved_post_items, build_settings_context, build_ui_user_context, get_onboarding_skill_config
 from covise_app.profile_sync import PROFILE_ONBOARDING_FIELD_IDS, sync_profile_for_user
 from covise_app.messaging import (
     MessagingError,
@@ -37,6 +42,7 @@ from covise_app.notifications import create_notification, dispatch_notification,
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import identify_hasher
+from django.contrib.sessions.models import Session
 
 try:
     import resend
@@ -49,10 +55,464 @@ RESEND_API_KEY = getattr(settings, "RESEND_API", "")
 WAITLIST_FAILURE_ALERT_EMAIL = getattr(settings, "WAITLIST_FAILURE_ALERT_EMAIL", "ellabouhawel@gmail.com")
 REPORT_ALERT_EMAIL = getattr(settings, "REPORT_ALERT_EMAIL", WAITLIST_FAILURE_ALERT_EMAIL)
 url_validator = URLValidator(schemes=["http", "https"])
+PENDING_2FA_CHALLENGE_SESSION_KEY = "pending_2fa_challenge_id"
+PENDING_2FA_USER_SESSION_KEY = "pending_2fa_user_id"
+PENDING_2FA_NEXT_SESSION_KEY = "pending_2fa_next"
+PROFILE_PHOTO_MAX_SIZE_BYTES = int(getattr(settings, "PROFILE_PHOTO_MAX_SIZE_BYTES", 5 * 1024 * 1024))
+PROFILE_PHOTO_MAX_SIZE_MB = max(1, PROFILE_PHOTO_MAX_SIZE_BYTES // (1024 * 1024))
 
 
 def _normalize_email(value):
     return str(value or "").strip().lower()
+
+
+def _normalize_email_list(value):
+    if not value:
+        return ()
+
+    if isinstance(value, str):
+        candidates = re.split(r"[,;\s]+", value)
+    elif isinstance(value, (list, tuple, set)):
+        candidates = list(value)
+    else:
+        candidates = [value]
+
+    normalized = []
+    for candidate in candidates:
+        email = _normalize_email(candidate)
+        if not email:
+            continue
+        try:
+            validate_email(email)
+        except ValidationError:
+            logger.warning("Ignoring invalid email recipient configured for post alerts: %s", candidate)
+            continue
+        if email not in normalized:
+            normalized.append(email)
+    return tuple(normalized)
+
+
+def _post_alert_recipients():
+    return _normalize_email_list(
+        getattr(
+            settings,
+            "POST_ALERT_EMAILS",
+            ("ellabouhawel@gmail.com", "small345az@gmail.com"),
+        )
+    )
+
+
+def _site_url():
+    return str(getattr(settings, "SITE_URL", "https://covise.net") or "https://covise.net").rstrip("/")
+
+
+def _absolute_site_url(value):
+    if not value:
+        return f"{_site_url()}/"
+
+    value = str(value)
+    if value.startswith("http://") or value.startswith("https://"):
+        return value
+    if not value.startswith("/"):
+        value = f"/{value}"
+    return f"{_site_url()}{value}"
+
+
+def _safe_media_url(field_file):
+    if not field_file:
+        return ""
+    try:
+        url = field_file.url
+    except Exception:
+        return ""
+    return _absolute_site_url(url)
+
+
+def _display_name(user):
+    if not user:
+        return ""
+    return user.full_name or user.email
+
+
+def _public_profile_url(user):
+    if not user:
+        return ""
+    return _absolute_site_url(reverse("Public Profile", args=[user.id]))
+
+
+def _serialize_model_fields(instance, *, exclude=None):
+    if not instance:
+        return {}
+    excluded = set(exclude or ())
+    data = {}
+    for field in instance._meta.concrete_fields:
+        if field.name in excluded:
+            continue
+        value = field.value_from_object(instance)
+        if isinstance(field, models.FileField):
+            data[field.name] = getattr(value, "name", "") if value else ""
+            data[f"{field.name}_url"] = _safe_media_url(value)
+        elif isinstance(value, uuid.UUID):
+            data[field.name] = str(value)
+        else:
+            data[field.name] = value
+    return data
+
+
+def _build_data_export_payload(user):
+    profile = getattr(user, "profile", None)
+    preferences = getattr(user, "preferences", None)
+
+    posts = list(
+        Post.objects.filter(user=user)
+        .prefetch_related("gallery_images", "mentions__mentioned_user")
+        .order_by("-created_at")
+    )
+    comments = list(
+        Comment.objects.filter(user=user)
+        .select_related("post", "post__user", "parent")
+        .order_by("-created_at")
+    )
+    saved_posts = list(
+        SavedPost.objects.filter(user=user)
+        .select_related("post__user")
+        .order_by("-created_at")
+    )
+    blocked_users = list(
+        BlockedUser.objects.filter(blocker=user)
+        .select_related("blocked")
+        .order_by("-created_at")
+    )
+    notifications = list(
+        Notification.objects.filter(recipient=user)
+        .select_related("actor")
+        .order_by("-created_at")
+    )
+    conversation_requests = list(
+        ConversationRequest.objects.filter(Q(requester=user) | Q(recipient=user))
+        .select_related("requester", "recipient", "conversation")
+        .order_by("-created_at")
+    )
+    conversations = list(
+        Conversation.objects.filter(participants=user)
+        .prefetch_related("participants__profile", "messages__sender", "messages__receipts", "messages__reactions")
+        .order_by("-updated_at")
+        .distinct()
+    )
+    experiences = list(Experiences.objects.filter(user=user).order_by("-date", "-id"))
+    active_projects = list(Active_projects.objects.filter(user=user).order_by("-id"))
+    projects = list(Project.objects.filter(user=user).order_by("-updated_at"))
+
+    payload = {
+        "generated_at": timezone.now(),
+        "site_url": _site_url(),
+        "account": {
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "is_active": user.is_active,
+            "date_joined": user.date_joined,
+            "sign_in_count": user.sign_in_count,
+            "has_seen_interactive_demo": user.has_seen_interactive_demo,
+            "public_profile_url": _public_profile_url(user),
+        },
+        "profile": _serialize_model_fields(profile, exclude={"id", "user"}),
+        "preferences": _serialize_model_fields(preferences, exclude={"id", "user"}),
+        "experiences": [
+            {
+                "id": item.id,
+                "title": item.title,
+                "date": item.date,
+                "description": item.desc,
+            }
+            for item in experiences
+        ],
+        "active_projects": [
+            {
+                "id": item.id,
+                "name": item.name,
+                "status": item.status,
+                "description": item.desc,
+            }
+            for item in active_projects
+        ],
+        "projects": [
+            {
+                **_serialize_model_fields(item, exclude={"user"}),
+                "url": _absolute_site_url(reverse("Project Detail", args=[item.slug])),
+            }
+            for item in projects
+        ],
+        "posts": [
+            {
+                "id": item.id,
+                "title": item.title,
+                "post_type": item.post_type,
+                "theme_color": item.theme_color,
+                "content": item.content,
+                "likes_number": item.likes_number,
+                "comments_number": item.comments_number,
+                "created_at": item.created_at,
+                "url": _absolute_site_url(reverse("Post Detail", args=[item.id])),
+                "image_url": _safe_media_url(item.image),
+                "gallery_images": [
+                    {
+                        "id": image.id,
+                        "sort_order": image.sort_order,
+                        "image_url": _safe_media_url(image.image),
+                    }
+                    for image in item.gallery_images.all()
+                ],
+                "mentions": [
+                    {
+                        "user_id": str(mention.mentioned_user_id),
+                        "display_name": _display_name(mention.mentioned_user),
+                        "handle_text": mention.handle_text,
+                        "profile_url": _public_profile_url(mention.mentioned_user),
+                    }
+                    for mention in item.mentions.all()
+                ],
+            }
+            for item in posts
+        ],
+        "comments": [
+            {
+                "id": item.id,
+                "post_id": item.post_id,
+                "post_title": item.post.title if item.post_id else "",
+                "post_url": _absolute_site_url(reverse("Post Detail", args=[item.post_id])) if item.post_id else "",
+                "post_owner_profile_url": _public_profile_url(item.post.user) if item.post_id else "",
+                "parent_comment_id": item.parent_id,
+                "content": item.content,
+                "up": item.up,
+                "down": item.down,
+                "is_pinned": item.is_pinned,
+                "edited_at": item.edited_at,
+                "created_at": item.created_at,
+            }
+            for item in comments
+        ],
+        "saved_posts": [
+            {
+                "saved_at": item.created_at,
+                "post_id": item.post_id,
+                "post_title": item.post.title,
+                "post_type": item.post.post_type,
+                "post_url": _absolute_site_url(reverse("Post Detail", args=[item.post_id])),
+                "post_owner_id": str(item.post.user_id),
+                "post_owner_name": _display_name(item.post.user),
+                "post_owner_profile_url": _public_profile_url(item.post.user),
+            }
+            for item in saved_posts
+        ],
+        "blocked_users": [
+            {
+                "blocked_user_id": str(item.blocked_id),
+                "blocked_user_name": _display_name(item.blocked),
+                "blocked_user_email": item.blocked.email if item.blocked_id else "",
+                "blocked_user_profile_url": _public_profile_url(item.blocked),
+                "blocked_at": item.created_at,
+            }
+            for item in blocked_users
+        ],
+        "notifications": [
+            {
+                "id": item.id,
+                "notification_type": item.notification_type,
+                "title": item.title,
+                "body": item.body,
+                "target_url": _absolute_site_url(item.target_url) if item.target_url else "",
+                "is_read": item.is_read,
+                "emailed_at": item.emailed_at,
+                "created_at": item.created_at,
+                "actor_id": str(item.actor_id) if item.actor_id else "",
+                "actor_name": _display_name(item.actor) if item.actor_id else "",
+                "actor_profile_url": _public_profile_url(item.actor) if item.actor_id else "",
+            }
+            for item in notifications
+        ],
+        "conversation_requests": [
+            {
+                "id": str(item.id),
+                "status": item.status,
+                "created_at": item.created_at,
+                "responded_at": item.responded_at,
+                "conversation_id": str(item.conversation_id) if item.conversation_id else "",
+                "requester": {
+                    "id": str(item.requester_id),
+                    "name": _display_name(item.requester),
+                    "email": item.requester.email,
+                    "profile_url": _public_profile_url(item.requester),
+                },
+                "recipient": {
+                    "id": str(item.recipient_id),
+                    "name": _display_name(item.recipient),
+                    "email": item.recipient.email,
+                    "profile_url": _public_profile_url(item.recipient),
+                },
+            }
+            for item in conversation_requests
+        ],
+        "conversations": [
+            {
+                "id": str(conversation.id),
+                "conversation_type": conversation.conversation_type,
+                "group_name": conversation.group_name,
+                "recording_mode": conversation.recording_mode,
+                "created_at": conversation.created_at,
+                "updated_at": conversation.updated_at,
+                "last_message_at": conversation.last_message_at,
+                "participants": [
+                    {
+                        "id": str(participant.id),
+                        "name": _display_name(participant),
+                        "email": participant.email,
+                        "profile_url": _public_profile_url(participant),
+                    }
+                    for participant in conversation.participants.all()
+                ],
+                "messages": [
+                    {
+                        "id": str(message.id),
+                        "sender_id": str(message.sender_id),
+                        "sender_name": _display_name(message.sender),
+                        "sender_profile_url": _public_profile_url(message.sender),
+                        "message_type": message.message_type,
+                        "body": message.body,
+                        "attachment_name": message.attachment_name,
+                        "attachment_content_type": message.attachment_content_type,
+                        "attachment_size": message.attachment_size,
+                        "attachment_url": _safe_media_url(message.attachment_file),
+                        "created_at": message.created_at,
+                        "receipts": [
+                            {
+                                "user_id": str(receipt.user_id),
+                                "status": receipt.status,
+                                "delivered_at": receipt.delivered_at,
+                                "seen_at": receipt.seen_at,
+                            }
+                            for receipt in message.receipts.all()
+                        ],
+                        "reactions": [
+                            {
+                                "user_id": str(reaction.user_id),
+                                "reaction": reaction.reaction,
+                                "created_at": reaction.created_at,
+                            }
+                            for reaction in message.reactions.all()
+                        ],
+                    }
+                    for message in conversation.messages.all()
+                ],
+            }
+            for conversation in conversations
+        ],
+    }
+    return payload
+
+
+def _build_data_export_archive(user):
+    export_payload = _build_data_export_payload(user)
+    export_json = json.dumps(export_payload, cls=DjangoJSONEncoder, indent=2)
+    now = timezone.now()
+    json_filename = f"covise-data-export-{now.strftime('%Y%m%d-%H%M%S')}.json"
+    archive_filename = f"covise-data-export-{now.strftime('%Y%m%d-%H%M%S')}.zip"
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(json_filename, export_json)
+    return archive_filename, buffer.getvalue()
+
+
+def _send_data_export_email(user):
+    filename, archive_bytes = _build_data_export_archive(user)
+    subject = "Your CoVise data export"
+    body = (
+        "Your CoVise data export is attached as a ZIP file.\n\n"
+        f"Account email: {user.email}\n"
+        f"Public profile: {_public_profile_url(user)}\n"
+        "The attachment includes your account, profile, preferences, posts, comments, saved posts, "
+        "notifications, conversation history, related profile links, and other user-owned records.\n"
+    )
+    email = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "support@covise.net"),
+        to=[user.email],
+    )
+    email.attach(filename, archive_bytes, "application/zip")
+    email.send(fail_silently=False)
+
+
+def _send_data_deletion_request_emails(user):
+    requested_at = timezone.now()
+    profile_url = _public_profile_url(user)
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "support@covise.net")
+    support_recipient = _normalize_email(REPORT_ALERT_EMAIL)
+
+    user_body = (
+        "We processed your CoVise data deletion request.\n\n"
+        f"Processed at: {requested_at.isoformat()}\n"
+        f"Account email: {user.email}\n"
+        f"Public profile: {profile_url}\n\n"
+        "Your member login remains active, but your user-owned CoVise data was cleared. If this request was not made by you, please reply to this email immediately.\n"
+    )
+    EmailMessage(
+        subject="We processed your CoVise data deletion request",
+        body=user_body,
+        from_email=from_email,
+        to=[user.email],
+    ).send(fail_silently=False)
+
+    if support_recipient:
+        support_body = (
+            "A CoVise user data wipe was completed.\n\n"
+            f"Processed at: {requested_at.isoformat()}\n"
+            f"User ID: {user.id}\n"
+            f"User email: {user.email}\n"
+            f"User name: {_display_name(user)}\n"
+            f"Public profile: {profile_url}\n"
+        )
+        EmailMessage(
+            subject=f"Data wipe completed: {user.email}",
+            body=support_body,
+            from_email=from_email,
+            to=[support_recipient],
+        ).send(fail_silently=False)
+
+
+def _send_account_deletion_request_emails(user):
+    requested_at = timezone.now()
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "support@covise.net")
+    support_recipient = _normalize_email(REPORT_ALERT_EMAIL)
+
+    user_body = (
+        "We received and processed your CoVise account deletion request.\n\n"
+        f"Processed at: {requested_at.isoformat()}\n"
+        f"Account email: {user.email}\n\n"
+        "If this request was not made by you, please contact support immediately.\n"
+    )
+    EmailMessage(
+        subject="Your CoVise account deletion was processed",
+        body=user_body,
+        from_email=from_email,
+        to=[user.email],
+    ).send(fail_silently=False)
+
+    if support_recipient:
+        support_body = (
+            "A CoVise user account was deleted.\n\n"
+            f"Processed at: {requested_at.isoformat()}\n"
+            f"User ID: {user.id}\n"
+            f"User email: {user.email}\n"
+            f"User name: {_display_name(user)}\n"
+        )
+        EmailMessage(
+            subject=f"Account deleted: {user.email}",
+            body=support_body,
+            from_email=from_email,
+            to=[support_recipient],
+        ).send(fail_silently=False)
 
 
 def _generate_verification_code():
@@ -97,6 +557,7 @@ def _blocked_user_items(user):
                 "display_name": blocked_user.full_name or blocked_user.email.split("@")[0],
                 "email": blocked_user.email,
                 "avatar_initials": blocked_user.avatar_initials,
+                "avatar_url": _user_avatar_url(blocked_user),
             }
         )
     return items
@@ -110,6 +571,24 @@ def _is_profile_onboarded(profile):
         or _clean_onboarding_answers(getattr(profile, "onboarding_answers", {}))
         or str(getattr(profile, "flow_name", "") or "").strip()
     )
+
+
+def _post_auth_redirect_url(user, next_url=""):
+    profile = getattr(user, "profile", None)
+    sanitized_next = str(next_url or "").strip()
+
+    if not _is_profile_onboarded(profile):
+        onboarding_url = reverse("Onboarding")
+        if sanitized_next:
+            return f"{onboarding_url}?next={sanitized_next}"
+        return onboarding_url
+
+    if not getattr(profile, "has_accepted_platform_agreement", False):
+        agreement_url = reverse("Agreement")
+        target = sanitized_next or reverse("Home")
+        return f"{agreement_url}?next={target}"
+
+    return sanitized_next or reverse("Home")
 
 
 def _clean_onboarding_answers(answers):
@@ -334,6 +813,419 @@ def _split_pipe_list(value):
 def _record_successful_sign_in(user):
     user.sign_in_count = (user.sign_in_count or 0) + 1
     user.save(update_fields=["sign_in_count"])
+
+
+def _request_ip_address(request):
+    forwarded_for = str(request.META.get("HTTP_X_FORWARDED_FOR", "") or "").strip()
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip() or None
+    for key in ("HTTP_CF_CONNECTING_IP", "REMOTE_ADDR"):
+        value = str(request.META.get(key, "") or "").strip()
+        if value:
+            return value
+    return None
+
+
+def _request_location_label(request):
+    city = str(request.META.get("HTTP_CF_IPCITY", "") or request.META.get("HTTP_X_CITY", "") or "").strip()
+    country = str(
+        request.META.get("HTTP_CF_IPCOUNTRY", "")
+        or request.META.get("HTTP_X_COUNTRY_CODE", "")
+        or request.META.get("GEOIP_COUNTRY_CODE", "")
+        or ""
+    ).strip()
+    if city and country:
+        return f"{city}, {country}"
+    if country:
+        return country
+    return "Unknown location"
+
+
+def _device_metadata_from_request(request):
+    user_agent = str(request.META.get("HTTP_USER_AGENT", "") or "")
+    lowered = user_agent.lower()
+
+    if "edg/" in lowered:
+        browser = "Edge"
+    elif "opr/" in lowered or "opera" in lowered:
+        browser = "Opera"
+    elif "chrome/" in lowered and "edg/" not in lowered:
+        browser = "Chrome"
+    elif "firefox/" in lowered:
+        browser = "Firefox"
+    elif "safari/" in lowered and "chrome/" not in lowered:
+        browser = "Safari"
+    else:
+        browser = "Browser"
+
+    if "windows" in lowered:
+        operating_system = "Windows"
+    elif "iphone" in lowered or "ipad" in lowered or "ios" in lowered:
+        operating_system = "iOS"
+    elif "android" in lowered:
+        operating_system = "Android"
+    elif "mac os x" in lowered or "macintosh" in lowered:
+        operating_system = "macOS"
+    elif "linux" in lowered:
+        operating_system = "Linux"
+    else:
+        operating_system = "Unknown OS"
+
+    if "ipad" in lowered or "tablet" in lowered:
+        device_type = SignInEvent.DeviceType.TABLET
+    elif "iphone" in lowered or "android" in lowered or "mobile" in lowered:
+        device_type = SignInEvent.DeviceType.MOBILE
+    elif user_agent:
+        device_type = SignInEvent.DeviceType.DESKTOP
+    else:
+        device_type = SignInEvent.DeviceType.OTHER
+
+    return {
+        "user_agent": user_agent,
+        "browser": browser,
+        "operating_system": operating_system,
+        "device_type": device_type,
+    }
+
+
+def _device_display_name(event):
+    if not event:
+        return "Unknown device"
+    browser = (event.browser or "").strip() or "Browser"
+    operating_system = (event.operating_system or "").strip() or "Unknown OS"
+    return f"{browser} - {operating_system}"
+
+
+def _record_sign_in_event(user, request, *, status, session_key=""):
+    metadata = _device_metadata_from_request(request)
+    return SignInEvent.objects.create(
+        user=user,
+        email=user.email,
+        status=status,
+        session_key=session_key or "",
+        ip_address=_request_ip_address(request),
+        location=_request_location_label(request),
+        user_agent=metadata["user_agent"],
+        browser=metadata["browser"],
+        operating_system=metadata["operating_system"],
+        device_type=metadata["device_type"],
+    )
+
+
+def _send_two_factor_code_email(user, challenge):
+    code = getattr(challenge, "code", "")
+    if not code:
+        raise ValueError("Two-factor challenge code is required.")
+
+    EmailMessage(
+        subject="Your CoVise security code",
+        body=(
+            f"Hi {_display_name(user) or user.email},\n\n"
+            f"Your CoVise security code is: {code}\n\n"
+            "It expires in 10 minutes. If you did not try to sign in, you can ignore this email."
+        ),
+        from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "support@covise.net"),
+        to=[challenge.email or user.email],
+    ).send(fail_silently=False)
+
+
+def _issue_two_factor_challenge(user):
+    TwoFactorChallenge.objects.filter(user=user, consumed_at__isnull=True).delete()
+    expires_at = timezone.now() + timedelta(minutes=10)
+    challenge = TwoFactorChallenge.objects.create(
+        user=user,
+        email=user.email,
+        code=_generate_verification_code(),
+        expires_at=expires_at,
+    )
+    _send_two_factor_code_email(user, challenge)
+    return challenge
+
+
+def _is_valid_two_factor_challenge(challenge):
+    if not challenge:
+        return False
+    if challenge.consumed_at is not None:
+        return False
+    return challenge.expires_at > timezone.now()
+
+
+def _store_pending_two_factor(request, challenge, *, next_url=""):
+    request.session[PENDING_2FA_CHALLENGE_SESSION_KEY] = str(challenge.id)
+    request.session[PENDING_2FA_USER_SESSION_KEY] = str(challenge.user_id)
+    request.session[PENDING_2FA_NEXT_SESSION_KEY] = next_url or ""
+    request.session.modified = True
+
+
+def _clear_pending_two_factor(request):
+    request.session.pop(PENDING_2FA_CHALLENGE_SESSION_KEY, None)
+    request.session.pop(PENDING_2FA_USER_SESSION_KEY, None)
+    request.session.pop(PENDING_2FA_NEXT_SESSION_KEY, None)
+    request.session.modified = True
+
+
+def _pending_two_factor_matches(request, challenge):
+    if not challenge:
+        return False
+    return (
+        str(request.session.get(PENDING_2FA_CHALLENGE_SESSION_KEY, "")) == str(challenge.id)
+        and str(request.session.get(PENDING_2FA_USER_SESSION_KEY, "")) == str(challenge.user_id)
+    )
+
+
+def _active_user_sessions(user):
+    active_sessions = []
+    for session in Session.objects.filter(expire_date__gte=timezone.now()).order_by("-expire_date"):
+        try:
+            decoded = session.get_decoded()
+        except Exception:
+            continue
+        if str(decoded.get("_auth_user_id")) != str(user.pk):
+            continue
+        active_sessions.append(session)
+    return active_sessions
+
+
+def _build_security_context(user, request):
+    current_session_key = request.session.session_key or ""
+    active_sessions = _active_user_sessions(user)
+    session_keys = [session.session_key for session in active_sessions if session.session_key]
+    sign_in_events = list(
+        SignInEvent.objects.filter(user=user).order_by("-created_at")[:12]
+    )
+
+    latest_event_by_session = {}
+    for event in SignInEvent.objects.filter(user=user, session_key__in=session_keys).order_by("-created_at"):
+        latest_event_by_session.setdefault(event.session_key, event)
+
+    session_rows = []
+    for session in active_sessions:
+        event = latest_event_by_session.get(session.session_key)
+        is_current = session.session_key == current_session_key
+        session_rows.append(
+            {
+                "session_key": session.session_key,
+                "device_label": _device_display_name(event),
+                "device_type": getattr(event, "device_type", SignInEvent.DeviceType.OTHER),
+                "location": getattr(event, "location", "") or "Unknown location",
+                "activity_label": "Active now" if is_current else f"Last seen {timesince(getattr(event, 'created_at', session.expire_date))} ago",
+                "is_current": is_current,
+            }
+        )
+
+    session_rows.sort(key=lambda row: (not row["is_current"], row["device_label"]))
+
+    history_rows = [
+        {
+            "created_at": event.created_at,
+            "device_label": _device_display_name(event),
+            "location": event.location or "Unknown location",
+            "status_label": event.get_status_display(),
+            "status_class": "success" if event.status == SignInEvent.Status.SUCCESS else "danger",
+        }
+        for event in sign_in_events
+    ]
+
+    return {
+        "two_factor_enabled": getattr(getattr(user, "preferences", None), "two_factor_enabled", False),
+        "active_sessions": session_rows,
+        "login_history": history_rows,
+    }
+
+
+def _reset_model_to_defaults(instance, *, preserve_fields=None):
+    preserve = set(preserve_fields or ())
+    update_fields = []
+
+    for field in instance._meta.concrete_fields:
+        if field.primary_key or field.name in preserve:
+            continue
+        if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            continue
+        if field.is_relation and field.name == "user":
+            continue
+
+        if field.has_default():
+            value = field.get_default()
+        elif getattr(field, "null", False):
+            value = None
+        elif isinstance(field, (models.CharField, models.TextField)):
+            value = ""
+        else:
+            continue
+
+        setattr(instance, field.name, value)
+        update_fields.append(field.name)
+
+    if update_fields:
+        instance.save(update_fields=update_fields)
+
+
+def _prune_conversations_after_member_data_wipe(conversations):
+    for conversation in conversations:
+        participant_count = conversation.participants.count()
+        latest_message = conversation.messages.order_by("-created_at").first()
+        if participant_count < 2 or latest_message is None:
+            conversation.delete()
+            continue
+        conversation.last_message_at = latest_message.created_at
+        conversation.save(update_fields=["last_message_at"])
+
+
+def _delete_file_field_for_queryset(queryset, field_name):
+    for item in queryset:
+        field_file = getattr(item, field_name, None)
+        if field_file:
+            field_file.delete(save=False)
+
+
+def _execute_member_data_wipe(user, *, current_deletion_request):
+    profile, _ = Profile.objects.get_or_create(user=user)
+    preferences, _ = UserPreference.objects.get_or_create(user=user)
+
+    preserved_profile_fields = {
+        "user",
+        "has_accepted_platform_agreement",
+        "platform_agreement_accepted_at",
+        "platform_agreement_version",
+        "is_account_paused",
+        "account_paused_at",
+    }
+    preserved_preference_fields = {
+        "user",
+        "two_factor_enabled",
+    }
+    preserved_user_fields = {
+        "email",
+        "password",
+        "is_active",
+        "is_staff",
+        "is_superuser",
+        "last_login",
+        "date_joined",
+    }
+
+    conversations = list(
+        Conversation.objects.filter(participants=user)
+        .prefetch_related("participants", "messages")
+        .distinct()
+    )
+    owned_posts = list(
+        Post.objects.filter(user=user).prefetch_related("gallery_images")
+    )
+    sent_messages = list(
+        Message.objects.filter(sender=user)
+    )
+
+    waitlist_entry_ids = [item for item in {profile.source_waitlist_entry_id} if item]
+    onboarding_response_ids = [item for item in {profile.source_onboarding_response_id} if item]
+    user_email = user.email
+    waitlist_entries = list(
+        WaitlistEntry.objects.filter(Q(id__in=waitlist_entry_ids) | Q(email__iexact=user_email))
+    )
+
+    if profile.profile_image:
+        profile.profile_image.delete(save=False)
+    if profile.cv_s3_key:
+        delete_s3_object(profile.cv_s3_key)
+    for entry in waitlist_entries:
+        if entry.cv_s3_key:
+            delete_s3_object(entry.cv_s3_key)
+    for post in owned_posts:
+        if post.image:
+            post.image.delete(save=False)
+        _delete_file_field_for_queryset(post.gallery_images.all(), "image")
+    _delete_file_field_for_queryset(sent_messages, "attachment_file")
+
+    WaitlistEmailVerification.objects.filter(email__iexact=user_email).delete()
+    WaitlistEntry.objects.filter(id__in=[entry.id for entry in waitlist_entries]).delete()
+    OnboardingResponse.objects.filter(Q(id__in=onboarding_response_ids) | Q(email__iexact=user_email)).delete()
+
+    Notification.objects.filter(actor=user).update(actor=None)
+    BlockedUser.objects.filter(Q(blocker=user) | Q(blocked=user)).delete()
+    ConversationRequest.objects.filter(Q(requester=user) | Q(recipient=user)).delete()
+    ConversationUserState.objects.filter(user=user).delete()
+    MessageReceipt.objects.filter(user=user).delete()
+    MessageReaction.objects.filter(user=user).delete()
+    CommentReaction.objects.filter(user=user).delete()
+    Comment.objects.filter(user=user).delete()
+    SavedPost.objects.filter(user=user).delete()
+    Notification.objects.filter(recipient=user).delete()
+    Experiences.objects.filter(user=user).delete()
+    Active_projects.objects.filter(user=user).delete()
+    Project.objects.filter(user=user).delete()
+    PostMention.objects.filter(mentioned_user=user).delete()
+    Post.objects.filter(user=user).delete()
+    SignInEvent.objects.filter(user=user).delete()
+    TwoFactorChallenge.objects.filter(user=user).delete()
+    DataExportRequest.objects.filter(user=user).delete()
+    AccountPauseRequest.objects.filter(user=user).delete()
+    DataDeletionRequest.objects.filter(user=user).exclude(id=current_deletion_request.id).delete()
+
+    Message.objects.filter(sender=user).delete()
+    user.conversations.clear()
+    _prune_conversations_after_member_data_wipe(conversations)
+
+    _reset_model_to_defaults(user, preserve_fields=preserved_user_fields)
+    _reset_model_to_defaults(profile, preserve_fields=preserved_profile_fields)
+    _reset_model_to_defaults(preferences, preserve_fields=preserved_preference_fields)
+
+
+def _build_data_export_context(user):
+    latest_request = (
+        DataExportRequest.objects.filter(user=user)
+        .order_by("-requested_at")
+        .first()
+    )
+    return {
+        "latest_request": latest_request,
+    }
+
+
+def _build_account_pause_context(user):
+    try:
+        profile = user.profile
+    except Profile.DoesNotExist:
+        profile = None
+    latest_request = (
+        AccountPauseRequest.objects.filter(user=user)
+        .order_by("-requested_at")
+        .first()
+    )
+    return {
+        "is_paused": getattr(profile, "is_account_paused", False),
+        "paused_at": getattr(profile, "account_paused_at", None),
+        "latest_request": latest_request,
+    }
+
+
+def _build_data_deletion_context(user):
+    latest_request = (
+        DataDeletionRequest.objects.filter(user=user)
+        .order_by("-requested_at")
+        .first()
+    )
+    if not latest_request:
+        return {
+            "has_request": False,
+            "requested_at": None,
+            "status_label": "Not requested",
+        }
+    return {
+        "has_request": True,
+        "requested_at": latest_request.requested_at,
+        "processed_at": latest_request.processed_at,
+        "status_label": latest_request.get_status_display(),
+    }
+
+
+def _build_settings_page_context(request):
+    settings_page = build_settings_context(request.user)
+    settings_page["security"] = _build_security_context(request.user, request)
+    settings_page["data_export_request"] = _build_data_export_context(request.user)
+    settings_page["account_pause"] = _build_account_pause_context(request.user)
+    settings_page["data_deletion_request"] = _build_data_deletion_context(request.user)
+    return settings_page
 
 
 def _agreement_next_url(request):
@@ -634,6 +1526,75 @@ def _profile_country_label(profile):
     )
 
 
+def _blocked_profile_search_ids(user):
+    if not user or not getattr(user, "is_authenticated", False):
+        return set()
+
+    hidden_ids = set()
+    relationships = BlockedUser.objects.filter(
+        Q(blocker=user) | Q(blocked=user)
+    ).values_list("blocker_id", "blocked_id")
+    for blocker_id, blocked_id in relationships:
+        if blocker_id == user.id:
+            hidden_ids.add(blocked_id)
+        else:
+            hidden_ids.add(blocker_id)
+    return hidden_ids
+
+
+def _searchable_users_for_home(user):
+    hidden_ids = _blocked_profile_search_ids(user)
+    candidates = (
+        User.objects.select_related("profile", "preferences")
+        .exclude(id__in=hidden_ids)
+        .exclude(profile__is_account_paused=True)
+        .filter(Q(preferences__appear_in_search=True) | Q(preferences__isnull=True))
+        .distinct()
+        .order_by("full_name", "email")
+    )
+
+    items = []
+    for candidate in candidates:
+        try:
+            profile = candidate.profile
+        except Profile.DoesNotExist:
+            profile = None
+
+        display_name = (candidate.full_name or "").strip() or candidate.email.split("@")[0]
+        location = _profile_country_label(profile)
+        headline = (
+            str(getattr(profile, "bio", "") or "").strip()
+            or _display_value(getattr(profile, "one_liner", None))
+            or _display_value((getattr(profile, "onboarding_answers", {}) or {}).get("one_liner"))
+        )
+        role = _display_value(getattr(profile, "current_role", None))
+        skills = ", ".join(_top_skill_labels(getattr(profile, "skills", None), limit=4))
+        searchable_text = " ".join(
+            part for part in [
+                candidate.full_name,
+                candidate.email,
+                location,
+                headline,
+                role,
+                skills,
+            ] if part
+        )
+        items.append(
+            {
+                "id": str(candidate.id),
+                "display_name": display_name,
+                "email": candidate.email,
+                "avatar_initials": candidate.avatar_initials,
+                "avatar_url": _profile_avatar_url(profile),
+                "profile_url": reverse("Profile") if candidate.id == user.id else reverse("Public Profile", args=[candidate.id]),
+                "location": location,
+                "headline": headline,
+                "search_text": searchable_text,
+            }
+        )
+    return items
+
+
 def _comment_reaction_payload(comment, *, viewer=None):
     reactions = list(comment.reactions.all()) if hasattr(comment, "reactions") else list(CommentReaction.objects.filter(comment=comment))
     thumbs_up = sum(1 for item in reactions if item.reaction in {CommentReaction.ReactionType.THUMBS_UP, "up"})
@@ -871,6 +1832,7 @@ def _home_quick_requests(user, limit=2):
             "id": str(request_item.id),
             "display_name": other_user.full_name or other_user.email,
             "avatar_initials": other_user.avatar_initials,
+            "avatar_url": _user_avatar_url(other_user),
             "status": request_item.status,
             "status_line": status_line,
             "is_incoming": is_incoming,
@@ -913,6 +1875,7 @@ def _post_gallery_items(post, limit=6):
 def _attach_post_feed_metadata(posts):
     for post in posts:
         profile = getattr(post.user, "profile", None)
+        post.avatar_url = _profile_avatar_url(profile)
         post.mentions_cache = list(post.mentions.select_related("mentioned_user")) if hasattr(post, "mentions") else []
         post.feed_title = _build_post_feed_title(post)
         post.feed_skills = _profile_skill_labels(profile, limit=2)
@@ -963,10 +1926,30 @@ def _post_theme_class(post):
     return f"post-tone-{theme_color}"
 
 
-def _comment_avatar_url(comment):
-    profile = getattr(comment.user, "profile", None)
+def _profile_avatar_url(profile):
+    if not profile:
+        return ""
     image = getattr(profile, "profile_image", None)
-    return getattr(image, "url", "") if image else ""
+    if not image:
+        return ""
+    try:
+        return image.url
+    except Exception:
+        return ""
+
+
+def _user_avatar_url(user):
+    if not user:
+        return ""
+    try:
+        profile = getattr(user, "profile", None)
+    except Profile.DoesNotExist:
+        return ""
+    return _profile_avatar_url(profile)
+
+
+def _comment_avatar_url(comment):
+    return _user_avatar_url(getattr(comment, "user", None))
 
 
 def _build_comment_tree(comments, current_user=None, max_visual_depth=3):
@@ -1085,6 +2068,74 @@ def _create_post_mention_notifications(post):
         )
 
 
+def _send_post_alert_email(post):
+    recipients = _post_alert_recipients()
+    if resend is None or not RESEND_API_KEY or not recipients:
+        logger.warning(
+            "Skipped post alert email for post=%s because email alerts are not configured.",
+            getattr(post, "id", ""),
+        )
+        return False
+
+    resend.api_key = RESEND_API_KEY
+    author = post.user
+    author_name = author.full_name or author.email
+    post_url = _absolute_site_url(reverse("Post Detail", args=[post.id]))
+    created_at_label = timezone.localtime(post.created_at).strftime("%B %d, %Y at %I:%M %p")
+    mentions = [f"@{mention.handle_text}" for mention in post.mentions.select_related("mentioned_user")]
+    image_urls = [
+        _absolute_site_url(image.image.url)
+        for image in post.gallery_images.all()
+        if getattr(getattr(image, "image", None), "url", "")
+    ]
+    safe_content_html = escape(post.content or "").replace("\n", "<br>")
+    mention_markup = (
+        "".join(f"<li>{escape(handle)}</li>" for handle in mentions)
+        if mentions
+        else "<li>None</li>"
+    )
+    image_markup = (
+        "".join(
+            f'<li><a href="{escape(url)}" style="color: #2563eb; text-decoration: none;">{escape(url)}</a></li>'
+            for url in image_urls
+        )
+        if image_urls
+        else "<li>None</li>"
+    )
+    payload = {
+        "from": "CoVise Alerts <founders@covise.net>",
+        "to": list(recipients),
+        "subject": f"New CoVise post: {post.title}",
+        "html": (
+            '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 640px; margin: 0 auto; padding: 32px 24px; color: #111827;">'
+            '<h1 style="font-size: 24px; margin: 0 0 18px;">A new post was published</h1>'
+            f"<p style=\"margin: 0 0 8px;\"><strong>Author:</strong> {escape(author_name)} ({escape(author.email)})</p>"
+            f"<p style=\"margin: 0 0 8px;\"><strong>Post ID:</strong> {post.id}</p>"
+            f"<p style=\"margin: 0 0 8px;\"><strong>Post type:</strong> {escape(post.get_post_type_display())}</p>"
+            f"<p style=\"margin: 0 0 8px;\"><strong>Title:</strong> {escape(post.title)}</p>"
+            f"<p style=\"margin: 0 0 8px;\"><strong>Created:</strong> {escape(created_at_label)}</p>"
+            f"<p style=\"margin: 0 0 16px;\"><strong>Link:</strong> <a href=\"{escape(post_url)}\" style=\"color: #2563eb; text-decoration: none;\">{escape(post_url)}</a></p>"
+            '<div style="margin: 0 0 16px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">'
+            '<p style="margin: 0 0 8px;"><strong>Post content</strong></p>'
+            f'<div style="white-space: normal; line-height: 1.6; color: #334155;">{safe_content_html}</div>'
+            "</div>"
+            '<p style="margin: 0 0 6px;"><strong>Mentions</strong></p>'
+            f'<ul style="margin: 0 0 16px 20px; padding: 0; line-height: 1.6;">{mention_markup}</ul>'
+            '<p style="margin: 0 0 6px;"><strong>Images</strong></p>'
+            f'<p style="margin: 0 0 6px;">Count: {len(image_urls)}</p>'
+            f'<ul style="margin: 0 0 8px 20px; padding: 0; line-height: 1.6;">{image_markup}</ul>'
+            "</div>"
+        ),
+    }
+
+    try:
+        resend.Emails.send(payload)
+        return True
+    except Exception:
+        logger.exception("Failed to send post alert email for post=%s", post.id)
+        return False
+
+
 def _mark_saved_posts(posts, user):
     post_list = list(posts)
     if not post_list:
@@ -1180,29 +2231,120 @@ def _group_avatar_initials(group_name):
     return "GR"
 
 
-def _find_existing_private_conversation(user_a, user_b):
+def _private_conversation_queryset(user_a, user_b):
     return (
-        Conversation.objects.filter(conversation_type=Conversation.ConversationType.PRIVATE, participants=user_a)
+        Conversation.objects.filter(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            participants=user_a,
+        )
         .filter(participants=user_b)
         .annotate(participant_count=Count("participants", distinct=True))
         .filter(participant_count=2)
-        .order_by("-last_message_at", "-updated_at")
         .distinct()
+    )
+
+
+def _merge_private_conversations(user_a, user_b):
+    if not user_a or not user_b or user_a == user_b:
+        return None
+
+    with transaction.atomic():
+        conversations = list(
+            _private_conversation_queryset(user_a, user_b)
+            .select_for_update()
+            .order_by("-last_message_at", "-updated_at", "-created_at")
+        )
+        if not conversations:
+            return None
+
+        canonical = conversations[0]
+        duplicates = conversations[1:]
+        if not duplicates:
+            return canonical
+
+        duplicate_ids = [conversation.id for conversation in duplicates]
+        Message.objects.filter(conversation_id__in=duplicate_ids).update(conversation=canonical)
+        ConversationRequest.objects.filter(conversation_id__in=duplicate_ids).update(conversation=canonical)
+
+        duplicate_states = list(
+            ConversationUserState.objects.filter(conversation_id__in=duplicate_ids).select_related("user")
+        )
+        for state in duplicate_states:
+            canonical_state, created = ConversationUserState.objects.get_or_create(
+                conversation=canonical,
+                user=state.user,
+                defaults={"mute_notifications": state.mute_notifications},
+            )
+            if not created and state.mute_notifications and not canonical_state.mute_notifications:
+                canonical_state.mute_notifications = True
+                canonical_state.save(update_fields=["mute_notifications", "updated_at"])
+        ConversationUserState.objects.filter(conversation_id__in=duplicate_ids).delete()
+
+        latest_message_at = (
+            Message.objects.filter(conversation=canonical)
+            .order_by("-created_at")
+            .values_list("created_at", flat=True)
+            .first()
+        )
+        if canonical.last_message_at != latest_message_at:
+            canonical.last_message_at = latest_message_at
+            canonical.save(update_fields=["last_message_at"])
+
+        Conversation.objects.filter(id__in=duplicate_ids).delete()
+        return canonical
+
+
+def _normalize_visible_private_conversations(user):
+    if not user or not getattr(user, "is_authenticated", False):
+        return
+
+    private_conversations = (
+        Conversation.objects.filter(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            participants=user,
+        )
+        .annotate(participant_count=Count("participants", distinct=True))
+        .filter(participant_count=2)
+        .prefetch_related("participants")
+        .distinct()
+    )
+    seen_pairs = set()
+    for conversation in private_conversations:
+        participants = list(conversation.participants.all())
+        if len(participants) != 2:
+            continue
+        pair_key = tuple(sorted(str(participant.id) for participant in participants))
+        if pair_key in seen_pairs:
+            continue
+        seen_pairs.add(pair_key)
+        _merge_private_conversations(participants[0], participants[1])
+
+
+def _find_existing_private_conversation(user_a, user_b):
+    return (
+        _private_conversation_queryset(user_a, user_b)
+        .order_by("-last_message_at", "-updated_at")
         .first()
     )
 
 
 def _get_or_create_private_conversation(user_a, user_b):
-    conversation = _find_existing_private_conversation(user_a, user_b)
+    conversation = _merge_private_conversations(user_a, user_b)
     if conversation:
         return conversation
 
-    conversation = Conversation.objects.create(
-        conversation_type=Conversation.ConversationType.PRIVATE,
-        created_by=user_a,
-    )
-    conversation.participants.add(user_a, user_b)
-    return conversation
+    with transaction.atomic():
+        conversation = _find_existing_private_conversation(user_a, user_b)
+        if conversation:
+            return conversation
+
+        conversation = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            created_by=user_a,
+        )
+        conversation.participants.add(user_a, user_b)
+
+    return _merge_private_conversations(user_a, user_b) or conversation
 
 
 def _serialize_message(message, *, viewer=None, is_ephemeral=False):
@@ -1260,6 +2402,7 @@ def _serialize_conversation(conversation, current_user):
                     "id": str(participant.id),
                     "display_name": participant.full_name or participant.email,
                     "avatar_initials": participant.avatar_initials,
+                    "avatar_url": _user_avatar_url(participant),
                 }
             )
     status = (
@@ -1314,6 +2457,7 @@ def _serialize_conversation(conversation, current_user):
         "blocked_by_current_user": _has_user_blocked(current_user, partner) if not is_group else False,
         "name": conversation.group_name if is_group else (partner.full_name or partner.email),
         "avatar": _group_avatar_initials(conversation.group_name) if is_group else partner.avatar_initials,
+        "avatar_url": "" if is_group else _user_avatar_url(partner),
         "preview": preview,
         "time": _relative_time_label(last_message.created_at) if last_message else "New",
         "unread": unread_count,
@@ -1351,6 +2495,7 @@ def _serialize_conversation_request(request_item, current_user):
         "id": str(request_item.id),
         "name": other_user.full_name or other_user.email,
         "avatar": other_user.avatar_initials,
+        "avatar_url": _user_avatar_url(other_user),
         "description": description,
         "is_incoming": is_incoming,
         "status": request_item.status,
@@ -1383,6 +2528,7 @@ def _project_card_context(project):
     owner_initials = project.founder_initials or "CV"
     if project.user and getattr(project.user, "avatar_initials", ""):
         owner_initials = project.user.avatar_initials
+    owner_avatar_url = _user_avatar_url(project.user) if project.user else ""
 
     filter_tokens = list(project.filter_tokens or [])
     if project.stage:
@@ -1409,6 +2555,7 @@ def _project_card_context(project):
         "title": project.title,
         "founder_name": owner_name,
         "founder_initials": owner_initials,
+        "founder_avatar_url": owner_avatar_url,
         "city": project.city,
         "country": project.country,
         "relative_time": f"{timesince(project.published_at)} ago" if project.published_at else "Recently added",
@@ -1475,6 +2622,7 @@ def home(request):
         "home_quick_requests": quick_requests,
         "home_welcome_subtitle": _home_welcome_subtitle(sidebar_metrics),
         "home_filter_countries": sorted({post.feed_country for post in posts if getattr(post, "feed_country", "")}),
+        "searchable_users": _searchable_users_for_home(request.user),
     })
     response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     return response
@@ -1944,10 +3092,12 @@ def create_post(request):
     _attach_post_feed_metadata([post])
     _create_post_notifications(post)
     _create_post_mention_notifications(post)
+    _send_post_alert_email(post)
     return redirect("Post Detail", post_id=post.id)
 
 @login_required
 def messages(request):
+    _normalize_visible_private_conversations(request.user)
     _normalize_friend_contacts(request.user)
     conversations = list(
         Conversation.objects.filter(participants=request.user)
@@ -1988,6 +3138,7 @@ def messages(request):
             "id": str(friend.id),
             "display_name": friend.full_name or friend.email,
             "avatar_initials": friend.avatar_initials,
+            "avatar_url": _user_avatar_url(friend),
         }
         for friend in _friend_queryset(request.user)
         if not _has_user_blocked(request.user, friend)
@@ -2019,7 +3170,7 @@ def start_private_conversation(request, user_id):
     if not _can_view_profile(request.user, target_user):
         raise Http404("Profile not available")
 
-    existing_conversation = _find_existing_private_conversation(request.user, target_user)
+    existing_conversation = _merge_private_conversations(request.user, target_user)
     if existing_conversation:
         return redirect(f"{reverse('Messages')}?conversation={existing_conversation.id}")
 
@@ -2820,14 +3971,25 @@ def toggle_block_user(request, user_id):
 
 @login_required
 def projects(request):
-    response = render(request, "coming_soon.html", {"page_name": "Projects"})
+    project_cards = [
+        _project_card_context(project)
+        for project in Project.objects.filter(is_active=True)
+        .exclude(user__profile__is_account_paused=True)
+        .select_related("user", "user__profile")
+    ]
+    response = render(request, "project.html", {"projects": project_cards})
     response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     return response
 
 
 @login_required
 def project_detail(request, project_slug):
-    project = Project.objects.filter(slug=project_slug, is_active=True).first()
+    project = (
+        Project.objects.select_related("user", "user__profile")
+        .filter(slug=project_slug, is_active=True)
+        .exclude(user__profile__is_account_paused=True)
+        .first()
+    )
     if not project:
         raise Http404("Project not found")
 
@@ -2839,15 +4001,33 @@ def project_detail(request, project_slug):
     else:
         alignment_band = "low"
 
+    founder_name = project.founder_name or "CoVise Founder"
+    if project.user and project.user.full_name:
+        founder_name = project.user.full_name
+
+    founder_initials = project.founder_initials or "CV"
+    if project.user and getattr(project.user, "avatar_initials", ""):
+        founder_initials = project.user.avatar_initials
+
     context = {
         "project": project,
         "alignment_band": alignment_band,
+        "project_founder_name": founder_name,
+        "project_founder_initials": founder_initials,
+        "project_founder_avatar_url": _user_avatar_url(project.user) if project.user else "",
     }
     return render(request, "project_detail.html", context)
 
 def _can_view_profile(viewer, target_user):
     if viewer == target_user:
         return True
+
+    try:
+        target_profile = target_user.profile
+    except Profile.DoesNotExist:
+        target_profile = None
+    if getattr(target_profile, "is_account_paused", False):
+        return False
 
     preferences = getattr(target_user, "preferences", None)
     visibility = getattr(preferences, "profile_visibility", "everyone")
@@ -2866,7 +4046,7 @@ def _render_profile_page(request, target_user, is_own_profile):
     target_profile = getattr(target_user, "profile", None)
     is_onboarded = _is_profile_onboarded(target_profile)
     onboarding_prompts = {
-        "headline": "Complete your profile so CoVise can introduce you to stronger matches.",
+        "headline": "Complete your profile",
         "location": "Add your location",
         "what_im_building": "Add your one-liner and market focus to show founders what you're building.",
         "looking_for": "Add the skills, commitment, and collaborator type you are looking for.",
@@ -2919,14 +4099,17 @@ def _render_profile_page(request, target_user, is_own_profile):
 
     context = {
         "ui_user": build_ui_user_context(target_user),
+        "viewer_ui_user": build_ui_user_context(request.user),
         "viewed_user_id": target_user.id,
         "profile_page": profile_page,
+        "profile_show_cofounder_badge": can_view_profile_data and _profile_has_visible_cofounder_badge(target_profile),
         "experiences": target_user.experiences.all() if can_view_profile_data else target_user.experiences.none(),
         "active_projects": target_user.active_projects.all() if can_view_profile_data else target_user.active_projects.none(),
         "posts": _mark_saved_posts(
             target_user.posts.select_related("user", "user__profile").prefetch_related("gallery_images", "mentions__mentioned_user").exclude(user_id__in=viewer_blocked_ids).order_by("-created_at"),
             request.user,
         ) if can_view_profile_data else target_user.posts.none(),
+        "saved_posts": build_saved_post_items(request.user) if is_own_profile else [],
         "is_own_profile": is_own_profile,
         "profile_read_only": not is_own_profile,
         "can_view_profile_data": can_view_profile_data,
@@ -3317,7 +4500,10 @@ def settings(request):
     preferences, _ = UserPreference.objects.get_or_create(user=request.user)
 
     user = request.user
-    context = {}
+    context = {
+        "profile_photo_max_size_bytes": PROFILE_PHOTO_MAX_SIZE_BYTES,
+        "profile_photo_max_size_mb": PROFILE_PHOTO_MAX_SIZE_MB,
+    }
 
     print(request.method)
 
@@ -3328,9 +4514,11 @@ def settings(request):
             if request.POST.get("save_section") == "personal_data":
                 email=request.POST.get("email", "").strip()
                 phone_number=request.POST.get("phone_number", "").strip()
+                profile_photo_action = request.POST.get("profile_photo_action", "").strip()
+                uploaded_profile_image = request.FILES.get("profile_image")
                 if email and email != user.email:
                     if User.objects.filter(email=email).exclude(pk=user.pk).exists():
-                        context["settings_page"] = build_settings_context(request.user)
+                        context["settings_page"] = _build_settings_page_context(request)
                         context["error_message"] = "This email is already registered on CoVise. Please sign in instead."
                         context["save_success"] = False
                         return render(request, "settings.html", context)
@@ -3340,7 +4528,23 @@ def settings(request):
                 print ("phone_number ",request.POST.get("phone_number"))
 
                 profile.phone_number = phone_number
-                profile.save(update_fields=["phone_number"])
+                profile_update_fields = ["phone_number"]
+
+                if profile_photo_action == "remove":
+                    if profile.profile_image:
+                        profile.profile_image.delete(save=False)
+                    profile.profile_image = None
+                    profile_update_fields.append("profile_image")
+                elif uploaded_profile_image:
+                    if uploaded_profile_image.size > PROFILE_PHOTO_MAX_SIZE_BYTES:
+                        context["settings_page"] = _build_settings_page_context(request)
+                        context["error_message"] = f"Profile photo must be {PROFILE_PHOTO_MAX_SIZE_MB} MB or smaller."
+                        context["save_success"] = False
+                        return render(request, "settings.html", context)
+                    profile.profile_image = uploaded_profile_image
+                    profile_update_fields.append("profile_image")
+
+                profile.save(update_fields=profile_update_fields)
 
                 print("Saved phone number in profile :", profile.phone_number)
 
@@ -3492,11 +4696,40 @@ def settings(request):
                 preferences.pause_matching = _as_bool(pause_matching)
                 preferences.save(update_fields=["preferred_cofounder_types", "pause_matching", "preferred_industries", "preferred_gcc_markets", "minimum_commitment", "open_to_foreign_founders"])
 
+            if request.POST.get("save_section") == "security":
+                security_action = request.POST.get("security_action", "").strip()
+
+                if security_action == "enable_2fa":
+                    preferences.two_factor_enabled = True
+                    preferences.save(update_fields=["two_factor_enabled"])
+                    return redirect(f"{reverse('Settings')}?security=2fa-enabled")
+
+                if security_action == "disable_2fa":
+                    preferences.two_factor_enabled = False
+                    preferences.save(update_fields=["two_factor_enabled"])
+                    return redirect(f"{reverse('Settings')}?security=2fa-disabled")
+
+                if security_action == "logout_session":
+                    session_key = request.POST.get("session_key", "").strip()
+                    if session_key:
+                        Session.objects.filter(session_key=session_key).delete()
+                        if session_key == request.session.session_key:
+                            logout(request)
+                            return redirect(f"{reverse('Login')}?logged_out=1")
+                    return redirect(f"{reverse('Settings')}?security=session-ended")
+
+                if security_action == "logout_other_sessions":
+                    current_session_key = request.session.session_key or ""
+                    for session in _active_user_sessions(request.user):
+                        if session.session_key and session.session_key != current_session_key:
+                            session.delete()
+                    return redirect(f"{reverse('Settings')}?security=other-sessions-ended")
+
             return redirect(f"{reverse('Settings')}?saved=1")
         except Exception:
             return redirect(f"{reverse('Settings')}?saved=2")
 
-    context["settings_page"] = build_settings_context(request.user)
+    context["settings_page"] = _build_settings_page_context(request)
     if request.GET.get("saved") == "1":
         context["success_message"] = "Saved successfully."
         context["save_success"] = True
@@ -3512,7 +4745,129 @@ def settings(request):
     if request.GET.get("delete_account") == "todo":
         context["error_message"] = "Delete account is wired to a backend view but not implemented yet."
         context["save_success"] = False
+    if request.GET.get("delete_account") == "error":
+        context["error_message"] = "We could not delete your account right now. Please try again."
+        context["save_success"] = False
+    if request.GET.get("data_export") == "completed":
+        context["success_message"] = "Your data export was emailed successfully."
+        context["save_success"] = True
+    if request.GET.get("data_export") == "error":
+        context["error_message"] = "We could not prepare your data export right now. Please try again."
+        context["save_success"] = False
+    if request.GET.get("account_pause") == "paused":
+        context["success_message"] = "Your account is now paused. You can still browse and reactivate anytime."
+        context["save_success"] = True
+    if request.GET.get("account_pause") == "reactivated":
+        context["success_message"] = "Your account has been reactivated."
+        context["save_success"] = True
+    if request.GET.get("account_pause") == "blocked":
+        context["error_message"] = "Your account is paused. Reactivate it to resume posting, messaging, and other activity."
+        context["save_success"] = False
+    if request.GET.get("account_pause") == "error":
+        context["error_message"] = "We could not update your pause status right now. Please try again."
+        context["save_success"] = False
+    if request.GET.get("data_deletion") == "completed":
+        context["success_message"] = "Your user data was deleted while keeping your login account active."
+        context["save_success"] = True
+    if request.GET.get("data_deletion") == "error":
+        context["error_message"] = "We could not complete your data deletion right now. Please try again."
+        context["save_success"] = False
+    security_action = request.GET.get("security", "").strip()
+    if security_action == "2fa-enabled":
+        context["success_message"] = "Two-factor authentication is now enabled."
+        context["save_success"] = True
+    if security_action == "2fa-disabled":
+        context["success_message"] = "Two-factor authentication has been disabled."
+        context["save_success"] = True
+    if security_action == "session-ended":
+        context["success_message"] = "That session has been logged out."
+        context["save_success"] = True
+    if security_action == "other-sessions-ended":
+        context["success_message"] = "All other active sessions have been logged out."
+        context["save_success"] = True
     return render(request, 'settings.html', context)
+
+
+@login_required
+@require_POST
+def request_data_export(request):
+    export_request = DataExportRequest.objects.create(
+        user=request.user,
+        status=DataExportRequest.Status.PENDING,
+        delivery_email=request.user.email,
+    )
+    try:
+        _send_data_export_email(request.user)
+        export_request.status = DataExportRequest.Status.COMPLETED
+        export_request.completed_at = timezone.now()
+        export_request.save(update_fields=["status", "completed_at"])
+        return redirect(f"{reverse('Settings')}?data_export=completed")
+    except Exception:
+        export_request.status = DataExportRequest.Status.FAILED
+        export_request.save(update_fields=["status"])
+        return redirect(f"{reverse('Settings')}?data_export=error")
+
+
+@login_required
+@require_POST
+def request_account_pause(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    action = request.POST.get("action", "").strip().lower()
+    if action not in {AccountPauseRequest.Action.PAUSE, AccountPauseRequest.Action.REACTIVATE}:
+        return redirect(f"{reverse('Settings')}?account_pause=error")
+
+    pause_request = AccountPauseRequest.objects.create(
+        user=request.user,
+        action=action,
+        status=AccountPauseRequest.Status.COMPLETED,
+    )
+    try:
+        if action == AccountPauseRequest.Action.PAUSE:
+            profile.is_account_paused = True
+            profile.account_paused_at = timezone.now()
+            profile.save(update_fields=["is_account_paused", "account_paused_at"])
+            pause_request.processed_at = timezone.now()
+            pause_request.save(update_fields=["processed_at"])
+            return redirect(f"{reverse('Settings')}?account_pause=paused")
+
+        profile.is_account_paused = False
+        profile.account_paused_at = None
+        profile.save(update_fields=["is_account_paused", "account_paused_at"])
+        pause_request.processed_at = timezone.now()
+        pause_request.save(update_fields=["processed_at"])
+        return redirect(f"{reverse('Settings')}?account_pause=reactivated")
+    except Exception:
+        pause_request.status = AccountPauseRequest.Status.FAILED
+        pause_request.save(update_fields=["status"])
+        return redirect(f"{reverse('Settings')}?account_pause=error")
+
+
+@login_required
+@require_POST
+def request_data_deletion(request):
+    deletion_request = DataDeletionRequest.objects.create(
+        user=request.user,
+        status=DataDeletionRequest.Status.PENDING,
+    )
+    try:
+        with transaction.atomic():
+            _execute_member_data_wipe(request.user, current_deletion_request=deletion_request)
+            deletion_request.status = DataDeletionRequest.Status.COMPLETED
+            deletion_request.processed_at = timezone.now()
+            deletion_request.notes = "Immediate member data wipe completed while preserving login access."
+            deletion_request.save(update_fields=["status", "processed_at", "notes"])
+        try:
+            _send_data_deletion_request_emails(request.user)
+        except Exception:
+            deletion_request.notes = "Immediate member data wipe completed, but confirmation email failed."
+            deletion_request.save(update_fields=["notes"])
+    except Exception:
+        deletion_request.status = DataDeletionRequest.Status.FAILED
+        deletion_request.notes = "Data wipe failed before completion."
+        deletion_request.processed_at = timezone.now()
+        deletion_request.save(update_fields=["status", "notes", "processed_at"])
+        return redirect(f"{reverse('Settings')}?data_deletion=error")
+    return redirect(f"{reverse('Settings')}?data_deletion=completed")
 
 
 @login_required
@@ -3523,14 +4878,32 @@ def delete_account(request):
     if confirm_text != "DELETE" or not delete_feedback:
         return redirect(f"{reverse('Settings')}#danger-zone")
 
-    # account deletion flow.
+    deletion_request = AccountDeletionRequest.objects.create(
+        user=request.user,
+        user_id_snapshot=request.user.id,
+        email_snapshot=request.user.email,
+        feedback=delete_feedback,
+        status=AccountDeletionRequest.Status.PENDING,
+    )
+
     user_email = request.user.email
     logger.info("Delete account feedback for user %s: %s", user_email, delete_feedback)
-    request.user.delete()
-    #what abt the rest of his data: posts, comments, profile, preferences etc?
-    request.session.flush()
-    logger.info("Deleted account for user with email: %s", user_email)
-
+    try:
+        deletion_request.status = AccountDeletionRequest.Status.COMPLETED
+        deletion_request.processed_at = timezone.now()
+        deletion_request.save(update_fields=["status", "processed_at"])
+        try:
+            _send_account_deletion_request_emails(request.user)
+        except Exception:
+            logger.exception("Account deletion confirmation email failed for user %s", user_email)
+        request.user.delete()
+        request.session.flush()
+        logger.info("Deleted account for user with email: %s", user_email)
+    except Exception:
+        deletion_request.status = AccountDeletionRequest.Status.FAILED
+        deletion_request.processed_at = timezone.now()
+        deletion_request.save(update_fields=["status", "processed_at"])
+        return redirect(f"{reverse('Settings')}?delete_account=error#danger-zone")
 
     return redirect("Landing Page")
 
@@ -3552,10 +4925,70 @@ def security(request):
 
 def login_view(request):
     next_url = request.POST.get('next') or request.GET.get('next')
-
-
     if request.method == 'GET':
-        return render(request, 'login.html', {'next': next_url})
+        context = {'next': next_url}
+        if request.GET.get("logged_out") == "1":
+            context["success_message"] = "You have been logged out."
+        return render(request, 'login.html', context)
+
+    challenge_id = request.POST.get("challenge_id", "").strip()
+    if challenge_id:
+        challenge = TwoFactorChallenge.objects.select_related("user", "user__profile").filter(id=challenge_id).first()
+        context = {
+            "two_factor_required": True,
+            "challenge_id": challenge_id,
+            "challenge_email": getattr(challenge, "email", ""),
+            "next": next_url,
+        }
+
+        if challenge is None:
+            context["two_factor_required"] = False
+            context["error_message"] = "Your security check expired. Please log in again."
+            return render(request, 'login.html', context, status=400)
+
+        if request.POST.get("resend_2fa") == "1":
+            try:
+                challenge.code = _generate_verification_code()
+                challenge.expires_at = timezone.now() + timedelta(minutes=10)
+                challenge.consumed_at = None
+                challenge.save(update_fields=["code", "expires_at", "consumed_at"])
+                _send_two_factor_code_email(challenge.user, challenge)
+            except Exception:
+                context["error_message"] = "We could not send a new security code right now. Please try again."
+                return render(request, 'login.html', context, status=500)
+            context["info_message"] = "We sent a fresh security code to your email."
+            return render(request, 'login.html', context)
+
+        two_factor_code = "".join(ch for ch in request.POST.get("two_factor_code", "") if ch.isdigit())[:6]
+        if not two_factor_code:
+            context["error_message"] = "Enter the 6-digit security code we emailed you."
+            return render(request, 'login.html', context, status=400)
+        if not _is_valid_two_factor_challenge(challenge):
+            context["two_factor_required"] = False
+            context["error_message"] = "That security code expired. Please log in again."
+            return render(request, 'login.html', context, status=400)
+        if challenge.code != two_factor_code:
+            _record_sign_in_event(challenge.user, request, status=SignInEvent.Status.FAILURE)
+            context["error_message"] = "That security code is incorrect. Please try again."
+            return render(request, 'login.html', context, status=400)
+
+        user = challenge.user
+        if not hasattr(user, "profile"):
+            sync_profile_for_user(user)
+        Profile.objects.get_or_create(user=user)
+        UserPreference.objects.get_or_create(user=user)
+        login(request, user)
+        challenge.consumed_at = timezone.now()
+        challenge.save(update_fields=["consumed_at"])
+        _record_successful_sign_in(user)
+        _record_sign_in_event(
+            user,
+            request,
+            status=SignInEvent.Status.SUCCESS,
+            session_key=request.session.session_key or "",
+        )
+        return redirect(_post_auth_redirect_url(user, next_url))
+
     email = request.POST.get('email', '').strip().lower()
     password = request.POST.get('password', '').strip()
     context = {
@@ -3589,20 +5022,35 @@ def login_view(request):
         )
     user = authenticate(request, email=existing_user.email, password=password)
     if user is None:
+        _record_sign_in_event(existing_user, request, status=SignInEvent.Status.FAILURE)
         context["error_message"] = "Incorrect password. Please try again."
         return render(request, 'login.html', context, status=400)
 
     if not hasattr(user, "profile"):
         sync_profile_for_user(user)
     Profile.objects.get_or_create(user=user)
-    UserPreference.objects.get_or_create(user=user)
+    preferences, _ = UserPreference.objects.get_or_create(user=user)
+    if preferences.two_factor_enabled:
+        try:
+            challenge = _issue_two_factor_challenge(user)
+        except Exception:
+            context["error_message"] = "We could not send your security code right now. Please try again."
+            return render(request, 'login.html', context, status=500)
+        context["two_factor_required"] = True
+        context["challenge_id"] = str(challenge.id)
+        context["challenge_email"] = user.email
+        context["info_message"] = "We sent a 6-digit security code to your email."
+        return render(request, 'login.html', context)
+
     login(request, user)
     _record_successful_sign_in(user)
-    if not user.profile.has_accepted_platform_agreement:
-        agreement_url = reverse("Agreement")
-        target = next_url or reverse("Home")
-        return redirect(f"{agreement_url}?next={target}")
-    return redirect(next_url or "Home")
+    _record_sign_in_event(
+        user,
+        request,
+        status=SignInEvent.Status.SUCCESS,
+        session_key=request.session.session_key or "",
+    )
+    return redirect(_post_auth_redirect_url(user, next_url))
 
 
 def signin(request):
@@ -3663,9 +5111,13 @@ def signin(request):
         return render(request, 'signin.html', context, status=500)
     login(request, user)
     _record_successful_sign_in(user)
-    if not user.profile.has_accepted_platform_agreement:
-        return redirect(f"{reverse('Agreement')}?next={reverse('Home')}")
-    return redirect("Home")
+    _record_sign_in_event(
+        user,
+        request,
+        status=SignInEvent.Status.SUCCESS,
+        session_key=request.session.session_key or "",
+    )
+    return redirect(_post_auth_redirect_url(user, reverse("Home")))
 
 
 def onboarding_final(request):
@@ -3678,6 +5130,9 @@ def onboarding(request):
     onboarding_unavailable = flow is None
     initial_answers = {}
     redirect_url = reverse("Sign In")
+    next_url = str(request.GET.get("next", "")).strip()
+    if next_url.startswith("/") and not next_url.startswith("//"):
+        redirect_url = next_url
     if getattr(request.user, "is_authenticated", False):
         profile = getattr(request.user, "profile", None)
         waitlist_initial_answers = _waitlist_to_onboarding_initial_answers(
@@ -3686,7 +5141,8 @@ def onboarding(request):
         initial_answers.update(waitlist_initial_answers)
         initial_answers.update(_clean_onboarding_answers(getattr(profile, "onboarding_answers", {})))
         initial_answers["email"] = request.user.email
-        redirect_url = reverse("Profile")
+        if not next_url:
+            redirect_url = reverse("Profile")
     elif request.session.get("waitlist_email"):
         initial_answers.update(
             _waitlist_to_onboarding_initial_answers(
@@ -3817,7 +5273,7 @@ def about(request):
     return render(request, 'about.html')
 @login_required
 def workspace(request):
-    response = render(request, "coming_soon.html", {"page_name": "Workspace"})
+    response = render(request, "workspace.html")
     response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     return response
 

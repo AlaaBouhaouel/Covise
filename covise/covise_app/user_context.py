@@ -2,6 +2,7 @@ import json
 import re
 from functools import lru_cache
 from pathlib import Path
+from django.urls import reverse
 from django.utils.timesince import timesince
 
 from covise_app.models import BlockedUser, SavedPost
@@ -66,6 +67,7 @@ def _preferences_dict(preferences):
         "ai_send_messages": getattr(preferences, "ai_send_messages", False),
         "ai_edit_workspace": getattr(preferences, "ai_edit_workspace", False),
         "ai_manage_milestones": getattr(preferences, "ai_manage_milestones", False),
+        "two_factor_enabled": getattr(preferences, "two_factor_enabled", False),
         "email_new_match": getattr(preferences, "email_new_match", True),
         "email_new_message": getattr(preferences, "email_new_message", True),
         "email_connection_request": getattr(preferences, "email_connection_request", True),
@@ -153,6 +155,27 @@ def _cofounder_badge_state(profile):
     return eligible, visible
 
 
+def build_saved_post_items(user):
+    blocked_user_ids = list(
+        BlockedUser.objects.filter(blocker=user).values_list("blocked_id", flat=True)
+    )
+    saved_posts = list(
+        SavedPost.objects.filter(user=user)
+        .exclude(post__user_id__in=blocked_user_ids)
+        .select_related("post", "post__user")
+        .order_by("-created_at")
+    )
+    return [
+        {
+            "id": saved_post.post.id,
+            "title": getattr(saved_post.post, "title", "") or (getattr(saved_post.post, "content", "")[:80] or "Untitled post"),
+            "author": getattr(saved_post.post.user, "full_name", "") or getattr(saved_post.post.user, "email", ""),
+            "saved_at": f"{timesince(saved_post.created_at)} ago",
+        }
+        for saved_post in saved_posts
+    ]
+
+
 def build_ui_user_context(user):
     profile = getattr(user, "profile", None)
 
@@ -178,7 +201,7 @@ def build_ui_user_context(user):
         "github_url": getattr(profile, "github", "") if profile else "",
         "proof_of_work_url": getattr(profile, "proof_of_work_url", "") if profile else "",
         "avatar_initials": avatar_initials,
-        "avatar_url": "",
+        "avatar_url": getattr(getattr(profile, "profile_image", None), "url", "") if profile and getattr(profile, "profile_image", None) else "",
     }
 
 
@@ -256,7 +279,7 @@ def build_profile_context(user):
     preferences = getattr(user, "preferences", None)
 
     defaults = {
-        "headline": "Complete your profile so CoVise can introduce you to stronger matches.",
+        "headline": "Complete your profile",
         "location": "Add your location",
         "what_im_building": "Add your one-liner and market focus to show founders what you're building.",
         "what_im_building_tags": [],
@@ -359,6 +382,15 @@ def build_profile_card_context(user):
     if not role_location:
         role_location = "PROFILE IN PROGRESS"
 
+    role_label = current_role or "Founder"
+    location_label = location if location and location != "Add your location" else "Location not added yet"
+    stage = _value_text(getattr(profile, "stage", None)) if profile else ""
+    commitment = _value_text(getattr(profile, "cofounder_commitment", None)) if profile else ""
+    if not commitment:
+        commitment = _value_text(getattr(profile, "commitment_level", None)) if profile else ""
+    industry = _value_text(getattr(profile, "industry", None)) if profile else ""
+    market = _value_text(getattr(profile, "target_market", None)) if profile else ""
+
     skills = _value_list(getattr(profile, "skills", None)) if profile else []
     if not skills:
         skills = ["Add your skills"]
@@ -371,16 +403,27 @@ def build_profile_card_context(user):
     if not looking_for:
         looking_for = ["Add what you're looking for"]
 
-    about = profile_page["headline"]
+    about = _value_text(getattr(profile, "one_liner", None)) if profile else ""
+    if not about:
+        about = profile_page["headline"]
+    _cofounder_badge_available, show_cofounder_badge = _cofounder_badge_state(profile)
 
     return {
         "avatar_initials": avatar_initials,
         "display_name": display_name,
+        "role": role_label,
+        "location": location_label,
         "role_location": role_location,
         "score": profile_page["conviction_score"],
+        "stage": stage or "Profile in progress",
+        "commitment": commitment or "Flexible",
+        "industry": industry or "Not shared yet",
+        "market": market or location_label,
         "skills": skills,
         "looking_for": looking_for,
         "about": about,
+        "show_cofounder_badge": show_cofounder_badge,
+        "share_url": reverse("Public Profile", args=[user.id]),
     }
 
 
@@ -389,15 +432,6 @@ def build_settings_context(user):
     preferences = getattr(user, "preferences", None)
     email = getattr(user, "email", "") or ""
     display_name = getattr(user, "full_name", "") or ""
-    blocked_user_ids = list(
-        BlockedUser.objects.filter(blocker=user).values_list("blocked_id", flat=True)
-    )
-    saved_posts = list(
-        SavedPost.objects.filter(user=user)
-        .exclude(post__user_id__in=blocked_user_ids)
-        .select_related("post", "post__user")
-        .order_by("-created_at")
-    )
     blocked_relationships = list(
         BlockedUser.objects.filter(blocker=user)
         .select_related("blocked", "blocked__profile")
@@ -420,15 +454,7 @@ def build_settings_context(user):
         location = getattr(profile, "country", "") or _value_text(getattr(profile, "home_country", None))
     cofounder_badge_available, show_cofounder_badge = _cofounder_badge_state(profile)
 
-    saved_post_items = [
-        {
-            "id": saved_post.post.id,
-            "title": getattr(saved_post.post, "title", "") or (getattr(saved_post.post, "content", "")[:80] or "Untitled post"),
-            "author": getattr(saved_post.post.user, "full_name", "") or getattr(saved_post.post.user, "email", ""),
-            "saved_at": f"{timesince(saved_post.created_at)} ago",
-        }
-        for saved_post in saved_posts
-    ]
+    saved_post_items = build_saved_post_items(user)
     blocked_user_items = [
         {
             "id": relationship.blocked.id,

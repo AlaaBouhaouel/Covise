@@ -1,7 +1,12 @@
-from django.test import TestCase
-from django.urls import reverse
+from unittest.mock import patch
 
-from .models import User, WaitlistEntry
+from django.core import mail
+from django.test import TestCase
+from django.test import override_settings
+from django.urls import reverse
+from django.utils import timezone
+
+from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, Post, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry, OnboardingResponse
 
 
 class WaitlistEntryModelTests(TestCase):
@@ -72,3 +77,721 @@ class AuthEmailNormalizationTests(TestCase):
         self.assertEqual(response.status_code, 302)
         created_user = User.objects.get(email="approved.user@example.com")
         self.assertTrue(created_user.check_password("safe-password-123"))
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class SecurityAuthenticationTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="secure@example.com",
+            password="safe-password-123",
+            full_name="Secure User",
+        )
+        Profile.objects.create(
+            user=self.user,
+            full_name="Secure User",
+            has_accepted_platform_agreement=True,
+        )
+        self.preferences = UserPreference.objects.create(user=self.user, two_factor_enabled=True)
+
+    @patch("covise_app.views.EmailMessage.send", return_value=1)
+    def test_login_requires_two_factor_code_when_enabled(self, _mock_send):
+        response = self.client.post(
+            reverse("Login"),
+            {
+                "email": "secure@example.com",
+                "password": "safe-password-123",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Security Check")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+        challenge = TwoFactorChallenge.objects.get(user=self.user)
+        response = self.client.post(
+            reverse("Login"),
+            {
+                "challenge_id": str(challenge.id),
+                "two_factor_code": challenge.code,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.client.session.get("_auth_user_id"), str(self.user.pk))
+        challenge.refresh_from_db()
+        self.assertIsNotNone(challenge.consumed_at)
+        self.assertEqual(
+            SignInEvent.objects.filter(user=self.user, status=SignInEvent.Status.SUCCESS).count(),
+            1,
+        )
+
+    def test_failed_password_attempt_is_recorded_in_sign_in_history(self):
+        response = self.client.post(
+            reverse("Login"),
+            {
+                "email": "secure@example.com",
+                "password": "wrong-password",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        event = SignInEvent.objects.get(user=self.user)
+        self.assertEqual(event.status, SignInEvent.Status.FAILURE)
+        self.assertEqual(event.email, "secure@example.com")
+
+    def test_settings_security_post_can_toggle_two_factor(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("Settings"),
+            {
+                "save_section": "security",
+                "security_action": "disable_2fa",
+            },
+        )
+
+        self.assertRedirects(response, f"{reverse('Settings')}?security=2fa-disabled")
+        self.preferences.refresh_from_db()
+        self.assertFalse(self.preferences.two_factor_enabled)
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class DataDeletionRequestTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="deletion@example.com",
+            password="safe-password-123",
+            full_name="Deletion User",
+        )
+        self.profile = Profile.objects.create(
+            user=self.user,
+            full_name="Deletion User",
+            has_accepted_platform_agreement=True,
+            platform_agreement_version="2026.04",
+            bio="This should be wiped.",
+            waitlist_snapshot={"email": "deletion@example.com"},
+            onboarding_answers={"one_liner": "Wipe me"},
+        )
+        self.preferences = UserPreference.objects.create(user=self.user, two_factor_enabled=True)
+        self.client.force_login(self.user)
+        self.waitlist_entry = WaitlistEntry.objects.create(
+            full_name="Deletion User",
+            phone_number="+966500000010",
+            email="deletion@example.com",
+            country="Saudi Arabia",
+            linkedin="https://www.linkedin.com/in/deletion-user/",
+            status=WaitlistEntry.Status.ACTIVATED,
+            my_referral_code="CV-DELETE01",
+        )
+        self.onboarding_response = OnboardingResponse.objects.create(
+            email="deletion@example.com",
+            answers={"one_liner": "Wipe me"},
+        )
+        self.profile.source_waitlist_entry = self.waitlist_entry
+        self.profile.source_onboarding_response = self.onboarding_response
+        self.profile.save(update_fields=["source_waitlist_entry", "source_onboarding_response"])
+        WaitlistEmailVerification.objects.create(
+            email="deletion@example.com",
+            verification_code="123456",
+        )
+
+    @patch("covise_app.views.EmailMessage.send", return_value=1)
+    def test_request_data_deletion_wipes_user_data_but_keeps_login_shell(self, _mock_send):
+        post = Post.objects.create(
+            user=self.user,
+            title="Delete me",
+            post_type=Post.PostType.UPDATE,
+            content="This post should be deleted.",
+        )
+        other_user = User.objects.create_user(
+            email="other@example.com",
+            password="safe-password-123",
+            full_name="Other User",
+        )
+        Profile.objects.create(
+            user=other_user,
+            full_name="Other User",
+            has_accepted_platform_agreement=True,
+        )
+        conversation = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            created_by=self.user,
+        )
+        conversation.participants.add(self.user, other_user)
+        Message.objects.create(
+            conversation=conversation,
+            sender=self.user,
+            body="This message should be deleted.",
+        )
+
+        response = self.client.post(reverse("Request Data Deletion"))
+
+        self.assertRedirects(response, f"{reverse('Settings')}?data_deletion=completed")
+        deletion_request = DataDeletionRequest.objects.get(user=self.user)
+        self.assertEqual(deletion_request.status, DataDeletionRequest.Status.COMPLETED)
+
+        self.user.refresh_from_db()
+        self.profile.refresh_from_db()
+        self.preferences.refresh_from_db()
+
+        self.assertEqual(self.user.email, "deletion@example.com")
+        self.assertEqual(self.user.full_name, "")
+        self.assertEqual(self.profile.bio, "")
+        self.assertEqual(self.profile.waitlist_snapshot, {})
+        self.assertEqual(self.profile.onboarding_answers, {})
+        self.assertTrue(self.profile.has_accepted_platform_agreement)
+        self.assertTrue(self.preferences.two_factor_enabled)
+
+        self.assertFalse(Post.objects.filter(id=post.id).exists())
+        self.assertFalse(Message.objects.filter(sender=self.user).exists())
+        self.assertFalse(WaitlistEntry.objects.filter(email="deletion@example.com").exists())
+        self.assertFalse(OnboardingResponse.objects.filter(email="deletion@example.com").exists())
+        self.assertFalse(WaitlistEmailVerification.objects.filter(email="deletion@example.com").exists())
+
+    @patch("covise_app.views.EmailMessage.send", return_value=1)
+    def test_settings_page_shows_completed_state_after_data_deletion(self, _mock_send):
+        self.client.post(reverse("Request Data Deletion"))
+
+        response = self.client.get(reverse("Settings"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Delete Data Again")
+        self.assertContains(response, "Your login account stays active.")
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class AccountRequestActionTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="requests@example.com",
+            password="safe-password-123",
+            full_name="Request User",
+        )
+        Profile.objects.create(
+            user=self.user,
+            full_name="Request User",
+            has_accepted_platform_agreement=True,
+        )
+        UserPreference.objects.create(user=self.user)
+        self.client.force_login(self.user)
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_request_data_export_creates_completed_request_and_emails_zip(self):
+        response = self.client.post(reverse("Request Data Export"))
+
+        self.assertRedirects(response, f"{reverse('Settings')}?data_export=completed")
+        export_request = DataExportRequest.objects.get(user=self.user)
+        self.assertEqual(export_request.status, DataExportRequest.Status.COMPLETED)
+        self.assertEqual(len(mail.outbox), 1)
+        attachment = mail.outbox[0].attachments[0]
+        self.assertTrue(attachment[0].endswith(".zip"))
+
+    def test_pause_and_reactivate_account_creates_request_records(self):
+        response = self.client.post(
+            reverse("Request Account Pause"),
+            {"action": "pause"},
+        )
+
+        self.assertRedirects(response, f"{reverse('Settings')}?account_pause=paused")
+        profile = self.user.profile
+        profile.refresh_from_db()
+        self.assertTrue(profile.is_account_paused)
+        self.assertEqual(AccountPauseRequest.objects.filter(user=self.user).count(), 1)
+
+        response = self.client.post(
+            reverse("Request Account Pause"),
+            {"action": "reactivate"},
+        )
+
+        self.assertRedirects(response, f"{reverse('Settings')}?account_pause=reactivated")
+        profile.refresh_from_db()
+        self.assertFalse(profile.is_account_paused)
+        self.assertEqual(AccountPauseRequest.objects.filter(user=self.user).count(), 2)
+
+    def test_delete_account_creates_audit_request_before_deleting_user(self):
+        with patch("covise_app.views.EmailMessage.send", return_value=1):
+            response = self.client.post(
+                reverse("Delete Account"),
+                {
+                    "confirm_delete": "DELETE",
+                    "delete_feedback": "Testing delete",
+                },
+            )
+
+        self.assertRedirects(response, reverse("Landing Page"))
+        self.assertFalse(User.objects.filter(email="requests@example.com").exists())
+        deletion_request = AccountDeletionRequest.objects.get(email_snapshot="requests@example.com")
+        self.assertEqual(deletion_request.status, AccountDeletionRequest.Status.COMPLETED)
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class PausedAccountBehaviorTests(TestCase):
+    def setUp(self):
+        self.viewer = User.objects.create_user(
+            email="viewer-paused@example.com",
+            password="safe-password-123",
+            full_name="Viewer User",
+        )
+        Profile.objects.create(
+            user=self.viewer,
+            full_name="Viewer User",
+            has_accepted_platform_agreement=True,
+        )
+        UserPreference.objects.create(user=self.viewer)
+        self.client.force_login(self.viewer)
+
+    def test_paused_users_are_excluded_from_home_search(self):
+        paused_user = User.objects.create_user(
+            email="paused@example.com",
+            password="safe-password-123",
+            full_name="Paused User",
+        )
+        Profile.objects.create(
+            user=paused_user,
+            full_name="Paused User",
+            has_accepted_platform_agreement=True,
+            is_account_paused=True,
+        )
+        UserPreference.objects.create(user=paused_user, appear_in_search=True)
+
+        response = self.client.get(reverse("Home"))
+
+        self.assertEqual(response.status_code, 200)
+        searchable_names = {item["display_name"] for item in response.context["searchable_users"]}
+        self.assertNotIn("Paused User", searchable_names)
+
+    def test_paused_user_can_browse_but_cannot_submit_blocked_settings_forms(self):
+        paused_user = User.objects.create_user(
+            email="paused-self@example.com",
+            password="safe-password-123",
+            full_name="Paused Self",
+        )
+        Profile.objects.create(
+            user=paused_user,
+            full_name="Paused Self",
+            has_accepted_platform_agreement=True,
+            is_account_paused=True,
+        )
+        UserPreference.objects.create(user=paused_user)
+
+        self.client.force_login(paused_user)
+
+        response = self.client.get(reverse("Settings"))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(
+            reverse("Settings"),
+            {
+                "save_section": "personal_data",
+                "phone_number": "+966500000011",
+            },
+        )
+
+        self.assertRedirects(response, f"{reverse('Settings')}?account_pause=blocked")
+class PreviewPageTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="preview@example.com",
+            password="safe-password-123",
+            full_name="Preview User",
+        )
+
+    def test_projects_page_renders_preview_shell(self):
+        Project.objects.create(
+            user=self.user,
+            slug="preview-project",
+            code="CV-1001",
+            title="Preview Project",
+            founder_name="Preview User",
+            founder_initials="PU",
+            city="Riyadh",
+            country="Saudi Arabia",
+            overview="Preview overview",
+            is_active=True,
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("Projects"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Project hub coming soon.")
+        self.assertContains(response, "This area is not available yet.")
+        self.assertContains(response, "Preview Project")
+        self.assertContains(response, 'aria-label="Projects"')
+        self.assertNotContains(response, "Projects Preview")
+
+    def test_workspace_page_renders_preview_shell(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("Workspace"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Workspace tools coming soon.")
+        self.assertContains(response, "This area is not available yet.")
+        self.assertContains(response, 'aria-label="Workspace"')
+        self.assertNotContains(response, "Workspace Preview")
+
+    def test_settings_page_marks_ai_permissions_unavailable(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("Settings"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "CoVise AI Agent is not available yet.")
+        self.assertContains(response, 'data-unavailable="true"', html=False)
+        self.assertContains(response, "AI Activity Log not available yet")
+
+    def test_settings_page_renders_security_state_from_real_data(self):
+        UserPreference.objects.update_or_create(
+            user=self.user,
+            defaults={"two_factor_enabled": True},
+        )
+        SignInEvent.objects.create(
+            user=self.user,
+            email=self.user.email,
+            status=SignInEvent.Status.FAILURE,
+            browser="Chrome",
+            operating_system="Windows",
+            device_type=SignInEvent.DeviceType.DESKTOP,
+            location="Unknown location",
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("Settings"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Disable 2FA")
+        self.assertContains(response, "Chrome - Windows")
+        self.assertContains(response, "Failed attempt")
+
+    def test_home_searchable_users_respects_search_visibility_and_blocks(self):
+        visible_user = User.objects.create_user(
+            email="visible@example.com",
+            password="safe-password-123",
+            full_name="Visible Founder",
+        )
+        hidden_user = User.objects.create_user(
+            email="hidden@example.com",
+            password="safe-password-123",
+            full_name="Hidden Founder",
+        )
+        blocker_user = User.objects.create_user(
+            email="blocked@example.com",
+            password="safe-password-123",
+            full_name="Blocked Founder",
+        )
+
+        Profile.objects.create(
+            user=visible_user,
+            country="Saudi Arabia",
+            bio="Building a fintech network for founders.",
+            current_role=["Founder"],
+            skills=["Product Management", "Fundraising"],
+        )
+        Profile.objects.create(user=hidden_user, country="UAE", bio="Hidden profile")
+        Profile.objects.create(user=blocker_user, country="Qatar", bio="Blocked profile")
+
+        UserPreference.objects.create(user=hidden_user, appear_in_search=False)
+        BlockedUser.objects.create(blocker=self.user, blocked=blocker_user)
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("Home"))
+
+        self.assertEqual(response.status_code, 200)
+        searchable_users = response.context["searchable_users"]
+        searchable_names = {item["display_name"] for item in searchable_users}
+
+        self.assertIn("Visible Founder", searchable_names)
+        self.assertNotIn("Hidden Founder", searchable_names)
+        self.assertNotIn("Blocked Founder", searchable_names)
+        visible_entry = next(item for item in searchable_users if item["display_name"] == "Visible Founder")
+        self.assertEqual(visible_entry["profile_url"], reverse("Public Profile", args=[visible_user.id]))
+        self.assertIn("fintech network", visible_entry["search_text"].lower())
+
+
+class ProfilePageTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="owner@example.com",
+            password="safe-password-123",
+            full_name="Owner User",
+        )
+        self.viewer = User.objects.create_user(
+            email="viewer@example.com",
+            password="safe-password-123",
+            full_name="Viewer User",
+        )
+        self.author = User.objects.create_user(
+            email="author@example.com",
+            password="safe-password-123",
+            full_name="Author User",
+        )
+
+        self.profile = Profile.objects.create(
+            user=self.user,
+            full_name="Owner User",
+            country="Saudi Arabia",
+            bio="Building something serious.",
+            current_role=["Founder"],
+            cofounders_needed=["1"],
+            looking_for_type=["Technical Cofounder"],
+            looking_for_skills=["Engineering"],
+            skills=["Product Management"],
+            onboarding_answers={"show_cofounder_badge": True},
+        )
+        Profile.objects.create(user=self.viewer, full_name="Viewer User")
+        Profile.objects.create(user=self.author, full_name="Author User")
+
+        self.own_post = Post.objects.create(
+            user=self.user,
+            title="AMA Launch Notes",
+            post_type=Post.PostType.AMA,
+            content="Ask me anything about our traction.",
+        )
+        self.saved_post = Post.objects.create(
+            user=self.author,
+            title="Saved Founder Update",
+            post_type=Post.PostType.UPDATE,
+            content="A useful post worth bookmarking.",
+        )
+        SavedPost.objects.create(user=self.user, post=self.saved_post)
+
+    def test_owner_profile_shows_saved_posts_section(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("Profile"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Saved Posts")
+        self.assertContains(response, self.saved_post.title)
+
+    def test_public_profile_hides_saved_posts_section(self):
+        self.client.force_login(self.viewer)
+
+        response = self.client.get(reverse("Public Profile", args=[self.user.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Saved Posts")
+        self.assertNotContains(response, self.saved_post.title)
+
+    def test_profile_post_metadata_omits_post_type_label(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("Profile"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, self.own_post.get_post_type_display())
+
+    def test_profile_hero_badge_renders_when_enabled(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("Profile"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["profile_show_cofounder_badge"])
+        self.assertContains(response, "Looking for Cofounder")
+
+    def test_profile_hero_badge_hidden_when_disabled(self):
+        self.profile.onboarding_answers = {"show_cofounder_badge": False}
+        self.profile.save(update_fields=["onboarding_answers"])
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("Profile"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["profile_show_cofounder_badge"])
+        self.assertNotContains(response, "Looking for Cofounder")
+
+    def test_profile_card_includes_badge_state_in_context_and_html(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("Profile Card"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["profile_card"]["show_cofounder_badge"])
+        self.assertContains(response, 'id="card-cofounder-badge"')
+        self.assertContains(response, "Looking for Cofounder")
+
+
+class CreatePostAlertEmailTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="poster@example.com",
+            password="safe-password-123",
+            full_name="Poster User",
+        )
+
+    @override_settings(
+        SITE_URL="https://covise.net",
+        POST_ALERT_EMAILS=["ellabouhawel@gmail.com", "small345az@gmail.com"],
+    )
+    @patch("covise_app.views.resend")
+    def test_create_post_emails_alert_recipients_with_post_details(self, mock_resend):
+        with patch("covise_app.views.RESEND_API_KEY", "test-resend-key"):
+            self.client.force_login(self.user)
+
+            response = self.client.post(
+                reverse("Create Post"),
+                {
+                    "title": "Founder update",
+                    "post_type": Post.PostType.UPDATE,
+                    "content": "We launched in Riyadh.\nLooking for pilot customers.",
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Post.objects.count(), 1)
+        mock_resend.Emails.send.assert_called_once()
+
+        payload = mock_resend.Emails.send.call_args.args[0]
+        created_post = Post.objects.get()
+
+        self.assertEqual(
+            payload["to"],
+            ["ellabouhawel@gmail.com", "small345az@gmail.com"],
+        )
+        self.assertEqual(payload["subject"], "New CoVise post: Founder update")
+        self.assertIn("Poster User (poster@example.com)", payload["html"])
+        self.assertIn("Founder update", payload["html"])
+        self.assertIn("We launched in Riyadh.<br>Looking for pilot customers.", payload["html"])
+        self.assertIn(f"https://covise.net/posts/{created_post.id}/", payload["html"])
+
+
+class MessagingConversationNormalizationTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="messages-owner@example.com",
+            password="safe-password-123",
+            full_name="Messages Owner",
+        )
+        self.other_user = User.objects.create_user(
+            email="messages-partner@example.com",
+            password="safe-password-123",
+            full_name="Messages Partner",
+        )
+        Profile.objects.create(user=self.user, full_name="Messages Owner")
+        Profile.objects.create(user=self.other_user, full_name="Messages Partner")
+        self.client.force_login(self.user)
+
+    def _create_private_conversation(self, *, created_by):
+        conversation = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            created_by=created_by,
+        )
+        conversation.participants.add(self.user, self.other_user)
+        return conversation
+
+    def test_messages_page_merges_duplicate_private_conversations_for_same_pair(self):
+        older_conversation = self._create_private_conversation(created_by=self.user)
+        newer_conversation = self._create_private_conversation(created_by=self.other_user)
+
+        older_message = Message.objects.create(
+            conversation=older_conversation,
+            sender=self.user,
+            body="First thread message",
+        )
+        newer_message = Message.objects.create(
+            conversation=newer_conversation,
+            sender=self.other_user,
+            body="Most recent thread message",
+        )
+        older_conversation.last_message_at = older_message.created_at
+        older_conversation.save(update_fields=["last_message_at"])
+        newer_conversation.last_message_at = newer_message.created_at
+        newer_conversation.save(update_fields=["last_message_at"])
+
+        accepted_request = ConversationRequest.objects.create(
+            requester=self.user,
+            recipient=self.other_user,
+            status=ConversationRequest.Status.ACCEPTED,
+            conversation=older_conversation,
+            responded_at=timezone.now(),
+        )
+        ConversationUserState.objects.create(
+            conversation=older_conversation,
+            user=self.user,
+            mute_notifications=True,
+        )
+
+        response = self.client.get(reverse("Messages"))
+
+        self.assertEqual(response.status_code, 200)
+        merged_conversations = (
+            Conversation.objects.filter(
+                conversation_type=Conversation.ConversationType.PRIVATE,
+                participants=self.user,
+            )
+            .filter(participants=self.other_user)
+            .distinct()
+        )
+        self.assertEqual(merged_conversations.count(), 1)
+
+        canonical = merged_conversations.first()
+        self.assertIsNotNone(canonical)
+        self.assertEqual(Message.objects.filter(conversation=canonical).count(), 2)
+        self.assertTrue(
+            ConversationRequest.objects.filter(id=accepted_request.id, conversation=canonical).exists()
+        )
+        self.assertTrue(
+            ConversationUserState.objects.filter(
+                conversation=canonical,
+                user=self.user,
+                mute_notifications=True,
+            ).exists()
+        )
+
+        serialized = [
+            item
+            for item in response.context["conversation_data"]
+            if item["conversation_type"] == Conversation.ConversationType.PRIVATE
+            and item["partner_id"] == str(self.other_user.id)
+        ]
+        self.assertEqual(len(serialized), 1)
+        self.assertEqual(serialized[0]["preview"], "Most recent thread message")
+
+    def test_start_private_conversation_redirects_to_canonical_merged_thread(self):
+        accepted_request = ConversationRequest.objects.create(
+            requester=self.user,
+            recipient=self.other_user,
+            status=ConversationRequest.Status.ACCEPTED,
+            responded_at=timezone.now(),
+        )
+        first_conversation = self._create_private_conversation(created_by=self.user)
+        second_conversation = self._create_private_conversation(created_by=self.other_user)
+
+        first_message = Message.objects.create(
+            conversation=first_conversation,
+            sender=self.user,
+            body="Earlier message",
+        )
+        second_message = Message.objects.create(
+            conversation=second_conversation,
+            sender=self.other_user,
+            body="Latest message",
+        )
+        first_conversation.last_message_at = first_message.created_at
+        first_conversation.save(update_fields=["last_message_at"])
+        second_conversation.last_message_at = second_message.created_at
+        second_conversation.save(update_fields=["last_message_at"])
+        accepted_request.conversation = first_conversation
+        accepted_request.save(update_fields=["conversation"])
+
+        response = self.client.post(reverse("Start Private Conversation", args=[self.other_user.id]))
+
+        merged_conversations = (
+            Conversation.objects.filter(
+                conversation_type=Conversation.ConversationType.PRIVATE,
+                participants=self.user,
+            )
+            .filter(participants=self.other_user)
+            .distinct()
+        )
+        self.assertEqual(merged_conversations.count(), 1)
+
+        canonical = merged_conversations.first()
+        self.assertIsNotNone(canonical)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"{reverse('Messages')}?conversation={canonical.id}")
+        self.assertTrue(
+            ConversationRequest.objects.filter(id=accepted_request.id, conversation=canonical).exists()
+        )

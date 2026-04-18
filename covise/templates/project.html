@@ -8,6 +8,7 @@
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'requests.css' %}">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
+    <link rel="stylesheet" href="{% static 'app_preview.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         .unstyled-link { color: inherit; text-decoration: none; }
@@ -64,141 +65,100 @@
         </aside>
 
         <main class="main">
-            <header class="home-header" aria-label="Projects top bar">
-                <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
-                    <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
-                    <img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="CoVise logo">
-                    <span>CoVise</span>
-                </a>
-                <div class="home-header-actions">
-                    <button class="theme-toggle" id="projectThemeToggle" aria-label="Toggle light/dark mode" aria-pressed="false">
-                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                    </button>
-                    <div class="notif-wrap">
-                        <button class="notification-bell" id="notifBell" aria-label="Toggle notifications" type="button">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M15 17H9M18 17V11a6 6 0 1 0-12 0v6l-2 2h16l-2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                            <span class="notification-badge" aria-hidden="true">4</span>
-                        </button>
-                        <div id="notifPanel" class="notif-panel">
-                            <div class="notif-panel-head">
-                                <span class="notif-panel-title">Network Activity</span>
-                                <span class="notif-panel-meta">4 new</span>
+            <div class="projects-preview-shell app-preview-shell">
+                <div class="projects-preview-region app-preview-region">
+                    <section class="projects">
+                        <div class="projects-head">
+                            <div class="right-panel dashboard-card widget">
+                                <div class="projects-copy">
+                                    <h2>Projects</h2>
+                                    <p>Discover active builds and connect with teams where your skills are needed.</p>
+                                </div>
+                                <div class="projects-controls">
+                                    <div style="position: relative; width: 100%;">
+                                        <input class="post-input" id="projectSearch" type="text" name="prompt" placeholder="Find what you are looking for..." style="padding-right: 44px;">
+                                        <button id="projectSearchButton" type="button" aria-label="search" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(120,150,255,0.35); background: rgba(120,150,255,0.14); color: var(--text); display: grid; place-items: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;" onmouseover="this.style.borderColor='rgba(120,150,255,0.6)';this.style.background='rgba(120,150,255,0.26)';" onmouseout="this.style.borderColor='rgba(120,150,255,0.35)';this.style.background='rgba(120,150,255,0.14)';">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="11" cy="11" r="8"></circle>
+                                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <div class="projects-filter-row">
+                                        <div class="filter-pills" role="tablist" aria-label="Project filters">
+                                            <button class="filter-pill is-active" type="button" data-filter="all" aria-pressed="true">All</button>
+                                            <button class="filter-pill" type="button" data-filter="seeking-co-founder" aria-pressed="false">Seeking Co-founder</button>
+                                            <button class="filter-pill" type="button" data-filter="seeking-investor" aria-pressed="false">Seeking Investor</button>
+                                            <button class="filter-pill" type="button" data-filter="seeking-operator" aria-pressed="false">Seeking Operator</button>
+                                            <button class="filter-pill" type="button" data-filter="early-stage" aria-pressed="false">Early Stage</button>
+                                            <button class="filter-pill" type="button" data-filter="revenue-stage" aria-pressed="false">Revenue Stage</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="activity-feed activity-feed-plain">
-                                <div class="feed-item">
-                                    <div class="feed-text"><strong>Ahmed K.</strong><br>joined from Riyadh - looking for a tech co-founder</div>
-                                    <div class="feed-time">2h ago</div>
-                                </div>
-                                <div class="feed-item">
-                                    <div class="feed-text"><strong>New project posted</strong><br>B2B logistics platform, UAE expansion</div>
-                                    <div class="feed-time">4h ago</div>
-                                </div>
-                                <div class="feed-item">
-                                    <div class="feed-text"><strong>Sara M. &amp; Faisal A.</strong><br>started a Trial Build together</div>
-                                    <div class="feed-time">6h ago</div>
-                                </div>
-                                <div class="feed-item">
-                                    <div class="feed-text"><strong>Nora H.</strong><br>joined from Dubai - open to cross-border partnerships</div>
-                                    <div class="feed-time">9h ago</div>
-                                </div>
+                            <div class="left-panel">
+                                <article class="dashboard-card widget" data-demo="Network Activity tracks live growth signals across founders, opportunities, and matches.">
+                                    <div class="widget-header">
+                                        <div class="widget-title">Network Activity</div>
+                                        <div class="widget-action">View All</div>
+                                    </div>
+
+                                    <div class="activity-grid">
+                                        <div class="stat-card">
+                                            <div class="stat-value">247</div>
+                                            <div class="stat-label">Verified Founders</div>
+                                            <div class="stat-delta">+ 14 this week</div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-value">42</div>
+                                            <div class="stat-label">Open Opportunities</div>
+                                            <div class="stat-delta">+ 6 today</div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-value">18</div>
+                                            <div class="stat-label">Matches This Week</div>
+                                            <div class="stat-delta">+ 3 yesterday</div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-value">91%</div>
+                                            <div class="stat-label">Avg Match Score</div>
+                                            <div class="stat-delta">Across active pairs</div>
+                                        </div>
+                                    </div>
+                                </article>
                             </div>
                         </div>
-                    </div>
-                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="8" r="4"></circle>
-                            <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
-                        </svg>
-                    </a>
-                </div>
-            </header>
 
-            <section class="projects">
-                <div class="projects-head">
-                    <div class="right-panel dashboard-card widget">
-                        <div class="projects-copy">
-                            <h2>Projects</h2>
-                            <p>Discover active builds and connect with teams where your skills are needed.</p>
-                        </div>
-                        <div class="projects-controls">
-                                <div style="position: relative; width: 100%;">
-                                    <input class="post-input" id="projectSearch" type="text" name="prompt" placeholder="Find what you are looking for..." style="padding-right: 44px;">
-                                    <button id="projectSearchButton" type="button" aria-label="search" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(120,150,255,0.35); background: rgba(120,150,255,0.14); color: var(--text); display: grid; place-items: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;" onmouseover="this.style.borderColor='rgba(120,150,255,0.6)';this.style.background='rgba(120,150,255,0.26)';" onmouseout="this.style.borderColor='rgba(120,150,255,0.35)';this.style.background='rgba(120,150,255,0.14)';">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                            <circle cx="11" cy="11" r="8"></circle>
-                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                        </svg>
-                                    </button>
-                                </div>
+                        <div class="project-list" id="projectList">
+                            {% for project in projects %}
+                            <article class="project-card" data-filters="{{ project.data_filters|default:''|escape }}" data-search="{{ project.data_search|default:''|escape }}">
+                                <div class="founder-row">
+                                    <div class="founder-meta">
+                                        {% if project.owner_user_id %}
+                                        <a href="{% url 'Public Profile' project.owner_user_id %}" class="unstyled-link" aria-label="View {{ project.founder_name }} profile">
+                                            {% if project.founder_avatar_url %}
+                                            <img class="founder-avatar founder-avatar-image" src="{{ project.founder_avatar_url }}" alt="{{ project.founder_name }} avatar">
+                                            {% else %}
+                                            <span class="founder-avatar">{{ project.founder_initials }}</span>
+                                            {% endif %}
+                                        </a>
+                                        <a href="{% url 'Public Profile' project.owner_user_id %}" class="unstyled-link">Posted by {{ project.founder_name }}</a>
+                                        {% else %}
+                                        {% if project.founder_avatar_url %}
+                                        <img class="founder-avatar founder-avatar-image" src="{{ project.founder_avatar_url }}" alt="{{ project.founder_name }} avatar">
+                                        {% else %}
+                                        <span class="founder-avatar">{{ project.founder_initials }}</span>
+                                        {% endif %}
+                                        <span>Posted by {{ project.founder_name }}</span>
+                                        {% endif %}
+                                    </div>
 
-                            <div class="projects-filter-row">
-                                <div class="filter-pills" role="tablist" aria-label="Project filters">
-                                    <button class="filter-pill is-active" type="button" data-filter="all" aria-pressed="true">All</button>
-                                    <button class="filter-pill" type="button" data-filter="seeking-co-founder" aria-pressed="false">Seeking Co-founder</button>
-                                    <button class="filter-pill" type="button" data-filter="seeking-investor" aria-pressed="false">Seeking Investor</button>
-                                    <button class="filter-pill" type="button" data-filter="seeking-operator" aria-pressed="false">Seeking Operator</button>
-                                    <button class="filter-pill" type="button" data-filter="early-stage" aria-pressed="false">Early Stage</button>
-                                    <button class="filter-pill" type="button" data-filter="revenue-stage" aria-pressed="false">Revenue Stage</button>
+                                    <div class="founder-meta" style="gap: calc(var(--spacing)*1.5);">
+                                        <span>{{ project.city }}, {{ project.country }}</span>
+                                        <span>{{ project.relative_time }}</span>
+                                    </div>
                                 </div>
-     
-                            </div>
-                        </div>
-                    </div>
-                    <div class="left-panel">
-                        <article class="dashboard-card widget" data-demo="Network Activity tracks live growth signals across founders, opportunities, and matches.">
-                            <div class="widget-header">
-                                <div class="widget-title">Network Activity</div>
-                                <div class="widget-action">View All</div>
-                            </div>
-
-                            <div class="activity-grid">
-                                <div class="stat-card">
-                                    <div class="stat-value">247</div>
-                                    <div class="stat-label">Verified Founders</div>
-                                    <div class="stat-delta">+ 14 this week</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-value">42</div>
-                                    <div class="stat-label">Open Opportunities</div>
-                                    <div class="stat-delta">+ 6 today</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-value">18</div>
-                                    <div class="stat-label">Matches This Week</div>
-                                    <div class="stat-delta">+ 3 yesterday</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-value">91%</div>
-                                    <div class="stat-label">Avg Match Score</div>
-                                    <div class="stat-delta">Across active pairs</div>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-                </div>
-
-                <div class="project-list" id="projectList">
-                    {% for project in projects %}
-                    <article class="project-card" data-filters="{{ project.data_filters|default:''|escape }}" data-search="{{ project.data_search|default:''|escape }}">
-                        <div class="founder-row">
-                            <div class="founder-meta">
-                                {% if project.owner_user_id %}
-                                <a href="{% url 'Public Profile' project.owner_user_id %}" class="unstyled-link" aria-label="View {{ project.founder_name }} profile"><span class="founder-avatar">{{ project.founder_initials }}</span></a>
-                                <a href="{% url 'Public Profile' project.owner_user_id %}" class="unstyled-link">Posted by {{ project.founder_name }}</a>
-                                {% else %}
-                                <span class="founder-avatar">{{ project.founder_initials }}</span>
-                                <span>Posted by {{ project.founder_name }}</span>
-                                {% endif %}
-                            </div>
-
-                            <div class="founder-meta" style="gap: calc(var(--spacing)*1.5);">
-                                <span>{{ project.city }}, {{ project.country }}</span>
-                                <span>{{ project.relative_time }}</span>
-                            </div>
-                        </div>
                         <div class="project-card-top">
                             <div class="project-title-block">
                                 <div class="project-title-row">
@@ -636,13 +596,16 @@
                         </div>
                     </article>
                     {% endcomment %}
-                </div>
+                        </div>
 
-                <div class="empty-state" id="projectEmptyState" hidden>
-                    <strong>No matching projects found.</strong>
-                    <span>Try a different keyword or switch back to the All filter.</span>
+                        <div class="empty-state" id="projectEmptyState" hidden>
+                            <strong>No matching projects found.</strong>
+                            <span>Try a different keyword or switch back to the All filter.</span>
+                        </div>
+                    </section>
                 </div>
-            </section>
+                {% include "includes/app_preview_overlay.html" with show_preview_loader=True preview_kicker="Projects" preview_title="Project hub coming soon." preview_subtitle="We are shaping this space so founders can discover serious builds faster." preview_unavailable_note="This area is not available yet." %}
+            </div>
         </main>
     </div>
 
@@ -657,10 +620,10 @@
         <div class="align-popup-summary" id="alignPopupSummary"></div>
     </div>
 
-    {% include "includes/app_mobile_nav.html" with active_page='' show_mobile_back=False %}
+    {% include "includes/app_mobile_nav.html" with active_page='projects' show_mobile_back=False %}
     <script>
         (function () {
-            var toggleButton = document.getElementById('projectThemeToggle');
+            var toggleButton = document.getElementById('themeToggle');
             if (!toggleButton) return;
 
             function applyThemeState() {

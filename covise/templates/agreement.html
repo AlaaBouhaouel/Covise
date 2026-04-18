@@ -17,111 +17,188 @@
     </script>
 </head>
 <body>
-    <main class="agreement-page">
+    <main class="agreement-main" id="top">
         <section class="agreement-shell">
-            <div class="agreement-brand">
-                <img src="{% static 'images/index/noBgLogo.png' %}" alt="CoVise logo">
-                <span>CoVise</span>
-            </div>
-            <div class="agreement-card panel">
-                <div class="agreement-kicker">Required Before Entry</div>
-                <h1>Community Guidelines</h1>
-                <p class="agreement-intro">Before you enter CoVise, please review the standards for posting, outreach, and collaboration on the platform.</p>
-                {% if agreement_read_only %}
-                <div class="agreement-readonly-note">Accepted on {{ agreement_profile.platform_agreement_accepted_at|date:"M j, Y, g:i a" }}. This page is now read-only.</div>
-                {% endif %}
 
-                {% if agreement_error_message %}
-                <div class="agreement-feedback agreement-feedback--error">{{ agreement_error_message }}</div>
-                {% endif %}
 
-                <div class="agreement-grid">
-                    <article class="agreement-point">
-                        <strong>Purpose-driven participation</strong>
-                        <p>This network is for founders, operators, and builders actively working on ventures or committed to starting one.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>Execution over conversation</strong>
-                        <p>CoVise exists to create real outcomes. Connections here should lead to action, not just talk.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>Integrity in representation</strong>
-                        <p>Present your background, experience, and intentions accurately. Misrepresentation undermines trust.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>Purposeful communication</strong>
-                        <p>Reach out with clarity and relevance. Vague outreach and mass messaging do not belong here.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>Zero tolerance for noise</strong>
-                        <p>Spam, unsolicited promotion, and irrelevant outreach have no place in this network.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>Confidentiality and respect</strong>
-                        <p>Ideas, conversations, and private information shared here should be handled with discretion.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>Depth over volume</strong>
-                        <p>Meaningful relationships with the right people matter more than a large number of surface-level connections.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>No hate or discrimination</strong>
-                        <p>Discriminatory, hateful, or offensive content toward any person or group is not tolerated.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>No political or divisive content</strong>
-                        <p>CoVise is a professional building space. Political, religious, and divisive content is out of scope.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>No misinformation or rumours</strong>
-                        <p>Communicate with accuracy and responsibility. Do not spread false or unverified claims.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>Strictly no illegal activity</strong>
-                        <p>Fraud, IP theft, data misuse, misconduct, or illegal solicitation can result in permanent removal.</p>
-                    </article>
-                    <article class="agreement-point">
-                        <strong>No harassment or intimidation</strong>
-                        <p>Threats, harassment, or intimidatory behavior in public or private communication will not be tolerated.</p>
-                    </article>
-                </div>
+            <div class="agreement-content-wrap">
+                <header class="agreement-page-header">
+                    <div class="agreement-kicker">Required Before Entry</div>
+                    <h1>Community Guidelines</h1>
+                    <p class="agreement-intro">Before you enter CoVise, please review the standards for posting, outreach, and collaboration on the platform.</p>
+                    <div class="agreement-note">These guidelines exist to protect trust, reduce noise, and keep the network focused on serious venture-building.</div>
 
-                <div class="agreement-links">
-                    <a class="agreement-link-card" href="{% url 'Terms' %}" target="_blank" rel="noopener">
-                        <strong>Terms of Service</strong>
-                        <span>Full legal terms</span>
-                    </a>
-                    <a class="agreement-link-card" href="{% url 'Privacy' %}" target="_blank" rel="noopener">
-                        <strong>Privacy Policy</strong>
-                        <span>How your data is handled</span>
-                    </a>
-                    <a class="agreement-link-card" href="{% url 'Security' %}" target="_blank" rel="noopener">
-                        <strong>Security Overview</strong>
-                        <span>How we protect the platform</span>
-                    </a>
-                </div>
+                    {% if agreement_read_only %}
+                    <div class="agreement-readonly-note">Accepted on {{ agreement_profile.platform_agreement_accepted_at|date:"M j, Y, g:i a" }}. This page is now read-only.</div>
+                    {% endif %}
 
-                {% if agreement_read_only %}
-                <div class="agreement-actions agreement-actions--readonly">
-                    <a class="agreement-logout" href="{% url 'Settings' %}">Back to settings</a>
-                    <a class="agreement-submit agreement-submit--link" href="{% url 'Home' %}">Back to platform</a>
-                </div>
-                {% else %}
-                <form class="agreement-form" method="post" action="{% url 'Agreement' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ agreement_next_url }}">
-                    <label class="agreement-check">
-                        <input type="checkbox" name="agree" required>
-                        <span>I have read the community guidelines and I agree to follow them while using CoVise.</span>
-                    </label>
-                    <div class="agreement-actions">
-                        <a class="agreement-logout" href="{% url 'Logout' %}">Log out</a>
-                        <button class="agreement-submit" type="submit">Agree and continue</button>
+                    {% if agreement_error_message %}
+                    <div class="agreement-feedback agreement-feedback--error">{{ agreement_error_message }}</div>
+                    {% endif %}
+                </header>
+
+                <div class="agreement-layout">
+                    <aside class="agreement-toc panel" aria-label="Community guidelines contents">
+                        <div class="agreement-toc-title">Contents</div>
+                        <ol class="agreement-toc-list">
+                            <li><a href="#guideline-1">Purpose-driven participation</a></li>
+                            <li><a href="#guideline-2">Execution over conversation</a></li>
+                            <li><a href="#guideline-3">Integrity in representation</a></li>
+                            <li><a href="#guideline-4">Purposeful communication</a></li>
+                            <li><a href="#guideline-5">Zero tolerance for noise</a></li>
+                            <li><a href="#guideline-6">Confidentiality and respect</a></li>
+                            <li><a href="#guideline-7">Depth over volume</a></li>
+                            <li><a href="#guideline-8">No hate or discrimination</a></li>
+                            <li><a href="#guideline-9">No political or divisive content</a></li>
+                            <li><a href="#guideline-10">No misinformation or rumours</a></li>
+                            <li><a href="#guideline-11">Strictly no illegal activity</a></li>
+                            <li><a href="#guideline-12">No harassment or intimidation</a></li>
+                        </ol>
+                    </aside>
+
+
+
+                    <div class="agreement-sections">
+                        <section class="panel agreement-section" id="guideline-1">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">1</span>
+                                <h2>Purpose-driven participation</h2>
+                            </div>
+                            <p>This network is for founders, operators, and builders actively working on ventures or committed to starting one. Participation should be grounded in clear intent, real ambition, and serious contribution to the ecosystem.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-2">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">2</span>
+                                <h2>Execution over conversation</h2>
+                            </div>
+                            <p>CoVise exists to create real outcomes. Conversations, introductions, and collaborations should move toward action, progress, and measurable work rather than vague networking for its own sake.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-3">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">3</span>
+                                <h2>Integrity in representation</h2>
+                            </div>
+                            <p>Present your background, experience, and intentions accurately. Misrepresentation of your identity, capabilities, traction, or goals undermines trust and damages the quality of the network for everyone.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-4">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">4</span>
+                                <h2>Purposeful communication</h2>
+                            </div>
+                            <p>Reach out with clarity and relevance. Outreach should be specific, context-aware, and respectful of the other person's time. Vague messaging, generic asks, and low-effort contact do not belong here.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-5">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">5</span>
+                                <h2>Zero tolerance for noise</h2>
+                            </div>
+                            <p>Spam, unsolicited promotion, repetitive posting, and irrelevant outreach have no place in this network. Members are expected to add signal, not clutter, to the platform experience.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-6">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">6</span>
+                                <h2>Confidentiality and respect</h2>
+                            </div>
+                            <p>Ideas, conversations, and private information shared here should be handled with discretion. Respect boundaries, permissions, and the trust that comes with founder-to-founder communication.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-7">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">7</span>
+                                <h2>Depth over volume</h2>
+                            </div>
+                            <p>Meaningful relationships with the right people matter more than a high number of shallow interactions. The goal is thoughtful alignment, not mass connection collecting.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-8">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">8</span>
+                                <h2>No hate or discrimination</h2>
+                            </div>
+                            <p>Discriminatory, hateful, or offensive content toward any person or group is not tolerated. Every member should be able to participate without fear of exclusion, hostility, or abuse.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-9">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">9</span>
+                                <h2>No political or divisive content</h2>
+                            </div>
+                            <p>CoVise is a professional building space. Political, religious, and other divisive content that distracts from venture formation and constructive collaboration is out of scope.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-10">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">10</span>
+                                <h2>No misinformation or rumours</h2>
+                            </div>
+                            <p>Communicate with accuracy and responsibility. Do not spread false, exaggerated, or unverified claims about people, companies, fundraising, opportunities, or platform activity.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-11">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">11</span>
+                                <h2>Strictly no illegal activity</h2>
+                            </div>
+                            <p>Fraud, IP theft, data misuse, misconduct, illegal solicitation, and any other unlawful behavior can result in immediate and permanent removal from the platform.</p>
+                        </section>
+
+                        <section class="panel agreement-section" id="guideline-12">
+                            <div class="agreement-section-head">
+                                <span class="agreement-section-number">12</span>
+                                <h2>No harassment or intimidation</h2>
+                            </div>
+                            <p>Threats, harassment, coercion, intimidation, or abusive behavior in public or private communication will not be tolerated. Professional respect is a baseline requirement for participation.</p>
+                        </section>
+
+                        <div class="panel agreement-confirmation">
+                            <div class="agreement-confirmation-head">
+                                <div class="agreement-confirmation-kicker">Before You Continue</div>
+                                <h3>Confirm your agreement</h3>
+                            </div>
+                            <p class="agreement-confirmation-copy">By continuing, you confirm that you understand these standards and will follow them while participating in the CoVise network.</p>
+
+                            {% if agreement_read_only %}
+                            <div class="agreement-actions agreement-actions--readonly">
+                                <a class="agreement-logout" href="{% url 'Settings' %}">Back to settings</a>
+                                <a class="agreement-submit agreement-submit--link agreement-submit--secondary" href="{% url 'Home' %}">Back to platform</a>
+                            </div>
+                            {% else %}
+                            <form class="agreement-form" method="post" action="{% url 'Agreement' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ agreement_next_url }}">
+                                <label class="agreement-check">
+                                    <input type="checkbox" name="agree" required>
+                                    <span>I have read the community guidelines and I agree to follow them while using CoVise.</span>
+                                </label>
+                                <div class="agreement-actions">
+                                    <a class="agreement-logout" href="{% url 'Logout' %}">Log out</a>
+                                    <button class="agreement-submit" type="submit">Agree and continue</button>
+                                </div>
+                            </form>
+                            {% endif %}
+                        </div>
                     </div>
-                </form>
-                {% endif %}
+                </div>
             </div>
         </section>
     </main>
+
+    <script>
+        (function () {
+            var jump = document.getElementById('agreementJump');
+            if (!jump) return;
+
+            jump.addEventListener('change', function () {
+                if (!jump.value) return;
+                var target = document.querySelector(jump.value);
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        })();
+    </script>
 </body>
 </html>

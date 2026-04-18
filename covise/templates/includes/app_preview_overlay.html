@@ -1,0 +1,14 @@
+<div class="app-preview-overlay" aria-hidden="true">
+    <div class="app-preview-card">
+        {% if show_preview_loader %}
+        <div class="app-preview-loader" aria-hidden="true"></div>
+        {% endif %}
+        {% if preview_kicker %}
+        <span class="app-preview-kicker">{{ preview_kicker }}</span>
+        {% endif %}
+        <h2 class="app-preview-title">{{ preview_title }}</h2>
+        {% if preview_subtitle %}
+        <p class="app-preview-subtitle">{{ preview_subtitle }}</p>
+        {% endif %}
+    </div>
+</div>

@@ -75,7 +75,11 @@
                         </div>
                     </div>
                     <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
-                        <span>{{ request.user.avatar_initials }}</span>
+                        {% if ui_user.avatar_url %}
+                        <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
+                        {% else %}
+                        <span>{{ ui_user.avatar_initials }}</span>
+                        {% endif %}
                     </a>
                 </div>
             </header>
@@ -87,7 +91,11 @@
 
             <section class="panel profile">
                 <div class="profile-left">
+                    {% if ui_user.avatar_url %}
+                    <img class="avatar" src="{{ ui_user.avatar_url }}" alt="{{ settings_page.display_name }} profile photo">
+                    {% else %}
                     <div class="avatar">{{ ui_user.avatar_initials }}</div>
+                    {% endif %}
                     <div>
                         <div class="profile-name">{{ settings_page.display_name }}</div>
                         <div class="profile-role">{{ settings_page.current_role|default:"Profile in progress" }}</div>
@@ -108,8 +116,9 @@
             <div class="submit-banner submit-banner-error">{{ error_message }}</div>
             {% endif %}
 
-            <form method="post" action="{% url 'Settings' %}" style="margin-top: calc(var(--spacing)*2);">
+            <form method="post" action="{% url 'Settings' %}" enctype="multipart/form-data" style="margin-top: calc(var(--spacing)*2);">
                 {% csrf_token %}
+                <input type="hidden" name="save_section" value="personal_data">
             <section class="panel settings-section notifications-section">
                 <div class="section-top"><h2>ACCOUNT</h2></div>
                 <div class="settings-stack">
@@ -129,8 +138,8 @@
                     </div>
                     <div class="settings-row"><div class="row-copy"><strong>Last Sign In</strong></div><div class="row-control input-action">{{ settings_page.last_login|date:"M j, Y, g:i a"|default:"No sign-in recorded yet" }}</div></div>
                     <div class="settings-row"><div class="row-copy"><strong>Total Sign Ins</strong></div><div class="row-control input-action">{{ settings_page.sign_in_count }}</div></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Interactive Demo</strong></div><div class="row-control input-action">{% if settings_page.has_seen_interactive_demo %}Completed{% else %}Not completed yet{% endif %}</div></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Profile Photo</strong></div><div class="row-control photo-row"><span class="avatar small-avatar">{{ ui_user.avatar_initials }}</span><button class="outline-btn" type="button">Upload Photo</button><button class="text-link danger-link" type="button">Remove</button></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Guidelines</strong><span>{% if settings_page.platform_agreement_accepted %}Accepted on {{ settings_page.platform_agreement_accepted_at|date:"M j, Y" }}{% else %}Review the community standards for posting, outreach, and collaboration.{% endif %}</span></div><div class="row-control input-action"><a class="outline-btn guidelines-btn" href="{% url 'Agreement' %}">{% if settings_page.platform_agreement_accepted %}View Guidelines{% else %}Read Guidelines{% endif %}</a></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Profile Photo</strong><span>Choose an image, then save your account changes. Max {{ profile_photo_max_size_mb }} MB.</span></div><div class="row-control photo-row">{% if ui_user.avatar_url %}<img class="avatar-image small-avatar" src="{{ ui_user.avatar_url }}" alt="{{ settings_page.display_name }} profile photo">{% else %}<span class="avatar small-avatar">{{ ui_user.avatar_initials }}</span>{% endif %}<input id="profilePhotoInput" name="profile_image" type="file" accept="image/*" data-max-size-bytes="{{ profile_photo_max_size_bytes }}" hidden><label class="outline-btn" for="profilePhotoInput" id="profilePhotoTrigger">Upload Photo</label><button class="text-link danger-link" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button><span id="profilePhotoHint" class="photo-row-note" data-default-text="Max {{ profile_photo_max_size_mb }} MB.">Max {{ profile_photo_max_size_mb }} MB.</span></div></div>
                     <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="personal_data">Save Changes</button></div>
                 </div>
             </section>
@@ -234,10 +243,15 @@
         <section class="panel settings-section" style="margin-top: calc(var(--spacing)*2);">
             <div class="section-top">
                 <h2>BLOCKED USERS</h2>
-                <span class="section-note">People you block cannot message you, and their posts stay hidden from your feed.</span>
+                <div class="row-inline-actions">
+                    <span class="section-note">People you block cannot message you, and their posts stay hidden from your feed.</span>
+                    {% if settings_page.blocked_users|length > 2 %}
+                    <button class="outline-btn" id="blockedUsersToggle" type="button" aria-expanded="false">View all</button>
+                    {% endif %}
+                </div>
             </div>
             <div class="settings-stack">
-                {% for blocked_user in settings_page.blocked_users %}
+                {% for blocked_user in settings_page.blocked_users|slice:":2" %}
                 <div class="settings-row">
                     <div class="row-copy">
                         <strong>{{ blocked_user.display_name }}</strong>
@@ -258,6 +272,23 @@
                 </div>
                 {% endfor %}
             </div>
+            {% if settings_page.blocked_users|length > 2 %}
+            <div class="settings-stack" id="blockedUsersAll" hidden>
+                {% for blocked_user in settings_page.blocked_users|slice:"2:" %}
+                <div class="settings-row">
+                    <div class="row-copy">
+                        <strong>{{ blocked_user.display_name }}</strong>
+                        <span>{{ blocked_user.email }} - Blocked {{ blocked_user.blocked_at }}</span>
+                    </div>
+                    <form method="post" action="{% url 'Toggle Block User' blocked_user.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button class="outline-btn" type="submit">Unblock</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </section>
         <section class="panel settings-section" style="margin-top: calc(var(--spacing)*2);">
             <div class="section-top">
@@ -379,32 +410,31 @@
                 <input type="hidden" name="ai_manage_milestones" value="{% if settings_page.preferences.ai_manage_milestones %}true{% else %}false{% endif %}">
             <section class="panel settings-section">
                 <div class="section-top"><h2>COVISE AI AGENT</h2></div>
-                <div class="info-banner">CoVise Advisor is your AI chief of staff. You control exactly what it can and cannot do on your behalf.</div>
+                <div class="info-banner">CoVise AI Agent is not available yet. This section is a preview of the controls that will launch soon.</div>
+                <div class="warning-note">AI permissions, approvals, and activity controls are still being built and cannot be used yet.</div>
                 <div class="settings-stack">
-                    <div class="settings-row"><div class="row-copy"><strong>Enable CoVise AI Agent</strong><span>Turn off to disable all AI features across the platform.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_enabled %} active{% endif %}" data-field="ai_enabled" id="aiMasterToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_enabled %}true{% else %}false{% endif %}"></button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Enable CoVise AI Agent</strong><span>This master control will activate once the AI agent is ready.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_enabled %} active{% endif %}" data-field="ai_enabled" id="aiMasterToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_enabled %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
                 </div>
-                <div class="permission-shell" id="aiPermissionShell">
+                <div class="permission-shell permissions-disabled" id="aiPermissionShell" data-unavailable="true" aria-disabled="true">
                     <div class="permission-group-head"><span>READ ONLY PERMISSIONS</span></div>
                     <div class="settings-stack">
 
 
-                        <div class="settings-row"><div class="row-copy"><strong>Read my profile and venture data</strong><span>Required for the AI to give personalized advice.</span></div><button class="toggle-switch{% if settings_page.preferences.read_profile_data %} active{% endif %}" data-field="read_profile_data" type="button" aria-pressed="{% if settings_page.preferences.read_profile_data %}true{% else %}false{% endif %}"></button></div>
-                        <div class="settings-row"><div class="row-copy"><strong>Read my messages (summaries only)</strong><span>The AI reads conversation context to give better match and communication advice. It never stores message content.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_read_messages %} active{% endif %}" data-field="ai_read_messages" type="button" aria-pressed="{% if settings_page.preferences.ai_read_messages %}true{% else %}false{% endif %}"></button></div>
-                        <div class="settings-row"><div class="row-copy"><strong>Read workspace content</strong><span>Allows the AI to review your milestones, tasks, and documents.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_read_workspace %} active{% endif %}" data-field="ai_read_workspace" type="button" aria-pressed="{% if settings_page.preferences.ai_read_workspace %}true{% else %}false{% endif %}"></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Read my profile and venture data</strong><span>Will be used to personalize AI recommendations once the agent launches.</span></div><button class="toggle-switch locked{% if settings_page.preferences.read_profile_data %} active{% endif %}" data-field="read_profile_data" type="button" aria-pressed="{% if settings_page.preferences.read_profile_data %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Read my messages (summaries only)</strong><span>This summary access is planned but is not available yet.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_read_messages %} active{% endif %}" data-field="ai_read_messages" type="button" aria-pressed="{% if settings_page.preferences.ai_read_messages %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Read workspace content</strong><span>This workspace review flow is still under development.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_read_workspace %} active{% endif %}" data-field="ai_read_workspace" type="button" aria-pressed="{% if settings_page.preferences.ai_read_workspace %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
                     </div>
-                    <div class="permission-group-head"><span>ACTION PERMISSIONS</span><small>All actions are logged and can be reversed.</small></div>
-                    <div class="warning-note">Warning: These permissions allow the AI to act on your behalf. All actions are logged and can be reversed.</div>
+                    <div class="permission-group-head"><span>ACTION PERMISSIONS</span><small>These actions will unlock later after the AI agent is fully available.</small></div>
                     <div class="settings-stack">
-                        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Post updates on my behalf</strong><span>The AI can post venture updates to your feed. You will be notified before each post.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_post_updates %} active{% endif %}" data-field="ai_post_updates" id="aiPostToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_post_updates %}true{% else %}false{% endif %}"></button></div>
+                        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Post updates on my behalf</strong><span>This approval-based posting flow is not available yet.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_post_updates %} active{% endif %}" data-field="ai_post_updates" id="aiPostToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_post_updates %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
                         <div class="warning-banner" id="aiPostBanner" hidden>The AI will draft posts for your approval before publishing. You can review in AI Activity Log.</div>
-                        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Send messages to matches</strong><span>The AI can send initial outreach messages to your top matches. You approve each message first.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_send_messages %} active{% endif %}" data-field="ai_send_messages" id="aiMessageToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_send_messages %}true{% else %}false{% endif %}"></button></div>
+                        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Send messages to matches</strong><span>This assisted outreach flow is not available yet.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_send_messages %} active{% endif %}" data-field="ai_send_messages" id="aiMessageToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_send_messages %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
                         <div class="warning-banner" id="aiMessageBanner" hidden>Messages will be drafted for your review before sending.</div>
-                        <div class="settings-row"><div class="row-copy"><strong>Edit workspace content</strong><span>The AI can update tasks, milestones, and notes in your workspace.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_edit_workspace %} active{% endif %}" data-field="ai_edit_workspace" type="button" aria-pressed="{% if settings_page.preferences.ai_edit_workspace %}true{% else %}false{% endif %}"></button></div>
-                        <div class="settings-row"><div class="row-copy"><strong>Schedule and manage milestones</strong><span>The AI can suggest and create milestone plans in your workspace based on your venture stage.</span></div><button class="toggle-switch{% if settings_page.preferences.ai_manage_milestones %} active{% endif %}" data-field="ai_manage_milestones" type="button" aria-pressed="{% if settings_page.preferences.ai_manage_milestones %}true{% else %}false{% endif %}"></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Edit workspace content</strong><span>Workspace editing by AI is still under development.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_edit_workspace %} active{% endif %}" data-field="ai_edit_workspace" type="button" aria-pressed="{% if settings_page.preferences.ai_edit_workspace %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
+                        <div class="settings-row"><div class="row-copy"><strong>Schedule and manage milestones</strong><span>Milestone planning assistance is not available yet.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_manage_milestones %} active{% endif %}" data-field="ai_manage_milestones" type="button" aria-pressed="{% if settings_page.preferences.ai_manage_milestones %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
                     </div>
                 </div>
-                <div class="section-footer start"><button class="text-link icon-link" data-open-modal="aiActivityModal" type="button"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>View AI Activity Log</span></button></div>
-                    <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="ai_preferences">Save Changes</button></div>
+                    <div class="section-footer full-width"><button class="primary-btn wide-btn locked-link" data-default-label="Not Available Yet" type="button" aria-disabled="true" disabled>Not Available Yet</button></div>
 
 
             </section>
@@ -442,9 +472,9 @@
                             <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch{% if settings_page.preferences.email_connection_request %} active{% endif %}" data-field="email_connection_request" type="button" aria-pressed="{% if settings_page.preferences.email_connection_request %}true{% else %}false{% endif %}"></button></div>
                             <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch{% if settings_page.preferences.email_request_accepted %} active{% endif %}" data-field="email_request_accepted" type="button" aria-pressed="{% if settings_page.preferences.email_request_accepted %}true{% else %}false{% endif %}"></button></div>
                             <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch{% if settings_page.preferences.email_milestone_reminder %} active{% endif %}" data-field="email_milestone_reminder" type="button" aria-pressed="{% if settings_page.preferences.email_milestone_reminder %}true{% else %}false{% endif %}"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch{% if settings_page.preferences.email_workspace_activity %} active{% endif %}" data-field="email_workspace_activity" type="button" aria-pressed="{% if settings_page.preferences.email_workspace_activity %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch{% if settings_page.preferences.email_workspace_activity %} active{% endif %}" data-field="email_workspace_activity" type="button" aria-pressed="{% if settings_page.preferences.email_workspace_activity %}true{% else %}false{% endif %}"></button></div>
                             <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch{% if settings_page.preferences.email_platform_updates %} active{% endif %}" data-field="email_platform_updates" type="button" aria-pressed="{% if settings_page.preferences.email_platform_updates %}true{% else %}false{% endif %}"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch{% if settings_page.preferences.email_marketing %} active{% endif %}" data-field="email_marketing" type="button" aria-pressed="{% if settings_page.preferences.email_marketing %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch{% if settings_page.preferences.email_marketing %} active{% endif %}" data-field="email_marketing" type="button" aria-pressed="{% if settings_page.preferences.email_marketing %}true{% else %}false{% endif %}"></button></div>
                         </div>
                     </div>
                     <div class="inner-panel">
@@ -455,9 +485,9 @@
                             <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_connection_request %} active{% endif %}" data-field="in_app_connection_request" type="button" aria-pressed="{% if settings_page.preferences.in_app_connection_request %}true{% else %}false{% endif %}"></button></div>
                             <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_request_accepted %} active{% endif %}" data-field="in_app_request_accepted" type="button" aria-pressed="{% if settings_page.preferences.in_app_request_accepted %}true{% else %}false{% endif %}"></button></div>
                             <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_milestone_reminder %} active{% endif %}" data-field="in_app_milestone_reminder" type="button" aria-pressed="{% if settings_page.preferences.in_app_milestone_reminder %}true{% else %}false{% endif %}"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_workspace_activity %} active{% endif %}" data-field="in_app_workspace_activity" type="button" aria-pressed="{% if settings_page.preferences.in_app_workspace_activity %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_workspace_activity %} active{% endif %}" data-field="in_app_workspace_activity" type="button" aria-pressed="{% if settings_page.preferences.in_app_workspace_activity %}true{% else %}false{% endif %}"></button></div>
                             <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_platform_updates %} active{% endif %}" data-field="in_app_platform_updates" type="button" aria-pressed="{% if settings_page.preferences.in_app_platform_updates %}true{% else %}false{% endif %}"></button></div>
-                            <div class="settings-row"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_marketing %} active{% endif %}" data-field="in_app_marketing" type="button" aria-pressed="{% if settings_page.preferences.in_app_marketing %}true{% else %}false{% endif %}"></button></div>
+                            <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_marketing %} active{% endif %}" data-field="in_app_marketing" type="button" aria-pressed="{% if settings_page.preferences.in_app_marketing %}true{% else %}false{% endif %}"></button></div>
                         </div>
                     </div>
                 </div>
@@ -473,7 +503,7 @@
                 <input type="hidden" name="preferred_gcc_markets" value="{{ settings_page.preferences.preferred_gcc_markets|join:'|' }}">
                 <input type="hidden" name="minimum_commitment" value="{{ settings_page.preferences.minimum_commitment }}">
                 <input type="hidden" name="open_to_foreign_founders" value="{% if settings_page.preferences.open_to_foreign_founders %}true{% else %}false{% endif %}">
-            <section class="panel settings-section">
+            <section class="panel settings-section matching-preferences-unavailable">
                 <div class="section-top"><h2>MATCHING PREFERENCES</h2></div>
                 <div class="settings-stack">
                     <div class="settings-row"><div class="row-copy"><strong>Pause Matching</strong><span>Temporarily pause matching.</span></div><button class="toggle-switch{% if settings_page.preferences.pause_matching %} active{% endif %}" data-field="pause_matching" type="button" aria-pressed="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}"></button></div>
@@ -491,15 +521,69 @@
             <section class="panel settings-section">
                 <div class="section-top"><h2>SECURITY</h2></div>
                 <div class="settings-stack">
-                    <div class="settings-row"><div class="row-copy"><strong>Two-Factor Authentication</strong><span>Add an extra layer of security to your account.</span></div><div class="row-inline-actions"><span class="status-badge amber">Not enabled</span><button class="outline-btn" data-open-modal="comingSoonModal" type="button">Enable 2FA</button></div></div>
+                    <form method="post" action="{% url 'Settings' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="save_section" value="security">
+                        <div class="settings-row">
+                            <div class="row-copy">
+                                <strong>Two-Factor Authentication</strong>
+                                <span>Require a 6-digit email code when signing in.</span>
+                            </div>
+                            <div class="row-inline-actions">
+                                <span class="status-badge{% if settings_page.security.two_factor_enabled %} success{% else %} amber{% endif %}">
+                                    {% if settings_page.security.two_factor_enabled %}Enabled{% else %}Not enabled{% endif %}
+                                </span>
+                                <button class="outline-btn" name="security_action" value="{% if settings_page.security.two_factor_enabled %}disable_2fa{% else %}enable_2fa{% endif %}" type="submit">
+                                    {% if settings_page.security.two_factor_enabled %}Disable 2FA{% else %}Enable 2FA{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <div class="inner-panel">
                     <h3>Active Sessions</h3>
                     <div class="session-list">
-                        <div class="session-row"><div class="session-copy with-icon"><i class="fa-solid fa-laptop" aria-hidden="true"></i><div><strong>Chrome - Windows</strong><span>Riyadh, SA - Active now</span></div></div><button class="text-link danger-link" type="button">Log out</button></div>
-                        <div class="session-row"><div class="session-copy with-icon"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><div><strong>Safari - iPhone</strong><span>Riyadh, SA - 2 days ago</span></div></div><button class="text-link danger-link" type="button">Log out</button></div>
+                        {% for session in settings_page.security.active_sessions %}
+                            <div class="session-row">
+                                <div class="session-copy with-icon">
+                                    {% if session.device_type == 'mobile' %}
+                                        <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
+                                    {% elif session.device_type == 'tablet' %}
+                                        <i class="fa-solid fa-tablet-screen-button" aria-hidden="true"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-laptop" aria-hidden="true"></i>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ session.device_label }}{% if session.is_current %} (Current session){% endif %}</strong>
+                                        <span>{{ session.location }} - {{ session.activity_label }}</span>
+                                    </div>
+                                </div>
+                                <form method="post" action="{% url 'Settings' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="save_section" value="security">
+                                    <input type="hidden" name="security_action" value="logout_session">
+                                    <input type="hidden" name="session_key" value="{{ session.session_key }}">
+                                    <button class="text-link danger-link" type="submit">Log out</button>
+                                </form>
+                            </div>
+                        {% empty %}
+                            <div class="session-row">
+                                <div class="session-copy with-icon">
+                                    <i class="fa-solid fa-laptop" aria-hidden="true"></i>
+                                    <div>
+                                        <strong>No active sessions found</strong>
+                                        <span>Your next successful sign-in will appear here.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
-                    <button class="text-link danger-link start-link" type="button">Log out all other sessions</button>
+                    <form method="post" action="{% url 'Settings' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="save_section" value="security">
+                        <input type="hidden" name="security_action" value="logout_other_sessions">
+                        <button class="text-link danger-link start-link" type="submit">Log out all other sessions</button>
+                    </form>
                 </div>
                 <div class="inner-panel">
                     <h3>Login History</h3>
@@ -507,11 +591,16 @@
                         <table class="settings-table">
                             <thead><tr><th>Date</th><th>Device</th><th>Location</th><th>Status</th></tr></thead>
                             <tbody>
-                                <tr><td>Mar 15, 2026</td><td>Chrome - Windows</td><td>Riyadh, SA</td><td class="success">Success</td></tr>
-                                <tr><td>Mar 14, 2026</td><td>Safari - iPhone</td><td>Riyadh, SA</td><td class="success">Success</td></tr>
-                                <tr><td>Mar 13, 2026</td><td>Chrome - Windows</td><td>Riyadh, SA</td><td class="success">Success</td></tr>
-                                <tr><td>Mar 11, 2026</td><td>Edge - Windows</td><td>Riyadh, SA</td><td class="danger">Failed attempt</td></tr>
-                                <tr><td>Mar 10, 2026</td><td>Safari - iPhone</td><td>Riyadh, SA</td><td class="success">Success</td></tr>
+                                {% for event in settings_page.security.login_history %}
+                                    <tr>
+                                        <td>{{ event.created_at|date:"M j, Y, g:i a" }}</td>
+                                        <td>{{ event.device_label }}</td>
+                                        <td>{{ event.location }}</td>
+                                        <td class="{{ event.status_class }}">{{ event.status_label }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="4">No sign-in activity has been recorded yet.</td></tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
@@ -540,17 +629,66 @@
                     </div>
                     <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Terms of Service</strong><span>Last updated March 2026</span></div></div><a class="outline-btn" href="{% url 'Terms' %}">View</a></div>
                     <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Privacy Policy</strong><span>How we collect and use your data</span></div></div><a class="outline-btn" href="{% url 'Privacy' %}">View</a></div>
-                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-cookie-bite" aria-hidden="true"></i><div><strong>Cookie Policy</strong><span>Manage how we use cookies</span></div></div><a class="outline-btn" href="#">View</a></div>
-                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-download" aria-hidden="true"></i><div><strong>Download My Data</strong><span>Export all your CoVise data as a ZIP file (GDPR)</span></div></div><button class="outline-btn" id="requestExportButton" type="button">Request Export</button></div>
-                    <div class="inline-feedback" id="requestExportFeedback" hidden>Your data export will be emailed to you within 24 hours.</div>
-                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-trash" aria-hidden="true"></i><div><strong>Request Data Deletion</strong><span>Permanently delete all your data from CoVise</span></div></div><button class="danger-outline-btn" data-open-modal="dataDeletionModal" type="button">Request Deletion</button></div>
+                    <div class="settings-row">
+                        <div class="row-copy with-icon">
+                            <i class="fa-solid fa-download" aria-hidden="true"></i>
+                            <div>
+                                <strong>Download My Data</strong>
+                                <span>
+                                    {% if settings_page.data_export_request.latest_request %}
+                                    Last export {{ settings_page.data_export_request.latest_request.get_status_display|lower }} on {{ settings_page.data_export_request.latest_request.requested_at|date:"M j, Y, g:i a" }}.
+                                    {% else %}
+                                    Export all your CoVise data as a ZIP file (GDPR).
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <form method="post" action="{% url 'Request Data Export' %}">
+                            {% csrf_token %}
+                            <button class="outline-btn" type="submit">Request Export</button>
+                        </form>
+                    </div>
+                    <div class="settings-row">
+                        <div class="row-copy with-icon">
+                            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                            <div>
+                                <strong>Request Data Deletion</strong>
+                                <span>
+                                    {% if settings_page.data_deletion_request.has_request %}
+                                    Last data wipe {{ settings_page.data_deletion_request.status_label|lower }}{% if settings_page.data_deletion_request.processed_at %} on {{ settings_page.data_deletion_request.processed_at|date:"M j, Y, g:i a" }}{% endif %}. Your login account stays active.
+                                    {% else %}
+                                    Delete your messages, onboarding, waitlist, profile content, and other user data while keeping your login account active.
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <button class="danger-outline-btn" data-open-modal="dataDeletionModal" type="button">
+                            {% if settings_page.data_deletion_request.has_request %}Delete Data Again{% else %}Request Deletion{% endif %}
+                        </button>
+                    </div>
                 </div>
             </section>
 
             <section class="panel settings-section danger-zone" id="danger-zone">
                 <div class="section-top"><h2>DANGER ZONE</h2></div>
                 <div class="settings-stack">
-                    <div class="settings-row"><div class="row-copy"><strong>Pause My Account</strong><span>Temporarily hide your profile from the platform. Your data and matches are preserved. You can reactivate anytime.</span></div><button class="warning-outline-btn" id="pauseAccountButton" type="button">Pause Account</button></div>
+                    <div class="settings-row">
+                        <div class="row-copy">
+                            <strong>Pause My Account</strong>
+                            <span>
+                                {% if settings_page.account_pause.is_paused %}
+                                Your account is paused{% if settings_page.account_pause.paused_at %} since {{ settings_page.account_pause.paused_at|date:"M j, Y, g:i a" }}{% endif %}. You can still browse and reactivate anytime.
+                                {% else %}
+                                Temporarily hide your profile from the platform. Your data and matches are preserved. You can reactivate anytime.
+                                {% endif %}
+                            </span>
+                        </div>
+                        <form method="post" action="{% url 'Request Account Pause' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="{% if settings_page.account_pause.is_paused %}reactivate{% else %}pause{% endif %}">
+                            <button class="warning-outline-btn" type="submit">{% if settings_page.account_pause.is_paused %}Reactivate Account{% else %}Pause Account{% endif %}</button>
+                        </form>
+                    </div>
                     <div class="settings-row"><div class="row-copy"><strong>Delete My Account</strong><span>Permanently delete your account and all associated data. This cannot be undone.</span></div><button class="danger-fill-btn" data-open-modal="dangerDeleteModal" type="button">Delete Account</button></div>
                 </div>
             </section>
@@ -561,8 +699,7 @@
 
     <div class="modal-backdrop" id="accountDeleteModal" hidden><div class="modal-card"><div class="modal-head"><h3>Delete your account?</h3><button class="modal-close" type="button">x</button></div><p>This will permanently delete your account, all your data, matches, messages, and workspace. This cannot be undone.</p><label class="modal-label" for="deleteFeedbackInput">Before you go, what went wrong?</label><textarea class="modal-input modal-textarea" id="deleteFeedbackInput" placeholder="Tell us what made you want to leave."></textarea><input class="modal-input" id="deleteConfirmInput" type="text" placeholder='Type "DELETE" to confirm'><div class="modal-actions"><button class="danger-fill-btn disabled-delete" id="confirmDeleteButton" type="button" disabled>Permanently Delete</button><button class="outline-btn modal-close" type="button">Cancel</button></div></div></div>
     <div class="modal-backdrop" id="dangerDeleteModal" hidden><div class="modal-card"><div class="modal-head"><h3>Delete your account?</h3><button class="modal-close" type="button">x</button></div><p>This will permanently delete your profile, matches, messages, workspace, and all data. This action cannot be reversed.</p><form class="delete-account-form" method="post" action="{% url 'Delete Account' %}">{% csrf_token %}<label class="modal-label" for="dangerDeleteFeedback">Before you go, what went wrong?</label><textarea class="modal-input modal-textarea" id="dangerDeleteFeedback" name="delete_feedback" placeholder="Tell us what made you want to leave." required></textarea><input class="modal-input" id="dangerDeleteInput" name="confirm_delete" type="text" placeholder='Type "DELETE" to confirm'><div class="modal-actions"><button class="danger-fill-btn disabled-delete" id="dangerDeleteButton" type="submit" disabled>Permanently Delete</button><button class="outline-btn modal-close" type="button">Cancel</button></div></form></div></div>
-    <div class="modal-backdrop" id="dataDeletionModal" hidden><div class="modal-card"><div class="modal-head"><h3>Request data deletion?</h3><button class="modal-close" type="button">x</button></div><p>Are you sure? This will schedule your account and all associated data for permanent deletion within 30 days. You can cancel this request within 30 days by logging in.</p><div class="modal-actions"><button class="danger-fill-btn" type="button">Confirm Request</button><button class="outline-btn modal-close" type="button">Cancel</button></div></div></div>
-    <div class="modal-backdrop" id="comingSoonModal" hidden><div class="modal-card"><div class="modal-head"><h3>Two-Factor Authentication</h3><button class="modal-close" type="button">x</button></div><p>Coming Soon - 2FA will be available shortly.</p><div class="modal-actions"><button class="outline-btn modal-close" type="button">Close</button></div></div></div>
+    <div class="modal-backdrop" id="dataDeletionModal" hidden><div class="modal-card"><div class="modal-head"><h3>Request data deletion?</h3><button class="modal-close" type="button">x</button></div><p>This will immediately delete your messages, onboarding, waitlist, profile content, and other user data while keeping the minimum account shell needed for login.</p><form method="post" action="{% url 'Request Data Deletion' %}">{% csrf_token %}<div class="modal-actions"><button class="danger-fill-btn" type="submit">Confirm Request</button><button class="outline-btn modal-close" type="button">Cancel</button></div></form></div></div>
     <div class="modal-backdrop" id="aiActivityModal" hidden><div class="modal-card wide-modal"><div class="modal-head"><h3>AI Activity Log</h3><button class="modal-close" type="button">x</button></div><div class="table-wrap"><table class="settings-table"><thead><tr><th>Action</th><th>Date</th><th>Status</th><th>Undo</th></tr></thead><tbody><tr><td>Suggested profile improvement</td><td>Mar 13</td><td class="success">Completed</td><td>-</td></tr><tr><td>Generated milestone plan draft</td><td>Mar 12</td><td class="amber">Pending review</td><td><button class="text-link" type="button">Undo</button></td></tr><tr><td>Drafted post: MVP update</td><td>Mar 11</td><td class="success">Approved by you</td><td>-</td></tr></tbody></table></div></div></div>
 
     {% include "includes/app_mobile_nav.html" with active_page='settings' show_mobile_back=False %}
@@ -801,10 +938,25 @@
                 });
             }
 
+            var blockedUsersToggle = document.getElementById('blockedUsersToggle');
+            var blockedUsersAll = document.getElementById('blockedUsersAll');
+            if (blockedUsersToggle && blockedUsersAll) {
+                blockedUsersToggle.addEventListener('click', function () {
+                    var willShow = blockedUsersAll.hidden;
+                    blockedUsersAll.hidden = !blockedUsersAll.hidden;
+                    blockedUsersToggle.textContent = willShow ? 'Show less' : 'View all';
+                    blockedUsersToggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+                });
+            }
+
             function syncBanner(toggleId, bannerId) {
                 var toggle = document.getElementById(toggleId);
                 var banner = document.getElementById(bannerId);
                 if (!toggle || !banner) return;
+                if (toggle.classList.contains('locked')) {
+                    banner.hidden = true;
+                    return;
+                }
                 banner.hidden = !toggle.classList.contains('active');
                 toggle.addEventListener('click', function () { banner.hidden = !toggle.classList.contains('active'); });
             }
@@ -816,14 +968,19 @@
             var aiPermissionShell = document.getElementById('aiPermissionShell');
             function syncAiPermissions() {
                 if (!aiMasterToggle || !aiPermissionShell) return;
+                if (aiPermissionShell.dataset.unavailable === 'true') {
+                    aiPermissionShell.classList.add('permissions-disabled');
+                    aiPermissionShell.querySelectorAll('.toggle-switch').forEach(function (toggle) { toggle.disabled = true; });
+                    return;
+                }
                 var enabled = aiMasterToggle.classList.contains('active');
                 aiPermissionShell.classList.toggle('permissions-disabled', !enabled);
                 aiPermissionShell.querySelectorAll('.toggle-switch:not(.locked)').forEach(function (toggle) { toggle.disabled = !enabled; });
             }
-            if (aiMasterToggle) {
+            if (aiMasterToggle && !aiMasterToggle.classList.contains('locked')) {
                 aiMasterToggle.addEventListener('click', syncAiPermissions);
-                syncAiPermissions();
             }
+            syncAiPermissions();
 
             function flashSaveButtons() {
                 Array.prototype.slice.call(document.querySelectorAll('button[type="submit"].primary-btn, button[type="submit"].wide-btn')).forEach(function (button) {
@@ -899,15 +1056,30 @@
             bindDeleteInput('deleteConfirmInput', 'confirmDeleteButton', 'deleteFeedbackInput');
             bindDeleteInput('dangerDeleteInput', 'dangerDeleteButton', 'dangerDeleteFeedback');
 
-            var exportButton = document.getElementById('requestExportButton');
-            var exportFeedback = document.getElementById('requestExportFeedback');
-            if (exportButton && exportFeedback) exportButton.addEventListener('click', function () { exportFeedback.hidden = false; });
-
-            var pauseAccountButton = document.getElementById('pauseAccountButton');
-            if (pauseAccountButton) {
-                pauseAccountButton.addEventListener('click', function () {
-                    var paused = pauseAccountButton.classList.toggle('reactivate');
-                    pauseAccountButton.textContent = paused ? 'Reactivate Account' : 'Pause Account';
+            var profilePhotoInput = document.getElementById('profilePhotoInput');
+            var profilePhotoTrigger = document.getElementById('profilePhotoTrigger');
+            var profilePhotoHint = document.getElementById('profilePhotoHint');
+            if (profilePhotoInput && profilePhotoTrigger) {
+                profilePhotoInput.addEventListener('change', function () {
+                    var selectedFile = profilePhotoInput.files && profilePhotoInput.files.length ? profilePhotoInput.files[0] : null;
+                    var selected = selectedFile ? selectedFile.name : '';
+                    var maxSizeBytes = Number(profilePhotoInput.getAttribute('data-max-size-bytes') || '0');
+                    var maxSizeMb = maxSizeBytes > 0 ? Math.max(1, Math.floor(maxSizeBytes / (1024 * 1024))) : 0;
+                    if (selectedFile && maxSizeBytes > 0 && selectedFile.size > maxSizeBytes) {
+                        profilePhotoInput.value = '';
+                        profilePhotoTrigger.textContent = 'Upload Photo';
+                        if (profilePhotoHint) {
+                            profilePhotoHint.textContent = 'File too large. Max ' + maxSizeMb + ' MB.';
+                            profilePhotoHint.classList.add('is-error');
+                        }
+                        return;
+                    }
+                    profilePhotoTrigger.textContent = selected ? 'Selected: ' + selected : 'Upload Photo';
+                    if (profilePhotoHint) {
+                        var defaultText = profilePhotoHint.getAttribute('data-default-text') || '';
+                        profilePhotoHint.textContent = defaultText;
+                        profilePhotoHint.classList.remove('is-error');
+                    }
                 });
             }
 

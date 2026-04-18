@@ -120,6 +120,24 @@
             .replaceAll("'", "&#39;");
     }
 
+    function avatarInnerMarkup(initials, avatarUrl, name) {
+        if (avatarUrl) {
+            return `<img class="avatar-image" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml((name || "CoVise member"))} avatar">`;
+        }
+        return escapeHtml(initials || "CV");
+    }
+
+    function setAvatarElement(element, initials, avatarUrl, name) {
+        if (!element) {
+            return;
+        }
+        if (avatarUrl) {
+            element.innerHTML = avatarInnerMarkup(initials, avatarUrl, name);
+        } else {
+            element.textContent = initials || "CV";
+        }
+    }
+
     function formatFileSize(value) {
         const size = Number(value || 0);
         if (!size) return "";
@@ -482,7 +500,7 @@
             actionsHtml += "</div>";
             element.innerHTML = `
                 <div class="request-main">
-                    <div class="avatar">${requestItem.avatar}</div>
+                    <div class="avatar">${avatarInnerMarkup(requestItem.avatar, requestItem.avatar_url, requestItem.name)}</div>
                     <div class="request-copy"><h3>${requestItem.name}</h3><p>${requestItem.description}</p></div>
                 </div>
                 ${actionsHtml}
@@ -538,7 +556,7 @@
                 );
                 element.innerHTML = `
                     <div class="conv-avatar-wrap">
-                        <div class="avatar">${conversation.avatar}</div>
+                        <div class="avatar">${avatarInnerMarkup(conversation.avatar, conversation.avatar_url, conversation.name)}</div>
                     </div>
                     <div class="conv-main">
                         <div class="conv-head"><h3>${conversation.name}</h3><span>${conversation.time}</span></div>
@@ -573,7 +591,7 @@
                 activeTab === "groups" && group.id === activeConversationId ? " is-active" : ""
             );
             element.innerHTML = `
-                <div class="avatar">${group.avatar}</div>
+                <div class="avatar">${avatarInnerMarkup(group.avatar, group.avatar_url, group.name)}</div>
                 <div class="conv-main">
                     <div class="conv-head"><h3>${group.name}</h3><span>${group.time}</span></div>
                     <p>${group.preview}</p>
@@ -750,7 +768,7 @@
         if (!conversation) {
             chatName.textContent = "Messages";
             chatStatus.textContent = "Choose a conversation to start chatting";
-            chatAvatar.textContent = "C";
+            setAvatarElement(chatAvatar, "C", "", "CoVise");
             if (chatNameLink) chatNameLink.setAttribute("href", "#");
             if (chatMatchPill) chatMatchPill.textContent = "Private conversation";
             pinnedText.textContent = "Start a private chat from a public profile.";
@@ -762,7 +780,7 @@
             detailsPersonName.textContent = "No conversation selected";
             if (detailsPersonLink) detailsPersonLink.setAttribute("href", "#");
             if (viewFullProfileBtn) viewFullProfileBtn.setAttribute("href", "#");
-            detailsAvatar.textContent = "C";
+            setAvatarElement(detailsAvatar, "C", "", "CoVise");
             if (detailsMatchPill) detailsMatchPill.textContent = "Private conversation";
             detailsMatchedOn.textContent = "";
             detailsUserType.textContent = "";
@@ -780,7 +798,7 @@
         chatName.textContent = conversation.name;
         if (chatNameLink) chatNameLink.setAttribute("href", conversationProfileUrl(conversation));
         chatStatus.textContent = buildChatStatusLine(conversation);
-        chatAvatar.textContent = conversation.avatar;
+        setAvatarElement(chatAvatar, conversation.avatar, conversation.avatar_url, conversation.name);
         if (chatMatchPill) chatMatchPill.textContent = conversation.match;
         pinnedText.textContent = conversation.pinned || "Private chat with this member.";
         if (pinnedText.parentElement) {
@@ -793,7 +811,7 @@
         detailsPersonName.textContent = conversation.name;
         if (detailsPersonLink) detailsPersonLink.setAttribute("href", conversationProfileUrl(conversation));
         if (viewFullProfileBtn) viewFullProfileBtn.setAttribute("href", conversationProfileUrl(conversation));
-        detailsAvatar.textContent = conversation.avatar;
+        setAvatarElement(detailsAvatar, conversation.avatar, conversation.avatar_url, conversation.name);
         if (detailsMatchPill) detailsMatchPill.textContent = conversation.match;
         detailsMatchedOn.textContent = conversation.matchedOn;
         detailsUserType.textContent = conversation.conversation_type === "group" ? "Group conversation" : conversation.userType;
@@ -1404,7 +1422,7 @@
                         ${friendOptions.map((friend) => `
                             <label class="friend-option">
                                 <input type="checkbox" value="${friend.id}">
-                                <div class="avatar">${friend.avatar_initials}</div>
+                                <div class="avatar">${avatarInnerMarkup(friend.avatar_initials, friend.avatar_url, friend.display_name)}</div>
                                 <div class="friend-option-copy">
                                     <strong>${escapeHtml(friend.display_name)}</strong>
                                     <span>Friend</span>

@@ -111,7 +111,11 @@
                         </div>
                     </div>
                     <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
-                        <span>{{ request.user.avatar_initials }}</span>
+                        {% if viewer_ui_user.avatar_url %}
+                        <img class="profile-button-image" src="{{ viewer_ui_user.avatar_url }}" alt="{{ viewer_ui_user.display_name }} profile photo">
+                        {% else %}
+                        <span>{{ viewer_ui_user.avatar_initials }}</span>
+                        {% endif %}
                     </a>
                 </div>
             </header>
@@ -120,7 +124,7 @@
                 <div class="hero-body">
                     {% if profile_error_message %}
                     {% endif %}
-                           <a href="{% url 'Public Profile' viewed_user_id %}" class="unstyled-link" aria-label="View {{ ui_user.display_name }} profile">
+                        <a href="{% url 'Public Profile' viewed_user_id %}" class="unstyled-link" aria-label="View {{ ui_user.display_name }} profile">
                         {% if ui_user.avatar_url %}
                         <img class="avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }}'s avatar">
                         {% else %}
@@ -136,6 +140,11 @@
                                     <path d="M12 3L14.78 5.22L18 6L18.78 9.22L21 12L18.78 14.78L18 18L14.78 18.78L12 21L9.22 18.78L6 18L5.22 14.78L3 12L5.22 9.22L6 6L9.22 5.22L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </span>
+                            {% if profile_show_cofounder_badge %}
+                            <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
+                                <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                            </span>
+                            {% endif %}
                         </h1>
                         <p class="headline">{{ profile_page.headline }}</p>
                         <p class="meta">{{ profile_page.location }}</p>
@@ -166,6 +175,28 @@
                     </div>
                     <div class="social-cards">
                         <div class="social-links-row">
+                        {% if is_own_profile %}
+                        <a href="{% if ui_user.linkedin_url %}{{ ui_user.linkedin_url }}{% else %}{% url 'Settings' %}{% endif %}" class="social-card linkedin">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M7.5 9.5V17M7.5 7.5V7.45M11 17V12.8C11 11.25 12.3 10 13.85 10C15.4 10 16.7 11.25 16.7 12.8V17M4 3.5H20C20.83 3.5 21.5 4.17 21.5 5V19C21.5 19.83 20.83 20.5 20 20.5H4C3.17 20.5 2.5 19.83 2.5 19V5C2.5 4.17 3.17 3.5 4 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <strong>LinkedIn</strong>
+                        </a>
+                        <a href="{% if ui_user.github_url %}{{ ui_user.github_url }}{% else %}{% url 'Settings' %}{% endif %}" class="social-card github">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 2A10 10 0 0 0 8.84 21.49c.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.19-3.37-1.19-.45-1.14-1.11-1.45-1.11-1.45-.9-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.33 1.08 2.89.82.09-.64.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.93 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.5 9.5 0 0 1 12 6.8c.85 0 1.7.11 2.5.33 1.9-1.29 2.74-1.02 2.74-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.83-2.33 4.68-4.56 4.93.36.31.68.91.68 1.84l-.01 2.72c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/>
+                            </svg>
+                            <strong>GitHub</strong>
+                        </a>
+                        <a href="{% if ui_user.proof_of_work_url %}{{ ui_user.proof_of_work_url }}{% else %}{% url 'Settings' %}{% endif %}" class="social-card github">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M14 3v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9 13h6M9 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <strong>Proof of Work</strong>
+                        </a>
+                        {% else %}
                         {% if can_view_profile_data and ui_user.linkedin_url and profile_page.preferences.show_linkedin_to_matches %}
                         <a href="{{ ui_user.linkedin_url }}" class="social-card linkedin">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -191,6 +222,7 @@
                             </svg>
                             <strong>Proof of Work</strong>
                         </a>
+                        {% endif %}
                         {% endif %}
                         </div>
                         {% if is_own_profile %}
@@ -342,6 +374,51 @@
                 </article>
                 {% endif %}
             </section>
+            
+            {% if is_own_profile %}
+            <section class="panel saved-posts-panel" style="margin-top: 24px;">
+                <div class="section-top">
+                    <h2>SAVED POSTS</h2>
+                    <div class="row-inline-actions">
+                        {% if saved_posts|length > 2 %}
+                        <button class="outline-btn saved-posts-toggle" id="savedPostsToggle" type="button" aria-expanded="false" aria-controls="savedPostsAll">View all</button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="settings-stack saved-posts-list">
+                    {% for saved_post in saved_posts|slice:":2" %}
+                    <div class="settings-row saved-post-item">
+                        <div class="row-copy saved-post-copy">
+                            <strong>{{ saved_post.title }}</strong>
+                            <span>{{ saved_post.author }} &middot; Saved {{ saved_post.saved_at }}</span>
+                        </div>
+                        <a class="outline-btn saved-post-link" href="{% url 'Post Detail' saved_post.id %}">Open</a>
+                    </div>
+                    {% empty %}
+                    <div class="settings-row saved-post-item saved-post-item-empty">
+                        <div class="row-copy saved-post-copy">
+                            <strong>No saved posts yet</strong>
+                            <span>Bookmark posts from the feed or post page and they will show up here.</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if saved_posts|length > 2 %}
+                <div class="settings-stack saved-posts-list" id="savedPostsAll" hidden>
+                    {% for saved_post in saved_posts|slice:"2:" %}
+                    <div class="settings-row saved-post-item">
+                        <div class="row-copy saved-post-copy">
+                            <strong>{{ saved_post.title }}</strong>
+                            <span>{{ saved_post.author }} &middot; Saved {{ saved_post.saved_at }}</span>
+                        </div>
+                        <a class="outline-btn saved-post-link" href="{% url 'Post Detail' saved_post.id %}">Open</a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </section>
 
             {% if can_view_profile_data %}
             <section class="panel posts">
@@ -351,8 +428,8 @@
                     <article class="structured-post">
                         <div class="structured-post-head">
                             <div class="structured-post-meta">
-                                {% if ui_user.avatar_url %}
-                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile"><img class="structured-avatar-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }}'s avatar"></a>
+                                {% if post.avatar_url %}
+                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile"><img class="structured-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.user.full_name|default:post.user.email }} avatar"></a>
                                 {% else %}
                                 <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile"><div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div></a>
                                 {% endif %}
@@ -366,9 +443,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="structured-post-subtitle">
-                                        {{ post.get_post_type_display }}
-                                        {% if post.feed_country %} · {{ post.feed_country }}{% endif %}
-                                        · {{ post.created_at|timesince }} ago
+                                        {% if post.feed_country %}{{ post.feed_country }} &middot; {% endif %}{{ post.created_at|timesince }} ago
                                     </div>
                                 </div>
                             </div>
@@ -419,15 +494,25 @@
             </section>
             {% endif %}
 
-            {% if is_own_profile %}
             <section class="panel posts" style="margin-top: 24px;">
-                <h2>Blocked Users</h2>
+                <div class="section-top">
+                    <h2>BLOCKED USERS</h2>
+                    <div class="row-inline-actions">
+                        {% if blocked_users|length > 2 %}
+                        <button class="outline-btn saved-posts-toggle" id="blockedUsersToggle" type="button" aria-expanded="false" aria-controls="blockedUsersAll">View all</button>
+                        {% endif %}
+                    </div>
+                </div>
                 <div class="structured-feed">
-                    {% for blocked_user in blocked_users %}
+                    {% for blocked_user in blocked_users|slice:":2" %}
                     <article class="structured-post">
                         <div class="structured-post-head">
                             <div class="structured-post-meta">
+                                {% if blocked_user.avatar_url %}
+                                <img class="structured-avatar-image" src="{{ blocked_user.avatar_url }}" alt="{{ blocked_user.display_name }} avatar">
+                                {% else %}
                                 <div class="structured-avatar">{{ blocked_user.avatar_initials }}</div>
+                                {% endif %}
                                 <div>
                                     <div class="structured-post-title">{{ blocked_user.display_name }}</div>
                                     <div class="structured-post-subtitle">{{ blocked_user.email }}</div>
@@ -446,6 +531,32 @@
                     </article>
                     {% endfor %}
                 </div>
+                {% if blocked_users|length > 2 %}
+                <div class="structured-feed" id="blockedUsersAll" hidden>
+                    {% for blocked_user in blocked_users|slice:"2:" %}
+                    <article class="structured-post">
+                        <div class="structured-post-head">
+                            <div class="structured-post-meta">
+                                {% if blocked_user.avatar_url %}
+                                <img class="structured-avatar-image" src="{{ blocked_user.avatar_url }}" alt="{{ blocked_user.display_name }} avatar">
+                                {% else %}
+                                <div class="structured-avatar">{{ blocked_user.avatar_initials }}</div>
+                                {% endif %}
+                                <div>
+                                    <div class="structured-post-title">{{ blocked_user.display_name }}</div>
+                                    <div class="structured-post-subtitle">{{ blocked_user.email }}</div>
+                                </div>
+                            </div>
+                            <form action="{% url 'Toggle Block User' blocked_user.id %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button class="action-btn" type="submit">Unblock</button>
+                            </form>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </section>
             {% endif %}
         </main>
@@ -602,7 +713,7 @@
         
     </script>
     <script src="{% static 'notifications.js' %}"></script>
-    {% include "includes/app_mobile_nav.html" with active_page='profile' show_mobile_back=False %}
+    {% include "includes/app_mobile_nav.html" with active_page='profile' show_mobile_back=False mobile_nav_user=viewer_ui_user %}
     <script>
         function getCookie(name) {
             let cookieValue = null;
@@ -948,6 +1059,34 @@
 
                 syncOverflow();
                 window.addEventListener("resize", syncOverflow);
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            var savedPostsList = document.getElementById('savedPostsAll');
+            var savedPostsToggle = document.getElementById('savedPostsToggle');
+            if (!savedPostsList || !savedPostsToggle) return;
+
+            savedPostsToggle.addEventListener('click', function () {
+                var willShow = savedPostsList.hidden;
+                savedPostsList.hidden = !savedPostsList.hidden;
+                savedPostsToggle.textContent = willShow ? 'Show less' : 'View all';
+                savedPostsToggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            var blockedUsersList = document.getElementById('blockedUsersAll');
+            var blockedUsersToggle = document.getElementById('blockedUsersToggle');
+            if (!blockedUsersList || !blockedUsersToggle) return;
+
+            blockedUsersToggle.addEventListener('click', function () {
+                var willShow = blockedUsersList.hidden;
+                blockedUsersList.hidden = !blockedUsersList.hidden;
+                blockedUsersToggle.textContent = willShow ? 'Show less' : 'View all';
+                blockedUsersToggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
             });
         })();
     </script>

@@ -8,7 +8,9 @@
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'workspace.css' %}">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
+    <link rel="stylesheet" href="{% static 'app_preview.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -43,49 +45,52 @@
             </a>
         </aside>
 
-        <aside class="workspace-nav" aria-label="Workspace navigation">
-            <div class="workspace-nav-top">
-                <div style="display: flex; justify-content: space-between;">
-                    <h1 style="font-size: 1.3rem;">Workspace</h1>
-                </div>
-                <div class="workspace-toggle">
-                    <button class="toggle-pill is-active" type="button">Personal</button>
-                    <button class="toggle-pill" type="button">Team</button>
-                </div>
-            </div>
-            <nav class="workspace-links" style="margin-top: calc(var(--spacing)*3);">
-                <button class="workspace-link is-active" type="button" data-section="overview"><i class="fa-solid fa-house"></i><span>Overview</span></button>
-                <button class="workspace-link" type="button" data-section="milestones"><i class="fa-solid fa-flag"></i><span>Milestones</span></button>
-                <button class="workspace-link" type="button" data-section="tasks"><i class="fa-solid fa-list-check"></i><span>Tasks</span></button>
-                <button class="workspace-link" type="button" data-section="documents"><i class="fa-solid fa-file"></i><span>Documents</span></button>
-                <button class="workspace-link" type="button" data-section="financials"><i class="fa-solid fa-chart-line"></i><span>Financials</span></button>
-                <button class="workspace-link" type="button" data-section="notes"><i class="fa-solid fa-note-sticky"></i><span>Notes</span></button>
-            </nav>
-            <div class="workspace-nav-bottom">
-                <div class="workspace-divider"></div>
-                <div class="members-summary">
-                    <div class="member-stack"><span class="member-stack-avatar a">A</span><span class="member-stack-avatar b">S</span></div>
-                    <span>2 members</span>
-                </div>
-                <button class="outline-btn full-btn" type="button">Invite</button>
-            </div>
-        </aside>
-        <section class="workspace-content">
-            <header class="content-topbar">
-                <div class="topbar-copy">
-                    <h2 id="sectionTitle">Overview</h2>
-                    <p id="sectionSubtitle">Track venture progress, activity, and where the team needs support next.</p>
-                </div>
-                <div class="topbar-actions">
-                    <div class="overall-progress">
-                        <div class="mini-progress"><span style="width: 65%;"></span></div>
-                        <span>65% complete</span>
-                    </div>
-                    <button class="icon-btn" id="contentNotifButton" type="button" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="mini-badge">3</span></button>
-                    <button class="advisor-header-btn" type="button" data-open-advisor aria-label="Open CoVise Advisor"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path><path d="M18.5 3.5l.6 1.9 1.9.6-1.9.6-.6 1.9-.6-1.9-1.9-.6 1.9-.6.6-1.9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path><path d="M5.5 15.5l.6 1.9 1.9.6-1.9.6-.6 1.9-.6-1.9-1.9-.6 1.9-.6.6-1.9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg></button>
-                </div>
-            </header>
-            <div class="content-scroll">
+        <main class="workspace-main">
+            <div class="workspace-preview-shell app-preview-shell">
+                <div class="workspace-preview-region app-preview-region">
+                    <aside class="workspace-nav" aria-label="Workspace navigation">
+                        <div class="workspace-nav-top">
+                            <div style="display: flex; justify-content: space-between;">
+                                <h1 style="font-size: 1.3rem;">Workspace</h1>
+                            </div>
+                            <div class="workspace-toggle">
+                                <button class="toggle-pill is-active" type="button">Personal</button>
+                                <button class="toggle-pill" type="button">Team</button>
+                            </div>
+                        </div>
+                        <nav class="workspace-links" style="margin-top: calc(var(--spacing)*3);">
+                            <button class="workspace-link is-active" type="button" data-section="overview"><i class="fa-solid fa-house"></i><span>Overview</span></button>
+                            <button class="workspace-link" type="button" data-section="milestones"><i class="fa-solid fa-flag"></i><span>Milestones</span></button>
+                            <button class="workspace-link" type="button" data-section="tasks"><i class="fa-solid fa-list-check"></i><span>Tasks</span></button>
+                            <button class="workspace-link" type="button" data-section="documents"><i class="fa-solid fa-file"></i><span>Documents</span></button>
+                            <button class="workspace-link" type="button" data-section="financials"><i class="fa-solid fa-chart-line"></i><span>Financials</span></button>
+                            <button class="workspace-link" type="button" data-section="notes"><i class="fa-solid fa-note-sticky"></i><span>Notes</span></button>
+                        </nav>
+                        <div class="workspace-nav-bottom">
+                            <div class="workspace-divider"></div>
+                            <div class="members-summary">
+                                <div class="member-stack"><span class="member-stack-avatar a">A</span><span class="member-stack-avatar b">S</span></div>
+                                <span>2 members</span>
+                            </div>
+                            <button class="outline-btn full-btn" type="button">Invite</button>
+                        </div>
+                    </aside>
+                    <section class="workspace-content">
+                        <header class="content-topbar">
+                            <div class="topbar-copy">
+                                <h2 id="sectionTitle">Overview</h2>
+                                <p id="sectionSubtitle">Track venture progress, activity, and where the team needs support next.</p>
+                            </div>
+                            <div class="topbar-actions">
+                                <div class="overall-progress">
+                                    <div class="mini-progress"><span style="width: 65%;"></span></div>
+                                    <span>65% complete</span>
+                                </div>
+                                <button class="icon-btn" id="contentNotifButton" type="button" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="mini-badge">3</span></button>
+                                <button class="advisor-header-btn" type="button" data-open-advisor aria-label="Open CoVise Advisor"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path><path d="M18.5 3.5l.6 1.9 1.9.6-1.9.6-.6 1.9-.6-1.9-1.9-.6 1.9-.6.6-1.9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path><path d="M5.5 15.5l.6 1.9 1.9.6-1.9.6-.6 1.9-.6-1.9-1.9-.6 1.9-.6.6-1.9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg></button>
+                            </div>
+                        </header>
+                        <div class="content-scroll">
                 <section class="workspace-section is-active" data-section="overview">
                     <div class="overview-grid">
                         <div class="overview-main">
@@ -175,8 +180,12 @@
                     <div class="note-composer" id="noteComposer" hidden><input class="composer-title" type="text" placeholder="Note title"><textarea class="composer-body" placeholder="Write your note..."></textarea><div class="composer-toolbar"><button type="button">B</button><button type="button">I</button><button type="button">&bull;</button></div><div class="composer-footer"><label class="private-toggle"><input type="checkbox"><i class="fa-solid fa-lock"></i><span>Private note</span></label><div class="composer-actions"><button class="text-link" id="cancelNoteButton" type="button">Cancel</button><button class="primary-btn" type="button">Post Note</button></div></div></div>
                     <div class="notes-list"><article class="note-card"><div class="note-head"><div class="note-author"><span class="team-avatar b">S</span><div><strong>Sara Al-Sabah</strong><span>Mar 11</span></div></div><span class="pin-badge"><i class="fa-solid fa-thumbtack"></i></span></div><h4>Legal checklist before DIFC setup</h4><p>DIFC free zone requirements, minimum capital SAR 150k, visa quota 3 per license.</p><div class="note-foot"><div class="note-icons"><i class="fa-solid fa-thumbtack"></i></div><button class="icon-btn mini-icon" type="button"><i class="fa-solid fa-ellipsis"></i></button></div></article><article class="note-card private"><div class="note-head"><div class="note-author"><span class="team-avatar c">Y</span><div><strong>You</strong><span>Mar 13</span></div></div><span class="private-badge"><i class="fa-solid fa-lock"></i></span></div><h4>Personal thoughts on equity split</h4><p>This note is private and only visible to you in the workspace.</p><div class="note-foot"><div class="note-icons"><i class="fa-solid fa-lock"></i></div><button class="icon-btn mini-icon" type="button"><i class="fa-solid fa-ellipsis"></i></button></div></article><article class="note-card"><div class="note-head"><div class="note-author"><span class="team-avatar a">A</span><div><strong>Ahmed</strong><span>Mar 10</span></div></div></div><h4>Investor feedback from Wamda meeting</h4><p>Key takeaways from GCC VC meeting and where the story still feels too early.</p><div class="note-foot"><div class="note-icons"></div><button class="icon-btn mini-icon" type="button"><i class="fa-solid fa-ellipsis"></i></button></div></article><article class="note-card"><div class="note-head"><div class="note-author"><span class="team-avatar c">Y</span><div><strong>You</strong><span>Mar 9</span></div></div></div><h4>MVP feature prioritization</h4><p>MoSCoW framework applied to keep launch scope tight and avoid overbuilding.</p><div class="note-foot"><div class="note-icons"></div><button class="icon-btn mini-icon" type="button"><i class="fa-solid fa-ellipsis"></i></button></div></article><article class="note-card"><div class="note-head"><div class="note-author"><span class="team-avatar b">S</span><div><strong>Sara</strong><span>Mar 7</span></div></div></div><h4>Competitor analysis summary</h4><p>Three competitors mapped, with key positioning notes and gaps in founder support.</p><div class="note-foot"><div class="note-icons"></div><button class="icon-btn mini-icon" type="button"><i class="fa-solid fa-ellipsis"></i></button></div></article></div>
                 </section>
+                        </div>
+                    </section>
+                </div>
+                {% include "includes/app_preview_overlay.html" with show_preview_loader=True preview_kicker="Workspace" preview_title="Workspace tools coming soon." preview_subtitle="We are still wiring the full workspace experience for planning, execution, and collaboration." preview_unavailable_note="This area is not available yet." %}
             </div>
-        </section>
+        </main>
     </div>
 
     <div class="backdrop" id="backdrop" hidden></div>
@@ -185,7 +194,7 @@
     <div class="modal" id="milestoneModal" hidden><div class="modal-card"><div class="modal-head"><h3>Generate Milestone Plan</h3><button class="icon-btn modal-close" type="button"><i class="fa-solid fa-xmark"></i></button></div><p>CoVise Advisor will generate a milestone plan tailored to your venture type, industry, and current stage.</p><div class="modal-actions"><button class="primary-btn" id="generatePlanButton" type="button">Generate Plan</button></div><div class="modal-feedback" id="milestoneFeedback"></div></div></div>
     <div class="modal" id="documentModal" hidden><div class="modal-card large"><div class="modal-head"><h3>What would you like to create?</h3><button class="icon-btn modal-close" type="button"><i class="fa-solid fa-xmark"></i></button></div><div class="creation-grid"><button class="creation-card" type="button" data-doc-type="Pitch Deck"><i class="fa-solid fa-presentation-screen"></i><strong>Pitch Deck</strong><span>AI-generated investor deck</span></button><button class="creation-card" type="button" data-doc-type="MVP Plan"><i class="fa-solid fa-list-check"></i><strong>MVP Plan</strong><span>Structured 90-day build plan</span></button><button class="creation-card" type="button" data-doc-type="Co-founder Agreement"><i class="fa-solid fa-handshake"></i><strong>Co-founder Agreement</strong><span>Legal checklist &amp; terms</span></button><button class="creation-card" type="button" data-doc-type="Financial Model"><i class="fa-solid fa-chart-line"></i><strong>Financial Model</strong><span>Revenue &amp; cost projections</span></button><button class="creation-card" type="button" data-doc-type="One-Pager"><i class="fa-solid fa-file-lines"></i><strong>One-Pager</strong><span>Single page executive summary</span></button><button class="creation-card" type="button" data-doc-type="Free Document"><i class="fa-solid fa-pen"></i><strong>Free Document</strong><span>Blank document, your format</span></button></div><div class="modal-feedback" id="documentFeedback"></div></div></div>
 
-    {% include "includes/app_mobile_nav.html" with active_page='' show_mobile_back=False %}
+    {% include "includes/app_mobile_nav.html" with active_page='workspace' show_mobile_back=False %}
     <script>
         (function () {
             var sectionMeta = {
@@ -576,6 +585,43 @@
                     menu.classList.remove('is-open');
                 });
             });
+        })();
+    </script>
+    <script>
+        (function () {
+            var toggleButton = document.getElementById('themeToggle');
+            if (toggleButton) {
+                function applyThemeState() {
+                    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                    toggleButton.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+                }
+                toggleButton.addEventListener('click', function () {
+                    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                    if (isLight) {
+                        document.documentElement.removeAttribute('data-theme');
+                        localStorage.setItem('covise-theme', 'dark');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'light');
+                        localStorage.setItem('covise-theme', 'light');
+                    }
+                    applyThemeState();
+                });
+                applyThemeState();
+            }
+
+            var bell = document.getElementById('notifBell');
+            var panel = document.getElementById('notifPanel');
+            if (bell && panel) {
+                bell.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    panel.classList.toggle('is-open');
+                });
+                document.addEventListener('click', function (event) {
+                    if (!panel.contains(event.target) && !bell.contains(event.target)) {
+                        panel.classList.remove('is-open');
+                    }
+                });
+            }
         })();
     </script>
 </body>

@@ -44,11 +44,20 @@ def user_ui_context(request):
     github_url = ""
     has_profile_content = False
 
-    profile = getattr(user, "profile", None)
+    try:
+        profile = getattr(user, "profile", None)
+    except Exception:
+        profile = None
     if profile:
         bio = profile.bio or ""
         linkedin_url = profile.linkedin or ""
         github_url = profile.github or ""
+        profile_image = getattr(profile, "profile_image", None)
+        if profile_image:
+            try:
+                avatar_url = profile_image.url
+            except Exception:
+                avatar_url = ""
         has_profile_content = any([
             profile.bio,
             profile.linkedin,

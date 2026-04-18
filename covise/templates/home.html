@@ -84,7 +84,8 @@
                             <circle cx="11" cy="11" r="7"></circle>
                             <path d="M20 20l-3.5-3.5"></path>
                         </svg>
-                        <input id="homeHeaderSearch" type="search" placeholder="Search posts, founders, or topics..." aria-label="Search posts">
+                        <input id="homeHeaderSearch" type="search" placeholder="Search accounts, posts, or topics..." aria-label="Search accounts and posts" autocomplete="off" aria-haspopup="listbox" aria-expanded="false" aria-controls="homeSearchResults">
+                        <div class="home-search-results" id="homeSearchResults" role="listbox" hidden></div>
                 </div>
                 <div class="home-header-actions">
                     
@@ -108,7 +109,11 @@
                         </div>
                     </div>
                     <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
-                        <span>{{ request.user.avatar_initials }}</span>
+                        {% if ui_user.avatar_url %}
+                        <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
+                        {% else %}
+                        <span>{{ ui_user.avatar_initials }}</span>
+                        {% endif %}
                     </a>
                 </div>
             </header>
@@ -310,6 +315,18 @@
                     </div>
 
                     <section class="feed-shell" data-demo="The feed keeps you close to founder momentum, product progress, and community updates in one wide stream." style="width: 100%; padding: 0 0 24px;">
+                 <div class="feed-fetch-indicator feed-fetch-indicator-top" data-feed-fetch-indicator="top" aria-hidden="true" aria-live="polite" aria-label="Refreshing feed">
+                    <div class="feed-fetch-indicator-shell">
+                        <div class="feed-fetch-loader" aria-hidden="true"></div>
+                        <span class="feed-fetch-status">You are up to date</span>
+                    </div>
+                 </div>
+                 <div class="feed-fetch-indicator feed-fetch-indicator-bottom" data-feed-fetch-indicator="bottom" aria-hidden="true" aria-live="polite" aria-label="Loading more posts">
+                    <div class="feed-fetch-indicator-shell">
+                        <div class="feed-fetch-loader" aria-hidden="true"></div>
+                        <span class="feed-fetch-status">You are up to date</span>
+                    </div>
+                 </div>
                  <div class="structured-feed">
                     {% for post in posts %}
                     <article class="structured-post {{ post.theme_class }}" data-post-url="{% url 'Post Detail' post.id %}" data-post-type="{{ post.post_type }}" data-post-owner="{{ post.owner_display_name|lower }}" data-post-country="{{ post.feed_country|lower }}">
@@ -317,7 +334,11 @@
                             <div class="structured-post-head-main">
                                 <div class="structured-post-meta">
                                     <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
+                                        {% if post.avatar_url %}
+                                        <img class="structured-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.user.full_name|default:post.user.email }} avatar">
+                                        {% else %}
                                         <div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div>
+                                        {% endif %}
                                     </a>
                                     <div class="structured-post-meta-copy">
                                         <div class="structured-post-title">
@@ -381,6 +402,7 @@
                     </article>
                     {% endfor %}
     </div>
+    {{ searchable_users|json_script:"homeSearchableUsersData" }}
     {% include "includes/app_mobile_nav.html" with active_page='home' show_mobile_back=True %}
 <script>
                     (function() {
@@ -401,7 +423,246 @@
                             return cookieValue;
                         }
 
+                        function reactionEmoji(reaction) {
+                            return {
+                                thumbs_up: '\u{1F44D}',
+                                thumbs_down: '\u{1F44E}'
+                            }[reaction] || '\u{2728}';
+                        }
+
+                        function spawnReactionBurst(sourceNode, reaction) {
+                            if (!sourceNode) return;
+                            var rect = sourceNode.getBoundingClientRect();
+                            var centerX = rect.left + (rect.width / 2);
+                            var centerY = rect.top + (rect.height / 2);
+                            for (var i = 0; i < 6; i += 1) {
+                                var burst = document.createElement('span');
+                                burst.className = 'reaction-burst';
+                                burst.textContent = reactionEmoji(reaction);
+                                burst.style.left = centerX + 'px';
+                                burst.style.top = centerY + 'px';
+                                burst.style.setProperty('--drift-x', ((Math.random() * 52) - 26) + 'px');
+                                burst.style.setProperty('--tilt', ((Math.random() * 40) - 20) + 'deg');
+                                document.body.appendChild(burst);
+                                window.setTimeout(function(node) {
+                                    if (node && node.parentNode) node.parentNode.removeChild(node);
+                                }, 900, burst);
+                            }
+                        }
+
                         var csrftoken = getCookie('csrftoken');
+                        var topFetchIndicator = feedSection.querySelector('[data-feed-fetch-indicator="top"]');
+                        var bottomFetchIndicator = feedSection.querySelector('[data-feed-fetch-indicator="bottom"]');
+                        var fetchIndicatorTimer = null;
+                        var activeLoaderSide = '';
+                        var lastScrollTop = pageScrollTop();
+                        var touchStartY = null;
+                        var topLoadIntent = 0;
+                        var bottomLoadIntent = 0;
+                        var topLoaderIntentThreshold = 120;
+                        var bottomLoaderIntentThreshold = 220;
+                        var feedIndicatorLockedUntil = 0;
+
+                        function feedIndicatorIsLocked() {
+                            return Date.now() < feedIndicatorLockedUntil;
+                        }
+
+                        function lockFeedIndicator(duration) {
+                            feedIndicatorLockedUntil = Date.now() + (duration || 0);
+                        }
+
+                        function getNavigationType() {
+                            if (window.performance && typeof window.performance.getEntriesByType === 'function') {
+                                var navigationEntries = window.performance.getEntriesByType('navigation');
+                                if (navigationEntries && navigationEntries.length) {
+                                    return navigationEntries[0].type || '';
+                                }
+                            }
+                            if (window.performance && window.performance.navigation) {
+                                return window.performance.navigation.type === 1 ? 'reload' : '';
+                            }
+                            return '';
+                        }
+
+                        function setFeedLoaderVisible(side, isVisible, label) {
+                            var indicator = side === 'bottom' ? bottomFetchIndicator : topFetchIndicator;
+                            if (!indicator) return;
+                            if (label) {
+                                indicator.setAttribute('aria-label', label);
+                            }
+                            indicator.classList.remove('is-status');
+                            indicator.classList.toggle('is-visible', !!isVisible);
+                            indicator.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+                        }
+
+                        function hideFeedLoaders() {
+                            window.clearTimeout(fetchIndicatorTimer);
+                            setFeedLoaderVisible('top', false);
+                            setFeedLoaderVisible('bottom', false);
+                            activeLoaderSide = '';
+                            resetLoadIntent();
+                            lockFeedIndicator(420);
+                        }
+
+                        function showFeedStatus(side, label, duration) {
+                            var indicator = side === 'bottom' ? bottomFetchIndicator : topFetchIndicator;
+                            if (!indicator) return;
+                            lockFeedIndicator((duration || 950) + 160);
+                            if (label) {
+                                indicator.setAttribute('aria-label', label);
+                            }
+                            indicator.classList.add('is-visible', 'is-status');
+                            indicator.setAttribute('aria-hidden', 'false');
+                            fetchIndicatorTimer = window.setTimeout(function() {
+                                hideFeedLoaders();
+                            }, duration || 950);
+                        }
+
+                        function showFeedLoader(side, label, duration) {
+                            var indicator = side === 'bottom' ? bottomFetchIndicator : topFetchIndicator;
+                            if (!indicator || activeLoaderSide || feedIndicatorIsLocked()) return;
+                            window.clearTimeout(fetchIndicatorTimer);
+                            if (activeLoaderSide && activeLoaderSide !== side) {
+                                setFeedLoaderVisible(activeLoaderSide, false);
+                            }
+                            activeLoaderSide = side;
+                            resetLoadIntent();
+                            lockFeedIndicator((duration || 520) + 1200);
+                            setFeedLoaderVisible(side, true, label);
+                            fetchIndicatorTimer = window.setTimeout(function() {
+                                showFeedStatus(side, 'You are up to date', 980);
+                            }, duration || 520);
+                        }
+
+                        function resetLoadIntent(side) {
+                            if (!side || side === 'top') topLoadIntent = 0;
+                            if (!side || side === 'bottom') bottomLoadIntent = 0;
+                        }
+
+                        function pageScrollTop() {
+                            return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+                        }
+
+                        function pageScrollHeight() {
+                            return Math.max(
+                                document.body.scrollHeight,
+                                document.documentElement.scrollHeight,
+                                document.body.offsetHeight,
+                                document.documentElement.offsetHeight,
+                                document.body.clientHeight,
+                                document.documentElement.clientHeight
+                            );
+                        }
+
+                        function isNearTop() {
+                            return pageScrollTop() <= 24;
+                        }
+
+                        function isNearBottom() {
+                            var topOffset = pageScrollTop();
+                            var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+                            var documentHeight = pageScrollHeight();
+                            return topOffset + viewportHeight >= documentHeight - 24;
+                        }
+
+                        function updateFeedLoaderPosition() {
+                            var rect = feedSection.getBoundingClientRect();
+                            var left = Math.max(12, Math.round(rect.left));
+                            var right = Math.min(window.innerWidth - 12, Math.round(rect.right));
+                            var width = Math.max(right - left, 0);
+                            feedSection.style.setProperty('--feed-loader-left', left + 'px');
+                            feedSection.style.setProperty('--feed-loader-width', width + 'px');
+                        }
+
+                        function registerLoadIntent(side, distance) {
+                            if (side === 'top') {
+                                if (!isNearTop()) {
+                                    resetLoadIntent('top');
+                                    return;
+                                }
+                                topLoadIntent += Math.max(distance, 0);
+                                bottomLoadIntent = 0;
+                                if (topLoadIntent >= topLoaderIntentThreshold) {
+                                    resetLoadIntent('top');
+                                    showFeedLoader('top', 'Refreshing feed', 560);
+                                }
+                                return;
+                            }
+                            if (!isNearBottom()) {
+                                resetLoadIntent('bottom');
+                                return;
+                            }
+                            bottomLoadIntent += Math.max(distance, 0);
+                            topLoadIntent = 0;
+                            if (bottomLoadIntent >= bottomLoaderIntentThreshold) {
+                                resetLoadIntent('bottom');
+                                showFeedLoader('bottom', 'Loading more posts', 560);
+                            }
+                        }
+
+                        function handleDirectionalBoundaryCheck(currentScrollTop) {
+                            if (!isNearTop()) resetLoadIntent('top');
+                            if (!isNearBottom()) resetLoadIntent('bottom');
+                            lastScrollTop = currentScrollTop;
+                        }
+
+                        var scrollTicking = false;
+                        function queueBoundaryCheck() {
+                            if (scrollTicking) return;
+                            scrollTicking = true;
+                            window.requestAnimationFrame(function() {
+                                scrollTicking = false;
+                                updateFeedLoaderPosition();
+                                handleDirectionalBoundaryCheck(pageScrollTop());
+                            });
+                        }
+
+                        if (getNavigationType() === 'reload') {
+                            showFeedLoader('top', 'Refreshing feed', 760);
+                        }
+                        window.addEventListener('scroll', queueBoundaryCheck, { passive: true });
+                        window.addEventListener('resize', function() {
+                            updateFeedLoaderPosition();
+                            lastScrollTop = pageScrollTop();
+                        });
+                        window.addEventListener('wheel', function(event) {
+                            updateFeedLoaderPosition();
+                            if (event.deltaY < -10 && isNearTop()) {
+                                registerLoadIntent('top', Math.abs(event.deltaY));
+                            } else if (event.deltaY > 10 && isNearBottom()) {
+                                registerLoadIntent('bottom', Math.abs(event.deltaY));
+                            } else if (event.deltaY < 0) {
+                                resetLoadIntent('bottom');
+                            } else if (event.deltaY > 0) {
+                                resetLoadIntent('top');
+                            }
+                        }, { passive: true });
+                        window.addEventListener('touchstart', function(event) {
+                            if (!event.touches || !event.touches.length) return;
+                            touchStartY = event.touches[0].clientY;
+                        }, { passive: true });
+                        window.addEventListener('touchmove', function(event) {
+                            if (touchStartY === null || !event.touches || !event.touches.length) return;
+                            updateFeedLoaderPosition();
+                            var currentY = event.touches[0].clientY;
+                            var deltaY = currentY - touchStartY;
+                            if (deltaY > 12 && isNearTop()) {
+                                registerLoadIntent('top', deltaY);
+                            } else if (deltaY < -12 && isNearBottom()) {
+                                registerLoadIntent('bottom', Math.abs(deltaY));
+                            } else if (deltaY > 0) {
+                                resetLoadIntent('bottom');
+                            } else if (deltaY < 0) {
+                                resetLoadIntent('top');
+                            }
+                            touchStartY = currentY;
+                        }, { passive: true });
+                        window.addEventListener('touchend', function() {
+                            touchStartY = null;
+                            resetLoadIntent();
+                        }, { passive: true });
+                        updateFeedLoaderPosition();
+
                         feedSection.querySelectorAll('.like-btn').forEach(function(button) {
                             button.addEventListener('click', function() {
                                 var icon = button.querySelector('i');
@@ -432,6 +693,9 @@
                                 button.setAttribute('data-count', String(count));
                                 countNode.textContent = String(count);
                                 button.classList.toggle('is-active', !liked);
+                                if (!liked) {
+                                    spawnReactionBurst(button, 'thumbs_up');
+                                }
                             });
                         });
                         feedSection.querySelectorAll('.dislike-btn').forEach(function(button) {
@@ -464,6 +728,9 @@
                                 button.setAttribute('data-count', String(count));
                                 countNode.textContent = String(count);
                                 button.classList.toggle('is-active', !disliked);
+                                if (!disliked) {
+                                    spawnReactionBurst(button, 'thumbs_down');
+                                }
                             });
                         });
                         feedSection.querySelectorAll('.comment-toggle').forEach(function(button) {
@@ -565,7 +832,11 @@
                         <div class="match-cards" style="gap: 0;">
                             {% for request_item in home_quick_requests %}
                             <div class="match-card request-match-card" style="grid-template-columns: auto 1fr auto; padding: calc(var(--spacing) * 1) 0; background: transparent; border: 0; {% if not forloop.last %}border-bottom: 1px solid rgba(120, 150, 255, 0.16);{% endif %} border-radius: 0; min-height: 52px;">
+                                {% if request_item.avatar_url %}
+                                <img class="match-avatar-image" src="{{ request_item.avatar_url }}" alt="{{ request_item.display_name }} avatar">
+                                {% else %}
                                 <div class="match-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ request_item.avatar_initials }}</div>
+                                {% endif %}
                                 <div class="match-info" style="gap: 2px;">
                                     <div class="match-name" style="padding-bottom: 0;">{{ request_item.display_name }}</div>
                                     <div class="match-role">{{ request_item.status_line }}</div>
@@ -1090,8 +1361,21 @@
         var mobileFilterBackdrop = document.getElementById('mobileFilterBackdrop');
         var mobileFilterClose = document.getElementById('mobileFilterClose');
         var mobileFilterQuery = window.matchMedia('(max-width: 520px)');
+        var searchResults = document.getElementById('homeSearchResults');
+        var searchUsersDataNode = document.getElementById('homeSearchableUsersData');
         var posts = Array.prototype.slice.call(document.querySelectorAll('.structured-feed .structured-post[data-post-url]'));
-        if (!input || !posts.length) return;
+        if (!input) return;
+
+        var searchableUsers = [];
+        var activeUserIndex = -1;
+        var currentUserMatches = [];
+        if (searchUsersDataNode) {
+            try {
+                searchableUsers = JSON.parse(searchUsersDataNode.textContent || '[]');
+            } catch (error) {
+                searchableUsers = [];
+            }
+        }
 
         var feed = document.querySelector('.structured-feed');
         var emptyState = document.createElement('p');
@@ -1103,6 +1387,141 @@
             post.dataset.originalIndex = String(index);
         });
         normalizeRelativeTimes(document.body);
+
+        function normalizeSearchText(value) {
+            return String(value || '').trim().toLowerCase();
+        }
+
+        function closeSearchResults() {
+            if (!searchResults) return;
+            searchResults.hidden = true;
+            searchResults.innerHTML = '';
+            input.setAttribute('aria-expanded', 'false');
+            activeUserIndex = -1;
+            currentUserMatches = [];
+        }
+
+        function scoreUserMatch(user, query) {
+            var normalizedQuery = normalizeSearchText(query);
+            if (!normalizedQuery) return -1;
+
+            var name = normalizeSearchText(user.display_name);
+            var email = normalizeSearchText(user.email);
+            var location = normalizeSearchText(user.location);
+            var headline = normalizeSearchText(user.headline);
+            var searchText = normalizeSearchText(user.search_text);
+            var score = -1;
+
+            if (name === normalizedQuery) score = Math.max(score, 1200);
+            else if (name.indexOf(normalizedQuery) === 0) score = Math.max(score, 980);
+            else if (name.indexOf(normalizedQuery) !== -1) score = Math.max(score, 840);
+
+            if (email === normalizedQuery) score = Math.max(score, 1100);
+            else if (email.indexOf(normalizedQuery) === 0) score = Math.max(score, 900);
+            else if (email.indexOf(normalizedQuery) !== -1) score = Math.max(score, 760);
+
+            if (location.indexOf(normalizedQuery) !== -1) score = Math.max(score, 620);
+            if (headline.indexOf(normalizedQuery) !== -1) score = Math.max(score, 580);
+            if (searchText.indexOf(normalizedQuery) !== -1) score = Math.max(score, 520);
+            return score;
+        }
+
+        function rankedUserMatches(query) {
+            var normalizedQuery = normalizeSearchText(query);
+            if (!normalizedQuery) return [];
+
+            return searchableUsers
+                .map(function(user) {
+                    return {
+                        user: user,
+                        score: scoreUserMatch(user, normalizedQuery),
+                        name: normalizeSearchText(user.display_name)
+                    };
+                })
+                .filter(function(item) {
+                    return item.score > -1;
+                })
+                .sort(function(a, b) {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return a.name.localeCompare(b.name);
+                })
+                .slice(0, 6)
+                .map(function(item) {
+                    return item.user;
+                });
+        }
+
+        function updateActiveSearchResult() {
+            if (!searchResults) return;
+            Array.prototype.slice.call(searchResults.querySelectorAll('.home-search-result')).forEach(function(resultNode, index) {
+                var isActive = index === activeUserIndex;
+                resultNode.classList.toggle('is-active', isActive);
+                resultNode.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                if (isActive) resultNode.scrollIntoView({ block: 'nearest' });
+            });
+        }
+
+        function renderSearchResults(matches) {
+            if (!searchResults) return;
+            currentUserMatches = matches;
+            activeUserIndex = matches.length ? Math.min(activeUserIndex, matches.length - 1) : -1;
+            searchResults.innerHTML = '';
+
+            if (!matches.length) {
+                closeSearchResults();
+                return;
+            }
+
+            matches.forEach(function(user, index) {
+                var resultLink = document.createElement('a');
+                resultLink.className = 'home-search-result';
+                resultLink.href = user.profile_url;
+                resultLink.setAttribute('role', 'option');
+                resultLink.setAttribute('data-result-index', String(index));
+                resultLink.setAttribute('aria-selected', 'false');
+
+                var avatar;
+                if (user.avatar_url) {
+                    avatar = document.createElement('img');
+                    avatar.className = 'home-search-result-avatar-image';
+                    avatar.src = user.avatar_url;
+                    avatar.alt = (user.display_name || 'CoVise member') + ' avatar';
+                } else {
+                    avatar = document.createElement('span');
+                    avatar.className = 'home-search-result-avatar';
+                    avatar.textContent = user.avatar_initials || 'CV';
+                }
+
+                var copy = document.createElement('span');
+                copy.className = 'home-search-result-copy';
+
+                var name = document.createElement('span');
+                name.className = 'home-search-result-name';
+                name.textContent = user.display_name;
+
+                var meta = document.createElement('span');
+                meta.className = 'home-search-result-meta';
+                meta.textContent = user.location ? (user.email + ' · ' + user.location) : user.email;
+
+                copy.appendChild(name);
+                copy.appendChild(meta);
+
+                if (user.headline) {
+                    var headline = document.createElement('span');
+                    headline.className = 'home-search-result-headline';
+                    headline.textContent = user.headline;
+                    copy.appendChild(headline);
+                }
+
+                resultLink.appendChild(avatar);
+                resultLink.appendChild(copy);
+                searchResults.appendChild(resultLink);
+            });
+
+            searchResults.hidden = false;
+            input.setAttribute('aria-expanded', 'true');
+            updateActiveSearchResult();
+        }
 
         document.querySelectorAll('[data-post-body]').forEach(function(body) {
             var toggle = body.parentElement ? body.parentElement.querySelector('[data-read-more]') : null;
@@ -1214,7 +1633,7 @@
             });
         }
 
-        document.addEventListener('click', function() {
+        document.addEventListener('click', function(event) {
             document.querySelectorAll('.filter-dropdown').forEach(function(item) {
                 item.classList.remove('is-open');
                 var itemMenu = item.querySelector('.filter-dropdown-menu');
@@ -1222,6 +1641,9 @@
                 if (itemMenu) itemMenu.hidden = true;
                 if (itemTrigger) itemTrigger.setAttribute('aria-expanded', 'false');
             });
+            if (searchResults && !searchResults.hidden && !input.closest('.home-header-search').contains(event.target)) {
+                closeSearchResults();
+            }
         });
 
         function reactionScore(post) {
@@ -1255,6 +1677,7 @@
             var selectedCountry = countryFilter ? countryFilter.value.trim().toLowerCase() : '';
             var selectedScope = scopeFilter ? scopeFilter.value.trim().toLowerCase() : 'all';
             sortPosts(selectedSort);
+            renderSearchResults(rankedUserMatches(query));
             var matches = 0;
             posts.forEach(function(post) {
                 var matchesText = !query || post.textContent.toLowerCase().indexOf(query) !== -1;
@@ -1268,11 +1691,46 @@
             emptyState.hidden = (!query && !selectedType && !selectedCountry && selectedScope === 'all' && selectedSort === 'date') || matches > 0;
         }
 
-        input.addEventListener('input', applyPostFilters);
+        input.addEventListener('input', function() {
+            activeUserIndex = -1;
+            applyPostFilters();
+        });
+        input.addEventListener('focus', applyPostFilters);
+        input.addEventListener('keydown', function(event) {
+            if (!currentUserMatches.length) {
+                if (event.key === 'Escape') closeSearchResults();
+                return;
+            }
+
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                activeUserIndex = activeUserIndex < currentUserMatches.length - 1 ? activeUserIndex + 1 : 0;
+                updateActiveSearchResult();
+                return;
+            }
+
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                activeUserIndex = activeUserIndex > 0 ? activeUserIndex - 1 : currentUserMatches.length - 1;
+                updateActiveSearchResult();
+                return;
+            }
+
+            if (event.key === 'Enter' && activeUserIndex > -1 && currentUserMatches[activeUserIndex]) {
+                event.preventDefault();
+                window.location.href = currentUserMatches[activeUserIndex].profile_url;
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                closeSearchResults();
+            }
+        });
         if (sortFilter) sortFilter.addEventListener('change', applyPostFilters);
         if (typeFilter) typeFilter.addEventListener('change', applyPostFilters);
         if (countryFilter) countryFilter.addEventListener('change', applyPostFilters);
         if (scopeFilter) scopeFilter.addEventListener('change', applyPostFilters);
+        applyPostFilters();
     })();
 </script>
 <script>

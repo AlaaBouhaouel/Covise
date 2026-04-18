@@ -81,3 +81,28 @@ def get_cv_download_url(s3_key, expiry_seconds=3600):
     except Exception as e:
         print(f"[S3] URL generation failed for {s3_key}: {e}")
         return None
+
+
+def delete_s3_object(s3_key):
+    """
+    Deletes an object from S3.
+    Returns True when the delete request was sent successfully.
+    """
+    if not s3_key:
+        return False
+
+    try:
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME
+        )
+        s3.delete_object(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            Key=s3_key,
+        )
+        return True
+    except Exception as e:
+        print(f"[S3] Delete failed for {s3_key}: {e}")
+        return False

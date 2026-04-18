@@ -64,44 +64,189 @@
                         <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                     </button>
                     <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
-                        <span>{{ request.user.avatar_initials }}</span>
+                        {% if ui_user.avatar_url %}
+                        <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
+                        {% else %}
+                        <span>{{ ui_user.avatar_initials }}</span>
+                        {% endif %}
                     </a>
                 </div>
             </header>
 
             <section class="create-post-shell feed-shell" aria-label="Create post">
                 <form class="structured-post create-post-form-card" action="{% url 'Create Post' %}" method="post" enctype="multipart/form-data">
-                    <div class="create-post-field-header">
-                        <label for="post-editor-title">POST</label>
-                        <a class="create-post-back-link" href="{% url 'Home' %}" title="Back to Home">
-                            <span aria-hidden="true">&lt;</span>
-                            <span>Back</span>
-                        </a>
-                    </div>
-
                     {% csrf_token %}
-                    <div class="create-post-topbar">
-                        <div>
-                            <div class="widget-title">Post something worth building on, {{ first_name }}</div>
+                    <input id="post-type" name="post_type" type="hidden" value="{{ form_data.post_type|default:'update' }}">
+                    <input id="post-title" name="title" type="hidden" value="{{ form_data.title|default:'' }}">
+                    <input id="post-content" name="content" type="hidden" value="{{ form_data.content|default:'' }}">
+
+                    <div class="create-post-head">
+                        <div class="create-post-head-row">
+                            <span class="create-post-kicker">Create Post</span>
+                            <a class="create-post-back-link" href="{% url 'Home' %}" title="Back to Home">
+                                <span aria-hidden="true">&larr;</span>
+                                <span>Back to feed</span>
+                            </a>
+                        </div>
+                        <div class="create-post-page-header">
+                            <h1 class="create-post-page-title">Post something worth building on{% if first_name %}, {{ first_name }}{% endif %}</h1>
                             {% if is_first_post %}
                             <p class="create-post-subtitle">Your first post on CoVise is your introduction. Fill it in, make it yours, and publish it to join the conversation.</p>
                             {% else %}
-                            <p class="create-post-subtitle">Start from a template or write freely.</p>
+                            <p class="create-post-subtitle">Start from a template or write freely, then refine the draft with the context builder below.</p>
                             {% endif %}
                         </div>
-                        <div class="post-tools-wrap">
-                            <label for="post-type">Post Tools</label>
-                            <div class="create-post-topbar-actions">
-                                <div class="tools">
-                                    <button class="add-picture" id="postImageTrigger" type="button" aria-label="Add picture to post" title="Add an image to this post">
-                                        <i class="fa-solid fa-image" aria-hidden="true"></i>
+                    </div>
+
+                    {% if error_message %}
+                    <div class="create-post-error" role="alert">
+                        {{ error_message }}
+                    </div>
+                    {% endif %}
+
+                    {% if is_first_post %}
+                    <section class="create-post-lock-panel" aria-label="Mandatory introduction template">
+                        <div class="create-post-lock-badge">Introduction required</div>
+                        <div class="create-post-lock-copy">
+                            <h2>Start with your founder introduction</h2>
+                            <p>This first post is locked to your introduction so people can quickly understand who you are, what you are building, and how to connect with you.</p>
+                        </div>
+                    </section>
+                    {% else %}
+                    <section class="create-post-intent-section" aria-label="Post intent">
+                        <div class="create-post-section-head">
+                            <span class="create-post-section-label">Intent</span>
+                        </div>
+                        <div class="create-post-intent-grid">
+                            <button class="create-post-intent-button is-active" type="button" data-intent="free" aria-pressed="true">
+                                <span class="create-post-intent-icon"><i class="fa-solid fa-pen-nib" aria-hidden="true"></i></span>
+                                <span class="create-post-intent-name">Write freely</span>
+                                <span class="create-post-intent-copy">Start with a blank draft and make it your own.</span>
+                            </button>
+                            <button class="create-post-intent-button" type="button" data-intent="cofounder" aria-pressed="false">
+                                <span class="create-post-intent-icon"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span>
+                                <span class="create-post-intent-name">Find a co-founder</span>
+                                <span class="create-post-intent-copy">Frame the venture, stage, and the partner you are looking for.</span>
+                            </button>
+                            <button class="create-post-intent-button" type="button" data-intent="advice" aria-pressed="false">
+                                <span class="create-post-intent-icon"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></span>
+                                <span class="create-post-intent-name">Ask for advice</span>
+                                <span class="create-post-intent-copy">Turn a vague question into a sharp ask with context.</span>
+                            </button>
+                            <button class="create-post-intent-button" type="button" data-intent="progress" aria-pressed="false">
+                                <span class="create-post-intent-icon"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
+                                <span class="create-post-intent-name">Share progress</span>
+                                <span class="create-post-intent-copy">Highlight momentum, traction, or what changed this week.</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <section class="create-post-context-section" aria-label="Context builder">
+                        <div class="create-post-context-inner create-post-context-note is-visible" id="ctx-free">
+                            <p>No structure needed. Write what is on your mind.</p>
+                        </div>
+
+                        <div class="create-post-context-inner" id="ctx-cofounder" hidden>
+                            <div class="create-post-context-field">
+                                <label for="cf-building">What are you building?</label>
+                                <input class="create-post-context-input" id="cf-building" type="text" placeholder="e.g. A fintech platform for SME invoicing in the GCC">
+                            </div>
+                            <div class="create-post-context-field">
+                                <label>Current stage</label>
+                                <div class="create-post-stage-pills" id="cf-stage">
+                                    <button class="create-post-stage-pill" type="button" data-stage="Idea" aria-pressed="false">Idea</button>
+                                    <button class="create-post-stage-pill" type="button" data-stage="MVP" aria-pressed="false">MVP</button>
+                                    <button class="create-post-stage-pill is-active" type="button" data-stage="Launched" aria-pressed="true">Launched</button>
+                                    <button class="create-post-stage-pill" type="button" data-stage="Growing" aria-pressed="false">Growing</button>
+                                </div>
+                            </div>
+                            <div class="create-post-context-field">
+                                <label for="cf-looking">Who are you looking for?</label>
+                                <input class="create-post-context-input" id="cf-looking" type="text" placeholder="e.g. Technical co-founder with backend / payments experience">
+                            </div>
+                            <div class="create-post-context-field">
+                                <label for="cf-why">Why now?</label>
+                                <input class="create-post-context-input" id="cf-why" type="text" placeholder="e.g. We have 3 pilot customers and need to ship v1">
+                            </div>
+                        </div>
+
+                        <div class="create-post-context-inner" id="ctx-advice" hidden>
+                            <div class="create-post-context-field">
+                                <label for="adv-solve">What are you trying to solve?</label>
+                                <input class="create-post-context-input" id="adv-solve" type="text" placeholder="e.g. How to approach enterprise sales in Saudi Arabia">
+                            </div>
+                            <div class="create-post-context-field">
+                                <label for="adv-tried">What have you tried?</label>
+                                <input class="create-post-context-input" id="adv-tried" type="text" placeholder="e.g. Cold outreach, LinkedIn, attending events">
+                            </div>
+                            <div class="create-post-context-field">
+                                <label for="adv-stuck">Where are you stuck?</label>
+                                <input class="create-post-context-input" id="adv-stuck" type="text" placeholder="e.g. Getting past the first meeting with procurement">
+                            </div>
+                        </div>
+
+                        <div class="create-post-context-inner" id="ctx-progress" hidden>
+                            <div class="create-post-context-field">
+                                <label for="prog-achieve">What did you achieve?</label>
+                                <input class="create-post-context-input" id="prog-achieve" type="text" placeholder="e.g. Closed our first enterprise deal with a regional bank">
+                            </div>
+                            <div class="create-post-context-field">
+                                <label for="prog-changed">What changed?</label>
+                                <input class="create-post-context-input" id="prog-changed" type="text" placeholder="e.g. Shifted from product-led to direct sales approach">
+                            </div>
+                            <div class="create-post-context-field">
+                                <label for="prog-next">What's next?</label>
+                                <input class="create-post-context-input" id="prog-next" type="text" placeholder="e.g. Hiring a second sales rep and targeting 5 more banks">
+                            </div>
+                        </div>
+                    </section>
+                    {% endif %}
+
+                    <section class="create-post-editor-section" aria-label="Post editor">
+                        <div class="create-post-section-head create-post-section-head-inline">
+                            <span class="create-post-section-label">Draft</span>
+                            <p>Shape the title and body here, then publish to the network.</p>
+                        </div>
+
+                        <div class="create-post-editor-card" id="createPostEditor">
+                            <textarea
+                                id="post-editor-title-ui"
+                                class="create-post-editor-title"
+                                rows="1"
+                                aria-label="Post title"
+                                placeholder="Give your post a sharp title"
+                            >{{ form_data.title|default:'' }}</textarea><textarea
+                                id="post-editor-body-ui"
+                                class="create-post-editor-body"
+                                aria-label="Post content"
+                                placeholder="Share your update, question, idea, or win..."
+                            >{{ form_data.content|default:'' }}</textarea>
+                            <div class="create-post-editor-footer">
+                                <span class="create-post-char-count" id="charCount">0 characters</span>
+                                <div class="create-post-editor-tools">
+                                    <button class="create-post-tool-button create-post-text-tool" id="postBoldTrigger" type="button" aria-label="Bold selected text" title="Bold selected text">
+                                        <i class="fa-solid fa-bold" aria-hidden="true"></i>
+                                    </button>
+                                    <button class="create-post-tool-button create-post-text-tool" id="postItalicTrigger" type="button" aria-label="Italicize selected text" title="Italicize selected text">
+                                        <i class="fa-solid fa-italic" aria-hidden="true"></i>
+                                    </button>
+                                    <button class="create-post-tool-button" id="postImageTrigger" type="button" aria-label="Add picture to post" title="Add an image to this post">
+                                        <i class="fa-regular fa-image" aria-hidden="true"></i>
                                     </button>
                                     <input id="postImageInput" name="images" type="file" accept="image/*" multiple hidden>
-                                </div>
-                                <div class="type">
+
                                     <div class="create-post-select-wrap create-post-dropdown">
-                                        <input id="post-type" name="post_type" type="hidden" value="{{ form_data.post_type|default:'update' }}">
-                                        <button class="create-post-select-button" id="postTypeTrigger" type="button" title="Choose a post type" aria-haspopup="listbox" aria-expanded="false" aria-controls="postTypeMenu">
+                                        <button
+                                            class="create-post-select-button"
+                                            id="postTypeTrigger"
+                                            type="button"
+                                            title="Choose a post type"
+                                            aria-haspopup="listbox"
+                                            aria-expanded="false"
+                                            aria-controls="postTypeMenu"
+                                            {% if is_first_post %}disabled aria-disabled="true"{% endif %}
+                                        >
+                                            <span class="create-post-select-prefix">Post type</span>
                                             <span id="postTypeLabel">
                                                 {% for value, label in post_type_choices %}{% if form_data.post_type == value or forloop.first and not form_data.post_type %}{{ label }}{% endif %}{% endfor %}
                                             </span>
@@ -121,62 +266,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {% if is_first_post %}
-                    <section class="create-post-template-intro" aria-label="Mandatory introduction template">
-                        <div class="create-post-template-lock">
-                            <span class="create-post-template-lock-badge">Introduction</span>
-                            <p>This first post is required so others can understand who you are, what you are building, and how to connect with you.</p>
-                        </div>
-                    </section>
-                    {% else %}
-                    <section class="create-post-template-section" aria-label="Post templates">
-                        <div class="create-post-template-head">
-                            <span class="create-post-template-kicker">Templates</span>
-                            <h2>Start from a template or write freely</h2>
-                        </div>
-                        <div class="create-post-template-grid">
-                            {% for card in template_cards %}
-                            <button
-                                class="create-post-template-card{% if initial_template_key == card.key %} is-active{% endif %}"
-                                type="button"
-                                data-template-key="{{ card.key }}"
-                            >
-                                <span class="create-post-template-card-title">{{ card.label }}</span>
-                                <span class="create-post-template-card-copy">{{ card.description }}</span>
-                            </button>
-                            {% endfor %}
-                        </div>
-                    </section>
-                    {% endif %}
-
-                    {% if error_message %}
-                    <div class="create-post-error" role="alert">
-                        {{ error_message }}
-                    </div>
-                    {% endif %}
-
-                    <div class="create-post-field">
-                        <label for="post-editor-title">Write</label>
-                        <div class="create-post-editor" id="createPostEditor">
-                            <div
-                                id="post-editor-title"
-                                class="create-post-editor-title"
-                                contenteditable="true"
-                                role="textbox"
-                                aria-label="Post title"
-                                data-placeholder="Give your post a sharp title"
-                            >{{ form_data.title|default:'' }}</div>
-                            <div
-                                id="post-editor-body"
-                                class="create-post-editor-body"
-                                contenteditable="true"
-                                role="textbox"
-                                aria-label="Post content"
-                                data-placeholder="Share your update, question, idea, or win..."
-                            >{{ form_data.content|default:'' }}</div>
-                        </div>
                         <div class="create-post-image-preview" id="postImagePreview" hidden>
                             <div class="create-post-image-preview-head">
                                 <span id="postImagePreviewCount">0 / 6 images</span>
@@ -184,14 +274,14 @@
                             </div>
                             <div class="create-post-image-preview-grid" id="postImagePreviewGrid"></div>
                         </div>
-                        <input id="post-title" name="title" type="hidden" value="{{ form_data.title|default:'' }}">
-                        <input id="post-content" name="content" type="hidden" value="{{ form_data.content|default:'' }}">
-                    </div>
+
+                    </section>
 
                     <div class="create-post-actions">
+                        <span class="create-post-visibility">Visible to all community members</span>
                         <button class="create-post-primary" type="submit" title="Publish this post">
                             <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                            <span>Publish post</span>
+                            <span>Post to network</span>
                         </button>
                     </div>
                 </form>
@@ -203,8 +293,8 @@
     <script>
         (function() {
             var form = document.querySelector('.create-post-form-card');
-            var titleEditor = document.getElementById('post-editor-title');
-            var bodyEditor = document.getElementById('post-editor-body');
+            var titleEditor = document.getElementById('post-editor-title-ui');
+            var bodyEditor = document.getElementById('post-editor-body-ui');
             var titleInput = document.getElementById('post-title');
             var contentInput = document.getElementById('post-content');
             var imageTrigger = document.getElementById('postImageTrigger');
@@ -213,15 +303,51 @@
             var imagePreviewGrid = document.getElementById('postImagePreviewGrid');
             var imagePreviewCount = document.getElementById('postImagePreviewCount');
             var imageRemove = document.getElementById('postImageRemove');
+            var boldTrigger = document.getElementById('postBoldTrigger');
+            var italicTrigger = document.getElementById('postItalicTrigger');
             var typeTrigger = document.getElementById('postTypeTrigger');
             var typeMenu = document.getElementById('postTypeMenu');
             var typeInput = document.getElementById('post-type');
             var typeLabel = document.getElementById('postTypeLabel');
+            var charCount = document.getElementById('charCount');
             var templateDataNode = document.getElementById('create-post-templates');
-            var templateCards = document.querySelectorAll('[data-template-key]');
+            var intentButtons = Array.prototype.slice.call(document.querySelectorAll('.create-post-intent-button[data-intent]'));
+            var contextPanels = Array.prototype.slice.call(document.querySelectorAll('.create-post-context-inner[id^="ctx-"]'));
+            var contextInputs = Array.prototype.slice.call(document.querySelectorAll('.create-post-context-input'));
+            var stagePills = Array.prototype.slice.call(document.querySelectorAll('.create-post-stage-pill'));
             var isFirstPost = {{ is_first_post|yesno:"true,false" }};
             var templatePayloads = {};
-            if (!form || !titleEditor || !bodyEditor || !titleInput || !contentInput) return;
+            var selectedImageFiles = [];
+            var intentTemplateMap = {
+                cofounder: 'find_cofounder',
+                advice: 'ask_advice',
+                progress: 'share_update',
+                free: 'write_freely'
+            };
+            var intentPlaceholders = {
+                cofounder: {
+                    title: 'Looking for a technical co-founder to build [your venture]',
+                    body: 'Describe your venture, what stage you are at, and the kind of co-founder you are looking for.'
+                },
+                advice: {
+                    title: 'Need advice on [your challenge]',
+                    body: 'Explain what you are working on, what you have tried, and where you are stuck.'
+                },
+                progress: {
+                    title: 'We just [your milestone] - here is what worked',
+                    body: 'Share what you achieved, what changed, and what you are planning next.'
+                },
+                free: {
+                    title: 'Give your post a sharp title',
+                    body: 'Share your update, question, idea, or win...'
+                }
+            };
+            var currentIntent = 'free';
+            var userEditedTitle = false;
+            var userEditedBody = false;
+            var activeEditor = bodyEditor;
+
+            if (!form || !titleEditor || !bodyEditor || !titleInput || !contentInput || !typeInput) return;
 
             if (templateDataNode) {
                 try {
@@ -235,36 +361,72 @@
                 return (value || '').replace(/\u00a0/g, ' ').replace(/\r/g, '').trim();
             }
 
-            function syncFields() {
-                titleInput.value = sanitizeText(titleEditor.textContent);
-                contentInput.value = sanitizeText(bodyEditor.textContent);
+            function setTextareaValue(field, value) {
+                field.value = value || '';
+                autoResize(field);
             }
 
-            titleEditor.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    bodyEditor.focus();
-                }
-            });
+            function syncFields() {
+                titleInput.value = sanitizeText(titleEditor.value);
+                contentInput.value = sanitizeText(bodyEditor.value);
+            }
 
-            ['input', 'blur'].forEach(function(eventName) {
-                titleEditor.addEventListener(eventName, syncFields);
-                bodyEditor.addEventListener(eventName, syncFields);
-            });
+            function autoResize(field) {
+                if (!field) return;
+                field.style.height = 'auto';
+                field.style.height = field.scrollHeight + 'px';
+            }
+
+            function updateCount() {
+                if (!charCount) return;
+                var total = titleEditor.value.length + bodyEditor.value.length;
+                charCount.textContent = total + ' character' + (total === 1 ? '' : 's');
+            }
+
+            function updateEditorMetrics() {
+                autoResize(titleEditor);
+                autoResize(bodyEditor);
+                updateCount();
+                syncFields();
+            }
+
+            function setActiveEditor(field) {
+                if (!field) return;
+                activeEditor = field;
+            }
+
+            function applyInlineFormat(marker) {
+                var field = activeEditor || bodyEditor;
+                if (!field || field.disabled) return;
+
+                var start = typeof field.selectionStart === 'number' ? field.selectionStart : field.value.length;
+                var end = typeof field.selectionEnd === 'number' ? field.selectionEnd : field.value.length;
+                var value = field.value || '';
+                var selectedText = value.slice(start, end);
+                var insertText = marker + (selectedText || 'text') + marker;
+
+                field.focus();
+                field.setRangeText(insertText, start, end, 'end');
+
+                if (!selectedText) {
+                    field.setSelectionRange(start + marker.length, start + marker.length + 4);
+                } else {
+                    field.setSelectionRange(start, start + insertText.length);
+                }
+
+                if (field === titleEditor) {
+                    userEditedTitle = true;
+                } else if (field === bodyEditor) {
+                    userEditedBody = true;
+                }
+
+                updateEditorMetrics();
+            }
 
             function closeTypeMenu() {
                 if (!typeMenu || !typeTrigger) return;
                 typeMenu.hidden = true;
                 typeTrigger.setAttribute('aria-expanded', 'false');
-            }
-
-            var selectedImageFiles = [];
-
-            function updateTemplateCardState(activeKey) {
-                templateCards.forEach(function(card) {
-                    var isActive = card.getAttribute('data-template-key') === activeKey;
-                    card.classList.toggle('is-active', isActive);
-                });
             }
 
             function setPostType(value, label) {
@@ -287,14 +449,195 @@
                 });
             }
 
+            function showContext(intentKey) {
+                contextPanels.forEach(function(panel) {
+                    var isMatch = panel.id === 'ctx-' + intentKey;
+                    panel.hidden = !isMatch;
+                    panel.classList.toggle('is-visible', isMatch);
+                });
+            }
+
+            function setPlaceholders(intentKey) {
+                var placeholder = intentPlaceholders[intentKey] || intentPlaceholders.free;
+                titleEditor.placeholder = placeholder.title;
+                bodyEditor.placeholder = placeholder.body;
+            }
+
+            function setActiveIntent(intentKey) {
+                intentButtons.forEach(function(button) {
+                    var isActive = button.getAttribute('data-intent') === intentKey;
+                    button.classList.toggle('is-active', isActive);
+                    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                });
+                currentIntent = intentKey;
+                showContext(intentKey);
+                setPlaceholders(intentKey);
+            }
+
+            function focusFirstContextInput(intentKey) {
+                var firstFieldId = {
+                    cofounder: 'cf-building',
+                    advice: 'adv-solve',
+                    progress: 'prog-achieve'
+                }[intentKey];
+                var firstField = firstFieldId ? document.getElementById(firstFieldId) : null;
+                if (!firstField) return;
+                window.requestAnimationFrame(function() {
+                    firstField.focus();
+                    if (typeof firstField.setSelectionRange === 'function') {
+                        var valueLength = firstField.value ? firstField.value.length : 0;
+                        firstField.setSelectionRange(valueLength, valueLength);
+                    }
+                });
+            }
+
+            function resetStagePills() {
+                stagePills.forEach(function(button) {
+                    var active = button.getAttribute('data-stage') === 'Launched';
+                    button.classList.toggle('is-active', active);
+                    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+                });
+            }
+
+            function resetContextBuilder() {
+                contextInputs.forEach(function(input) {
+                    input.value = '';
+                });
+                resetStagePills();
+            }
+
+            function getTemplate(templateKey) {
+                return templatePayloads[templateKey] || null;
+            }
+
             function applyTemplate(templateKey) {
-                var template = templatePayloads[templateKey];
+                var template = getTemplate(templateKey);
                 if (!template) return;
-                titleEditor.textContent = template.title || '';
-                bodyEditor.textContent = template.content || '';
+                setTextareaValue(titleEditor, template.title || '');
+                setTextareaValue(bodyEditor, template.content || '');
                 setPostType(template.post_type, template.label);
-                updateTemplateCardState(templateKey);
-                syncFields();
+                updateEditorMetrics();
+            }
+
+            function getStage() {
+                var active = document.querySelector('.create-post-stage-pill.is-active');
+                return active ? active.getAttribute('data-stage') || '' : '';
+            }
+
+            function valueFor(id) {
+                var field = document.getElementById(id);
+                return field ? field.value.trim() : '';
+            }
+
+            function buildDraftFromContext() {
+                var template = getTemplate(intentTemplateMap[currentIntent]) || { title: '', content: '' };
+                var nextTitle = template.title || '';
+                var nextBody = template.content || '';
+
+                if (currentIntent === 'cofounder') {
+                    var building = valueFor('cf-building');
+                    var stage = getStage();
+                    var looking = valueFor('cf-looking');
+                    var why = valueFor('cf-why');
+
+                    if (looking && building) {
+                        nextTitle = 'Looking for ' + looking.charAt(0).toLowerCase() + looking.slice(1) + ' to build ' + building.charAt(0).toLowerCase() + building.slice(1);
+                    } else if (looking) {
+                        nextTitle = 'Looking for ' + looking.charAt(0).toLowerCase() + looking.slice(1);
+                    } else if (building) {
+                        nextTitle = 'Looking for a co-founder to build ' + building.charAt(0).toLowerCase() + building.slice(1);
+                    }
+
+                    var cofounderParts = [];
+                    if (building) {
+                        cofounderParts.push("We're building " + building + (stage ? ', currently at the ' + stage.toLowerCase() + ' stage.' : '.'));
+                    }
+                    if (looking) {
+                        cofounderParts.push('Looking for ' + looking.charAt(0).toLowerCase() + looking.slice(1) + ' to join as co-founder.');
+                    }
+                    if (why) {
+                        cofounderParts.push(why.charAt(0).toUpperCase() + why.slice(1) + (/[.!?]$/.test(why) ? '' : '.'));
+                    }
+                    if (cofounderParts.length) {
+                        nextBody = cofounderParts.join(' ');
+                    }
+                } else if (currentIntent === 'advice') {
+                    var solve = valueFor('adv-solve');
+                    var tried = valueFor('adv-tried');
+                    var stuck = valueFor('adv-stuck');
+
+                    if (solve) {
+                        nextTitle = 'Need advice: ' + solve.charAt(0).toLowerCase() + solve.slice(1);
+                    }
+
+                    var adviceParts = [];
+                    if (solve) {
+                        adviceParts.push("I'm trying to figure out " + solve.charAt(0).toLowerCase() + solve.slice(1) + (/[.!?]$/.test(solve) ? '' : '.'));
+                    }
+                    if (tried) {
+                        adviceParts.push("So far I've tried " + tried.charAt(0).toLowerCase() + tried.slice(1) + (/[.!?]$/.test(tried) ? '' : '.'));
+                    }
+                    if (stuck) {
+                        adviceParts.push("Where I'm stuck: " + stuck.charAt(0).toLowerCase() + stuck.slice(1) + (/[.!?]$/.test(stuck) ? '' : '.'));
+                    }
+                    if (adviceParts.length) {
+                        adviceParts.push('Would love any advice or perspective from founders who have navigated this.');
+                        nextBody = adviceParts.join('\n\n');
+                    }
+                } else if (currentIntent === 'progress') {
+                    var achieve = valueFor('prog-achieve');
+                    var changed = valueFor('prog-changed');
+                    var next = valueFor('prog-next');
+
+                    if (achieve) {
+                        nextTitle = achieve.charAt(0).toUpperCase() + achieve.slice(1) + ' - here is what worked';
+                    }
+
+                    var progressParts = [];
+                    if (achieve) {
+                        progressParts.push(achieve.charAt(0).toUpperCase() + achieve.slice(1) + (/[.!?]$/.test(achieve) ? '' : '.'));
+                    }
+                    if (changed) {
+                        progressParts.push('What changed: ' + changed.charAt(0).toLowerCase() + changed.slice(1) + (/[.!?]$/.test(changed) ? '' : '.'));
+                    }
+                    if (next) {
+                        progressParts.push('Next up: ' + next.charAt(0).toLowerCase() + next.slice(1) + (/[.!?]$/.test(next) ? '' : '.'));
+                    }
+                    if (progressParts.length) {
+                        nextBody = progressParts.join('\n\n');
+                    }
+                }
+
+                if (!userEditedTitle) {
+                    setTextareaValue(titleEditor, nextTitle);
+                }
+                if (!userEditedBody) {
+                    setTextareaValue(bodyEditor, nextBody);
+                }
+                updateEditorMetrics();
+            }
+
+            function selectIntent(intentKey, shouldSeedTemplate) {
+                if (isFirstPost) return;
+                setActiveIntent(intentKey);
+                resetContextBuilder();
+                userEditedTitle = false;
+                userEditedBody = false;
+                if (shouldSeedTemplate !== false) {
+                    applyTemplate(intentTemplateMap[intentKey]);
+                } else {
+                    updateEditorMetrics();
+                }
+                focusFirstContextInput(intentKey);
+            }
+
+            function resolveInitialIntent() {
+                var currentType = typeInput.value;
+                var hasDraft = sanitizeText(titleEditor.value).length > 0 || sanitizeText(bodyEditor.value).length > 0;
+                if (!hasDraft) return 'free';
+                if (currentType === 'idea') return 'cofounder';
+                if (currentType === 'ask') return 'advice';
+                return 'free';
             }
 
             function syncImagePreviewVisibility() {
@@ -364,7 +707,60 @@
                 syncImagePreviewVisibility();
             }
 
-            if (typeTrigger && typeMenu && typeInput && typeLabel) {
+            titleEditor.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    bodyEditor.focus();
+                }
+            });
+
+            [titleEditor, bodyEditor].forEach(function(field) {
+                ['focus', 'click', 'keyup', 'select'].forEach(function(eventName) {
+                    field.addEventListener(eventName, function() {
+                        setActiveEditor(field);
+                    });
+                });
+            });
+
+            titleEditor.addEventListener('input', function() {
+                userEditedTitle = true;
+                updateEditorMetrics();
+            });
+
+            bodyEditor.addEventListener('input', function() {
+                userEditedBody = true;
+                updateEditorMetrics();
+            });
+
+            ['blur'].forEach(function(eventName) {
+                titleEditor.addEventListener(eventName, syncFields);
+                bodyEditor.addEventListener(eventName, syncFields);
+            });
+
+            intentButtons.forEach(function(button) {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    selectIntent(button.getAttribute('data-intent') || 'free', true);
+                });
+            });
+
+            contextInputs.forEach(function(input) {
+                input.addEventListener('input', buildDraftFromContext);
+            });
+
+            stagePills.forEach(function(button) {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    stagePills.forEach(function(item) {
+                        var active = item === button;
+                        item.classList.toggle('is-active', active);
+                        item.setAttribute('aria-pressed', active ? 'true' : 'false');
+                    });
+                    buildDraftFromContext();
+                });
+            });
+
+            if (typeTrigger && typeMenu && typeLabel && !typeTrigger.disabled) {
                 typeTrigger.addEventListener('click', function(event) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -381,15 +777,6 @@
                         var label = option.getAttribute('data-label') || '';
                         setPostType(value, label);
                         closeTypeMenu();
-                    });
-                });
-            }
-
-            if (!isFirstPost && templateCards.length) {
-                templateCards.forEach(function(card) {
-                    card.addEventListener('click', function(event) {
-                        event.preventDefault();
-                        applyTemplate(card.getAttribute('data-template-key') || '');
                     });
                 });
             }
@@ -419,6 +806,7 @@
                         existingKeys[key] = true;
                         selectedImageFiles.push(file);
                     });
+
                     syncImageInputFiles();
                     renderImagePreviews();
                 });
@@ -433,18 +821,43 @@
                 }
             }
 
+            if (boldTrigger) {
+                boldTrigger.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    applyInlineFormat('**');
+                });
+            }
+
+            if (italicTrigger) {
+                italicTrigger.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    applyInlineFormat('*');
+                });
+            }
+
             document.addEventListener('click', function(event) {
                 if (typeMenu && typeTrigger && !typeMenu.hidden && !typeMenu.contains(event.target) && !typeTrigger.contains(event.target)) {
                     closeTypeMenu();
                 }
             });
 
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeTypeMenu();
+                }
+            });
+
             form.addEventListener('submit', syncFields);
+
+            setPostType(typeInput.value);
             syncImagePreviewVisibility();
             if (isFirstPost) {
+                setPlaceholders('free');
                 applyTemplate('introduction');
+            } else {
+                setActiveIntent(resolveInitialIntent());
             }
-            syncFields();
+            updateEditorMetrics();
         })();
     </script>
     <script>

@@ -93,10 +93,11 @@
                         </div>
                     </div>
                     <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="8" r="4"></circle>
-                            <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
-                        </svg>
+                        {% if ui_user.avatar_url %}
+                        <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
+                        {% else %}
+                        <span>{{ ui_user.avatar_initials }}</span>
+                        {% endif %}
                     </a>
                 </div>
             </header>
@@ -106,8 +107,12 @@
                 <article class="project-card project-detail-card">
                     <div class="founder-row">
                         <div class="founder-meta">
-                            <span class="founder-avatar">CV</span>
-                            <span>CoVise venture dossier</span>
+                            {% if project_founder_avatar_url %}
+                            <img class="founder-avatar founder-avatar-image" src="{{ project_founder_avatar_url }}" alt="{{ project_founder_name }} avatar">
+                            {% else %}
+                            <span class="founder-avatar">{{ project_founder_initials }}</span>
+                            {% endif %}
+                            <span>Posted by {{ project_founder_name }}</span>
                             {% if project.city or project.country %}
                             <span class="meta-pill"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>{{ project.city }}, {{ project.country }}</span></span>
                             {% endif %}

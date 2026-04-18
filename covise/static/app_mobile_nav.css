@@ -33,7 +33,9 @@
 
     .app-mobile-nav__link,
     .app-mobile-nav__button {
-        width: 44px;
+        flex: 1 1 0;
+        width: auto;
+        max-width: 44px;
         height: 44px;
         padding: 0;
         border: 0;
@@ -67,6 +69,30 @@
         fill: none;
     }
 
+    .app-mobile-nav__avatar-image,
+    .app-mobile-nav__avatar-initials {
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        border: 1px solid rgba(123, 167, 255, 0.42);
+    }
+
+    .app-mobile-nav__avatar-image {
+        display: block;
+        object-fit: cover;
+    }
+
+    .app-mobile-nav__avatar-initials {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.56rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        color: #e7efff;
+        background: rgba(64, 110, 196, 0.38);
+    }
+
     .messages-app,
     .workspace-app,
     .chatbot-app {
@@ -77,10 +103,6 @@
     .messages-app,
     .messages-app.details-open {
         grid-template-columns: 340px minmax(0, 1fr) !important;
-    }
-
-    .workspace-app {
-        grid-template-columns: 200px minmax(0, 1fr) !important;
     }
 
     .chatbot-app {
@@ -107,8 +129,29 @@
         grid-template-columns: 1fr !important;
     }
 
-    .workspace-app {
-        grid-template-columns: 1fr !important;
-        grid-template-rows: auto auto minmax(0, 1fr) !important;
+}
+
+@media (max-width: 480px) {
+    .app-mobile-nav {
+        gap: calc(var(--spacing) * 0.5);
+        padding-left: calc(var(--spacing) * 1.25);
+        padding-right: calc(var(--spacing) * 1.25);
+    }
+
+    .app-mobile-nav__link,
+    .app-mobile-nav__button {
+        max-width: 40px;
+        height: 40px;
+    }
+
+    .app-mobile-nav svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .app-mobile-nav__avatar-image,
+    .app-mobile-nav__avatar-initials {
+        width: 22px;
+        height: 22px;
     }
 }

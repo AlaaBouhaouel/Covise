@@ -6,17 +6,22 @@
             <path d="M5 10.5V21h14V10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
         </svg>
     </a>
+
     <a class="app-mobile-nav__link{% if active_page == 'messages' %} is-active{% endif %}" href="{% url 'Messages' %}" aria-label="Messages" title="Messages">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M4 6h16v10H7l-3 3V6z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
         </svg>
     </a>
+
+    {% with nav_user=mobile_nav_user|default:ui_user %}
     <a class="app-mobile-nav__link{% if active_page == 'profile' %} is-active{% endif %}" href="{% url 'Profile' %}" aria-label="Profile" title="Profile">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"></circle>
-            <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-        </svg>
+        {% if nav_user.avatar_url %}
+        <img class="app-mobile-nav__avatar-image" src="{{ nav_user.avatar_url }}" alt="{{ nav_user.display_name }} profile photo">
+        {% else %}
+        <span class="app-mobile-nav__avatar-initials">{{ nav_user.avatar_initials }}</span>
+        {% endif %}
     </a>
+    {% endwith %}
     <a class="app-mobile-nav__link{% if active_page == 'settings' %} is-active{% endif %}" href="{% url 'Settings' %}" aria-label="Settings" title="Settings">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>

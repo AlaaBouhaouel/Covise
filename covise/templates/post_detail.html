@@ -72,7 +72,11 @@
                         </svg>
                     </a>
                     <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
-                        <span>{{ request.user.avatar_initials }}</span>
+                        {% if ui_user.avatar_url %}
+                        <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
+                        {% else %}
+                        <span>{{ ui_user.avatar_initials }}</span>
+                        {% endif %}
                     </a>
                 </div>
             </header>
@@ -83,7 +87,11 @@
                         <div class="post-detail-head-main">
                     <div class="post-detail-meta">
                         <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
+                            {% if post.avatar_url %}
+                            <img class="post-detail-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.user.full_name|default:post.user.email }} avatar">
+                            {% else %}
                             <div class="post-detail-avatar">{{ post.user.avatar_initials }}</div>
+                            {% endif %}
                         </a>
                         <div class="post-detail-meta-copy">
                             <div class="post-detail-author">
@@ -139,7 +147,7 @@
                 </article>
 
                 <div class="post-comment-compose-shell">
-                    <form class="post-comment-compose" id="postCommentForm" data-author-name="{{ request.user.full_name|default:request.user.email }}" data-author-url="{% url 'Public Profile' request.user.id %}" data-avatar-initials="{{ request.user.avatar_initials }}" data-avatar-url="{% if request.user.profile.profile_image %}{{ request.user.profile.profile_image.url }}{% endif %}">
+                    <form class="post-comment-compose" id="postCommentForm" data-author-name="{{ request.user.full_name|default:request.user.email }}" data-author-url="{% url 'Public Profile' request.user.id %}" data-avatar-initials="{{ ui_user.avatar_initials }}" data-avatar-url="{{ ui_user.avatar_url }}">
                         <div class="post-comment-compose-row">
                             <input id="postCommentInput" type="text" placeholder="Write a comment..." data-post-id="{{ post.id }}">
                             <button id="postCommentSend" type="submit" aria-label="Send comment" title="Send your comment">
@@ -294,6 +302,7 @@
         .badge-insight { background: #d97706; }
         .badge-opportunity { background: #059669; }
         .post-detail-avatar,
+        .post-detail-avatar-image,
         .post-comment-avatar,
         .post-comment-avatar-image {
             width: 28px;
@@ -310,6 +319,7 @@
             background: rgba(64, 110, 196, 0.38);
             border: 1px solid rgba(123, 167, 255, 0.42);
         }
+        .post-detail-avatar-image,
         .post-comment-avatar-image {
             object-fit: cover;
             border: 1px solid rgba(123, 167, 255, 0.42);
@@ -1205,7 +1215,7 @@
                         '<button class="comment-reaction-picker-option" type="button" data-picker-reaction="crazy" aria-label="React with mind blown">&#129327;</button>' +
                     '</div>';
                 var head = commentCard.querySelector('.post-comment-head');
-                if (head && (pinButton || editButton || deleteButton)) {
+                if (head && !head.querySelector('.comment-more-menu') && (pinButton || editButton || deleteButton)) {
                     head.insertAdjacentHTML('beforeend',
                         '<details class="comment-more-menu"><summary class="comment-more-trigger" aria-label="Comment actions"><i class="fa-solid fa-ellipsis-vertical"></i></summary><div class="comment-more-dropdown">' +
                         (pinButton ? '<button class="comment-more-action comment-inline-action" type="button" data-comment-action="pin" data-comment-id="' + commentId + '"><i class="fa-solid fa-thumbtack"></i><span>Pin</span></button>' : '') +

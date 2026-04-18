@@ -218,6 +218,8 @@ class Profile(models.Model):
     has_accepted_platform_agreement = models.BooleanField(default=False)
     platform_agreement_accepted_at = models.DateTimeField(null=True, blank=True)
     platform_agreement_version = models.CharField(max_length=20, default="2026.04")
+    is_account_paused = models.BooleanField(default=False)
+    account_paused_at = models.DateTimeField(null=True, blank=True)
     waitlist_snapshot = models.JSONField(default=dict, blank=True)
     onboarding_answers = models.JSONField(default=dict, blank=True)
 
@@ -326,6 +328,7 @@ class UserPreference(models.Model):
     ai_send_messages = models.BooleanField(default=False)
     ai_edit_workspace = models.BooleanField(default=False)
     ai_manage_milestones = models.BooleanField(default=False)
+    two_factor_enabled = models.BooleanField(default=False)
 
     email_new_match = models.BooleanField(default=True)
     email_new_message = models.BooleanField(default=True)
@@ -365,6 +368,140 @@ class UserPreference(models.Model):
 
     def __str__(self):
         return f"Preferences for {self.user.email}"
+
+
+class TwoFactorChallenge(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="two_factor_challenges")
+    code = models.CharField(max_length=6)
+    email = models.EmailField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    consumed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"TwoFactorChallenge<{self.user.email}>"
+
+
+class SignInEvent(models.Model):
+    class Status(models.TextChoices):
+        SUCCESS = "success", "Success"
+        FAILURE = "failure", "Failed attempt"
+
+    class DeviceType(models.TextChoices):
+        DESKTOP = "desktop", "Desktop"
+        MOBILE = "mobile", "Mobile"
+        TABLET = "tablet", "Tablet"
+        OTHER = "other", "Other"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sign_in_events")
+    email = models.EmailField(blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.SUCCESS)
+    session_key = models.CharField(max_length=64, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    location = models.CharField(max_length=120, blank=True)
+    user_agent = models.TextField(blank=True)
+    browser = models.CharField(max_length=60, blank=True)
+    operating_system = models.CharField(max_length=60, blank=True)
+    device_type = models.CharField(max_length=20, choices=DeviceType.choices, default=DeviceType.OTHER)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"SignInEvent<{self.user.email} {self.status}>"
+
+
+class DataDeletionRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        CANCELLED = "cancelled", "Cancelled"
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="data_deletion_requests")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    notes = models.TextField(blank=True, default="")
+    requested_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-requested_at"]
+
+    def __str__(self):
+        return f"DataDeletionRequest<{self.user.email} {self.status}>"
+
+
+class DataExportRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="data_export_requests")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    delivery_email = models.EmailField()
+    requested_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-requested_at"]
+
+    def __str__(self):
+        return f"DataExportRequest<{self.user.email} {self.status}>"
+
+
+class AccountPauseRequest(models.Model):
+    class Action(models.TextChoices):
+        PAUSE = "pause", "Pause"
+        REACTIVATE = "reactivate", "Reactivate"
+
+    class Status(models.TextChoices):
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="account_pause_requests")
+    action = models.CharField(max_length=20, choices=Action.choices)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.COMPLETED)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-requested_at"]
+
+    def __str__(self):
+        return f"AccountPauseRequest<{self.user.email} {self.action}>"
+
+
+class AccountDeletionRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name="account_deletion_requests",
+        null=True,
+        blank=True,
+    )
+    user_id_snapshot = models.UUIDField()
+    email_snapshot = models.EmailField()
+    feedback = models.TextField(blank=True, default="")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-requested_at"]
+
+    def __str__(self):
+        return f"AccountDeletionRequest<{self.email_snapshot} {self.status}>"
 
 
 class Notification(models.Model):

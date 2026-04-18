@@ -7,6 +7,15 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='fallback-secret-key')
+SITE_URL = config('SITE_URL', default='https://covise.net').rstrip('/')
+POST_ALERT_EMAILS = [
+    email.strip().lower()
+    for email in config(
+        'POST_ALERT_EMAILS',
+        default='ellabouhawel@gmail.com,small345az@gmail.com',
+    ).split(',')
+    if email.strip()
+]
 
 DEBUG_RAW = str(config('DEBUG', default='false')).strip().lower()
 DEBUG = DEBUG_RAW in {'1', 'true', 'yes', 'on', 'debug', 'local'}

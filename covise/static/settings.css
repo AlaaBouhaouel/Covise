@@ -312,6 +312,14 @@ p {
     font-weight: 700;
     box-shadow: 0 10px 24px rgba(90, 95, 170, 0.22);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
+    overflow: hidden;
+}
+
+.profile-button-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .profile-button:hover {
@@ -535,6 +543,14 @@ p {
     font-family: var(--font-display);
     font-weight: 700;
     color: var(--text);
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+    display: block;
 }
 
 .profile-name {
@@ -824,6 +840,21 @@ p {
     justify-content: space-between;
     gap: calc(var(--spacing) * 2);
     padding: calc(var(--spacing) * 1.6);
+}
+
+.settings-row-unavailable {
+    opacity: 0.72;
+    filter: blur(1.3px) saturate(0.88);
+}
+
+.settings-row-unavailable .toggle-switch {
+    opacity: 0.6;
+}
+
+.matching-preferences-unavailable .settings-stack,
+.matching-preferences-unavailable .section-footer {
+    opacity: 0.72;
+    filter: blur(1.3px) saturate(0.88);
 }
 
 .settings-row-block {
@@ -1121,10 +1152,22 @@ p {
     background: rgba(255, 255, 255, 0.03);
 }
 
+.guidelines-btn {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+    color: #ffffff;
+}
+
 .outline-btn:hover,
 .text-link:hover {
     border-color: rgba(120, 150, 255, 0.48);
     background: rgba(120, 150, 255, 0.08);
+}
+
+.guidelines-btn:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
 }
 
 .primary-btn {
@@ -1226,11 +1269,37 @@ p {
     justify-content: flex-end;
 }
 
+.photo-row-note {
+    flex-basis: 100%;
+    text-align: right;
+    color: var(--muted);
+    font-size: 0.74rem;
+    line-height: 1.35;
+}
+
+.photo-row-note.is-error {
+    color: #ff9aa6;
+}
+
 .small-avatar {
     width: 38px;
     height: 38px;
     border-radius: 50%;
     font-size: 0.78rem;
+}
+
+label.outline-btn,
+button.outline-btn[disabled],
+button.text-link[disabled] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button.outline-btn[disabled],
+button.text-link[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .section-footer {
@@ -1361,7 +1430,15 @@ p {
 }
 
 .permissions-disabled {
-    opacity: 0.5;
+    opacity: 0.46;
+    filter: blur(6px) saturate(0.78);
+    pointer-events: none;
+    user-select: none;
+}
+
+.locked-link {
+    opacity: 0.62;
+    cursor: not-allowed;
 }
 
 .permission-group-head {
@@ -1539,6 +1616,12 @@ p {
     border-color: var(--light-surface-border);
 }
 
+[data-theme="light"] .guidelines-btn {
+    border-color: rgba(26, 33, 64, 0.16);
+    background: rgba(255, 255, 255, 0.92);
+    color: #1a2140;
+}
+
 [data-theme="light"] .entry-card {
     background:
         linear-gradient(180deg, rgba(98, 145, 236, 0.08), rgba(255, 255, 255, 0.7)),
@@ -1568,6 +1651,12 @@ p {
 [data-theme="light"] .skills-picker-toggle:hover {
     background: var(--light-hover-bg);
     border-color: var(--light-active-border);
+}
+
+[data-theme="light"] .guidelines-btn:hover {
+    background: #ffffff;
+    border-color: rgba(26, 33, 64, 0.24);
+    color: #1a2140;
 }
 
 [data-theme="light"] .selector-pill.is-active,
