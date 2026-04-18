@@ -15,11 +15,9 @@
 
     {% with nav_user=mobile_nav_user|default:ui_user %}
     <a class="app-mobile-nav__link{% if active_page == 'profile' %} is-active{% endif %}" href="{% url 'Profile' %}" aria-label="Profile" title="Profile">
-        {% if nav_user.avatar_url %}
-        <img class="app-mobile-nav__avatar-image" src="{{ nav_user.avatar_url }}" alt="{{ nav_user.display_name }} profile photo">
-        {% else %}
-        <span class="app-mobile-nav__avatar-initials">{{ nav_user.avatar_initials }}</span>
-        {% endif %}
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-3-3.87M4 21v-2a4 4 0 0 1 3-3.87M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
     </a>
     {% endwith %}
     <a class="app-mobile-nav__link{% if active_page == 'settings' %} is-active{% endif %}" href="{% url 'Settings' %}" aria-label="Settings" title="Settings">
