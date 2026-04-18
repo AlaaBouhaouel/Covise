@@ -56,7 +56,6 @@ PROFILE_ONBOARDING_FIELD_IDS = [
     "leadership_style",
     "how_heard",
     "referral_code",
-    "profile_visibility_consent",
 ]
 
 
