@@ -207,7 +207,7 @@ class Profile(models.Model):
     phone_number = models.CharField(max_length=30, blank=True)
     country = models.CharField(max_length=100, blank=True)
     nationality = models.CharField(max_length=150, blank=True)
-    profile_image = models.ImageField(upload_to="profile_images/", blank=True, null=True)
+    profile_image = models.ImageField(upload_to="profile_images/", storage=post_image_storage, blank=True, null=True)
 
     linkedin = models.URLField(max_length=300, blank=True)
     github = models.URLField(max_length=300, blank=True)
@@ -286,6 +286,7 @@ class Profile(models.Model):
     leadership_style = models.JSONField(null=True, blank=True)
     how_heard = models.JSONField(null=True, blank=True)
     referral_code = models.JSONField(null=True, blank=True)
+    network_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
