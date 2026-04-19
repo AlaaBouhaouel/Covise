@@ -21,9 +21,7 @@
 </div>
 <script>
 (function () {
-    var KEY = 'covise_review_start';
-    var start = Number(localStorage.getItem(KEY)) || Date.now();
-    localStorage.setItem(KEY, start);
+    var start = new Date('2026-04-19T23:59:00').getTime();
     var DURATION = 24 * 60 * 60 * 1000;
 
     var display = document.getElementById('reviewTimerDisplay');
