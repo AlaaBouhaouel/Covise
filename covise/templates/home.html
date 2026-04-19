@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>CoVise | Home</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'home.css' %}?v=20260419h">
+    <link rel="stylesheet" href="{% static 'home.css' %}?v=20260419x">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419h">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -455,6 +455,7 @@
                         var bottomFetchIndicator = feedSection.querySelector('[data-feed-fetch-indicator="bottom"]');
                         var fetchIndicatorTimer = null;
                         var activeLoaderSide = '';
+                        var pendingFeedReload = false;
                         var lastScrollTop = pageScrollTop();
                         var touchStartY = null;
                         var topLoadIntent = 0;
@@ -462,6 +463,8 @@
                         var topLoaderIntentThreshold = 120;
                         var bottomLoaderIntentThreshold = 220;
                         var feedIndicatorLockedUntil = 0;
+                        var feedReloadStorageKey = 'covise-feed-reload-side';
+                        var restoredFeedReloadSide = '';
 
                         function feedIndicatorIsLocked() {
                             return Date.now() < feedIndicatorLockedUntil;
@@ -516,6 +519,29 @@
                             fetchIndicatorTimer = window.setTimeout(function() {
                                 hideFeedLoaders();
                             }, duration || 950);
+                        }
+
+                        function completePendingFeedReload() {
+                            if (restoredFeedReloadSide) {
+                                window.sessionStorage.removeItem(feedReloadStorageKey);
+                                restoredFeedReloadSide = '';
+                            }
+                            pendingFeedReload = false;
+                        }
+
+                        function triggerFeedReload(side, label, duration) {
+                            var indicator = side === 'bottom' ? bottomFetchIndicator : topFetchIndicator;
+                            if (!indicator || pendingFeedReload || activeLoaderSide || feedIndicatorIsLocked()) return;
+                            pendingFeedReload = true;
+                            activeLoaderSide = side;
+                            resetLoadIntent();
+                            lockFeedIndicator((duration || 520) + 1800);
+                            window.clearTimeout(fetchIndicatorTimer);
+                            window.sessionStorage.setItem(feedReloadStorageKey, side);
+                            setFeedLoaderVisible(side, true, label);
+                            fetchIndicatorTimer = window.setTimeout(function() {
+                                window.location.reload();
+                            }, duration || 520);
                         }
 
                         function showFeedLoader(side, label, duration) {
@@ -584,7 +610,7 @@
                                 bottomLoadIntent = 0;
                                 if (topLoadIntent >= topLoaderIntentThreshold) {
                                     resetLoadIntent('top');
-                                    showFeedLoader('top', 'Refreshing feed', 560);
+                                    triggerFeedReload('top', 'Refreshing feed', 560);
                                 }
                                 return;
                             }
@@ -596,7 +622,7 @@
                             topLoadIntent = 0;
                             if (bottomLoadIntent >= bottomLoaderIntentThreshold) {
                                 resetLoadIntent('bottom');
-                                showFeedLoader('bottom', 'Loading more posts', 560);
+                                triggerFeedReload('bottom', 'Loading more posts', 560);
                             }
                         }
 
@@ -617,8 +643,14 @@
                             });
                         }
 
-                        if (getNavigationType() === 'reload') {
-                            showFeedLoader('top', 'Refreshing feed', 760);
+                        restoredFeedReloadSide = window.sessionStorage.getItem(feedReloadStorageKey) || '';
+                        if (getNavigationType() === 'reload' && restoredFeedReloadSide) {
+                            showFeedLoader(
+                                restoredFeedReloadSide,
+                                restoredFeedReloadSide === 'bottom' ? 'Loading more posts' : 'Refreshing feed',
+                                760
+                            );
+                            window.setTimeout(completePendingFeedReload, 1200);
                         }
                         window.addEventListener('scroll', queueBoundaryCheck, { passive: true });
                         window.addEventListener('resize', function() {
