@@ -3,11 +3,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | Profile</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'profile.css' %}">
-    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
+    <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260419j">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419j">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -73,8 +73,8 @@
             </a>
         </aside>
 
-        <main class="main">
-            <header class="home-header" aria-label="Profile top bar">
+        <main class="main app-shell-main">
+            <header class="home-header app-shell-header" aria-label="Profile top bar">
                 <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
                     <span class="home-brand-wordmark">CoVise</span>
                 </a>
@@ -150,9 +150,6 @@
                         <p class="meta">{{ profile_page.location }}</p>
                         {% if is_own_profile %}
                         <div class="hero-actions">
-                            {% if not is_onboarded %}
-                            <a class="primary-action onboarding-action" href="{% url 'Onboarding' %}">Start onboarding</a>
-                            {% endif %}
                             <a class="primary-action" href="{% url 'Profile Card' %}">Profile Card</a>
                             <a class="primary-action secondary" href="{% url 'Settings' %}">Edit</a>
                         </div>
@@ -271,6 +268,7 @@
     
             <section class="content-grid">
                 {% if can_view_profile_data and profile_page.preferences.show_conviction_score %}
+                <!--
                 <article class="panel score-section">
                     <h2>Founder Conviction</h2>
                     <div class="score-main">
@@ -295,6 +293,27 @@
                         {% endfor %}
                     </div>
                 </article>
+                {% endif %}-->
+                {% if is_own_profile and not is_onboarded %}
+                <section class="panel profile-onboarding-panel">
+                    <div class="no-margin-button">
+                        <h2 class="no-margin-button">Start onboarding</h2>
+                        <p>Complete your profile.</p>
+                    </div>
+                    <a class="panel-link profile-onboarding-panel__arrow" href="{% url 'Onboarding' %}" aria-label="Start onboarding">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </section>
+                {% elif is_own_profile and not extended_onboarding_complete %}
+                <section class="panel profile-onboarding-panel">
+                    <div class="no-margin-button">
+                        <h2 class="no-margin-button">Continue onboarding</h2>
+                        <p>Finish your setup when you're ready.</p>
+                    </div>
+                    <a class="panel-link profile-onboarding-panel__arrow" href="{% url 'Onboarding' %}?step=intent&amp;next={% url 'Profile' %}" aria-label="Continue onboarding">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </section>
                 {% endif %}
 
                 {% if can_view_profile_data %}
@@ -322,242 +341,158 @@
                         </div>
                     </div>
                 </article>
+                {% if is_own_profile %}
+                <section class="panel profile-panel-card">
+                    <div class="profile-panel-head">
+                        <div>
+                            <h2>Personal Data</h2>
+                            <p class="profile-panel-subcopy">Contact info, links, location, and profile details you can update.</p>
+                        </div>
+                        <a class="panel-link" href="{{ profile_personal_data_url }}" aria-label="Open personal data">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </section>
+                {% endif %}
 
                 <article class="two-col">
-                    <section class="panel exp-section">
-                        <h2>Experience</h2>
-                        <div class="panel-list-wrap" data-expandable>
+                    <section class="panel profile-panel-card">
+                        <div class="profile-panel-head">
+                            <h2>Experience</h2>
+                            <a class="panel-link" href="{{ profile_experience_url }}" aria-label="Open experience">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </a>
+                        </div>
+                        <div class="panel-list-wrap">
                             <div class="exp-items panel-list-content">
-                                {% for experience in experiences %}
+                                {% for experience in experience_preview %}
                                 <div class="exp-item">
                                     <div class="exp-title">{{ experience.title }}</div>
-                                    <div class="exp-date">{{ experience.date }}</div>
+                                    <div class="exp-date">{{ experience.date|date:"M j, Y" }}</div>
                                     <div class="exp-desc">{{ experience.desc }}</div>
                                 </div>
                                 {% empty %}
-                                <p>No experience listed yet.</p>
+                                <p>{% if is_own_profile %}Add your first experience entry to make your profile stronger.{% else %}No public experience listed yet.{% endif %}</p>
                                 {% endfor %}
                             </div>
-                            <a class="show-more-link" href="#" hidden>Show more</a>
                         </div>
                     </section>
 
-                    <section class="panel projects-section">
-                        <h2>Active Projects</h2>
-                        <div class="panel-list-wrap" data-expandable>
+                    <section class="panel projects-section profile-panel-card">
+                        <div class="profile-panel-head">
+                            <h2>Active Projects</h2>
+                            <a class="panel-link" href="{{ profile_active_projects_url }}" aria-label="Open active projects">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </a>
+                        </div>
+                        <div class="panel-list-wrap">
                             <div class="panel-list-content project-list-content">
-                                {% for project in active_projects %}
+                                {% for project in active_projects_preview %}
                                 <div class="project-card">
                                     <div class="project-top">
                                         <div class="project-name">{{ project.name }}</div>
-                                        <div class="project-status active">Active</div>
+                                        <div class="project-status active">{{ project.status|default:"Active" }}</div>
                                     </div>
                                     <div class="project-desc">{{ project.desc }}</div>
                                 </div>
                                 {% empty %}
-                                <p>No active projects listed.</p>
+                                <p>{% if is_own_profile %}Add an active project so people can see what you're building right now.{% else %}No public projects listed yet.{% endif %}</p>
                                 {% endfor %}
                             </div>
-                            <a class="show-more-link" href="#" hidden>Show more</a>
                         </div>
                     </section>
                 </article>
-                {% else %}
-                <article class="panel looking-section">
-                    <div class="looking-block">
-                        <h2>Profile Privacy</h2>
-                        <p class="looking-text">This user keeps their detailed profile data private.</p>
-                        <div class="tags">
-                            <span class="tag blue">Read-only profile</span>
-                        </div>
-                    </div>
-                </article>
-                {% endif %}
-            </section>
             
-            {% if is_own_profile %}
-            <section class="panel saved-posts-panel" style="margin-top: 24px;">
-                <div class="section-top">
-                    <h2>SAVED POSTS</h2>
-                    <div class="row-inline-actions">
-                        {% if saved_posts|length > 2 %}
-                        <button class="outline-btn saved-posts-toggle" id="savedPostsToggle" type="button" aria-expanded="false" aria-controls="savedPostsAll">View all</button>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="settings-stack saved-posts-list">
-                    {% for saved_post in saved_posts|slice:":2" %}
-                    <div class="settings-row saved-post-item">
-                        <div class="row-copy saved-post-copy">
-                            <strong>{{ saved_post.title }}</strong>
-                            <span>{{ saved_post.author }} &middot; Saved {{ saved_post.saved_at }}</span>
+                {% if is_own_profile %}
+                <section class="panel saved-posts-panel profile-panel-card">
+                    <div class="profile-panel-head">
+                        <div>
+                            <h2>Saved Posts</h2>
+                            <p class="profile-panel-subcopy">Things you bookmarked to revisit later.</p>
                         </div>
-                        <a class="outline-btn saved-post-link" href="{% url 'Post Detail' saved_post.id %}">Open</a>
+                        <a class="panel-link" href="{{ profile_saved_posts_url }}" aria-label="Open saved posts">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
                     </div>
-                    {% empty %}
-                    <div class="settings-row saved-post-item saved-post-item-empty">
-                        <div class="row-copy saved-post-copy">
-                            <strong>No saved posts yet</strong>
-                            <span>Bookmark posts from the feed or post page and they will show up here.</span>
+                    <div class="settings-stack saved-posts-list">
+                        {% for saved_post in saved_posts_preview %}
+                        <div class="settings-row saved-post-item">
+                            <div class="row-copy saved-post-copy">
+                                <strong>{{ saved_post.title }}</strong>
+                                <span>{{ saved_post.author }} &middot; Saved {{ saved_post.saved_at }}</span>
+                            </div>
+                            <a class="outline-btn saved-post-link" href="{% url 'Post Detail' saved_post.id %}">Open</a>
                         </div>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                {% if saved_posts|length > 2 %}
-                <div class="settings-stack saved-posts-list" id="savedPostsAll" hidden>
-                    {% for saved_post in saved_posts|slice:"2:" %}
-                    <div class="settings-row saved-post-item">
-                        <div class="row-copy saved-post-copy">
-                            <strong>{{ saved_post.title }}</strong>
-                            <span>{{ saved_post.author }} &middot; Saved {{ saved_post.saved_at }}</span>
+                        {% empty %}
+                        <div class="settings-row saved-post-item saved-post-item-empty">
+                            <div class="row-copy saved-post-copy">
+                                <strong>No saved posts yet</strong>
+                                <span>Bookmark posts from the feed or post page and they will show up here.</span>
+                            </div>
                         </div>
-                        <a class="outline-btn saved-post-link" href="{% url 'Post Detail' saved_post.id %}">Open</a>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
+                </section>
                 {% endif %}
-            </section>
 
-            {% if can_view_profile_data %}
-            <section class="panel posts">
-                <h2>Posts</h2>
-                <div class="structured-feed">
-                    {% for post in posts %}
-                    <article class="structured-post">
-                        <div class="structured-post-head">
-                            <div class="structured-post-meta">
-                                {% if post.avatar_url %}
-                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile"><img class="structured-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.user.full_name|default:post.user.email }} avatar"></a>
-                                {% else %}
-                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile"><div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div></a>
-                                {% endif %}
-                                <div>
-                                    <div class="structured-post-title">
-                                        <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a>
-                                        {% if post.show_cofounder_badge %}
-                                        <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
-                                            <i class="fa-solid fa-user-group" aria-hidden="true"></i>
-                                        </span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="structured-post-subtitle">
-                                        {% if post.feed_country %}{{ post.feed_country }} &middot; {% endif %}{{ post.created_at|timesince }} ago
+                {% if can_view_profile_data %}
+                <section class="panel posts profile-panel-card">
+                    <div class="profile-panel-head">
+                        <div>
+                            <h2>Posts</h2>
+                            <p class="profile-panel-subcopy">{% if is_own_profile %}Your latest updates on CoVise.{% else %}Recent public updates from this member.{% endif %}</p>
+                        </div>
+                        <a class="panel-link" href="{{ profile_posts_url }}" aria-label="Open posts">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="structured-feed">
+                        {% for post in posts_preview %}
+                        <article class="structured-post {{ post.theme_class }}">
+                            <div class="structured-post-head">
+                                <div class="structured-post-meta">
+                                    {% if post.avatar_url %}
+                                    <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile"><img class="structured-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.user.full_name|default:post.user.email }} avatar"></a>
+                                    {% else %}
+                                    <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile"><div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div></a>
+                                    {% endif %}
+                                    <div>
+                                        <div class="structured-post-title">
+                                            <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a>
+                                            {% if post.show_cofounder_badge %}
+                                            <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
+                                                <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="structured-post-subtitle">
+                                            {% if post.feed_country %}{{ post.feed_country }} &middot; {% endif %}{{ post.created_at|timesince }} ago
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="structured-post-tools">
-                                {% for skill in post.feed_skills %}
-                                <span class="profile-skill-badge profile-skill-badge--{{ skill.tone }}" data-tone="{{ skill.tone }}">{{ skill.label }}</span>
+                            <div class="structured-post-body is-clamped">{{ post.content_html|safe }}</div>
+                            {% if post.feed_images %}
+                            <div class="post-gallery post-gallery-count-{{ post.feed_image_count }}">
+                                {% for image in post.feed_images|slice:":4" %}
+                                <div class="post-gallery-item">
+                                    <img src="{{ image.url }}" alt="{{ image.alt }}">
+                                </div>
                                 {% endfor %}
-                                <button class="menu-btn" type="button" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                             </div>
-                        </div>
-                        <div class="structured-post-body">{{ post.content_html|safe }}</div>
-                        {% if post.feed_images %}
-                        <div class="post-gallery post-gallery-count-{{ post.feed_image_count }}">
-                            {% for image in post.feed_images %}
-                            <div class="post-gallery-item">
-                                <img src="{{ image.url }}" alt="{{ image.alt }}">
+                            {% endif %}
+                            <div class="structured-post-footer profile-post-preview-footer">
+                                <span class="profile-post-preview-meta"><i class="fa-regular fa-thumbs-up"></i><span>{{ post.likes_number }}</span></span>
+                                <span class="profile-post-preview-meta"><i class="fa-regular fa-comment"></i><span>{{ post.comments.count }}</span></span>
+                                <a class="outline-btn" href="{% url 'Post Detail' post.id %}">Open</a>
                             </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        {% if is_own_profile %}
-                        <div class="structured-post-footer">
-                            <button class="action-btn like-btn" type="button" data-count="{{ post.likes_number }}"><i class="fa-regular fa-thumbs-up"></i><span class="count">{{ post.likes_number }}</span></button>
-                            <button class="action-btn comments-toggle" type="button"><i class="fa-regular fa-comment"></i><span class="comment-count">{{ post.comments.count }}</span></button>
-                            <button class="action-btn bookmark-btn{% if post.is_saved %} is-active{% endif %}" type="button" data-post-id="{{ post.id }}" data-saved="{% if post.is_saved %}true{% else %}false{% endif %}"><i class="{% if post.is_saved %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i></button>
-                        </div>
-                        <div class="comments-section structured-comments">
-                            {% for comment in post.comment_threads %}
-                            {% include "includes/profile_comment.html" with comment=comment %}
-                            {% empty %}
-                            <div class="comment-wrap empty-comment">
-                                <div class="comment-content">No comments yet.</div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <div class="structured-post-footer">
-                            <button class="action-btn" type="button" disabled><i class="fa-regular fa-comment"></i><span class="count">{{ post.comments.count }}</span></button>
-                        </div>
-                        {% endif %}
-                    </article>
-                    {% empty %}
-                        <p>No posts yet.</p>
- 
-                    {% endfor %}
-
-                </div>
-            </section>
-            {% endif %}
-
-            <section class="panel posts" style="margin-top: 24px;">
-                <div class="section-top">
-                    <h2>BLOCKED USERS</h2>
-                    <div class="row-inline-actions">
-                        {% if blocked_users|length > 2 %}
-                        <button class="outline-btn saved-posts-toggle" id="blockedUsersToggle" type="button" aria-expanded="false" aria-controls="blockedUsersAll">View all</button>
-                        {% endif %}
+                        </article>
+                        {% empty %}
+                        <p>{% if is_own_profile %}Share your first update to start building momentum on your profile.{% else %}No public posts yet.{% endif %}</p>
+                        {% endfor %}
                     </div>
-                </div>
-                <div class="structured-feed">
-                    {% for blocked_user in blocked_users|slice:":2" %}
-                    <article class="structured-post">
-                        <div class="structured-post-head">
-                            <div class="structured-post-meta">
-                                {% if blocked_user.avatar_url %}
-                                <img class="structured-avatar-image" src="{{ blocked_user.avatar_url }}" alt="{{ blocked_user.display_name }} avatar">
-                                {% else %}
-                                <div class="structured-avatar">{{ blocked_user.avatar_initials }}</div>
-                                {% endif %}
-                                <div>
-                                    <div class="structured-post-title">{{ blocked_user.display_name }}</div>
-                                    <div class="structured-post-subtitle">{{ blocked_user.email }}</div>
-                                </div>
-                            </div>
-                            <form action="{% url 'Toggle Block User' blocked_user.id %}" method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                <button class="action-btn" type="submit">Unblock</button>
-                            </form>
-                        </div>
-                    </article>
-                    {% empty %}
-                    <article class="structured-post">
-                        <div class="structured-post-body">No blocked users yet.</div>
-                    </article>
-                    {% endfor %}
-                </div>
-                {% if blocked_users|length > 2 %}
-                <div class="structured-feed" id="blockedUsersAll" hidden>
-                    {% for blocked_user in blocked_users|slice:"2:" %}
-                    <article class="structured-post">
-                        <div class="structured-post-head">
-                            <div class="structured-post-meta">
-                                {% if blocked_user.avatar_url %}
-                                <img class="structured-avatar-image" src="{{ blocked_user.avatar_url }}" alt="{{ blocked_user.display_name }} avatar">
-                                {% else %}
-                                <div class="structured-avatar">{{ blocked_user.avatar_initials }}</div>
-                                {% endif %}
-                                <div>
-                                    <div class="structured-post-title">{{ blocked_user.display_name }}</div>
-                                    <div class="structured-post-subtitle">{{ blocked_user.email }}</div>
-                                </div>
-                            </div>
-                            <form action="{% url 'Toggle Block User' blocked_user.id %}" method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                <button class="action-btn" type="submit">Unblock</button>
-                            </form>
-                        </div>
-                    </article>
-                    {% endfor %}
-                </div>
+                </section>
                 {% endif %}
-            </section>
             {% endif %}
         </main>
     </div>
@@ -1078,16 +1013,22 @@
     </script>
     <script>
         (function () {
-            var blockedUsersList = document.getElementById('blockedUsersAll');
-            var blockedUsersToggle = document.getElementById('blockedUsersToggle');
-            if (!blockedUsersList || !blockedUsersToggle) return;
+            var header = document.querySelector('.app-shell-header');
+            if (!header) return;
 
-            blockedUsersToggle.addEventListener('click', function () {
-                var willShow = blockedUsersList.hidden;
-                blockedUsersList.hidden = !blockedUsersList.hidden;
-                blockedUsersToggle.textContent = willShow ? 'Show less' : 'View all';
-                blockedUsersToggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
-            });
+            var ticking = false;
+
+            function syncHeaderScrollState() {
+                header.classList.toggle('is-scrolled', (window.pageYOffset || document.documentElement.scrollTop || 0) > 12);
+                ticking = false;
+            }
+
+            syncHeaderScrollState();
+            window.addEventListener('scroll', function () {
+                if (ticking) return;
+                ticking = true;
+                window.requestAnimationFrame(syncHeaderScrollState);
+            }, { passive: true });
         })();
     </script>
     <script>

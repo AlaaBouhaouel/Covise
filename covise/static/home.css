@@ -282,6 +282,16 @@ p {
     background: rgba(5, 6, 11, 0.92);
     backdrop-filter: blur(18px);
     gap: calc(var(--spacing) * 3);
+    transition: border-radius 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, padding 0.22s ease, background 0.22s ease;
+}
+
+.home-header.is-scrolled {
+    padding-left: calc(var(--spacing) * 2);
+    padding-right: calc(var(--spacing) * 2);
+    border: 1px solid rgba(120, 150, 255, 0.18);
+    border-bottom-color: rgba(120, 150, 255, 0.18);
+    border-radius: 24px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
 }
 
 .home-header-search {
@@ -3350,6 +3360,10 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
     .main {
         gap: calc(var(--spacing) * 2.5);
         padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3) calc(var(--spacing) * 12);
+    }
+
+    .home-header {
+        top: 0;
     }
 
     .sidebar {

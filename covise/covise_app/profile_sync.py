@@ -1,3 +1,6 @@
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
+
 from .models import OnboardingResponse, Profile, User, WaitlistEntry
 
 
@@ -58,9 +61,72 @@ PROFILE_ONBOARDING_FIELD_IDS = [
     "referral_code",
 ]
 
+url_validator = URLValidator(schemes=["http", "https"])
+
 
 def _clean_text(value):
     return str(value or "").strip()
+
+
+def _flatten_text_values(value):
+    if value in (None, "", [], {}, ()):
+        return []
+    if isinstance(value, dict):
+        items = []
+        for item in value.values():
+            items.extend(_flatten_text_values(item))
+        return items
+    if isinstance(value, (list, tuple, set)):
+        items = []
+        for item in value:
+            items.extend(_flatten_text_values(item))
+        return items
+    text = str(value).strip()
+    return [text] if text else []
+
+
+def _normalize_profile_links(value, *, max_items=5):
+    links = []
+    for raw in _flatten_text_values(value):
+        candidate = raw
+        if not candidate.startswith(("http://", "https://")):
+            candidate = f"https://{candidate}"
+        try:
+            url_validator(candidate)
+        except ValidationError:
+            continue
+        if candidate not in links:
+            links.append(candidate)
+        if len(links) >= max_items:
+            break
+    return links
+
+
+def _profile_links_from_answers(answers):
+    links = []
+    for candidate in _normalize_profile_links(answers.get("profile_links", [])):
+        if candidate not in links:
+            links.append(candidate)
+    return links
+
+
+def _pick_profile_links(links, *, existing_linkedin="", existing_github="", existing_proof=""):
+    linkedin = _clean_text(existing_linkedin)
+    github = _clean_text(existing_github)
+    proof = _clean_text(existing_proof)
+
+    for link in links:
+        lowered = link.lower()
+        if not linkedin and "linkedin.com" in lowered:
+            linkedin = link
+            continue
+        if not github and "github.com" in lowered:
+            github = link
+            continue
+        if not proof:
+            proof = link
+
+    return linkedin, github, proof
 
 
 def _waitlist_snapshot(waitlist_entry):
@@ -93,6 +159,29 @@ def build_profile_defaults(
 ):
     answers = answers or {}
     source_waitlist = waitlist_entry or getattr(onboarding_response, "waitlist_entry", None)
+    normalized_profile_links = _profile_links_from_answers(answers)
+    waitlist_linkedin = _clean_text(getattr(source_waitlist, "linkedin", ""))
+    existing_linkedin = _clean_text(getattr(existing_profile, "linkedin", "")) if existing_profile else ""
+    existing_github = _clean_text(getattr(existing_profile, "github", "")) if existing_profile else ""
+    existing_proof = _clean_text(getattr(existing_profile, "proof_of_work_url", "")) if existing_profile else ""
+    resolved_linkedin, resolved_github, resolved_proof = _pick_profile_links(
+        normalized_profile_links,
+        existing_linkedin=existing_linkedin or waitlist_linkedin,
+        existing_github=existing_github,
+        existing_proof=existing_proof,
+    )
+
+    resolved_location = (
+        _clean_text(answers.get("location"))
+        or (_clean_text(getattr(existing_profile, "country", "")) if existing_profile else "")
+        or _clean_text(getattr(source_waitlist, "custom_country", ""))
+        or _clean_text(getattr(source_waitlist, "country", ""))
+    )
+    resolved_headline = (
+        _clean_text(answers.get("headline"))
+        or (_clean_text(getattr(existing_profile, "bio", "")) if existing_profile else "")
+    )
+
     profile_defaults = {
         "full_name": _clean_text(user.full_name) or _clean_text(getattr(source_waitlist, "full_name", "")),
         "source_waitlist_entry": source_waitlist,
@@ -100,14 +189,17 @@ def build_profile_defaults(
         "waitlist_snapshot": _waitlist_snapshot(source_waitlist),
         "onboarding_answers": answers,
         "plan": _clean_text(answers.get("plan")) or getattr(existing_profile, "plan", "") or "Free",
+        "country": resolved_location,
+        "bio": resolved_headline,
+        "linkedin": resolved_linkedin,
+        "github": resolved_github,
+        "proof_of_work_url": resolved_proof,
     }
 
     if source_waitlist:
         profile_defaults.update(
             {
                 "phone_number": source_waitlist.phone_number,
-                "country": source_waitlist.custom_country or source_waitlist.country,
-                "linkedin": source_waitlist.linkedin,
                 "non_gcc_business": source_waitlist.non_gcc_business,
                 "custom_country": source_waitlist.custom_country,
                 "cv_s3_key": source_waitlist.cv_s3_key,

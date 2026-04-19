@@ -1,0 +1,40 @@
+/* Full page overlay */
+.logo-loader{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  z-index: 9999;
+}
+
+/* SVG size */
+.logo-loader svg{
+  width: 120px;
+  height: 120px;
+}
+
+/* Stroke animation */
+.stroke{
+  fill: none;
+  stroke: #fff;
+  stroke-width: 18;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1700;
+  stroke-dashoffset: 1700;
+}
+
+.draw{
+  animation: drawLine 2.2s ease-in-out infinite;
+}
+
+.delay{
+  animation-delay: .12s;
+}
+
+@keyframes drawLine{
+  0%{ stroke-dashoffset:1700; opacity:1; }
+  70%{ stroke-dashoffset:0; opacity:1; }
+  100%{ stroke-dashoffset:0; opacity:0; }
+}

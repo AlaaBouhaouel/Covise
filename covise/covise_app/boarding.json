@@ -1,11 +1,155 @@
 {
-  "flow_name": "COVISE ONBOARDING",
+  "flow_name": "Covise onboarding",
+  "intro": "Set up your profile first, then continue with the deeper onboarding when you are ready.",
+  "success_message": "Your onboarding is saved.",
   "steps": [
     {
-      "step_id": "S2",
-      "title": "Your profile",
-      "description": "This determines the path of your application.",
+      "step_id": "S1_PROFILE_COMPLETION",
+      "title": "Complete your profile",
+      "progress_label": "Profile completion",
+      "description": "This is required before entering the feed, but only the marked fields are mandatory.",
       "fields": [
+        {
+          "id": "profile_image",
+          "type": "file_upload_image",
+          "label": "Profile photo",
+          "required": false,
+          "helper_text": "Optional. Add a photo now or later."
+        },
+        {
+          "id": "headline",
+          "type": "short_text",
+          "label": "Headline",
+          "required": false,
+          "placeholder": "Founder @ X or Backend Engineer"
+        },
+        {
+          "id": "one_liner",
+          "type": "multi_line_text",
+          "label": "What are you building?",
+          "required": true,
+          "placeholder": "2-3 lines max about what you are building and for whom",
+          "max_chars": 220
+        },
+        {
+          "id": "looking_for_type",
+          "type": "single_select",
+          "label": "What are you looking for?",
+          "required": true,
+          "options": [
+            "Technical co-founder",
+            "Business / operational co-founder",
+            "Industry expert co-founder",
+            "Investor / backer",
+            "Strategic advisor",
+            "Local GCC partner"
+          ]
+        },
+        {
+          "id": "location",
+          "type": "single_select_searchable",
+          "label": "Location",
+          "required": true,
+          "options": [
+            "Saudi Arabia",
+            "United Arab Emirates",
+            "Qatar",
+            "Kuwait",
+            "Bahrain",
+            "Oman",
+            "United States",
+            "United Kingdom",
+            "Germany",
+            "France",
+            "Netherlands",
+            "Sweden",
+            "Spain",
+            "Italy",
+            "Canada",
+            "Australia",
+            "India",
+            "Pakistan",
+            "Bangladesh",
+            "Sri Lanka",
+            "Turkey",
+            "Egypt",
+            "Jordan",
+            "Lebanon",
+            "Morocco",
+            "Tunisia",
+            "Nigeria",
+            "Kenya",
+            "Ghana",
+            "South Africa",
+            "Ethiopia",
+            "Singapore",
+            "Malaysia",
+            "Indonesia",
+            "Philippines",
+            "Vietnam",
+            "China",
+            "South Korea",
+            "Japan",
+            "Brazil",
+            "Mexico",
+            "Other"
+          ]
+        },
+        {
+          "id": "profile_links",
+          "type": "link_list",
+          "label": "Links",
+          "required": true,
+          "max_selected": 5,
+          "placeholder": "https://linkedin.com/in/username",
+          "helper_text": "Add up to 5 links: LinkedIn, website, GitHub, proof of work, or personal profile."
+        }
+      ]
+    },
+    {
+      "step_id": "S2_INTENT_SETUP",
+      "title": "Set your intent",
+      "progress_label": "Intent setup",
+      "description": "Tell us what you want from CoVise right now and who you want to discover more of.",
+      "fields": [
+        {
+          "id": "current_goal",
+          "type": "single_select_card",
+          "label": "What do you want from CoVise right now?",
+          "required": true,
+          "options": [
+            "Find a co-founder",
+            "Meet other founders",
+            "Get feedback on what I’m building",
+            "Connect with investors",
+            "Join a team"
+          ]
+        },
+        {
+          "id": "discovery_people",
+          "type": "multi_select",
+          "label": "Who do you want to see more of?",
+          "required": true,
+          "max_selected": 4,
+          "options": [
+            "Founders",
+            "Developers",
+            "Operators",
+            "Investors"
+          ]
+        },
+        {
+          "id": "discovery_region",
+          "type": "single_select",
+          "label": "Where?",
+          "required": true,
+          "options": [
+            "Saudi",
+            "UAE",
+            "Qatar",
+            "Open to all GCC"
+          ]
+        },
         {
           "id": "user_type",
           "type": "single_select_card",
@@ -15,27 +159,27 @@
             {
               "value": "founder",
               "label": "Founder",
-              "description": "I have a venture and I'm looking for a co-founder"
+              "description": "I am building a venture and want the right people around it."
             },
             {
               "value": "specialist",
               "label": "Specialist / Operator",
-              "description": "I have skills and want to co-found the right venture"
+              "description": "I bring strong skills and want to build with the right venture."
             },
             {
               "value": "investor",
               "label": "Investor",
-              "description": "I'm looking to connect with and back GCC founders"
+              "description": "I want to connect with and support founders in the region."
             },
             {
               "value": "foreign_founder",
               "label": "Foreign Founder",
-              "description": "I'm based outside the GCC and seeking a local co-founder or partner"
+              "description": "I am based outside the GCC and exploring a local partner or market entry."
             },
             {
               "value": "incubator",
               "label": "Incubator / Accelerator",
-              "description": "We support startups and want to connect with GCC founders"
+              "description": "We support startups and want to connect with the right founders."
             }
           ]
         }
@@ -43,8 +187,9 @@
     },
     {
       "step_id": "S3_founder",
-      "title": "Your venture",
-      "description": "Share the core details of your startup and what you need in a co-founder.",
+      "title": "Tell us about your venture",
+      "progress_label": "Founder profile",
+      "description": "A few more details so your profile feels useful without repeating the basics.",
       "show_if": {
         "field": "user_type",
         "equals": "founder"
@@ -85,7 +230,7 @@
         {
           "id": "stage",
           "type": "single_select",
-          "label": "Current stage of your venture",
+          "label": "Current stage",
           "required": true,
           "options": [
             "Idea",
@@ -112,26 +257,6 @@
           ]
         },
         {
-          "id": "team_size",
-          "type": "single_select",
-          "label": "Current team size (excluding yourself)",
-          "required": true,
-          "options": [
-            "Solo",
-            "1-2 others",
-            "3-5 others",
-            "6+"
-          ]
-        },
-        {
-          "id": "one_liner",
-          "type": "multi_line_text",
-          "label": "Venture overview",
-          "required": true,
-          "placeholder": "What you are building, who it is for, and what problem it solves",
-          "max_chars": 300
-        },
-        {
           "id": "cofounders_needed",
           "type": "single_select",
           "label": "How many co-founders are you looking for?",
@@ -143,29 +268,14 @@
           ]
         },
         {
-          "id": "looking_for_type",
-          "type": "multi_select",
-          "label": "What type of co-founder or partner are you seeking?",
-          "required": true,
-          "max_selected": 3,
-          "options": [
-            "Technical co-founder",
-            "Business / operational co-founder",
-            "Industry expert co-founder",
-            "Investor / backer",
-            "Strategic advisor",
-            "Local GCC partner"
-          ]
-        },
-        {
           "id": "founder_timeline",
           "type": "single_select",
-          "label": "How soon are you looking to bring a co-founder on board?",
+          "label": "How soon are you looking to move on this?",
           "required": true,
           "options": [
             "Immediately",
-            "Within 1–3 months",
-            "Within 3–6 months",
+            "Within 1-3 months",
+            "Within 3-6 months",
             "No fixed timeline"
           ]
         }
@@ -173,8 +283,9 @@
     },
     {
       "step_id": "S3_specialist",
-      "title": "Your background",
-      "description": "Tell us about your expertise, the type of venture you want to build, and your availability.",
+      "title": "Tell us about your background",
+      "progress_label": "Specialist profile",
+      "description": "The essentials on what you do, your experience, and where you want to build.",
       "show_if": {
         "field": "user_type",
         "equals": "specialist"
@@ -205,9 +316,9 @@
           "label": "Years of professional experience",
           "required": true,
           "options": [
-            "0–2 years",
-            "3–5 years",
-            "6–10 years",
+            "0-2 years",
+            "3-5 years",
+            "6-10 years",
             "10+ years"
           ]
         },
@@ -243,40 +354,14 @@
           ]
         },
         {
-          "id": "venture_stage_preference",
-          "type": "multi_select",
-          "label": "What stage of venture do you want to join?",
-          "required": true,
-          "options": [
-            "Idea stage",
-            "MVP built",
-            "Early revenue",
-            "Any stage"
-          ]
-        },
-        {
-          "id": "founder_type_preference",
-          "type": "multi_select",
-          "label": "What type of founder are you looking to work with?",
-          "required": true,
-          "max_selected": 3,
-          "options": [
-            "Technical founder looking for business co-founder",
-            "Business founder looking for technical co-founder",
-            "Domain expert founder",
-            "Foreign founder entering GCC",
-            "Open to any founder profile"
-          ]
-        },
-        {
           "id": "specialist_timeline",
           "type": "single_select",
-          "label": "How soon are you ready to commit to a venture?",
+          "label": "How soon are you ready to commit?",
           "required": true,
           "options": [
             "Immediately",
-            "Within 1–3 months",
-            "Within 3–6 months",
+            "Within 1-3 months",
+            "Within 3-6 months",
             "No fixed timeline"
           ]
         }
@@ -284,8 +369,9 @@
     },
     {
       "step_id": "S3_investor",
-      "title": "Your investment profile",
-      "description": "Define your investment focus, geography, ticket size, and current deployment status.",
+      "title": "Tell us about your investment profile",
+      "progress_label": "Investor profile",
+      "description": "A concise view of where you invest and what you want to do on Covise.",
       "show_if": {
         "field": "user_type",
         "equals": "investor"
@@ -307,7 +393,7 @@
         {
           "id": "investment_geography",
           "type": "multi_select",
-          "label": "Geographies you actively invest in",
+          "label": "Geographies you actively focus on",
           "required": true,
           "options": [
             "Saudi Arabia",
@@ -319,20 +405,6 @@
             "GCC-wide",
             "MENA-wide",
             "Global"
-          ]
-        },
-        {
-          "id": "ticket_size",
-          "type": "single_select",
-          "label": "Typical ticket size (USD)",
-          "required": true,
-          "options": [
-            "Under $25K",
-            "$25K – $100K",
-            "$100K – $500K",
-            "$500K – $2M",
-            "$2M+",
-            "Prefer not to say"
           ]
         },
         {
@@ -373,26 +445,9 @@
           ]
         },
         {
-          "id": "investor_value_add",
-          "type": "multi_select",
-          "label": "Beyond capital, what do you offer portfolio founders?",
-          "required": true,
-          "max_selected": 4,
-          "options": [
-            "Strategic advisory",
-            "Hiring / team building",
-            "Business development",
-            "Follow-on funding",
-            "Regulatory / legal guidance",
-            "Market access",
-            "Media / PR exposure",
-            "Technical expertise"
-          ]
-        },
-        {
           "id": "investor_looking_for",
           "type": "single_select",
-          "label": "Primary objective on CoVise",
+          "label": "Primary objective on Covise",
           "required": true,
           "options": [
             "Source deal flow",
@@ -400,25 +455,14 @@
             "Mentor and support founders",
             "All of the above"
           ]
-        },
-        {
-          "id": "investor_timeline",
-          "type": "single_select",
-          "label": "Current deployment status",
-          "required": true,
-          "options": [
-            "Actively deploying capital now",
-            "Deploying within 1–3 months",
-            "Deploying within 3–6 months",
-            "Exploring — no fixed timeline"
-          ]
         }
       ]
     },
     {
       "step_id": "S3_foreign_founder",
-      "title": "Your venture & GCC expansion",
-      "description": "Help us understand your company and what you need from a local partner.",
+      "title": "Tell us about your expansion plans",
+      "progress_label": "Foreign founder",
+      "description": "A few key details on your venture and what you need in the GCC.",
       "show_if": {
         "field": "user_type",
         "equals": "foreign_founder"
@@ -509,7 +553,7 @@
         {
           "id": "foreign_stage",
           "type": "single_select",
-          "label": "Current stage of your venture",
+          "label": "Current stage",
           "required": true,
           "options": [
             "Idea",
@@ -519,46 +563,27 @@
           ]
         },
         {
-          "id": "foreign_one_liner",
-          "type": "multi_line_text",
-          "label": "Venture overview",
-          "required": true,
-          "placeholder": "What you are building, who it is for, and what problem it solves",
-          "max_chars": 300
-        },
-        {
           "id": "local_partner_need",
           "type": "multi_select",
-          "label": "What do you need from a local GCC co-founder or partner?",
+          "label": "What do you need from a local GCC partner?",
           "required": true,
           "max_selected": 3,
           "options": [
-            "Market access & local relationships",
-            "Entity setup & local operations",
-            "Sales & business development",
-            "Regulatory & legal navigation",
-            "Investor & funding connections",
-            "Cultural & language bridge"
-          ]
-        },
-        {
-          "id": "foreign_timeline",
-          "type": "single_select",
-          "label": "Planned timeline for GCC market entry",
-          "required": true,
-          "options": [
-            "Already in process",
-            "Within 1–3 months",
-            "Within 3–6 months",
-            "No fixed timeline"
+            "Market access and local relationships",
+            "Entity setup and local operations",
+            "Sales and business development",
+            "Regulatory and legal navigation",
+            "Investor and funding connections",
+            "Cultural and language bridge"
           ]
         }
       ]
     },
     {
       "step_id": "S3_incubator",
-      "title": "Your program",
-      "description": "Describe your program model, focus, and what you are looking for on CoVise.",
+      "title": "Tell us about your program",
+      "progress_label": "Program profile",
+      "description": "A concise view of your model, stage focus, and what you want from Covise.",
       "show_if": {
         "field": "user_type",
         "equals": "incubator"
@@ -629,55 +654,15 @@
           ]
         },
         {
-          "id": "cohort_size",
-          "type": "single_select",
-          "label": "Average cohort or intake size",
-          "required": true,
-          "options": [
-            "1–5",
-            "6–15",
-            "16–30",
-            "30+"
-          ]
-        },
-        {
-          "id": "program_offering",
-          "type": "multi_select",
-          "label": "Support offered to portfolio companies",
-          "required": true,
-          "options": [
-            "Funding / grants",
-            "Mentorship",
-            "Office space",
-            "Legal support",
-            "Investor access",
-            "Co-founder matching",
-            "Market access",
-            "Technical resources"
-          ]
-        },
-        {
           "id": "incubator_looking_for",
           "type": "single_select",
-          "label": "Primary objective on CoVise",
+          "label": "Primary objective on Covise",
           "required": true,
           "options": [
             "Source founders for our program",
-            "Help our portfolio founders find co-founders",
+            "Help portfolio founders find the right people",
             "Partner with other programs and ecosystems",
             "All of the above"
-          ]
-        },
-        {
-          "id": "incubator_timeline",
-          "type": "single_select",
-          "label": "Next cohort or intake opening",
-          "required": true,
-          "options": [
-            "Currently open",
-            "Within 1–3 months",
-            "Within 3–6 months",
-            "No fixed schedule"
           ]
         }
       ]
@@ -685,7 +670,8 @@
     {
       "step_id": "S4",
       "title": "What you bring",
-      "description": "Select the skills you contribute to a venture team.",
+      "progress_label": "Strengths",
+      "description": "The essentials on how you contribute to a team right now.",
       "show_if": {
         "any_of": [
           {
@@ -746,259 +732,27 @@
         {
           "id": "availability",
           "type": "single_select",
-          "label": "Weekly time commitment to a new venture",
+          "label": "Weekly time commitment",
           "required": true,
           "options": [
             "Under 5 hours per week",
-            "5–10 hours per week",
-            "10–20 hours per week",
+            "5-10 hours per week",
+            "10-20 hours per week",
             "Full-time"
-          ]
-        },
-        {
-          "id": "capital_contribution",
-          "type": "single_select",
-          "label": "Are you able to contribute capital to the venture?",
-          "required": true,
-          "options": [
-            "No",
-            "Yes — under $10K",
-            "Yes — $10K to $50K",
-            "Yes — $50K+",
-            "Prefer to discuss"
-          ]
-        }
-      ]
-    },
-    {
-      "step_id": "S5",
-      "title": "Who you are looking for",
-      "description": "Define the profile, skills, and commitment level you need in a co-founder.",
-      "show_if": {
-        "any_of": [
-          {
-            "field": "user_type",
-            "equals": "founder"
-          },
-          {
-            "field": "user_type",
-            "equals": "foreign_founder"
-          }
-        ]
-      },
-      "fields": [
-        {
-          "id": "looking_for_skills",
-          "type": "multi_select_searchable",
-          "label": "Skills your co-founder must bring",
-          "required": true,
-          "max_selected": 6,
-          "options": [
-            "Software Engineering",
-            "Full-stack Development",
-            "Mobile Development",
-            "AI / ML Engineering",
-            "DevOps / Cloud",
-            "Data Science",
-            "Product Management",
-            "UX / UI Design",
-            "Growth Marketing",
-            "Performance Marketing",
-            "Sales",
-            "Business Development",
-            "Operations / COO",
-            "Finance / CFO",
-            "Fundraising",
-            "Legal / Compliance",
-            "Industry Expertise",
-            "Other"
-          ]
-        },
-        {
-          "id": "cofounder_commitment",
-          "type": "single_select",
-          "label": "Required commitment level from your co-founder",
-          "required": true,
-          "options": [
-            "Full-time only",
-            "Part-time acceptable",
-            "Flexible"
-          ]
-        },
-        {
-          "id": "compensation",
-          "type": "single_select",
-          "label": "Equity and compensation structure",
-          "required": true,
-          "options": [
-            "Equity only",
-            "Salary + equity",
-            "Open to discussion"
-          ]
-        },
-        {
-          "id": "cofounder_location_pref",
-          "type": "single_select",
-          "label": "Location preference for your co-founder",
-          "required": true,
-          "options": [
-            "Must be GCC-based",
-            "GCC preferred but open to remote",
-            "Location is not a factor"
-          ]
-        }
-      ]
-    },
-    {
-      "step_id": "S6",
-      "title": "Traction snapshot",
-      "description": "A quick snapshot of your current business metrics. All fields are optional.",
-      "show_if": {
-        "any_of": [
-          {
-            "field": "stage",
-            "equals": "Early revenue"
-          },
-          {
-            "field": "stage",
-            "equals": "Profitable / Scaling"
-          },
-          {
-            "field": "foreign_stage",
-            "equals": "Early revenue"
-          },
-          {
-            "field": "foreign_stage",
-            "equals": "Profitable / Scaling"
-          }
-        ]
-      },
-      "fields": [
-        {
-          "id": "monthly_revenue",
-          "type": "single_select",
-          "label": "Monthly recurring revenue (USD)",
-          "required": false,
-          "options": [
-            "Under $1K",
-            "$1K – $10K",
-            "$10K – $50K",
-            "$50K – $200K",
-            "$200K+",
-            "Prefer not to say"
-          ]
-        },
-        {
-          "id": "funding_status",
-          "type": "single_select",
-          "label": "Funding raised to date",
-          "required": false,
-          "options": [
-            "Bootstrapped",
-            "Friends & family round",
-            "Angel round",
-            "Pre-seed",
-            "Seed",
-            "Series A+",
-            "Prefer not to say"
-          ]
-        },
-        {
-          "id": "customer_count",
-          "type": "single_select",
-          "label": "Active customers or paying users",
-          "required": false,
-          "options": [
-            "1–10",
-            "11–100",
-            "101–1,000",
-            "1,000–10,000",
-            "10,000+",
-            "Prefer not to say"
-          ]
-        }
-      ]
-    },
-    {
-      "step_id": "S7",
-      "title": "Your commitment level",
-      "description": "This information is used to calculate your Founder Conviction score, which is visible on your profile.",
-      "show_if": {
-        "any_of": [
-          {
-            "field": "user_type",
-            "equals": "founder"
-          },
-          {
-            "field": "user_type",
-            "equals": "specialist"
-          },
-          {
-            "field": "user_type",
-            "equals": "foreign_founder"
-          }
-        ]
-      },
-      "fields": [
-        {
-          "id": "commitment_level",
-          "type": "single_select",
-          "label": "How would you describe your current level of commitment to building a venture?",
-          "required": true,
-          "options": [
-            "Fully committed — this is my primary focus",
-            "Serious — actively dedicating significant time alongside other commitments",
-            "Exploring — evaluating the opportunity before committing",
-            "Early stage — still defining my direction"
-          ]
-        },
-        {
-          "id": "risk_tolerance",
-          "type": "single_select",
-          "label": "How do you approach financial risk in a venture?",
-          "required": true,
-          "options": [
-            "High — I am prepared to invest personal capital and work without salary",
-            "Medium — I can take calculated risks with a financial runway in place",
-            "Conservative — I need income stability while building",
-            "Prefer to discuss with potential co-founder"
-          ]
-        },
-        {
-          "id": "execution_history",
-          "type": "single_select",
-          "label": "Have you previously built or operated a venture?",
-          "required": true,
-          "options": [
-            "Yes — I have successfully exited or scaled a venture",
-            "Yes — I have built a venture with meaningful traction",
-            "Yes — I have started a venture that did not scale",
-            "No — this is my first venture"
-          ]
-        },
-        {
-          "id": "leadership_style",
-          "type": "single_select",
-          "label": "How do you lead within a team?",
-          "required": true,
-          "options": [
-            "Visionary — I set direction and inspire the team",
-            "Executor — I focus on delivery and operational excellence",
-            "Collaborative — I build consensus and lead through alignment",
-            "Adaptive — my style depends on the team and context"
           ]
         }
       ]
     },
     {
       "step_id": "S8",
-      "title": "Final step",
-      "description": "One last detail before we complete your application.",
+      "title": "Finish up",
+      "progress_label": "Wrap-up",
+      "description": "A couple of final details and you are done.",
       "fields": [
         {
           "id": "how_heard",
           "type": "single_select",
-          "label": "How did you hear about CoVise?",
+          "label": "How did you hear about Covise?",
           "required": false,
           "options": [
             "LinkedIn",
@@ -1013,13 +767,11 @@
         {
           "id": "referral_code",
           "type": "short_text",
-          "label": "Referral code (if you have one)",
+          "label": "Referral code",
           "required": false,
           "placeholder": "e.g. COVISE-2026"
         }
-        
       ]
     }
-  ],
-  "success_message": "Your application is in. Our team reviews every profile manually — you will hear from us within 48 hours with your first curated matches."
+  ]
 }

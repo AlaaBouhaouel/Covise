@@ -1,12 +1,17 @@
+import shutil
 from unittest.mock import patch
+from tempfile import mkdtemp
+
+from botocore.exceptions import ClientError
 
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, Post, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry, OnboardingResponse
+from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, OnboardingResponse, Post, PostImage, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
 
 
 class WaitlistEntryModelTests(TestCase):
@@ -620,6 +625,11 @@ class CreatePostAlertEmailTests(TestCase):
             password="safe-password-123",
             full_name="Poster User",
         )
+        Profile.objects.create(
+            user=self.user,
+            full_name="Poster User",
+            has_accepted_platform_agreement=True,
+        )
 
     @override_settings(
         SITE_URL="https://covise.net",
@@ -655,6 +665,90 @@ class CreatePostAlertEmailTests(TestCase):
         self.assertIn("Founder update", payload["html"])
         self.assertIn("We launched in Riyadh.<br>Looking for pilot customers.", payload["html"])
         self.assertIn(f"https://covise.net/posts/{created_post.id}/", payload["html"])
+
+
+@override_settings(
+    DEBUG=False,
+    SECURE_SSL_REDIRECT=False,
+    ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"],
+    AWS_ACCESS_KEY_ID="test-access-key",
+    AWS_SECRET_ACCESS_KEY="test-secret-key",
+    AWS_STORAGE_BUCKET_NAME="covise-posts-test",
+    AWS_S3_REGION_NAME="eu-central-1",
+)
+class PostImageStorageTests(TestCase):
+    PNG_BYTES = (
+        b"\x89PNG\r\n\x1a\n"
+        b"\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde"
+        b"\x00\x00\x00\x0cIDAT\x08\xd7c\xf8\xcf\xc0\x00\x00\x03\x01\x01\x00\xc9\xfe\x92\xef"
+        b"\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="storage@example.com",
+            password="safe-password-123",
+            full_name="Storage User",
+        )
+        Profile.objects.create(
+            user=self.user,
+            full_name="Storage User",
+            has_accepted_platform_agreement=True,
+        )
+
+    def _missing_s3_object(self, *args, **kwargs):
+        raise ClientError({"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject")
+
+    @patch("covise_app.storage.boto3.client")
+    def test_create_post_uploads_gallery_images_to_s3_and_keeps_s3_url_on_model(self, mock_boto_client):
+        mock_s3 = mock_boto_client.return_value
+        mock_s3.head_object.side_effect = self._missing_s3_object
+
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("Create Post"),
+            {
+                "title": "Shipping with S3",
+                "post_type": Post.PostType.UPDATE,
+                "content": "Testing production image storage.",
+                "images": SimpleUploadedFile(
+                    "launch.png",
+                    self.PNG_BYTES,
+                    content_type="image/png",
+                ),
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Post.objects.count(), 1)
+        self.assertEqual(PostImage.objects.count(), 1)
+
+        saved_image = PostImage.objects.get()
+        self.assertTrue(saved_image.image.name.startswith("post_images/"))
+        self.assertEqual(
+            saved_image.image.url,
+            f"https://covise-posts-test.s3.eu-central-1.amazonaws.com/{saved_image.image.name}",
+        )
+
+        mock_s3.upload_fileobj.assert_called_once()
+        upload_args = mock_s3.upload_fileobj.call_args.args
+        upload_extra_args = mock_s3.upload_fileobj.call_args.kwargs["ExtraArgs"]
+        self.assertEqual(upload_args[1], "covise-posts-test")
+        self.assertEqual(upload_args[2], saved_image.image.name)
+        self.assertEqual(upload_extra_args["ContentType"], "image/png")
+        self.assertEqual(upload_extra_args["ServerSideEncryption"], "AES256")
+
+    def test_post_images_still_use_local_media_storage_in_debug(self):
+        temp_media_root = mkdtemp(dir=".")
+        try:
+            with override_settings(DEBUG=True, MEDIA_ROOT=temp_media_root, MEDIA_URL="/media/"):
+                image_field = PostImage._meta.get_field("image")
+                image_url = image_field.storage.url("post_images/local.png")
+
+                self.assertFalse(image_field.storage._use_s3())
+                self.assertEqual(image_url, "/media/post_images/local.png")
+        finally:
+            shutil.rmtree(temp_media_root, ignore_errors=True)
 
 
 class MessagingConversationNormalizationTests(TestCase):

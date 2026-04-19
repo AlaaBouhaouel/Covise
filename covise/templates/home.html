@@ -3,12 +3,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>CoVise | Home</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'home.css' %}">
-    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
+    <link rel="stylesheet" href="{% static 'home.css' %}?v=20260419h">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419h">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -74,8 +74,8 @@
             </a>
         </aside>
 
-        <main class="main">
-            <header class="home-header" aria-label="Home top bar">
+        <main class="main app-shell-main">
+            <header class="home-header app-shell-header" aria-label="Home top bar">
                 <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
                     <span class="home-brand-wordmark">CoVise</span>
                 </a>
@@ -1751,6 +1751,26 @@
     })();
 </script>
 <script src="{% static 'notifications.js' %}"></script>
+<script>
+    (function() {
+        var header = document.querySelector('.app-shell-header');
+        if (!header) return;
+
+        var ticking = false;
+
+        function syncHeaderScrollState() {
+            header.classList.toggle('is-scrolled', (window.pageYOffset || document.documentElement.scrollTop || 0) > 12);
+            ticking = false;
+        }
+
+        syncHeaderScrollState();
+        window.addEventListener('scroll', function() {
+            if (ticking) return;
+            ticking = true;
+            window.requestAnimationFrame(syncHeaderScrollState);
+        }, { passive: true });
+    })();
+</script>
 <script>
     (function() {
         var input = document.getElementById('advisorInput');

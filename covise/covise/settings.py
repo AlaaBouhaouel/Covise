@@ -6,6 +6,14 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def _csv_config(name, default=""):
+    return [
+        item.strip()
+        for item in config(name, default=default).split(",")
+        if item.strip()
+    ]
+
 SECRET_KEY = config('SECRET_KEY', default='fallback-secret-key')
 SITE_URL = config('SITE_URL', default='https://covise.net').rstrip('/')
 POST_ALERT_EMAILS = [
@@ -20,17 +28,21 @@ POST_ALERT_EMAILS = [
 DEBUG_RAW = str(config('DEBUG', default='false')).strip().lower()
 DEBUG = DEBUG_RAW in {'1', 'true', 'yes', 'on', 'debug', 'local'}
 
-ALLOWED_HOSTS = ['covise.net', 'www.covise.net', '.up.railway.app', 'localhost', '127.0.0.1']
+DEFAULT_ALLOWED_HOSTS = ['covise.net', 'www.covise.net', '.up.railway.app', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = list(dict.fromkeys(DEFAULT_ALLOWED_HOSTS + _csv_config('ALLOWED_HOSTS')))
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-CSRF_TRUSTED_ORIGINS = [
+DEFAULT_CSRF_TRUSTED_ORIGINS = [
     'https://covise.net',
     'https://www.covise.net',
     'https://*.up.railway.app',
 ]
+CSRF_TRUSTED_ORIGINS = list(
+    dict.fromkeys(DEFAULT_CSRF_TRUSTED_ORIGINS + _csv_config('CSRF_TRUSTED_ORIGINS'))
+)
 
 
 INSTALLED_APPS = [
@@ -207,5 +219,6 @@ AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default='')
 AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='')
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='eu-central-1')
+AWS_S3_MEDIA_BASE_URL = config('AWS_S3_MEDIA_BASE_URL', default='')
 WAITLIST_FAILURE_ALERT_EMAIL = config('WAITLIST_FAILURE_ALERT_EMAIL', default='ellabouhawel@gmail.com')
 REPORT_ALERT_EMAIL = config('REPORT_ALERT_EMAIL', default=WAITLIST_FAILURE_ALERT_EMAIL)

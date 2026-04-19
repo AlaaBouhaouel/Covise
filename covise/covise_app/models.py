@@ -2,6 +2,7 @@ import uuid
 
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
+from covise_app.storage import post_image_storage
 
 class WaitlistEntry(models.Model):
     class Status(models.TextChoices):
@@ -725,7 +726,7 @@ class Post(models.Model):
     title=models.CharField(max_length=255, blank=True, default="")
     post_type=models.CharField(max_length=20, choices=PostType.choices)
     theme_color=models.CharField(max_length=20, choices=ThemeColor.choices, default=ThemeColor.DEFAULT)
-    image=models.ImageField(upload_to="post_images/", blank=True, null=True)
+    image=models.ImageField(upload_to="post_images/", storage=post_image_storage, blank=True, null=True)
     content=models.TextField()
     likes_number=models.IntegerField(default=0)
     comments_number=models.IntegerField(default=0)
@@ -737,7 +738,7 @@ class Post(models.Model):
 
 class PostImage(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="gallery_images")
-    image = models.ImageField(upload_to="post_images/")
+    image = models.ImageField(upload_to="post_images/", storage=post_image_storage)
     sort_order = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 

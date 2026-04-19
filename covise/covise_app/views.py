@@ -7,6 +7,7 @@ import uuid
 import zipfile
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import quote
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.serializers.json import DjangoJSONEncoder
@@ -563,14 +564,87 @@ def _blocked_user_items(user):
     return items
 
 
-def _is_profile_onboarded(profile):
+EXTENDED_ONBOARDING_SIGNAL_KEYS = (
+    "current_goal",
+    "discovery_people",
+    "discovery_region",
+    "industry",
+    "stage",
+    "target_market",
+    "team_size",
+    "cofounders_needed",
+    "founder_timeline",
+    "current_role",
+    "years_experience",
+    "industries_interested",
+    "specialist_timeline",
+    "investor_type",
+    "investment_geography",
+    "investment_stage",
+    "investment_industries",
+    "investor_looking_for",
+    "home_country",
+    "target_gcc_market",
+    "foreign_industry",
+    "foreign_stage",
+    "local_partner_need",
+    "program_type",
+    "program_location",
+    "program_stage_focus",
+    "program_industries",
+    "incubator_looking_for",
+    "skills",
+    "availability",
+    "how_heard",
+    "referral_code",
+)
+
+
+def _has_profile_completion(profile):
     if not profile:
         return False
-    return bool(
-        getattr(profile, "source_onboarding_response_id", None)
-        or _clean_onboarding_answers(getattr(profile, "onboarding_answers", {}))
-        or str(getattr(profile, "flow_name", "") or "").strip()
+
+    onboarding_answers = _clean_onboarding_answers(getattr(profile, "onboarding_answers", {}))
+    one_liner_value = onboarding_answers.get("one_liner", getattr(profile, "one_liner", None))
+    looking_for_value = onboarding_answers.get("looking_for_type", getattr(profile, "looking_for_type", None))
+    location_value = (
+        str(getattr(profile, "country", "") or "").strip()
+        or _flatten_text_values(onboarding_answers.get("location"))
+        or _flatten_text_values(getattr(profile, "home_country", None))
     )
+
+    collected_links = []
+    for link_value in onboarding_answers.get("profile_links", []), getattr(profile, "linkedin", ""), getattr(profile, "github", ""), getattr(profile, "proof_of_work_url", ""):
+        normalized_links, _ = _normalize_profile_links(link_value)
+        for link in normalized_links:
+            if link not in collected_links:
+                collected_links.append(link)
+
+    has_building = bool(_flatten_text_values(one_liner_value))
+    has_looking_for = bool(_flatten_text_values(looking_for_value))
+    has_location = bool(location_value)
+    has_links = bool(collected_links)
+    legacy_onboarding = bool(getattr(profile, "source_onboarding_response_id", None) or str(getattr(profile, "flow_name", "") or "").strip())
+
+    return (has_building and has_looking_for and has_location and has_links) or legacy_onboarding
+
+
+def _has_completed_extended_onboarding(profile):
+    if not profile:
+        return False
+
+    onboarding_answers = _clean_onboarding_answers(getattr(profile, "onboarding_answers", {}))
+    if onboarding_answers.get("extended_onboarding_completed"):
+        return True
+
+    if any(key in onboarding_answers for key in EXTENDED_ONBOARDING_SIGNAL_KEYS):
+        return True
+
+    return False
+
+
+def _is_profile_onboarded(profile):
+    return _has_profile_completion(profile)
 
 
 def _post_auth_redirect_url(user, next_url=""):
@@ -602,6 +676,42 @@ def _clean_onboarding_answers(answers):
     return cleaned
 
 
+def _flatten_text_values(value):
+    if value in (None, "", [], {}, ()):
+        return []
+    if isinstance(value, dict):
+        items = []
+        for item in value.values():
+            items.extend(_flatten_text_values(item))
+        return items
+    if isinstance(value, (list, tuple, set)):
+        items = []
+        for item in value:
+            items.extend(_flatten_text_values(item))
+        return items
+    text = str(value).strip()
+    return [text] if text else []
+
+
+def _normalize_profile_links(value, *, max_items=5):
+    links = []
+    invalid_links = []
+    for raw in _flatten_text_values(value):
+        candidate = raw
+        if not candidate.startswith(("http://", "https://")):
+            candidate = f"https://{candidate}"
+        try:
+            url_validator(candidate)
+        except ValidationError:
+            invalid_links.append(raw)
+            continue
+        if candidate not in links:
+            links.append(candidate)
+        if len(links) >= max_items:
+            break
+    return links, invalid_links
+
+
 def _waitlist_description_to_user_type(description_value, *, non_gcc_business=False):
     normalized = str(description_value or "").strip().lower()
     if normalized == "founder_idea":
@@ -625,6 +735,7 @@ def _waitlist_to_onboarding_initial_answers(waitlist_source):
             "description": getattr(waitlist_source, "description", ""),
             "custom_description": getattr(waitlist_source, "custom_description", ""),
             "venture_summary": getattr(waitlist_source, "venture_summary", ""),
+            "linkedin": getattr(waitlist_source, "linkedin", ""),
         }
 
     non_gcc_business = bool(source.get("non_gcc_business"))
@@ -640,6 +751,12 @@ def _waitlist_to_onboarding_initial_answers(waitlist_source):
         initial_answers["user_type"] = mapped_user_type
     if source.get("venture_summary"):
         initial_answers["one_liner"] = source.get("venture_summary")
+    waitlist_location = source.get("custom_country") or source.get("country")
+    if waitlist_location:
+        initial_answers["location"] = waitlist_location
+    normalized_waitlist_links, _ = _normalize_profile_links(source.get("linkedin", ""))
+    if normalized_waitlist_links:
+        initial_answers["profile_links"] = normalized_waitlist_links
     if non_gcc_business and source.get("custom_country"):
         initial_answers["home_country"] = source.get("custom_country")
 
@@ -2599,6 +2716,11 @@ def landing(request):
 def home(request):
     if not request.user.is_authenticated:
         return HttpResponsePermanentRedirect(reverse('Landing Page'))
+    profile = getattr(request.user, "profile", None)
+    if not _is_profile_onboarded(profile):
+        return redirect(f"{reverse('Onboarding')}?next={reverse('Home')}")
+    if profile and not getattr(profile, "has_accepted_platform_agreement", False):
+        return redirect(f"{reverse('Agreement')}?next={quote(reverse('Home'))}")
 
     blocked_ids = _blocked_user_ids(request.user)
     posts = _mark_saved_posts(
@@ -2609,7 +2731,6 @@ def home(request):
 
     full_name = (request.user.full_name or "").strip()
     first_name = full_name.split()[0] if full_name else "User"
-    profile = getattr(request.user, "profile", None)
     raw_skills = getattr(profile, "skills", None) if profile else []
     tags = set(raw_skills or [])
     sidebar_metrics = _home_sidebar_metrics(request.user)
@@ -4039,12 +4160,18 @@ def _can_view_profile(viewer, target_user):
     return True
 
 
-def _render_profile_page(request, target_user, is_own_profile):
+def _profile_section_status_message(request, success_map):
+    status = request.GET.get("status", "").strip().lower()
+    return success_map.get(status, "")
+
+
+def _build_profile_display_context(request, target_user, is_own_profile):
     profile_page = build_profile_context(target_user)
     preferences = profile_page.get("preferences", {})
     can_view_profile_data = is_own_profile or preferences.get("read_profile_data", True)
     target_profile = getattr(target_user, "profile", None)
     is_onboarded = _is_profile_onboarded(target_profile)
+    extended_onboarding_complete = _has_completed_extended_onboarding(target_profile)
     onboarding_prompts = {
         "headline": "Complete your profile",
         "location": "Add your location",
@@ -4097,27 +4224,75 @@ def _render_profile_page(request, target_user, is_own_profile):
     elif report_error_code == "self":
         report_error_message = "You cannot report your own profile."
 
+    experiences = list(
+        target_user.experiences.order_by("-date", "-id")
+    ) if can_view_profile_data else []
+    active_projects = list(
+        target_user.active_projects.order_by("-id")
+    ) if can_view_profile_data else []
+    posts = list(
+        _mark_saved_posts(
+            target_user.posts.select_related("user", "user__profile")
+            .prefetch_related("gallery_images", "mentions__mentioned_user")
+            .exclude(user_id__in=viewer_blocked_ids)
+            .order_by("-created_at"),
+            request.user,
+        )
+    ) if can_view_profile_data else []
+    if posts:
+        _attach_post_feed_metadata(posts)
+        _attach_post_comment_threads(posts, current_user=request.user)
+
+    saved_posts = build_saved_post_items(request.user) if is_own_profile else []
+
+    if is_own_profile:
+        profile_home_url = reverse("Profile")
+        profile_personal_data_url = reverse("Profile Personal Data")
+        profile_experience_url = reverse("Profile Experience")
+        profile_active_projects_url = reverse("Profile Active Projects")
+        profile_saved_posts_url = reverse("Profile Saved Posts")
+        profile_posts_url = reverse("Profile Posts")
+    else:
+        profile_home_url = reverse("Public Profile", args=[target_user.id])
+        profile_personal_data_url = ""
+        profile_experience_url = reverse("Public Profile Experience", args=[target_user.id])
+        profile_active_projects_url = reverse("Public Profile Active Projects", args=[target_user.id])
+        profile_saved_posts_url = ""
+        profile_posts_url = reverse("Public Profile Posts", args=[target_user.id])
+
     context = {
         "ui_user": build_ui_user_context(target_user),
         "viewer_ui_user": build_ui_user_context(request.user),
         "viewed_user_id": target_user.id,
         "profile_page": profile_page,
         "profile_show_cofounder_badge": can_view_profile_data and _profile_has_visible_cofounder_badge(target_profile),
-        "experiences": target_user.experiences.all() if can_view_profile_data else target_user.experiences.none(),
-        "active_projects": target_user.active_projects.all() if can_view_profile_data else target_user.active_projects.none(),
-        "posts": _mark_saved_posts(
-            target_user.posts.select_related("user", "user__profile").prefetch_related("gallery_images", "mentions__mentioned_user").exclude(user_id__in=viewer_blocked_ids).order_by("-created_at"),
-            request.user,
-        ) if can_view_profile_data else target_user.posts.none(),
-        "saved_posts": build_saved_post_items(request.user) if is_own_profile else [],
+        "experiences": experiences,
+        "experience_preview": experiences[:3],
+        "has_more_experiences": len(experiences) > 3,
+        "active_projects": active_projects,
+        "active_projects_preview": active_projects[:2],
+        "has_more_active_projects": len(active_projects) > 2,
+        "posts": posts,
+        "posts_preview": posts[:2],
+        "has_more_posts": len(posts) > 2,
+        "saved_posts": saved_posts,
+        "saved_posts_preview": saved_posts[:2],
+        "has_more_saved_posts": len(saved_posts) > 2,
         "is_own_profile": is_own_profile,
         "profile_read_only": not is_own_profile,
         "can_view_profile_data": can_view_profile_data,
+        "profile_home_url": profile_home_url,
+        "profile_personal_data_url": profile_personal_data_url,
+        "profile_experience_url": profile_experience_url,
+        "profile_active_projects_url": profile_active_projects_url,
+        "profile_saved_posts_url": profile_saved_posts_url,
+        "profile_posts_url": profile_posts_url,
         "blocked_users": _blocked_user_items(request.user) if is_own_profile else [],
         "is_blocked_user": is_blocked_user,
         "messaging_blocked": messaging_blocked,
         "is_friend": is_friend,
         "is_onboarded": is_onboarded,
+        "extended_onboarding_complete": extended_onboarding_complete,
         "profile_error_message": "Messaging is disabled because one of you has blocked the other." if request.GET.get("blocked_message") == "1" else "",
         "profile_report_success_message": (
             "Your report has been sent. Our team will review it, and this user was added to your blocked list."
@@ -4128,9 +4303,322 @@ def _render_profile_page(request, target_user, is_own_profile):
         ),
         "profile_report_error_message": report_error_message,
     }
-    _attach_post_feed_metadata(context["posts"])
-    _attach_post_comment_threads(context["posts"], current_user=request.user)
-    return render(request, "profile.html", context)
+    return context
+
+
+def _render_profile_page(request, target_user, is_own_profile):
+    return render(request, "profile.html", _build_profile_display_context(request, target_user, is_own_profile))
+
+
+def _build_profile_section_context(request, target_user, is_own_profile, *, section_key, section_title, section_description):
+    context = _build_profile_display_context(request, target_user, is_own_profile)
+    context.update(
+        {
+            "profile_section_key": section_key,
+            "profile_section_title": section_title,
+            "profile_section_description": section_description,
+        }
+    )
+    return context
+
+
+def _public_profile_section_target(request, user_id):
+    target_user = User.objects.filter(id=user_id).first()
+    if not target_user:
+        raise Http404("User not found")
+    if not _can_view_profile(request.user, target_user):
+        raise Http404("Profile not available")
+    return target_user
+
+
+def _parse_profile_skills(raw_value):
+    skill_config = get_onboarding_skill_config()
+    allowed_skills = set(skill_config["options"])
+    values = []
+    for item in re.split(r"[,|\n]", raw_value or ""):
+        normalized = item.strip()
+        if normalized and normalized in allowed_skills and normalized not in values:
+            values.append(normalized)
+    return values[: skill_config["max_selected"]]
+
+
+@login_required
+def profile_personal_data(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    context = _build_profile_section_context(
+        request,
+        request.user,
+        True,
+        section_key="personal_data",
+        section_title="Personal Data",
+        section_description="Update the details people use to recognize and trust your profile.",
+    )
+    context.update(
+        {
+            "profile_photo_max_size_bytes": PROFILE_PHOTO_MAX_SIZE_BYTES,
+            "profile_photo_max_size_mb": PROFILE_PHOTO_MAX_SIZE_MB,
+            "settings_page": build_settings_context(request.user),
+            "profile_section_success_message": _profile_section_status_message(
+                request,
+                {"updated": "Your personal data is updated."},
+            ),
+            "profile_section_error_message": "",
+        }
+    )
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip()
+        phone_number = request.POST.get("phone_number", "").strip()
+        profile_photo_action = request.POST.get("profile_photo_action", "").strip()
+        uploaded_profile_image = request.FILES.get("profile_image")
+
+        if email and email != request.user.email:
+            if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
+                context["profile_section_error_message"] = "This email is already registered on CoVise."
+                return render(request, "profile_section.html", context, status=400)
+            request.user.email = email
+            request.user.save(update_fields=["email"])
+
+        profile.phone_number = phone_number
+        profile.linkedin = request.POST.get("linkedin", "").strip()
+        profile.github = request.POST.get("github", "").strip()
+        profile.proof_of_work_url = request.POST.get("proof_of_work_url", "").strip()
+        profile.country = request.POST.get("location", "").strip()
+        profile.nationality = request.POST.get("nationality", "").strip()
+        profile.bio = request.POST.get("bio", "").strip()
+        profile.skills = _parse_profile_skills(request.POST.get("skills", ""))
+
+        update_fields = [
+            "phone_number",
+            "linkedin",
+            "github",
+            "proof_of_work_url",
+            "country",
+            "nationality",
+            "bio",
+            "skills",
+        ]
+
+        if profile_photo_action == "remove":
+            if profile.profile_image:
+                profile.profile_image.delete(save=False)
+            profile.profile_image = None
+            update_fields.append("profile_image")
+        elif uploaded_profile_image:
+            if uploaded_profile_image.size > PROFILE_PHOTO_MAX_SIZE_BYTES:
+                context["profile_section_error_message"] = (
+                    f"Profile photo must be {PROFILE_PHOTO_MAX_SIZE_MB} MB or smaller."
+                )
+                return render(request, "profile_section.html", context, status=400)
+            profile.profile_image = uploaded_profile_image
+            update_fields.append("profile_image")
+
+        profile.save(update_fields=update_fields)
+        return redirect(f"{reverse('Profile Personal Data')}?status=updated")
+
+    return render(request, "profile_section.html", context)
+
+
+@login_required
+def profile_experience(request):
+    context = _build_profile_section_context(
+        request,
+        request.user,
+        True,
+        section_key="experience",
+        section_title="Experience",
+        section_description="Show your track record, operating context, and the work that gives you credibility.",
+    )
+    context.update(
+        {
+            "profile_section_success_message": _profile_section_status_message(
+                request,
+                {
+                    "created": "Experience added.",
+                    "updated": "Experience updated.",
+                    "deleted": "Experience removed.",
+                },
+            ),
+            "profile_section_error_message": "",
+        }
+    )
+
+    if request.method == "POST":
+        action = request.POST.get("action", "").strip()
+        experience_id = request.POST.get("experience_id", "").strip()
+        title = request.POST.get("title", "").strip()
+        date = request.POST.get("date", "").strip()
+        desc = request.POST.get("desc", "").strip()
+
+        if action == "delete":
+            experience = get_object_or_404(Experiences, id=experience_id, user=request.user)
+            experience.delete()
+            return redirect(f"{reverse('Profile Experience')}?status=deleted")
+
+        if not title or not date or not desc:
+            context["profile_section_error_message"] = "Title, date, and description are required."
+            return render(request, "profile_section.html", context, status=400)
+
+        if action == "update":
+            experience = get_object_or_404(Experiences, id=experience_id, user=request.user)
+            experience.title = title
+            experience.date = date
+            experience.desc = desc
+            experience.save(update_fields=["title", "date", "desc"])
+            return redirect(f"{reverse('Profile Experience')}?status=updated")
+
+        Experiences.objects.create(user=request.user, title=title, date=date, desc=desc)
+        return redirect(f"{reverse('Profile Experience')}?status=created")
+
+    return render(request, "profile_section.html", context)
+
+
+@login_required
+def profile_active_projects(request):
+    context = _build_profile_section_context(
+        request,
+        request.user,
+        True,
+        section_key="active_projects",
+        section_title="Active Projects",
+        section_description="Show what you are building now, where it stands, and what deserves attention next.",
+    )
+    context.update(
+        {
+            "profile_section_success_message": _profile_section_status_message(
+                request,
+                {
+                    "created": "Project added.",
+                    "updated": "Project updated.",
+                    "deleted": "Project removed.",
+                },
+            ),
+            "profile_section_error_message": "",
+        }
+    )
+
+    if request.method == "POST":
+        action = request.POST.get("action", "").strip()
+        project_id = request.POST.get("project_id", "").strip()
+        name = request.POST.get("name", "").strip()
+        status_text = request.POST.get("status_text", "").strip()
+        desc = request.POST.get("desc", "").strip()
+
+        if action == "delete":
+            active_project = get_object_or_404(Active_projects, id=project_id, user=request.user)
+            active_project.delete()
+            return redirect(f"{reverse('Profile Active Projects')}?status=deleted")
+
+        if not name or not desc:
+            context["profile_section_error_message"] = "Project name and description are required."
+            return render(request, "profile_section.html", context, status=400)
+
+        if action == "update":
+            active_project = get_object_or_404(Active_projects, id=project_id, user=request.user)
+            active_project.name = name
+            active_project.status = status_text
+            active_project.desc = desc
+            active_project.save(update_fields=["name", "status", "desc"])
+            return redirect(f"{reverse('Profile Active Projects')}?status=updated")
+
+        Active_projects.objects.create(
+            user=request.user,
+            name=name,
+            status=status_text,
+            desc=desc,
+        )
+        return redirect(f"{reverse('Profile Active Projects')}?status=created")
+
+    return render(request, "profile_section.html", context)
+
+
+@login_required
+def profile_saved_posts(request):
+    context = _build_profile_section_context(
+        request,
+        request.user,
+        True,
+        section_key="saved_posts",
+        section_title="Saved Posts",
+        section_description="Keep track of the posts you want to revisit, respond to, or learn from later.",
+    )
+    context.update(
+        {
+            "profile_section_success_message": _profile_section_status_message(
+                request,
+                {"removed": "Saved post removed."},
+            ),
+            "profile_section_error_message": "",
+        }
+    )
+
+    if request.method == "POST":
+        post_id = request.POST.get("post_id", "").strip()
+        SavedPost.objects.filter(user=request.user, post_id=post_id).delete()
+        return redirect(f"{reverse('Profile Saved Posts')}?status=removed")
+
+    return render(request, "profile_section.html", context)
+
+
+@login_required
+def profile_posts(request):
+    context = _build_profile_section_context(
+        request,
+        request.user,
+        True,
+        section_key="posts",
+        section_title="Posts",
+        section_description="Review the updates, asks, and builds you have shared with the CoVise network.",
+    )
+    return render(request, "profile_section.html", context)
+
+
+@login_required
+def public_profile_experience(request, user_id):
+    target_user = _public_profile_section_target(request, user_id)
+    if target_user == request.user:
+        return redirect(reverse("Profile Experience"))
+    context = _build_profile_section_context(
+        request,
+        target_user,
+        False,
+        section_key="experience",
+        section_title="Experience",
+        section_description="A read-only view of this member's public background and operating context.",
+    )
+    return render(request, "profile_section.html", context)
+
+
+@login_required
+def public_profile_active_projects(request, user_id):
+    target_user = _public_profile_section_target(request, user_id)
+    if target_user == request.user:
+        return redirect(reverse("Profile Active Projects"))
+    context = _build_profile_section_context(
+        request,
+        target_user,
+        False,
+        section_key="active_projects",
+        section_title="Active Projects",
+        section_description="A read-only view of the projects this member is currently showing on their profile.",
+    )
+    return render(request, "profile_section.html", context)
+
+
+@login_required
+def public_profile_posts(request, user_id):
+    target_user = _public_profile_section_target(request, user_id)
+    if target_user == request.user:
+        return redirect(reverse("Profile Posts"))
+    context = _build_profile_section_context(
+        request,
+        target_user,
+        False,
+        section_key="posts",
+        section_title="Posts",
+        section_description="A read-only view of this member's public posts and updates.",
+    )
+    return render(request, "profile_section.html", context)
 
 
 @login_required
@@ -4789,6 +5277,58 @@ def settings(request):
 
 
 @login_required
+def account_security(request):
+    preferences, _ = UserPreference.objects.get_or_create(user=request.user)
+    context = {}
+
+    if request.method == "POST":
+        try:
+            if request.POST.get("save_section") == "security":
+                security_action = request.POST.get("security_action", "").strip()
+
+                if security_action == "enable_2fa":
+                    preferences.two_factor_enabled = True
+                    preferences.save(update_fields=["two_factor_enabled"])
+                    return redirect(f"{reverse('Account Security')}?security=2fa-enabled")
+
+                if security_action == "disable_2fa":
+                    preferences.two_factor_enabled = False
+                    preferences.save(update_fields=["two_factor_enabled"])
+                    return redirect(f"{reverse('Account Security')}?security=2fa-disabled")
+
+                if security_action == "logout_session":
+                    session_key = request.POST.get("session_key", "").strip()
+                    if session_key:
+                        Session.objects.filter(session_key=session_key).delete()
+                        if session_key == request.session.session_key:
+                            logout(request)
+                            return redirect(f"{reverse('Login')}?logged_out=1")
+                    return redirect(f"{reverse('Account Security')}?security=session-ended")
+
+                if security_action == "logout_other_sessions":
+                    current_session_key = request.session.session_key or ""
+                    for session in _active_user_sessions(request.user):
+                        if session.session_key and session.session_key != current_session_key:
+                            session.delete()
+                    return redirect(f"{reverse('Account Security')}?security=other-sessions-ended")
+
+        except Exception:
+            pass
+
+    context["settings_page"] = _build_settings_page_context(request)
+    security_action = request.GET.get("security", "").strip()
+    if security_action == "2fa-enabled":
+        context["success_message"] = "Two-factor authentication is now enabled."
+    if security_action == "2fa-disabled":
+        context["success_message"] = "Two-factor authentication has been disabled."
+    if security_action == "session-ended":
+        context["success_message"] = "That session has been logged out."
+    if security_action == "other-sessions-ended":
+        context["success_message"] = "All other active sessions have been logged out."
+    return render(request, 'account_security.html', context)
+
+
+@login_required
 @require_POST
 def request_data_export(request):
     export_request = DataExportRequest.objects.create(
@@ -5121,7 +5661,11 @@ def signin(request):
 
 
 def onboarding_final(request):
-    return render(request, 'onboarding-final.html')
+    target_url = reverse("Onboarding")
+    query_string = request.META.get("QUERY_STRING", "").strip()
+    if query_string:
+        target_url = f"{target_url}?{query_string}"
+    return redirect(target_url)
 
 
 @ensure_csrf_cookie
@@ -5130,6 +5674,8 @@ def onboarding(request):
     onboarding_unavailable = flow is None
     initial_answers = {}
     redirect_url = reverse("Sign In")
+    requested_step = str(request.GET.get("step", "")).strip().lower()
+    start_step_id = "S1_PROFILE_COMPLETION"
     next_url = str(request.GET.get("next", "")).strip()
     if next_url.startswith("/") and not next_url.startswith("//"):
         redirect_url = next_url
@@ -5141,8 +5687,29 @@ def onboarding(request):
         initial_answers.update(waitlist_initial_answers)
         initial_answers.update(_clean_onboarding_answers(getattr(profile, "onboarding_answers", {})))
         initial_answers["email"] = request.user.email
-        if not next_url:
-            redirect_url = reverse("Profile")
+        if profile:
+            if getattr(profile, "bio", "") and "headline" not in initial_answers:
+                initial_answers["headline"] = profile.bio
+            if getattr(profile, "country", "") and "location" not in initial_answers:
+                initial_answers["location"] = profile.country
+            profile_links = []
+            stored_links, _ = _normalize_profile_links(initial_answers.get("profile_links", []))
+            profile_links.extend(stored_links)
+            for profile_link in [getattr(profile, "linkedin", ""), getattr(profile, "github", ""), getattr(profile, "proof_of_work_url", "")]:
+                normalized_links, _ = _normalize_profile_links(profile_link)
+                for normalized_link in normalized_links:
+                    if normalized_link not in profile_links:
+                        profile_links.append(normalized_link)
+            initial_answers["profile_links"] = profile_links[:5]
+        profile_completion_complete = _has_profile_completion(profile)
+        if requested_step == "intent" and profile_completion_complete:
+            start_step_id = "S2_INTENT_SETUP"
+        profile_has_accepted_agreement = bool(getattr(profile, "has_accepted_platform_agreement", False))
+        final_target = redirect_url if next_url else reverse("Home")
+        if profile_has_accepted_agreement:
+            redirect_url = final_target
+        else:
+            redirect_url = f"{reverse('Agreement')}?next={quote(final_target)}"
     elif request.session.get("waitlist_email"):
         initial_answers.update(
             _waitlist_to_onboarding_initial_answers(
@@ -5166,6 +5733,7 @@ def onboarding(request):
             'onboarding_unavailable': onboarding_unavailable,
             'onboarding_error_message': onboarding_error_message,
             'onboarding_complete_redirect_url': redirect_url,
+            'onboarding_start_step_id': start_step_id,
         },
     )
 
@@ -5175,7 +5743,10 @@ def onboarding_submit(request):
         return JsonResponse({"error": "Method not allowed."}, status=405)
 
     try:
-        payload = json.loads(request.body.decode('utf-8') or '{}')
+        if request.POST.get("payload"):
+            payload = json.loads(request.POST.get("payload", "") or "{}")
+        else:
+            payload = json.loads(request.body.decode('utf-8') or '{}')
     except (UnicodeDecodeError, json.JSONDecodeError):
         return JsonResponse({"error": "Invalid JSON payload."}, status=400)
 
@@ -5244,6 +5815,26 @@ def onboarding_submit(request):
                 flow_name=flow_name[:200],
                 answers=answers,
             )
+            uploaded_profile_image = request.FILES.get("profile_image")
+            remove_profile_image = str(request.POST.get("remove_profile_image", "")).strip().lower() in {"1", "true", "yes"}
+            if uploaded_profile_image or remove_profile_image:
+                profile, _ = Profile.objects.get_or_create(user=user)
+                profile_update_fields = []
+                if remove_profile_image:
+                    if profile.profile_image:
+                        profile.profile_image.delete(save=False)
+                    profile.profile_image = None
+                    profile_update_fields.append("profile_image")
+                elif uploaded_profile_image:
+                    if uploaded_profile_image.size > PROFILE_PHOTO_MAX_SIZE_BYTES:
+                        return JsonResponse(
+                            {"error": f"Profile photo must be {PROFILE_PHOTO_MAX_SIZE_MB} MB or smaller."},
+                            status=400,
+                        )
+                    profile.profile_image = uploaded_profile_image
+                    profile_update_fields.append("profile_image")
+                if profile_update_fields:
+                    profile.save(update_fields=profile_update_fields)
     except Exception as exc:
         details = {
             "flow_name": flow_name[:200],
@@ -5654,4 +6245,3 @@ def waitlist_success(request):
 def csrf_failure(request, reason=""):
     context = {"reason": reason}
     return render(request, "csrf_error.html", context, status=403)
-

@@ -3,12 +3,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | Settings</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'settings.css' %}">
-    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
+    <link rel="stylesheet" href="{% static 'settings.css' %}?v=20260419i">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419i">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -42,8 +43,8 @@
             </a>
         </aside>
 
-        <main class="main">
-            <header class="home-header" aria-label="Settings top bar">
+        <main class="main app-shell-main">
+            <header class="home-header app-shell-header" aria-label="Settings top bar">
                 <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
                     <span class="home-brand-wordmark">CoVise</span>
                 </a>
@@ -125,19 +126,7 @@
                     <div class="settings-row"><div class="row-copy"><strong>Full Name</strong></div><div class="row-control input-action">{{ settings_page.display_name }}</div></div>
                     <div class="settings-row"><div class="row-copy"><strong>Email</strong><span>Changing your email requires verification.</span></div><div class="row-control input-action"><input type="text" name="email" value="{{ settings_page.email }}"></div></div>
                     <div class="settings-row"><div class="row-copy"><strong>Phone Number</strong></div><div class="row-control input-action"><input type="text" name="phone_number" value="{{ settings_page.phone_number }}"></div></div>
-                    <div class="settings-row settings-row-block">
-                        <div class="row-copy">
-                            <strong>Password</strong>
-                        </div>
-                        <div class="row-control password-shell">
-                            <div class="inline-action">
-                                <span class="password-mask">••••••••</span>
-                                <a class="outline-btn" href="{% url 'Forgot Password' %}">Change Password</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="settings-row"><div class="row-copy"><strong>Last Sign In</strong></div><div class="row-control input-action">{{ settings_page.last_login|date:"M j, Y, g:i a"|default:"No sign-in recorded yet" }}</div></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Total Sign Ins</strong></div><div class="row-control input-action">{{ settings_page.sign_in_count }}</div></div>
+                    <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Security</strong><span>Password, sign-ins, and two-factor authentication.</span></div></div><a class="outline-btn" href="{% url 'Account Security' %}">Security</a></div>
                     <div class="settings-row"><div class="row-copy"><strong>Guidelines</strong><span>{% if settings_page.platform_agreement_accepted %}Accepted on {{ settings_page.platform_agreement_accepted_at|date:"M j, Y" }}{% else %}Review the community standards for posting, outreach, and collaboration.{% endif %}</span></div><div class="row-control input-action"><a class="outline-btn guidelines-btn" href="{% url 'Agreement' %}">{% if settings_page.platform_agreement_accepted %}View Guidelines{% else %}Read Guidelines{% endif %}</a></div></div>
                     <div class="settings-row"><div class="row-copy"><strong>Profile Photo</strong><span>Choose an image, then save your account changes. Max {{ profile_photo_max_size_mb }} MB.</span></div><div class="row-control photo-row">{% if ui_user.avatar_url %}<img class="avatar-image small-avatar" src="{{ ui_user.avatar_url }}" alt="{{ settings_page.display_name }} profile photo">{% else %}<span class="avatar small-avatar">{{ ui_user.avatar_initials }}</span>{% endif %}<input id="profilePhotoInput" name="profile_image" type="file" accept="image/*" data-max-size-bytes="{{ profile_photo_max_size_bytes }}" hidden><label class="outline-btn" for="profilePhotoInput" id="profilePhotoTrigger">Upload Photo</label><button class="text-link danger-link" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button><span id="profilePhotoHint" class="photo-row-note" data-default-text="Max {{ profile_photo_max_size_mb }} MB.">Max {{ profile_photo_max_size_mb }} MB.</span></div></div>
                     <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="personal_data">Save Changes</button></div>
@@ -517,96 +506,6 @@
                 <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="matching_preferences">Save Changes</button></div>
             </section>
             </form>
-
-            <section class="panel settings-section">
-                <div class="section-top"><h2>SECURITY</h2></div>
-                <div class="settings-stack">
-                    <form method="post" action="{% url 'Settings' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="save_section" value="security">
-                        <div class="settings-row">
-                            <div class="row-copy">
-                                <strong>Two-Factor Authentication</strong>
-                                <span>Require a 6-digit email code when signing in.</span>
-                            </div>
-                            <div class="row-inline-actions">
-                                <span class="status-badge{% if settings_page.security.two_factor_enabled %} success{% else %} amber{% endif %}">
-                                    {% if settings_page.security.two_factor_enabled %}Enabled{% else %}Not enabled{% endif %}
-                                </span>
-                                <button class="outline-btn" name="security_action" value="{% if settings_page.security.two_factor_enabled %}disable_2fa{% else %}enable_2fa{% endif %}" type="submit">
-                                    {% if settings_page.security.two_factor_enabled %}Disable 2FA{% else %}Enable 2FA{% endif %}
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="inner-panel">
-                    <h3>Active Sessions</h3>
-                    <div class="session-list">
-                        {% for session in settings_page.security.active_sessions %}
-                            <div class="session-row">
-                                <div class="session-copy with-icon">
-                                    {% if session.device_type == 'mobile' %}
-                                        <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
-                                    {% elif session.device_type == 'tablet' %}
-                                        <i class="fa-solid fa-tablet-screen-button" aria-hidden="true"></i>
-                                    {% else %}
-                                        <i class="fa-solid fa-laptop" aria-hidden="true"></i>
-                                    {% endif %}
-                                    <div>
-                                        <strong>{{ session.device_label }}{% if session.is_current %} (Current session){% endif %}</strong>
-                                        <span>{{ session.location }} - {{ session.activity_label }}</span>
-                                    </div>
-                                </div>
-                                <form method="post" action="{% url 'Settings' %}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="save_section" value="security">
-                                    <input type="hidden" name="security_action" value="logout_session">
-                                    <input type="hidden" name="session_key" value="{{ session.session_key }}">
-                                    <button class="text-link danger-link" type="submit">Log out</button>
-                                </form>
-                            </div>
-                        {% empty %}
-                            <div class="session-row">
-                                <div class="session-copy with-icon">
-                                    <i class="fa-solid fa-laptop" aria-hidden="true"></i>
-                                    <div>
-                                        <strong>No active sessions found</strong>
-                                        <span>Your next successful sign-in will appear here.</span>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <form method="post" action="{% url 'Settings' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="save_section" value="security">
-                        <input type="hidden" name="security_action" value="logout_other_sessions">
-                        <button class="text-link danger-link start-link" type="submit">Log out all other sessions</button>
-                    </form>
-                </div>
-                <div class="inner-panel">
-                    <h3>Login History</h3>
-                    <div class="table-wrap">
-                        <table class="settings-table">
-                            <thead><tr><th>Date</th><th>Device</th><th>Location</th><th>Status</th></tr></thead>
-                            <tbody>
-                                {% for event in settings_page.security.login_history %}
-                                    <tr>
-                                        <td>{{ event.created_at|date:"M j, Y, g:i a" }}</td>
-                                        <td>{{ event.device_label }}</td>
-                                        <td>{{ event.location }}</td>
-                                        <td class="{{ event.status_class }}">{{ event.status_label }}</td>
-                                    </tr>
-                                {% empty %}
-                                    <tr><td colspan="4">No sign-in activity has been recorded yet.</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </section>
 
             <section class="panel settings-section">
                 <div class="section-top"><h2>LEGAL &amp; COMPLIANCE</h2></div>
@@ -1107,5 +1006,25 @@
         })();
     </script>
     <script src="{% static 'notifications.js' %}"></script>
+    <script>
+        (function () {
+            var header = document.querySelector('.app-shell-header');
+            if (!header) return;
+
+            var ticking = false;
+
+            function syncHeaderScrollState() {
+                header.classList.toggle('is-scrolled', (window.pageYOffset || document.documentElement.scrollTop || 0) > 12);
+                ticking = false;
+            }
+
+            syncHeaderScrollState();
+            window.addEventListener('scroll', function () {
+                if (ticking) return;
+                ticking = true;
+                window.requestAnimationFrame(syncHeaderScrollState);
+            }, { passive: true });
+        })();
+    </script>
 </body>
 </html>
