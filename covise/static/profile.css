@@ -2507,6 +2507,10 @@ p {
     text-align: center;
 }
 
+
+
+
+
 @media (max-width: 1020px) {
     .hero-body {
         grid-template-columns: auto 1fr;

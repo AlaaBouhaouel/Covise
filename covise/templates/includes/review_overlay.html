@@ -1,0 +1,54 @@
+<div class="review-overlay" id="reviewOverlay" role="status" aria-live="polite">
+    <div class="review-overlay-card">
+        <div class="review-overlay-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6l4 2"></path>
+            </svg>
+        </div>
+        <h2 class="review-overlay-title">Your profile is being reviewed before activation across the network.</h2>
+        <p class="review-overlay-body">Full access will be unlocked within 24 hours.<br>Check back soon, or we'll email you once you're ready to start posting.</p>
+        <button class="review-timer-toggle" type="button" aria-expanded="false" aria-controls="reviewTimerPanel" id="reviewTimerToggle">
+            <span>Time remaining</span>
+            <svg class="review-timer-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"></path>
+            </svg>
+        </button>
+        <div class="review-timer-panel" id="reviewTimerPanel" hidden>
+            <div class="review-timer-display" id="reviewTimerDisplay">24:00:00</div>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    var KEY = 'covise_review_start';
+    var start = Number(localStorage.getItem(KEY)) || Date.now();
+    localStorage.setItem(KEY, start);
+    var DURATION = 24 * 60 * 60 * 1000;
+
+    var display = document.getElementById('reviewTimerDisplay');
+    var toggle = document.getElementById('reviewTimerToggle');
+    var panel = document.getElementById('reviewTimerPanel');
+
+    if (toggle && panel) {
+        toggle.addEventListener('click', function () {
+            var open = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', String(!open));
+            panel.hidden = open;
+        });
+    }
+
+    function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+    function tick() {
+        var left = Math.max(0, DURATION - (Date.now() - start));
+        var h = Math.floor(left / 3600000);
+        var m = Math.floor((left % 3600000) / 60000);
+        var s = Math.floor((left % 60000) / 1000);
+        if (display && !panel.hidden) display.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+        if (left > 0) setTimeout(tick, 1000);
+    }
+
+    tick();
+}());
+</script>

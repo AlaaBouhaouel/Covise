@@ -8,6 +8,7 @@
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260419j">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419j">
+    <link rel="stylesheet" href="{% static 'review_overlay.css' %}?v=20260419a">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -1059,5 +1060,6 @@
             });
         })();
     </script>
+{% include "includes/review_overlay.html" %}
 </body>
 </html>
