@@ -7,9 +7,9 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>CoVise | Create Post</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'home.css' %}">
-    <link rel="stylesheet" href="{% static 'create_post.css' %}">
-    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
+    <link rel="stylesheet" href="{% static 'home.css' %}?v=20260420g">
+    <link rel="stylesheet" href="{% static 'create_post.css' %}?v=20260420m">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419h">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script>
@@ -63,7 +63,7 @@
                         <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                         <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                     </button>
-                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile"{% if not ui_user.avatar_url %} data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}"{% endif %}>
                         {% if ui_user.avatar_url %}
                         <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
                         {% else %}
@@ -89,12 +89,6 @@
                             </a>
                         </div>
                         <div class="create-post-page-header">
-                            <h1 class="create-post-page-title">Post something worth building on{% if first_name %}, {{ first_name }}{% endif %}</h1>
-                            {% if is_first_post %}
-                            <p class="create-post-subtitle">Your first post on CoVise is your introduction. Fill it in, make it yours, and publish it to join the conversation.</p>
-                            {% else %}
-                            <p class="create-post-subtitle">Start from a template or write freely, then refine the draft with the context builder below.</p>
-                            {% endif %}
                         </div>
                     </div>
 
@@ -105,13 +99,7 @@
                     {% endif %}
 
                     {% if is_first_post %}
-                    <section class="create-post-lock-panel" aria-label="Mandatory introduction template">
-                        <div class="create-post-lock-badge">Introduction required</div>
-                        <div class="create-post-lock-copy">
-                            <h2>Start with your founder introduction</h2>
-                            <p>This first post is locked to your introduction so people can quickly understand who you are, what you are building, and how to connect with you.</p>
-                        </div>
-                    </section>
+                    <div class="create-post-lock-badge">Introduction required</div>
                     {% else %}
                     <section class="create-post-intent-section" aria-label="Post intent">
                         <div class="create-post-section-head">
@@ -140,72 +128,11 @@
                             </button>
                         </div>
                     </section>
-
-                    <section class="create-post-context-section" aria-label="Context builder">
-                        <div class="create-post-context-inner create-post-context-note is-visible" id="ctx-free">
-                            <p>No structure needed. Write what is on your mind.</p>
-                        </div>
-
-                        <div class="create-post-context-inner" id="ctx-cofounder" hidden>
-                            <div class="create-post-context-field">
-                                <label for="cf-building">What are you building?</label>
-                                <input class="create-post-context-input" id="cf-building" type="text" placeholder="e.g. A fintech platform for SME invoicing in the GCC">
-                            </div>
-                            <div class="create-post-context-field">
-                                <label>Current stage</label>
-                                <div class="create-post-stage-pills" id="cf-stage">
-                                    <button class="create-post-stage-pill" type="button" data-stage="Idea" aria-pressed="false">Idea</button>
-                                    <button class="create-post-stage-pill" type="button" data-stage="MVP" aria-pressed="false">MVP</button>
-                                    <button class="create-post-stage-pill is-active" type="button" data-stage="Launched" aria-pressed="true">Launched</button>
-                                    <button class="create-post-stage-pill" type="button" data-stage="Growing" aria-pressed="false">Growing</button>
-                                </div>
-                            </div>
-                            <div class="create-post-context-field">
-                                <label for="cf-looking">Who are you looking for?</label>
-                                <input class="create-post-context-input" id="cf-looking" type="text" placeholder="e.g. Technical co-founder with backend / payments experience">
-                            </div>
-                            <div class="create-post-context-field">
-                                <label for="cf-why">Why now?</label>
-                                <input class="create-post-context-input" id="cf-why" type="text" placeholder="e.g. We have 3 pilot customers and need to ship v1">
-                            </div>
-                        </div>
-
-                        <div class="create-post-context-inner" id="ctx-advice" hidden>
-                            <div class="create-post-context-field">
-                                <label for="adv-solve">What are you trying to solve?</label>
-                                <input class="create-post-context-input" id="adv-solve" type="text" placeholder="e.g. How to approach enterprise sales in Saudi Arabia">
-                            </div>
-                            <div class="create-post-context-field">
-                                <label for="adv-tried">What have you tried?</label>
-                                <input class="create-post-context-input" id="adv-tried" type="text" placeholder="e.g. Cold outreach, LinkedIn, attending events">
-                            </div>
-                            <div class="create-post-context-field">
-                                <label for="adv-stuck">Where are you stuck?</label>
-                                <input class="create-post-context-input" id="adv-stuck" type="text" placeholder="e.g. Getting past the first meeting with procurement">
-                            </div>
-                        </div>
-
-                        <div class="create-post-context-inner" id="ctx-progress" hidden>
-                            <div class="create-post-context-field">
-                                <label for="prog-achieve">What did you achieve?</label>
-                                <input class="create-post-context-input" id="prog-achieve" type="text" placeholder="e.g. Closed our first enterprise deal with a regional bank">
-                            </div>
-                            <div class="create-post-context-field">
-                                <label for="prog-changed">What changed?</label>
-                                <input class="create-post-context-input" id="prog-changed" type="text" placeholder="e.g. Shifted from product-led to direct sales approach">
-                            </div>
-                            <div class="create-post-context-field">
-                                <label for="prog-next">What's next?</label>
-                                <input class="create-post-context-input" id="prog-next" type="text" placeholder="e.g. Hiring a second sales rep and targeting 5 more banks">
-                            </div>
-                        </div>
-                    </section>
                     {% endif %}
 
                     <section class="create-post-editor-section" aria-label="Post editor">
                         <div class="create-post-section-head create-post-section-head-inline">
                             <span class="create-post-section-label">Draft</span>
-                            <p>Shape the title and body here, then publish to the network.</p>
                         </div>
 
                         <div class="create-post-editor-card" id="createPostEditor">
@@ -246,7 +173,6 @@
                                             aria-controls="postTypeMenu"
                                             {% if is_first_post %}disabled aria-disabled="true"{% endif %}
                                         >
-                                            <span class="create-post-select-prefix">Post type</span>
                                             <span id="postTypeLabel">
                                                 {% for value, label in post_type_choices %}{% if form_data.post_type == value or forloop.first and not form_data.post_type %}{{ label }}{% endif %}{% endfor %}
                                             </span>
@@ -256,9 +182,6 @@
                                             {% for value, label in post_type_choices %}
                                             <button class="create-post-select-option{% if form_data.post_type == value or forloop.first and not form_data.post_type %} is-selected{% endif %}" type="button" role="option" data-value="{{ value }}" data-label="{{ label }}" aria-selected="{% if form_data.post_type == value or forloop.first and not form_data.post_type %}true{% else %}false{% endif %}">
                                                 <span class="create-post-select-option-title">{{ label }}</span>
-                                                <span class="create-post-select-option-sub">
-                                                    {% if value == 'idea' %}Pitch a concept worth teaming up around.{% elif value == 'update' %}Share momentum, progress, or a real shift.{% elif value == 'ask' %}Ask for advice, feedback, or a sharp answer.{% elif value == 'win' %}Share a milestone your network can build on.{% else %}Open the floor and invite the community in.{% endif %}
-                                                </span>
                                             </button>
                                             {% endfor %}
                                         </div>
@@ -345,7 +268,7 @@
             var currentIntent = 'free';
             var userEditedTitle = false;
             var userEditedBody = false;
-            var activeEditor = bodyEditor;
+            var activeEditor = titleEditor;
 
             if (!form || !titleEditor || !bodyEditor || !titleInput || !contentInput || !typeInput) return;
 
@@ -491,6 +414,17 @@
                 });
             }
 
+            function focusTitleEditor() {
+                window.requestAnimationFrame(function() {
+                    titleEditor.focus();
+                    setActiveEditor(titleEditor);
+                    if (typeof titleEditor.setSelectionRange === 'function') {
+                        var titleLength = titleEditor.value ? titleEditor.value.length : 0;
+                        titleEditor.setSelectionRange(titleLength, titleLength);
+                    }
+                });
+            }
+
             function resetStagePills() {
                 stagePills.forEach(function(button) {
                     var active = button.getAttribute('data-stage') === 'Launched';
@@ -628,7 +562,7 @@
                 } else {
                     updateEditorMetrics();
                 }
-                focusFirstContextInput(intentKey);
+                focusTitleEditor();
             }
 
             function resolveInitialIntent() {
@@ -858,6 +792,9 @@
                 setActiveIntent(resolveInitialIntent());
             }
             updateEditorMetrics();
+            if (!document.activeElement || document.activeElement === document.body) {
+                focusTitleEditor();
+            }
         })();
     </script>
     <script>
@@ -878,6 +815,7 @@
         })();
     </script>
     <script src="{% static 'notifications.js' %}"></script>
+    <script src="{% static 'avatar_fallback.js' %}?v=20260420a"></script>
     {% include "includes/app_mobile_nav.html" with active_page='' show_mobile_back=False %}
     <script>
         (function() {

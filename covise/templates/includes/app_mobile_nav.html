@@ -34,3 +34,108 @@
     </button>
     {% endif %}
 </nav>
+<script>
+    (function () {
+        var body = document.body;
+        var nav = document.querySelector('.app-mobile-nav');
+        if (!body || !nav) return;
+
+        var viewport = window.visualViewport;
+        var mobileQuery = window.matchMedia('(max-width: 1100px)');
+        var baselineHeight = viewport ? viewport.height : window.innerHeight;
+
+        function isSmallScreen() {
+            return mobileQuery.matches;
+        }
+
+        function getViewportHeight() {
+            return viewport ? viewport.height : window.innerHeight;
+        }
+
+        function isKeyboardField(element) {
+            if (!element || element.disabled || element.readOnly) return false;
+            if (element.tagName === 'TEXTAREA') return true;
+            if (element.isContentEditable) return true;
+            if (element.tagName !== 'INPUT') return false;
+
+            var blockedTypes = {
+                button: true,
+                checkbox: true,
+                color: true,
+                file: true,
+                hidden: true,
+                image: true,
+                radio: true,
+                range: true,
+                reset: true,
+                submit: true,
+            };
+            return !blockedTypes[(element.type || 'text').toLowerCase()];
+        }
+
+        function setKeyboardOpen(isOpen) {
+            body.classList.toggle('app-mobile-nav-keyboard-open', isOpen);
+            nav.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
+        }
+
+        function syncKeyboardState() {
+            if (!isSmallScreen()) {
+                baselineHeight = getViewportHeight();
+                setKeyboardOpen(false);
+                return;
+            }
+
+            var activeElement = document.activeElement;
+            var currentHeight = getViewportHeight();
+            var keyboardFieldFocused = isKeyboardField(activeElement);
+            var heightDelta = Math.max(0, baselineHeight - currentHeight);
+            var layoutDelta = Math.max(0, window.innerHeight - currentHeight);
+
+            if (!keyboardFieldFocused) {
+                baselineHeight = Math.max(baselineHeight, currentHeight);
+            }
+
+            var keyboardLikelyOpen = keyboardFieldFocused && (heightDelta > 120 || layoutDelta > 120);
+            setKeyboardOpen(keyboardLikelyOpen);
+
+            if (!keyboardFieldFocused && currentHeight >= baselineHeight - 24) {
+                baselineHeight = currentHeight;
+            }
+        }
+
+        window.addEventListener('focusin', function () {
+            window.setTimeout(syncKeyboardState, 40);
+        }, true);
+
+        window.addEventListener('focusout', function () {
+            window.setTimeout(syncKeyboardState, 120);
+        }, true);
+
+        window.addEventListener('resize', function () {
+            if (!body.classList.contains('app-mobile-nav-keyboard-open')) {
+                baselineHeight = viewport ? viewport.height : window.innerHeight;
+            }
+            syncKeyboardState();
+        });
+
+        window.addEventListener('orientationchange', function () {
+            window.setTimeout(function () {
+                baselineHeight = getViewportHeight();
+                syncKeyboardState();
+            }, 120);
+        });
+
+        if (mobileQuery.addEventListener) {
+            mobileQuery.addEventListener('change', syncKeyboardState);
+        } else if (mobileQuery.addListener) {
+            mobileQuery.addListener(syncKeyboardState);
+        }
+
+        if (viewport) {
+            viewport.addEventListener('resize', syncKeyboardState);
+            viewport.addEventListener('scroll', syncKeyboardState);
+        }
+
+        syncKeyboardState();
+    })();
+</script>

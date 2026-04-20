@@ -16,7 +16,7 @@ from .messaging import deliver_media_message
 from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, OnboardingResponse, Post, PostImage, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
 from .context_processors import user_ui_context
 from .user_context import build_ui_user_context
-from .views import _has_profile_completion, _safe_media_url, _serialize_message, _waitlist_to_onboarding_initial_answers
+from .views import _has_profile_completion, _home_sidebar_metrics, _render_post_content_html, _render_post_title_html, _safe_media_url, _serialize_message, _waitlist_to_onboarding_initial_answers
 
 
 class WaitlistEntryModelTests(TestCase):
@@ -365,7 +365,7 @@ class PausedAccountBehaviorTests(TestCase):
         )
         UserPreference.objects.create(user=paused_user, appear_in_search=True)
 
-        response = self.client.get(reverse("Home"))
+        response = self.client.get(reverse("Home"), follow=True)
 
         self.assertEqual(response.status_code, 200)
         searchable_names = {item["display_name"] for item in response.context["searchable_users"]}
@@ -519,7 +519,73 @@ class PreviewPageTests(TestCase):
         self.assertEqual(visible_entry["profile_url"], reverse("Public Profile", args=[visible_user.id]))
         self.assertIn("fintech network", visible_entry["search_text"].lower())
 
+    def test_home_community_pulse_uses_approved_waitlist_verification_countries_and_post_counts(self):
+        Profile.objects.create(
+            user=self.user,
+            full_name="Preview User",
+            country="Saudi Arabia",
+            linkedin="https://www.linkedin.com/in/preview-user/",
+            has_accepted_platform_agreement=True,
+            onboarding_answers={
+                "one_liner": "Building community intelligence.",
+                "looking_for_type": ["Technical co-founder"],
+            },
+        )
+        WaitlistEntry.objects.create(
+            full_name="Approved One",
+            phone_number="+966500000001",
+            email="approved-one@example.com",
+            country="Saudi Arabia",
+            linkedin="https://www.linkedin.com/in/approved-one/",
+            status=WaitlistEntry.Status.APPROVED,
+            my_referral_code="CV-APR001",
+        )
+        WaitlistEntry.objects.create(
+            full_name="Approved Two",
+            phone_number="+966500000002",
+            email="approved-two@example.com",
+            custom_country="Japan",
+            linkedin="https://www.linkedin.com/in/approved-two/",
+            status=WaitlistEntry.Status.APPROVED,
+            my_referral_code="CV-APR002",
+        )
+        WaitlistEntry.objects.create(
+            full_name="Activated Founder",
+            phone_number="+966500000003",
+            email="activated@example.com",
+            country="UAE",
+            linkedin="https://www.linkedin.com/in/activated-founder/",
+            status=WaitlistEntry.Status.ACTIVATED,
+            my_referral_code="CV-ACT001",
+        )
+        WaitlistEmailVerification.objects.create(email="verification-one@example.com")
+        WaitlistEmailVerification.objects.create(email="verification-two@example.com")
+        WaitlistEmailVerification.objects.create(email="verification-three@example.com")
+        Post.objects.create(
+            user=self.user,
+            title="First pulse post",
+            post_type=Post.PostType.UPDATE,
+            content="Community pulse test post one.",
+        )
+        Post.objects.create(
+            user=self.user,
+            title="Second pulse post",
+            post_type=Post.PostType.UPDATE,
+            content="Community pulse test post two.",
+        )
 
+        metrics = _home_sidebar_metrics(self.user)
+        self.assertEqual(metrics["verified_founders_count"], 2)
+        self.assertEqual(metrics["waitlist_count"], 3)
+        self.assertEqual(metrics["countries_involved_count"], 2)
+        self.assertEqual(metrics["posts_count"], 2)
+        self.assertEqual(metrics["verified_founders_delta"], "2+ today")
+        self.assertEqual(metrics["waitlist_delta"], "3+ today")
+        self.assertEqual(metrics["countries_involved_delta"], "2+ today")
+        self.assertEqual(metrics["posts_delta"], "2+ today")
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
 class OnboardingPrefillTests(TestCase):
     def test_waitlist_answers_prefill_building_text_and_matching_choice(self):
         initial_answers = _waitlist_to_onboarding_initial_answers(
@@ -556,6 +622,34 @@ class OnboardingPrefillTests(TestCase):
         )
 
         self.assertTrue(_has_profile_completion(profile))
+
+    def test_onboarding_intent_redirect_starts_at_first_matching_extended_step(self):
+        user = User.objects.create_user(
+            email="intent-step@example.com",
+            password="safe-password-123",
+            full_name="Intent Step",
+        )
+        Profile.objects.create(
+            user=user,
+            full_name="Intent Step",
+            has_accepted_platform_agreement=True,
+            waitlist_snapshot={
+                "email": "intent-step@example.com",
+                "description": "developer",
+                "venture_summary": "Building internal AI tooling for operators.",
+            },
+            onboarding_answers={
+                "user_type": "developer",
+                "one_liner": "Building internal AI tooling for operators.",
+                "looking_for_type": "Technical co-founder",
+            },
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(f"{reverse('Onboarding')}?step=intent")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["onboarding_start_step_id"], "S3_specialist")
 
 
 class ProfilePageTests(TestCase):
@@ -710,6 +804,125 @@ class CreatePostAlertEmailTests(TestCase):
         self.assertIn("Founder update", payload["html"])
         self.assertIn("We launched in Riyadh.<br>Looking for pilot customers.", payload["html"])
         self.assertIn(f"https://covise.net/posts/{created_post.id}/", payload["html"])
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class CreatePostTemplatePrefillTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="templates@example.com",
+            password="safe-password-123",
+            full_name="Template User",
+        )
+        self.profile = Profile.objects.create(
+            user=self.user,
+            full_name="Template User",
+            country="Saudi Arabia",
+            bio="Former operator building workflow tools for founder teams.",
+            has_accepted_platform_agreement=True,
+            stage=["MVP"],
+            one_liner=["A founder workflow platform for lean teams"],
+            looking_for_type=["Technical co-founder"],
+            looking_for_skills=["Backend engineer"],
+            cofounder_commitment=["Full-time"],
+            founder_timeline=["Launching pilots this quarter"],
+            skills=["Product strategy", "Go-to-market"],
+            onboarding_answers={
+                "local_partner_need": "Helping founders run their teams without operational sprawl",
+            },
+        )
+
+    def test_non_free_intent_templates_prefill_from_profile_data(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("Create Post"))
+
+        self.assertEqual(response.status_code, 200)
+        template_payloads = response.context["template_payloads"]
+
+        self.assertEqual(
+            template_payloads["find_cofounder"]["title"],
+            "Looking for backend engineer to build a founder workflow platform for lean teams",
+        )
+        self.assertIn("A founder workflow platform for lean teams", template_payloads["find_cofounder"]["content"])
+        self.assertIn("Backend engineer", template_payloads["find_cofounder"]["content"])
+        self.assertIn("Full-time", template_payloads["find_cofounder"]["content"])
+        self.assertIn("Saudi Arabia", template_payloads["find_cofounder"]["content"])
+
+        self.assertEqual(
+            template_payloads["ask_advice"]["title"],
+            "Need advice on helping founders run their teams without operational sprawl",
+        )
+        self.assertIn("Former operator building workflow tools for founder teams.", template_payloads["ask_advice"]["content"])
+        self.assertIn("Technical co-founder", template_payloads["ask_advice"]["content"])
+
+        self.assertEqual(
+            template_payloads["share_update"]["title"],
+            "Update on A founder workflow platform for lean teams",
+        )
+        self.assertIn("Launching pilots this quarter", template_payloads["share_update"]["content"])
+        self.assertIn("Technical co-founder", template_payloads["share_update"]["content"])
+        self.assertIn("MVP / Saudi Arabia", template_payloads["share_update"]["content"])
+
+    def test_non_free_intent_templates_fallback_to_dot_placeholders_when_profile_is_missing(self):
+        self.profile.bio = ""
+        self.profile.country = ""
+        self.profile.stage = None
+        self.profile.one_liner = None
+        self.profile.looking_for_type = None
+        self.profile.looking_for_skills = None
+        self.profile.cofounder_commitment = None
+        self.profile.founder_timeline = None
+        self.profile.skills = None
+        self.profile.onboarding_answers = {}
+        self.profile.save()
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("Create Post"))
+
+        self.assertEqual(response.status_code, 200)
+        template_payloads = response.context["template_payloads"]
+
+        self.assertEqual(
+            template_payloads["find_cofounder"]["title"],
+            "Looking for [who I'm looking for] to build [what I'm building]",
+        )
+        self.assertIn("[What I'm building]", template_payloads["find_cofounder"]["content"])
+        self.assertIn("[Who I'm looking for]", template_payloads["find_cofounder"]["content"])
+        self.assertEqual(
+            template_payloads["ask_advice"]["title"],
+            "Need advice on [the challenge I'm facing]",
+        )
+        self.assertIn("[Context]", template_payloads["ask_advice"]["content"])
+        self.assertIn("[The challenge I'm facing]", template_payloads["ask_advice"]["content"])
+        self.assertEqual(
+            template_payloads["share_update"]["title"],
+            "Update on [What I'm building]",
+        )
+        self.assertIn("[What we shipped / achieved]", template_payloads["share_update"]["content"])
+        self.assertIn("Building in [Industry / Stage / Location]", template_payloads["share_update"]["content"])
+
+
+class PostContentFormattingTests(TestCase):
+    def test_render_post_content_html_formats_bold_and_italic_markers(self):
+        post = Post(
+            title="Formatting",
+            content="This is **bold** and this is *italic*.",
+        )
+        post.mentions_cache = []
+
+        rendered = _render_post_content_html(post)
+
+        self.assertIn("<strong>bold</strong>", rendered)
+        self.assertIn("<em>italic</em>", rendered)
+        self.assertNotIn("**bold**", rendered)
+        self.assertNotIn("*italic*", rendered)
+
+    def test_render_post_title_html_formats_bold_markers(self):
+        rendered = _render_post_title_html("A **bold** title")
+
+        self.assertIn("<strong>bold</strong>", rendered)
+        self.assertNotIn("**bold**", rendered)
 
 
 @override_settings(
@@ -1001,6 +1214,7 @@ class MessageAttachmentStorageTests(TestCase):
         self.assertEqual(upload_extra_args["ServerSideEncryption"], "AES256")
 
 
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
 class MessagingConversationNormalizationTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -1013,8 +1227,16 @@ class MessagingConversationNormalizationTests(TestCase):
             password="safe-password-123",
             full_name="Messages Partner",
         )
-        Profile.objects.create(user=self.user, full_name="Messages Owner")
-        Profile.objects.create(user=self.other_user, full_name="Messages Partner")
+        Profile.objects.create(
+            user=self.user,
+            full_name="Messages Owner",
+            has_accepted_platform_agreement=True,
+        )
+        Profile.objects.create(
+            user=self.other_user,
+            full_name="Messages Partner",
+            has_accepted_platform_agreement=True,
+        )
         self.client.force_login(self.user)
 
     def _create_private_conversation(self, *, created_by):

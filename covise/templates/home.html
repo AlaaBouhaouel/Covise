@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>CoVise | Home</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'home.css' %}?v=20260419x">
+    <link rel="stylesheet" href="{% static 'home.css' %}?v=20260420i">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419h">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -108,7 +108,7 @@
                             <div class="activity-feed" style="border: 0; border-radius: 0; background: transparent;"></div>
                         </div>
                     </div>
-                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile">
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile" title="Open your profile"{% if not ui_user.avatar_url %} data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}"{% endif %}>
                         {% if ui_user.avatar_url %}
                         <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
                         {% else %}
@@ -263,14 +263,22 @@
                 <div class="home-primary">
                     <div class="home-section-head">
                         <h1 class="home-section-title">Network</h1>
-                        <button class="mobile-filter-toggle" id="mobileFilterToggle" type="button" aria-expanded="false" aria-controls="mobileFilterDrawer">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M4 7h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                <path d="M7 12h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                <path d="M10 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                            </svg>
-                            <span>Filter</span>
-                        </button>
+                        <div class="home-section-actions">
+                            <button class="mobile-search-toggle" id="mobileSearchToggle" type="button" aria-expanded="false" aria-controls="mobileSearchSheet" aria-label="Open search">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"></circle>
+                                    <path d="M16 16l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                                </svg>
+                            </button>
+                            <button class="mobile-filter-toggle" id="mobileFilterToggle" type="button" aria-expanded="false" aria-controls="mobileFilterDrawer">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 7h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M7 12h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M10 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                <span>Filter</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="mobile-filter-backdrop" id="mobileFilterBackdrop" hidden></div>
                     <div class="post-filter-row" id="mobileFilterDrawer">
@@ -313,6 +321,24 @@
                             <option value="contacts">Contacts only</option>
                         </select>
                     </div>
+                    <section class="mobile-search-sheet" id="mobileSearchSheet" hidden aria-hidden="true" aria-label="Search CoVise">
+                        <div class="mobile-search-sheet-head">
+                            <button class="mobile-search-close" id="mobileSearchClose" type="button" aria-label="Close search">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="mobile-search-field">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="11" cy="11" r="7"></circle>
+                                <path d="M20 20l-3.5-3.5"></path>
+                            </svg>
+                            <input id="homeMobileSearch" type="search" placeholder="Search people, posts, or topics..." aria-label="Search people, posts, or topics" autocomplete="off" aria-haspopup="listbox" aria-expanded="false" aria-controls="mobileHomeSearchResults">
+                        </div>
+                        <div class="home-search-results mobile-search-results" id="mobileHomeSearchResults" role="listbox" hidden></div>
+                    </section>
 
                     <section class="feed-shell" data-demo="The feed keeps you close to founder momentum, product progress, and community updates in one wide stream." style="width: 100%; padding: 0 0 24px;">
                  <div class="feed-fetch-indicator feed-fetch-indicator-top" data-feed-fetch-indicator="top" aria-hidden="true" aria-live="polite" aria-label="Refreshing feed">
@@ -356,7 +382,47 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button class="menu-btn" type="button" aria-label="More actions" title="Open post actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                <details class="post-more-menu">
+                                    <summary class="menu-btn" aria-label="More actions" title="Open post actions">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </summary>
+                                    <div class="post-more-dropdown">
+                                        {% if post.user.id != request.user.id %}
+                                        <a class="feed-post-menu-action feed-post-menu-action--request" href="{% url 'Start Private Conversation' post.user.id %}">
+                                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                                            <span>Request</span>
+                                        </a>
+                                        <form method="post" action="{% url 'Toggle Block User' post.user.id %}">
+                                            {% csrf_token %}
+                                            <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
+                                                <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                                                <span>Block</span>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'Report User Profile' post.user.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="report_reason" value="Reported from home feed post menu">
+                                            <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
+                                                <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                                                <span>Report</span>
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <button class="feed-post-menu-action feed-post-menu-action--disabled" type="button" disabled>
+                                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                                            <span>Request</span>
+                                        </button>
+                                        <button class="feed-post-menu-action feed-post-menu-action--disabled" type="button" disabled>
+                                            <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                                            <span>Block</span>
+                                        </button>
+                                        <button class="feed-post-menu-action feed-post-menu-action--disabled" type="button" disabled>
+                                            <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                                            <span>Report</span>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </details>
                             </div>
                             <div class="structured-post-tools">
                                     <div class="structured-badges">
@@ -368,7 +434,7 @@
                         </div>
                         <div class="structured-post-link">
                             <a class="unstyled-link" href="{% url 'Post Detail' post.id %}">
-                                <div class="structured-post-heading">{{ post.feed_title }}</div>
+                                <div class="structured-post-heading">{{ post.feed_title_html|safe }}</div>
                             </a>
                             <div class="structured-post-body-wrap">
                                 <div class="structured-post-body is-clamped" data-post-body>{{ post.content_html|safe }}</div>
@@ -565,6 +631,10 @@
                             if (!side || side === 'bottom') bottomLoadIntent = 0;
                         }
 
+                        function mobileOverlayIsOpen() {
+                            return document.body.classList.contains('mobile-filter-open') || document.body.classList.contains('mobile-search-open');
+                        }
+
                         function pageScrollTop() {
                             return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
                         }
@@ -658,6 +728,10 @@
                             lastScrollTop = pageScrollTop();
                         });
                         window.addEventListener('wheel', function(event) {
+                            if (mobileOverlayIsOpen()) {
+                                resetLoadIntent();
+                                return;
+                            }
                             updateFeedLoaderPosition();
                             if (event.deltaY < -10 && isNearTop()) {
                                 registerLoadIntent('top', Math.abs(event.deltaY));
@@ -670,10 +744,20 @@
                             }
                         }, { passive: true });
                         window.addEventListener('touchstart', function(event) {
+                            if (mobileOverlayIsOpen()) {
+                                touchStartY = null;
+                                resetLoadIntent();
+                                return;
+                            }
                             if (!event.touches || !event.touches.length) return;
                             touchStartY = event.touches[0].clientY;
                         }, { passive: true });
                         window.addEventListener('touchmove', function(event) {
+                            if (mobileOverlayIsOpen()) {
+                                touchStartY = null;
+                                resetLoadIntent();
+                                return;
+                            }
                             if (touchStartY === null || !event.touches || !event.touches.length) return;
                             updateFeedLoaderPosition();
                             var currentY = event.touches[0].clientY;
@@ -693,6 +777,10 @@
                             touchStartY = null;
                             resetLoadIntent();
                         }, { passive: true });
+                        window.CoviseFeedResetLoadIntent = function() {
+                            touchStartY = null;
+                            resetLoadIntent();
+                        };
                         updateFeedLoaderPosition();
 
                         feedSection.querySelectorAll('.like-btn').forEach(function(button) {
@@ -792,9 +880,32 @@
                                 });
                             });
                         });
+                        feedSection.querySelectorAll('.post-more-menu').forEach(function(menu) {
+                            var summary = menu.querySelector('summary');
+                            if (!summary) return;
+                            summary.addEventListener('click', function() {
+                                if (menu.hasAttribute('open')) return;
+                                feedSection.querySelectorAll('.post-more-menu[open]').forEach(function(otherMenu) {
+                                    if (otherMenu !== menu) otherMenu.removeAttribute('open');
+                                });
+                            });
+                        });
+                        document.addEventListener('click', function(event) {
+                            feedSection.querySelectorAll('.post-more-menu[open]').forEach(function(menu) {
+                                if (!menu.contains(event.target)) {
+                                    menu.removeAttribute('open');
+                                }
+                            });
+                        });
+                        document.addEventListener('keydown', function(event) {
+                            if (event.key !== 'Escape') return;
+                            feedSection.querySelectorAll('.post-more-menu[open]').forEach(function(menu) {
+                                menu.removeAttribute('open');
+                            });
+                        });
                         feedSection.querySelectorAll('.structured-post').forEach(function(card) {
                             card.addEventListener('click', function(event) {
-                                if (event.target.closest('a, button, input, textarea, label')) return;
+                                if (event.target.closest('a, button, input, textarea, label, summary, details, form')) return;
                                 var postUrl = card.getAttribute('data-post-url');
                                 if (postUrl) window.location.href = postUrl;
                             });
@@ -836,22 +947,22 @@
                             <div class="stat-card">
                                 <div class="stat-value">{{ home_sidebar_metrics.verified_founders_count }}</div>
                                 <div class="stat-label">Verified Founders</div>
-                                <div class="stat-delta">+ {{ home_sidebar_metrics.verified_founders_today }} today</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">{{ home_sidebar_metrics.open_opportunities_count }}</div>
-                                <div class="stat-label">Open Opportunities</div>
-                                <div class="stat-delta">+ {{ home_sidebar_metrics.open_opportunities_week }} this week</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">{{ home_sidebar_metrics.new_matches_count }}</div>
-                                <div class="stat-label">New Members</div>
-                                <div class="stat-delta">+ {{ home_sidebar_metrics.new_matches_today }} today</div>
+                                <div class="stat-delta">{{ home_sidebar_metrics.verified_founders_delta }}</div>
                             </div>
                             <div class="stat-card">
                                 <div class="stat-value">{{ home_sidebar_metrics.waitlist_count }}</div>
-                                <div class="stat-label">People In the waitlist</div>
-                                <div class="stat-delta">+ {{ home_sidebar_metrics.same_domain_week }} this week</div>
+                                <div class="stat-label">In The Waitlist</div>
+                                <div class="stat-delta">{{ home_sidebar_metrics.waitlist_delta }}</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ home_sidebar_metrics.countries_involved_count }}</div>
+                                <div class="stat-label">Countries Involved</div>
+                                <div class="stat-delta">{{ home_sidebar_metrics.countries_involved_delta }}</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ home_sidebar_metrics.posts_count }}</div>
+                                <div class="stat-label">Posts You Posted</div>
+                                <div class="stat-delta">{{ home_sidebar_metrics.posts_delta }}</div>
                             </div>
                         </div>
                     </article>
@@ -1384,16 +1495,25 @@
             }
         }
         var input = document.getElementById('homeHeaderSearch');
+        var mobileSearchInput = document.getElementById('homeMobileSearch');
         var sortFilter = document.getElementById('postSortFilter');
         var typeFilter = document.getElementById('postTypeFilter');
         var countryFilter = document.getElementById('postCountryFilter');
         var scopeFilter = document.getElementById('postScopeFilter');
+        var mobileSearchToggle = document.getElementById('mobileSearchToggle');
+        var mobileSearchSheet = document.getElementById('mobileSearchSheet');
+        var mobileSearchClose = document.getElementById('mobileSearchClose');
+        var mobileSearchFeedHint = document.getElementById('mobileSearchFeedHint');
         var mobileFilterToggle = document.getElementById('mobileFilterToggle');
         var mobileFilterDrawer = document.getElementById('mobileFilterDrawer');
         var mobileFilterBackdrop = document.getElementById('mobileFilterBackdrop');
         var mobileFilterClose = document.getElementById('mobileFilterClose');
         var mobileFilterQuery = window.matchMedia('(max-width: 520px)');
+        var mobileFilterTouchStartY = null;
+        var mobileFilterTouchDeltaY = 0;
+        var mobileFilterSwipeActive = false;
         var searchResults = document.getElementById('homeSearchResults');
+        var mobileSearchResults = document.getElementById('mobileHomeSearchResults');
         var searchUsersDataNode = document.getElementById('homeSearchableUsersData');
         var posts = Array.prototype.slice.call(document.querySelectorAll('.structured-feed .structured-post[data-post-url]'));
         if (!input) return;
@@ -1401,6 +1521,7 @@
         var searchableUsers = [];
         var activeUserIndex = -1;
         var currentUserMatches = [];
+        var currentSearchQuery = input.value || '';
         if (searchUsersDataNode) {
             try {
                 searchableUsers = JSON.parse(searchUsersDataNode.textContent || '[]');
@@ -1424,11 +1545,61 @@
             return String(value || '').trim().toLowerCase();
         }
 
+        function mobileSearchIsOpen() {
+            return document.body.classList.contains('mobile-search-open');
+        }
+
+        function getSearchInputs() {
+            return [input, mobileSearchInput].filter(Boolean);
+        }
+
+        function getSearchResultContainers() {
+            return [searchResults, mobileSearchResults].filter(Boolean);
+        }
+
+        function getActiveSearchInput() {
+            if (mobileSearchIsOpen() && mobileFilterQuery.matches && mobileSearchInput) {
+                return mobileSearchInput;
+            }
+            return input;
+        }
+
+        function getActiveSearchResults() {
+            if (mobileSearchIsOpen() && mobileFilterQuery.matches && mobileSearchResults) {
+                return mobileSearchResults;
+            }
+            return searchResults;
+        }
+
+        function syncSearchInputs(sourceInput) {
+            getSearchInputs().forEach(function(searchInput) {
+                if (searchInput !== sourceInput && searchInput.value !== currentSearchQuery) {
+                    searchInput.value = currentSearchQuery;
+                }
+            });
+        }
+
+        function syncMobileSearchToggleState() {
+            if (!mobileSearchToggle) return;
+            var hasQuery = !!normalizeSearchText(currentSearchQuery);
+            mobileSearchToggle.classList.toggle('has-query', hasQuery);
+            mobileSearchToggle.setAttribute('aria-pressed', hasQuery ? 'true' : 'false');
+        }
+
+        function setSearchQuery(value, sourceInput) {
+            currentSearchQuery = String(value || '');
+            syncSearchInputs(sourceInput);
+            syncMobileSearchToggleState();
+        }
+
         function closeSearchResults() {
-            if (!searchResults) return;
-            searchResults.hidden = true;
-            searchResults.innerHTML = '';
-            input.setAttribute('aria-expanded', 'false');
+            getSearchResultContainers().forEach(function(resultsNode) {
+                resultsNode.hidden = true;
+                resultsNode.innerHTML = '';
+            });
+            getSearchInputs().forEach(function(searchInput) {
+                searchInput.setAttribute('aria-expanded', 'false');
+            });
             activeUserIndex = -1;
             currentUserMatches = [];
         }
@@ -1461,6 +1632,7 @@
         function rankedUserMatches(query) {
             var normalizedQuery = normalizeSearchText(query);
             if (!normalizedQuery) return [];
+            var limit = mobileSearchIsOpen() ? searchableUsers.length : 6;
 
             return searchableUsers
                 .map(function(user) {
@@ -1477,15 +1649,16 @@
                     if (b.score !== a.score) return b.score - a.score;
                     return a.name.localeCompare(b.name);
                 })
-                .slice(0, 6)
+                .slice(0, limit)
                 .map(function(item) {
                     return item.user;
                 });
         }
 
         function updateActiveSearchResult() {
-            if (!searchResults) return;
-            Array.prototype.slice.call(searchResults.querySelectorAll('.home-search-result')).forEach(function(resultNode, index) {
+            var activeResults = getActiveSearchResults();
+            if (!activeResults) return;
+            Array.prototype.slice.call(activeResults.querySelectorAll('.home-search-result')).forEach(function(resultNode, index) {
                 var isActive = index === activeUserIndex;
                 resultNode.classList.toggle('is-active', isActive);
                 resultNode.setAttribute('aria-selected', isActive ? 'true' : 'false');
@@ -1493,14 +1666,36 @@
             });
         }
 
-        function renderSearchResults(matches) {
-            if (!searchResults) return;
+        function renderSearchResults(matches, query) {
+            var activeInput = getActiveSearchInput();
+            var activeResults = getActiveSearchResults();
+            if (!activeInput || !activeResults) return;
             currentUserMatches = matches;
             activeUserIndex = matches.length ? Math.min(activeUserIndex, matches.length - 1) : -1;
-            searchResults.innerHTML = '';
+            getSearchResultContainers().forEach(function(resultsNode) {
+                if (!resultsNode) return;
+                resultsNode.hidden = resultsNode !== activeResults;
+                if (resultsNode !== activeResults) {
+                    resultsNode.innerHTML = '';
+                }
+            });
+            activeResults.innerHTML = '';
+
+            if (!normalizeSearchText(query)) {
+                closeSearchResults();
+                return;
+            }
 
             if (!matches.length) {
-                closeSearchResults();
+                var emptyMessage = document.createElement('div');
+                emptyMessage.className = 'home-search-results-empty';
+                emptyMessage.textContent = mobileSearchIsOpen()
+                    ? 'No people match that search yet. The feed is still filtering while you type.'
+                    : 'No people match that search.';
+                activeResults.appendChild(emptyMessage);
+                activeResults.hidden = false;
+                activeInput.setAttribute('aria-expanded', 'true');
+                updateActiveSearchResult();
                 return;
             }
 
@@ -1547,11 +1742,11 @@
 
                 resultLink.appendChild(avatar);
                 resultLink.appendChild(copy);
-                searchResults.appendChild(resultLink);
+                activeResults.appendChild(resultLink);
             });
 
-            searchResults.hidden = false;
-            input.setAttribute('aria-expanded', 'true');
+            activeResults.hidden = false;
+            activeInput.setAttribute('aria-expanded', 'true');
             updateActiveSearchResult();
         }
 
@@ -1577,12 +1772,21 @@
             trigger.setAttribute('aria-expanded', 'false');
             trigger.textContent = select.options[select.selectedIndex] ? select.options[select.selectedIndex].textContent : '';
 
-            var menu = document.createElement('div');
-            menu.className = 'filter-dropdown-menu';
-            menu.hidden = true;
-            menu.setAttribute('role', 'listbox');
+              var menu = document.createElement('div');
+              menu.className = 'filter-dropdown-menu';
+              menu.hidden = true;
+              menu.setAttribute('role', 'listbox');
+              menu.addEventListener('click', function(event) {
+                  event.stopPropagation();
+              });
+              menu.addEventListener('touchstart', function(event) {
+                  event.stopPropagation();
+              }, { passive: true });
+              menu.addEventListener('touchmove', function(event) {
+                  event.stopPropagation();
+              }, { passive: true });
 
-            Array.prototype.slice.call(select.options).forEach(function(option) {
+              Array.prototype.slice.call(select.options).forEach(function(option) {
                 var optionButton = document.createElement('button');
                 optionButton.type = 'button';
                 optionButton.className = 'filter-dropdown-option' + (option.selected ? ' is-active' : '');
@@ -1627,8 +1831,18 @@
 
         [sortFilter, typeFilter, countryFilter, scopeFilter].forEach(enhanceFilterSelect);
 
+        function resetMobileFilterSwipe() {
+            mobileFilterTouchStartY = null;
+            mobileFilterTouchDeltaY = 0;
+            mobileFilterSwipeActive = false;
+            if (mobileFilterDrawer) {
+                mobileFilterDrawer.style.transform = '';
+            }
+        }
+
         function closeMobileFilterDrawer() {
             if (!mobileFilterDrawer || !mobileFilterToggle || !mobileFilterBackdrop) return;
+            resetMobileFilterSwipe();
             mobileFilterDrawer.classList.remove('is-open');
             mobileFilterToggle.setAttribute('aria-expanded', 'false');
             mobileFilterBackdrop.hidden = true;
@@ -1637,10 +1851,43 @@
 
         function openMobileFilterDrawer() {
             if (!mobileFilterDrawer || !mobileFilterToggle || !mobileFilterBackdrop) return;
+            closeMobileSearchSheet();
+            resetMobileFilterSwipe();
             mobileFilterDrawer.classList.add('is-open');
             mobileFilterToggle.setAttribute('aria-expanded', 'true');
             mobileFilterBackdrop.hidden = false;
             document.body.classList.add('mobile-filter-open');
+            if (typeof window.CoviseFeedResetLoadIntent === 'function') {
+                window.CoviseFeedResetLoadIntent();
+            }
+        }
+
+        function closeMobileSearchSheet() {
+            if (!mobileSearchSheet || !mobileSearchToggle) return;
+            mobileSearchSheet.hidden = true;
+            mobileSearchSheet.setAttribute('aria-hidden', 'true');
+            mobileSearchToggle.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('mobile-search-open');
+            closeSearchResults();
+            syncMobileSearchToggleState();
+        }
+
+        function openMobileSearchSheet() {
+            if (!mobileSearchSheet || !mobileSearchToggle || !mobileSearchInput) return;
+            closeMobileFilterDrawer();
+            mobileSearchSheet.hidden = false;
+            mobileSearchSheet.setAttribute('aria-hidden', 'false');
+            mobileSearchToggle.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('mobile-search-open');
+            setSearchQuery(currentSearchQuery, mobileSearchInput);
+            applyPostFilters();
+            if (typeof window.CoviseFeedResetLoadIntent === 'function') {
+                window.CoviseFeedResetLoadIntent();
+            }
+            window.setTimeout(function() {
+                mobileSearchInput.focus();
+                if (currentSearchQuery) mobileSearchInput.setSelectionRange(currentSearchQuery.length, currentSearchQuery.length);
+            }, 20);
         }
 
         if (mobileFilterToggle && mobileFilterDrawer && mobileFilterBackdrop) {
@@ -1657,11 +1904,63 @@
             if (mobileFilterClose) {
                 mobileFilterClose.addEventListener('click', closeMobileFilterDrawer);
             }
+            mobileFilterDrawer.addEventListener('touchstart', function(event) {
+                if (!mobileFilterQuery.matches || !mobileFilterDrawer.classList.contains('is-open')) return;
+                if (!event.touches || event.touches.length !== 1) return;
+                if (event.target.closest('.filter-dropdown-menu')) return;
+                mobileFilterTouchStartY = event.touches[0].clientY;
+                mobileFilterTouchDeltaY = 0;
+                mobileFilterSwipeActive = mobileFilterDrawer.scrollTop <= 0;
+            }, { passive: true });
+            mobileFilterDrawer.addEventListener('touchmove', function(event) {
+                if (!mobileFilterSwipeActive || mobileFilterTouchStartY === null) return;
+                if (!event.touches || event.touches.length !== 1) return;
+                var currentY = event.touches[0].clientY;
+                var deltaY = Math.max(0, currentY - mobileFilterTouchStartY);
+                mobileFilterTouchDeltaY = deltaY;
+                mobileFilterDrawer.style.transform = 'translateY(' + Math.min(deltaY, 180) + 'px)';
+            }, { passive: true });
+            mobileFilterDrawer.addEventListener('touchend', function() {
+                if (!mobileFilterSwipeActive) {
+                    resetMobileFilterSwipe();
+                    return;
+                }
+                if (mobileFilterTouchDeltaY > 90) {
+                    closeMobileFilterDrawer();
+                    return;
+                }
+                resetMobileFilterSwipe();
+            }, { passive: true });
             window.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') closeMobileFilterDrawer();
             });
             mobileFilterQuery.addEventListener('change', function(event) {
                 if (!event.matches) closeMobileFilterDrawer();
+            });
+        }
+
+        if (mobileSearchToggle && mobileSearchSheet && mobileSearchInput) {
+            mobileSearchToggle.addEventListener('click', function() {
+                if (!mobileFilterQuery.matches) return;
+                if (mobileSearchIsOpen()) {
+                    closeMobileSearchSheet();
+                } else {
+                    openMobileSearchSheet();
+                }
+            });
+            if (mobileSearchClose) {
+                mobileSearchClose.addEventListener('click', closeMobileSearchSheet);
+            }
+            mobileSearchSheet.addEventListener('click', function(event) {
+                if (event.target === mobileSearchSheet) {
+                    closeMobileSearchSheet();
+                }
+            });
+            window.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') closeMobileSearchSheet();
+            });
+            mobileFilterQuery.addEventListener('change', function(event) {
+                if (!event.matches) closeMobileSearchSheet();
             });
         }
 
@@ -1674,7 +1973,7 @@
                 if (itemTrigger) itemTrigger.setAttribute('aria-expanded', 'false');
             });
             if (searchResults && !searchResults.hidden && !input.closest('.home-header-search').contains(event.target)) {
-                closeSearchResults();
+                if (!mobileSearchIsOpen()) closeSearchResults();
             }
         });
 
@@ -1703,13 +2002,13 @@
         }
 
         function applyPostFilters() {
-            var query = input.value.trim().toLowerCase();
+            var query = normalizeSearchText(currentSearchQuery);
             var selectedSort = sortFilter ? sortFilter.value.trim().toLowerCase() : 'date';
             var selectedType = typeFilter ? typeFilter.value.trim().toLowerCase() : '';
             var selectedCountry = countryFilter ? countryFilter.value.trim().toLowerCase() : '';
             var selectedScope = scopeFilter ? scopeFilter.value.trim().toLowerCase() : 'all';
             sortPosts(selectedSort);
-            renderSearchResults(rankedUserMatches(query));
+            renderSearchResults(rankedUserMatches(query), query);
             var matches = 0;
             posts.forEach(function(post) {
                 var matchesText = !query || post.textContent.toLowerCase().indexOf(query) !== -1;
@@ -1720,15 +2019,27 @@
                 post.hidden = !visible;
                 if (visible) matches += 1;
             });
+            if (mobileSearchFeedHint) {
+                if (!query) {
+                    mobileSearchFeedHint.textContent = 'Search finds people across CoVise and filters the feed while you type.';
+                } else {
+                    mobileSearchFeedHint.textContent = '"' + currentSearchQuery.trim() + '" is filtering ' + matches + ' feed post' + (matches === 1 ? '' : 's') + ' while showing matching people.';
+                }
+            }
             emptyState.hidden = (!query && !selectedType && !selectedCountry && selectedScope === 'all' && selectedSort === 'date') || matches > 0;
         }
 
-        input.addEventListener('input', function() {
+        function handleSearchInput(event) {
             activeUserIndex = -1;
+            setSearchQuery(event.target.value, event.target);
             applyPostFilters();
-        });
-        input.addEventListener('focus', applyPostFilters);
-        input.addEventListener('keydown', function(event) {
+        }
+
+        function handleSearchFocus() {
+            applyPostFilters();
+        }
+
+        function handleSearchKeydown(event) {
             if (!currentUserMatches.length) {
                 if (event.key === 'Escape') closeSearchResults();
                 return;
@@ -1757,11 +2068,18 @@
             if (event.key === 'Escape') {
                 closeSearchResults();
             }
+        }
+
+        [input, mobileSearchInput].filter(Boolean).forEach(function(searchInput) {
+            searchInput.addEventListener('input', handleSearchInput);
+            searchInput.addEventListener('focus', handleSearchFocus);
+            searchInput.addEventListener('keydown', handleSearchKeydown);
         });
         if (sortFilter) sortFilter.addEventListener('change', applyPostFilters);
         if (typeFilter) typeFilter.addEventListener('change', applyPostFilters);
         if (countryFilter) countryFilter.addEventListener('change', applyPostFilters);
         if (scopeFilter) scopeFilter.addEventListener('change', applyPostFilters);
+        setSearchQuery(currentSearchQuery, input);
         applyPostFilters();
     })();
 </script>
@@ -1860,6 +2178,7 @@
         setTimeout(tick, 800);
     })();
 </script>
+<script src="{% static 'avatar_fallback.js' %}?v=20260420a"></script>
 </body>
 </html>
 

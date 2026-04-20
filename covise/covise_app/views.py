@@ -748,6 +748,31 @@ def _waitlist_to_onboarding_initial_answers(waitlist_source):
     return _clean_onboarding_answers(initial_answers)
 
 
+def _onboarding_show_if_matches(show_if, answers):
+    if not show_if:
+        return True
+    if isinstance(show_if, dict):
+        any_of = show_if.get("any_of")
+        if isinstance(any_of, list):
+            return any(_onboarding_show_if_matches(rule, answers) for rule in any_of)
+        field = str(show_if.get("field", "")).strip()
+        expected = show_if.get("equals")
+        if field:
+            return answers.get(field) == expected
+    return True
+
+
+def _first_extended_onboarding_step_id(flow, answers):
+    steps = (flow or {}).get("steps", [])
+    for step in steps:
+        step_id = str((step or {}).get("step_id", "")).strip()
+        if not step_id or step_id == "S1_PROFILE_COMPLETION":
+            continue
+        if _onboarding_show_if_matches((step or {}).get("show_if"), answers):
+            return step_id
+    return "S1_PROFILE_COMPLETION"
+
+
 def _send_onboarding_failure_alert(user_email, reason, details):
     alert_email = WAITLIST_FAILURE_ALERT_EMAIL
     if resend is None or not RESEND_API_KEY or not alert_email:
@@ -1603,7 +1628,7 @@ def _render_post_content_html(post):
     last_index = 0
     for match in MENTION_PATTERN.finditer(content):
         start, end = match.span()
-        pieces.append(escape(content[last_index:start]))
+        pieces.append(_render_post_content_segment_html(content[last_index:start]))
         raw_handle = match.group(1)
         normalized = _normalize_handle_token(raw_handle)
         mention_data = mention_map.get(normalized)
@@ -1614,8 +1639,15 @@ def _render_post_content_html(post):
         else:
             pieces.append(escape(match.group(0)))
         last_index = end
-    pieces.append(escape(content[last_index:]))
+    pieces.append(_render_post_content_segment_html(content[last_index:]))
     return "".join(pieces).replace("\n", "<br>")
+
+
+def _render_post_content_segment_html(text):
+    escaped = escape(text or "")
+    escaped = re.sub(r"\*\*(?=\S)(.+?)(?<=\S)\*\*", r"<strong>\1</strong>", escaped, flags=re.DOTALL)
+    escaped = re.sub(r"(?<!\*)\*(?=\S)(.+?)(?<=\S)\*(?!\*)", r"<em>\1</em>", escaped, flags=re.DOTALL)
+    return escaped
 
 
 def _profile_country_label(profile):
@@ -1817,62 +1849,40 @@ def _home_sidebar_metrics(user):
 
 
 def _home_sidebar_metrics(user):
-    now = timezone.now()
-    day_ago = now - timezone.timedelta(days=1)
-    week_ago = now - timezone.timedelta(days=7)
+    start_of_day = timezone.make_aware(
+        timezone.datetime.combine(timezone.localdate(), timezone.datetime.min.time()),
+        timezone.get_current_timezone(),
+    )
+    approved_waitlist_entries = WaitlistEntry.objects.filter(status=WaitlistEntry.Status.APPROVED)
+    verified_founders_count = approved_waitlist_entries.count()
+    waitlist_count = WaitlistEmailVerification.objects.count()
+    posts_count = Post.objects.filter(user=user).count()
+    verified_founders_today = approved_waitlist_entries.filter(created_at__gte=start_of_day).count()
+    waitlist_today = WaitlistEmailVerification.objects.filter(created_at__gte=start_of_day).count()
+    posts_today = Post.objects.filter(user=user, created_at__gte=start_of_day).count()
 
-    waitlist_entries = WaitlistEntry.objects.all()
-    verified_founders_count = waitlist_entries.count()
-    verified_founders_today = waitlist_entries.filter(created_at__gte=day_ago).count()
-    waitlist_count = verified_founders_count
+    approved_country_keys = set()
+    for country, custom_country in approved_waitlist_entries.values_list("country", "custom_country"):
+        normalized_country = (custom_country or country or "").strip()
+        if normalized_country:
+            approved_country_keys.add(normalized_country.casefold())
 
-    onboarding_responses = (
-        OnboardingResponse.objects.exclude(flow_name="")
-        .exclude(answers={})
-    )
-    open_opportunities_count = onboarding_responses.values("email").distinct().count()
-    open_opportunities_week = (
-        onboarding_responses.filter(created_at__gte=week_ago)
-        .values("email")
-        .distinct()
-        .count()
-    )
+    countries_involved_today = set()
+    for country, custom_country in approved_waitlist_entries.filter(created_at__gte=start_of_day).values_list("country", "custom_country"):
+        normalized_country = (custom_country or country or "").strip()
+        if normalized_country:
+            countries_involved_today.add(normalized_country.casefold())
 
-    request_items = list(
-        ConversationRequest.objects.filter(
-            Q(requester=user) | Q(recipient=user),
-        ).select_related("requester", "recipient")
-    )
-    visible_request_items = [
-        item for item in request_items if not _is_blocked_pair(item.requester, item.recipient)
-    ]
-    accepted_this_week_count = sum(
-        1
-        for item in visible_request_items
-        if item.status == ConversationRequest.Status.ACCEPTED
-        and item.responded_at
-        and item.responded_at >= week_ago
-    )
-    pending_requests_count = sum(
-        1 for item in visible_request_items if item.status == ConversationRequest.Status.PENDING
-    )
-    new_matches_today = sum(
-        1 for item in visible_request_items if item.created_at and item.created_at >= day_ago
-    )
-
-    current_profile = getattr(user, "profile", None)
-    current_tokens = _profile_domain_tokens(current_profile)
-    blocked_ids = _blocked_user_ids(user)
-    same_domain_count = 0
-    if current_tokens:
-        candidate_profiles = (
-            Profile.objects.select_related("user")
-            .exclude(user=user)
-            .exclude(user_id__in=blocked_ids)
-        )
-        for profile in candidate_profiles:
-            if current_tokens.intersection(_profile_domain_tokens(profile)):
-                same_domain_count += 1
+    return {
+        "verified_founders_count": verified_founders_count,
+        "verified_founders_delta": f"{verified_founders_today}+ today",
+        "waitlist_count": waitlist_count,
+        "waitlist_delta": f"{waitlist_today}+ today",
+        "countries_involved_count": len(approved_country_keys),
+        "countries_involved_delta": f"{len(countries_involved_today)}+ today",
+        "posts_count": posts_count,
+        "posts_delta": f"{posts_today}+ today",
+    }
 
     return {
         "verified_founders_count": verified_founders_count,
@@ -1980,6 +1990,7 @@ def _attach_post_feed_metadata(posts):
         post.avatar_url = _profile_avatar_url(profile)
         post.mentions_cache = list(post.mentions.select_related("mentioned_user")) if hasattr(post, "mentions") else []
         post.feed_title = _build_post_feed_title(post)
+        post.feed_title_html = _render_post_title_html(post.feed_title)
         post.feed_skills = _profile_skill_labels(profile, limit=2)
         post.show_cofounder_badge = _profile_has_visible_cofounder_badge(profile)
         post.theme_class = _post_theme_class(post)
@@ -2018,6 +2029,10 @@ def _build_post_feed_title(post):
     sentence_break = raw_text.find(". ")
     title_source = raw_text if sentence_break == -1 else raw_text[:sentence_break + 1]
     return (title_source[:110].rstrip() + "…") if len(title_source) > 110 else title_source
+
+
+def _render_post_title_html(title):
+    return _render_post_content_segment_html(title or "")
 
 
 def _post_theme_class(post):
@@ -2331,14 +2346,23 @@ def _group_avatar_initials(group_name):
 
 
 def _private_conversation_queryset(user_a, user_b):
+    matched_users = [user.id for user in (user_a, user_b) if getattr(user, "id", None)]
+    if len(matched_users) != 2 or matched_users[0] == matched_users[1]:
+        return Conversation.objects.none()
+
     return (
         Conversation.objects.filter(
             conversation_type=Conversation.ConversationType.PRIVATE,
-            participants=user_a,
         )
-        .filter(participants=user_b)
-        .annotate(participant_count=Count("participants", distinct=True))
-        .filter(participant_count=2)
+        .annotate(
+            participant_count=Count("participants", distinct=True),
+            matched_participant_count=Count(
+                "participants",
+                filter=Q(participants__id__in=matched_users),
+                distinct=True,
+            ),
+        )
+        .filter(participant_count=2, matched_participant_count=2)
         .distinct()
     )
 
@@ -2400,10 +2424,16 @@ def _normalize_visible_private_conversations(user):
     private_conversations = (
         Conversation.objects.filter(
             conversation_type=Conversation.ConversationType.PRIVATE,
-            participants=user,
         )
-        .annotate(participant_count=Count("participants", distinct=True))
-        .filter(participant_count=2)
+        .annotate(
+            participant_count=Count("participants", distinct=True),
+            includes_viewer=Count(
+                "participants",
+                filter=Q(participants=user),
+                distinct=True,
+            ),
+        )
+        .filter(participant_count=2, includes_viewer=1)
         .prefetch_related("participants")
         .distinct()
     )
@@ -2950,12 +2980,53 @@ def _send_message_report_email(reporter, reported_user, message, reason):
 @login_required
 def create_post(request):
     full_name = (request.user.full_name or "").strip()
-    first_name = full_name.split()[0] if full_name else "User"
+    first_name = full_name.split()[0] if full_name else "..."
     profile = getattr(request.user, "profile", None)
+    onboarding_answers = getattr(profile, "onboarding_answers", {}) or {}
+    waitlist_snapshot = getattr(profile, "waitlist_snapshot", {}) or {}
 
     def _line_value(value, placeholder):
         text = str(value or "").strip()
         return text if text else placeholder
+
+    def _first_nonempty(*values):
+        for value in values:
+            text = _display_value(value, "").strip()
+            if text:
+                return text
+        return ""
+
+    def _first_skill_text(*values, limit=3):
+        for value in values:
+            labels = _top_skill_labels(value, limit=limit)
+            if labels:
+                return ", ".join(labels)
+        return ""
+
+    def _placeholder(label):
+        return f"[{label}]"
+
+    def _seed_value(*values, placeholder="[..]"):
+        return _first_nonempty(*values) or placeholder
+
+    def _join_nonempty(*values, separator=" / "):
+        parts = []
+        for value in values:
+            text = str(value or "").strip()
+            if text and not (text.startswith("[") and text.endswith("]")):
+                parts.append(text)
+        return separator.join(parts)
+
+    def _lower_lead(value):
+        text = str(value or "").strip()
+        if not text:
+            return "[..]"
+        if text.startswith("[") and text.endswith("]"):
+            inner = text[1:-1].strip()
+            if not inner:
+                return text
+            return f"[{inner[:1].lower() + inner[1:]}]"
+        return text[:1].lower() + text[1:]
 
     def _build_intro_template():
         based_in_parts = [
@@ -2963,20 +3034,24 @@ def create_post(request):
             str(getattr(profile, "country", "") or "").strip(),
         ]
         based_in = ", ".join(part for part in based_in_parts if part)
+        if not based_in:
+            based_in = (
+                _profile_country_label(profile)
+                or _display_value(onboarding_answers.get("home_country"), "")
+                or _display_value(onboarding_answers.get("target_gcc_market"), "")
+            )
         background = str(getattr(profile, "bio", "") or "").strip()
         looking_for = _display_value(getattr(profile, "looking_for_type", None))
         top_skills = _top_skill_labels(getattr(profile, "skills", None), limit=2)
+        intro_title_name = full_name or first_name or "me"
         return {
             "key": "introduction",
             "label": "Introduction",
             "description": "Introduce yourself before joining the conversation.",
             "post_type": Post.PostType.UPDATE,
-            "title": "Introduction",
+            "title": f"Hey this is {intro_title_name}",
             "content": "\n".join(
                 [
-                    "Name:",
-                    _line_value(full_name, "[Your name]"),
-                    "",
                     "Based in:",
                     _line_value(based_in, "[City, Country]"),
                     "",
@@ -2986,16 +3061,132 @@ def create_post(request):
                     "What I'm building or looking to build:",
                     "[Your venture or area of interest]",
                     "",
-                    "What I'm looking for on CoVise:",
+                    "What I'm looking for:",
                     _line_value(looking_for, "[Co-founder / Partners / Advice / Connections]"),
                     "",
                     "One thing I can help others with:",
                     _line_value(", ".join(top_skills), "[Your strongest skill or area of expertise]"),
                     "",
-                    "Happy to connect with other builders.",
+                    "Happy to connect with the network.",
                 ]
             ),
         }
+
+    location_value = _seed_value(
+        ", ".join(
+            part for part in [
+                str(getattr(profile, "city", "") or "").strip(),
+                str(getattr(profile, "country", "") or "").strip(),
+            ] if part
+        ),
+        _profile_country_label(profile),
+        onboarding_answers.get("home_country"),
+        onboarding_answers.get("target_gcc_market"),
+        placeholder=_placeholder("Location"),
+    )
+    venture_value = _seed_value(
+        getattr(profile, "one_liner", None),
+        onboarding_answers.get("one_liner"),
+        waitlist_snapshot.get("venture_summary"),
+        getattr(profile, "foreign_one_liner", None),
+        placeholder=_placeholder("What I'm building"),
+    )
+    stage_value = _seed_value(
+        getattr(profile, "stage", None),
+        onboarding_answers.get("stage"),
+        getattr(profile, "foreign_stage", None),
+        getattr(profile, "program_stage_focus", None),
+        getattr(profile, "investment_stage", None),
+        placeholder=_placeholder("Stage"),
+    )
+    industry_value = _seed_value(
+        getattr(profile, "industry", None),
+        onboarding_answers.get("industry"),
+        getattr(profile, "foreign_industry", None),
+        getattr(profile, "target_market", None),
+        placeholder=_placeholder("Industry"),
+    )
+    partner_value = _seed_value(
+        getattr(profile, "looking_for_skills", None),
+        onboarding_answers.get("looking_for_skills"),
+        getattr(profile, "looking_for_type", None),
+        onboarding_answers.get("looking_for_type"),
+        getattr(profile, "cofounders_needed", None),
+        onboarding_answers.get("cofounders_needed"),
+        placeholder=_placeholder("Who I'm looking for"),
+    )
+    skills_value = _first_skill_text(
+        getattr(profile, "skills", None),
+        onboarding_answers.get("skills"),
+        getattr(profile, "looking_for_skills", None),
+        onboarding_answers.get("looking_for_skills"),
+        limit=3,
+    )
+    bring_value = _seed_value(
+        getattr(profile, "bio", ""),
+        _join_nonempty(
+            _first_nonempty(getattr(profile, "current_role", None), onboarding_answers.get("current_role")),
+            skills_value,
+            separator=" | ",
+        ),
+        placeholder=_placeholder("What I bring"),
+    )
+    commitment_value = _seed_value(
+        getattr(profile, "cofounder_commitment", None),
+        onboarding_answers.get("cofounder_commitment"),
+        getattr(profile, "availability", None),
+        onboarding_answers.get("availability"),
+        getattr(profile, "commitment_level", None),
+        onboarding_answers.get("commitment_level"),
+        placeholder=_placeholder("Commitment expected"),
+    )
+    advice_context_value = _seed_value(
+        getattr(profile, "bio", ""),
+        _join_nonempty(venture_value, industry_value, stage_value, location_value),
+        placeholder=_placeholder("Context"),
+    )
+    advice_challenge_value = _seed_value(
+        getattr(profile, "local_partner_need", None),
+        onboarding_answers.get("local_partner_need"),
+        placeholder=_placeholder("The challenge I'm facing"),
+    )
+    advice_tried_value = _seed_value(
+        getattr(profile, "execution_history", None),
+        onboarding_answers.get("execution_history"),
+        getattr(profile, "founder_timeline", None),
+        onboarding_answers.get("founder_timeline"),
+        getattr(profile, "specialist_timeline", None),
+        onboarding_answers.get("specialist_timeline"),
+        getattr(profile, "foreign_timeline", None),
+        onboarding_answers.get("foreign_timeline"),
+        getattr(profile, "investor_timeline", None),
+        onboarding_answers.get("investor_timeline"),
+        placeholder=_placeholder("What I've already tried"),
+    )
+    guidance_value = _seed_value(
+        getattr(profile, "looking_for_type", None),
+        onboarding_answers.get("looking_for_type"),
+        getattr(profile, "investor_looking_for", None),
+        onboarding_answers.get("investor_looking_for"),
+        getattr(profile, "incubator_looking_for", None),
+        onboarding_answers.get("incubator_looking_for"),
+        placeholder=_placeholder("What I'm looking for"),
+    )
+    update_next_value = _seed_value(
+        getattr(profile, "founder_timeline", None),
+        onboarding_answers.get("founder_timeline"),
+        getattr(profile, "specialist_timeline", None),
+        onboarding_answers.get("specialist_timeline"),
+        getattr(profile, "foreign_timeline", None),
+        onboarding_answers.get("foreign_timeline"),
+        getattr(profile, "investor_timeline", None),
+        onboarding_answers.get("investor_timeline"),
+        placeholder=_placeholder("What's next"),
+    )
+    update_building_line = _seed_value(
+        _join_nonempty(industry_value, stage_value, location_value),
+        placeholder=_placeholder("Industry / Stage / Location"),
+    )
 
     template_payloads = {
         "introduction": _build_intro_template(),
@@ -3004,29 +3195,29 @@ def create_post(request):
             "label": "Find a Co-Founder",
             "description": "Pitch your venture and the partner you need.",
             "post_type": Post.PostType.IDEA,
-            "title": "Looking for a Co-Founder",
+            "title": f"Looking for {_lower_lead(partner_value)} to build {_lower_lead(venture_value)}",
             "content": "\n".join(
                 [
                     "What I'm building:",
-                    "[One sentence about your venture]",
+                    venture_value,
                     "",
                     "The problem I'm solving:",
-                    "[What gap or pain point this addresses]",
+                    advice_challenge_value,
                     "",
                     "Stage:",
-                    "[Idea / MVP / Early revenue]",
+                    stage_value,
                     "",
                     "Who I'm looking for:",
                     "[Technical / Business / Industry expert — be specific]",
                     "",
                     "What I bring:",
-                    "[Your skills, background, relevant experience]",
+                    bring_value,
                     "",
                     "Commitment expected:",
-                    "[Full-time / Part-time / Flexible]",
+                    commitment_value,
                     "",
                     "Location:",
-                    "[GCC-based / Remote / Open]",
+                    location_value,
                     "",
                     "If this resonates, reply below or request to connect.",
                 ]
@@ -3089,6 +3280,73 @@ def create_post(request):
             "content": "",
         },
     }
+    template_payloads["find_cofounder"]["title"] = (
+        f"Looking for {_lower_lead(partner_value)} to build {_lower_lead(venture_value)}"
+    )
+    template_payloads["find_cofounder"]["content"] = "\n".join(
+        [
+            "What I'm building:",
+            venture_value,
+            "",
+            "The problem I'm solving:",
+            advice_challenge_value,
+            "",
+            "Stage:",
+            stage_value,
+            "",
+            "Who I'm looking for:",
+            partner_value,
+            "",
+            "What I bring:",
+            bring_value,
+            "",
+            "Commitment expected:",
+            commitment_value,
+            "",
+            "Location:",
+            location_value,
+            "",
+            "If this resonates, reply below or request to connect.",
+        ]
+    )
+    template_payloads["ask_advice"]["title"] = (
+        f"Need advice on {_lower_lead(_seed_value(advice_challenge_value, venture_value, industry_value, placeholder=_placeholder('The challenge I need advice on')))}"
+    )
+    template_payloads["ask_advice"]["content"] = "\n".join(
+        [
+            "Context:",
+            advice_context_value,
+            "",
+            "The challenge I'm facing:",
+            advice_challenge_value,
+            "",
+            "What I've already tried:",
+            advice_tried_value,
+            "",
+            "What I'm looking for:",
+            guidance_value,
+            "",
+            "Any input appreciated.",
+        ]
+    )
+    template_payloads["share_update"]["title"] = f"Update on {venture_value}"
+    template_payloads["share_update"]["content"] = "\n".join(
+        [
+            "Company:",
+            venture_value,
+            "",
+            "What we shipped / achieved:",
+            _placeholder("What we shipped / achieved"),
+            "",
+            "What's next:",
+            update_next_value,
+            "",
+            "Where we need help:",
+            guidance_value,
+            "",
+            f"Building in {update_building_line}",
+        ]
+    )
     template_cards = [
         {
             "key": "find_cofounder",
@@ -5671,7 +5929,7 @@ def onboarding(request):
         initial_answers.pop("profile_links", None)
         profile_completion_complete = _has_profile_completion(profile)
         if requested_step == "intent" and profile_completion_complete:
-            start_step_id = "S2_INTENT_SETUP"
+            start_step_id = _first_extended_onboarding_step_id(flow, initial_answers)
         profile_has_accepted_agreement = bool(getattr(profile, "has_accepted_platform_agreement", False))
         final_target = redirect_url if next_url else reverse("Home")
         if profile_has_accepted_agreement:

@@ -92,7 +92,7 @@
                             </div>
                         </div>
                     </div>
-                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile"{% if not ui_user.avatar_url %} data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}"{% endif %}>
                         {% if ui_user.avatar_url %}
                         <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
                         {% else %}
@@ -383,5 +383,6 @@
         })();
     </script>
     <script src="{% static 'notifications.js' %}"></script>
+    <script src="{% static 'avatar_fallback.js' %}?v=20260420a"></script>
 </body>
 </html>

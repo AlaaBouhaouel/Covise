@@ -71,7 +71,7 @@
                             <path d="M15 18l-6-6 6-6"></path>
                         </svg>
                     </a>
-                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile"{% if not ui_user.avatar_url %} data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}"{% endif %}>
                         {% if ui_user.avatar_url %}
                         <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
                         {% else %}
@@ -116,7 +116,7 @@
                             {% endfor %}
                         </div>
                     </div>
-                    <h1 class="post-detail-title">{{ post.feed_title }}</h1>
+                    <h1 class="post-detail-title">{{ post.feed_title_html|safe }}</h1>
                     <div class="post-detail-content">{{ post.content_html|safe }}</div>
                     {% if post.feed_images %}
                     <div class="post-gallery post-gallery-detail post-gallery-count-{{ post.feed_image_count }}">
@@ -345,11 +345,12 @@
         }
         .post-detail-title {
             margin-top: 14px;
-            font-size: 1.12rem;
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+            font-size: 1.34rem;
             font-weight: 600;
             color: var(--white);
-            line-height: 1.2;
-            letter-spacing: -0.02em;
+            line-height: 1.16;
+            letter-spacing: -0.025em;
         }
         .post-detail-content {
             margin-top: 12px;
@@ -779,6 +780,9 @@
             }
             .post-detail-tools {
                 margin-left: 38px;
+            }
+            .post-detail-title {
+                font-size: 1.18rem;
             }
         }
     </style>
@@ -1382,5 +1386,6 @@
             });
         })();
     </script>
+    <script src="{% static 'avatar_fallback.js' %}?v=20260420a"></script>
 </body>
 </html>

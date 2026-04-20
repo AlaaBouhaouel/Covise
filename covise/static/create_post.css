@@ -137,16 +137,46 @@
 }
 
 .create-post-lock-badge {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
     width: fit-content;
     padding: 8px 14px;
     border-radius: 999px;
-    border: 1px solid rgba(120, 150, 255, 0.24);
-    background: rgba(120, 150, 255, 0.12);
-    color: #dbe8fb;
+    border: 1px solid rgba(255, 208, 92, 0.42);
+    background: linear-gradient(135deg, rgba(255, 202, 74, 0.24) 0%, rgba(255, 174, 25, 0.18) 100%);
+    color: #ffe9a8;
+    box-shadow: 0 12px 28px rgba(255, 181, 38, 0.16);
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+}
+
+.create-post-lock-badge::before {
+    content: "";
+    position: absolute;
+    inset: -50% -70%;
+    background: linear-gradient(118deg, transparent 34%, rgba(255, 251, 225, 0.08) 42%, rgba(255, 245, 196, 0.28) 50%, rgba(255, 250, 216, 0.46) 54%, rgba(255, 245, 196, 0.12) 59%, transparent 68%);
+    transform: translate3d(-74%, 0, 0);
+    animation: createPostBadgeShine 4.6s linear infinite;
+    pointer-events: none;
+    opacity: 0.9;
+    z-index: 0;
+}
+
+.create-post-lock-badge > * {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes createPostBadgeShine {
+    0% {
+        transform: translate3d(-72%, 0, 0);
+    }
+    100% {
+        transform: translate3d(72%, 0, 0);
+    }
 }
 
 .create-post-lock-copy {
@@ -156,8 +186,9 @@
 
 .create-post-lock-copy h2 {
     margin: 0;
-    font-family: 'Syne', sans-serif;
-    font-size: 1.08rem;
+    font-family: 'Darker Grotesque', sans-serif;
+    font-size: 0.98rem;
+    font-weight: 700;
     letter-spacing: -0.03em;
     color: #dbe8fb;
 }
@@ -219,8 +250,9 @@
 }
 
 .create-post-intent-name {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Darker Grotesque', sans-serif;
     font-size: 0.82rem;
+    font-weight: 700;
     color: #edf3ff;
     letter-spacing: -0.02em;
     line-height: 1.15;
@@ -374,8 +406,8 @@
 .create-post-editor-title {
     min-height: 72px;
     padding: calc(var(--spacing) * 2.2) calc(var(--spacing) * 2.2) calc(var(--spacing) * 0.9);
-    font-family: 'Syne', sans-serif;
-    font-size: 1.45rem;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.7rem;
     font-weight: 600;
     line-height: 1.1;
     letter-spacing: -0.04em;
@@ -398,7 +430,7 @@
 }
 
 .create-post-editor-title::placeholder {
-    font-family: 'Darker Grotesque', sans-serif;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     font-weight: 600;
     letter-spacing: -0.03em;
 }
@@ -518,7 +550,7 @@
     border-radius: 16px;
     background: rgba(8, 13, 24, 0.98);
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.34);
-    z-index: 40;
+    z-index: 280;
     backdrop-filter: blur(18px);
 }
 
@@ -545,7 +577,7 @@
 
 .create-post-select-option-title {
     display: block;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Darker Grotesque', sans-serif;
     font-size: 0.78rem;
     font-weight: 700;
 }
@@ -688,7 +720,6 @@
     color: #8a1030;
 }
 
-[data-theme="light"] .create-post-lock-badge,
 [data-theme="light"] .create-post-intent-button:hover,
 [data-theme="light"] .create-post-intent-button:focus-visible,
 [data-theme="light"] .create-post-intent-button.is-active,
@@ -701,6 +732,13 @@
     background: rgba(120, 164, 255, 0.12);
     border-color: rgba(76, 112, 181, 0.26);
     color: #1b2d55;
+}
+
+[data-theme="light"] .create-post-lock-badge {
+    border-color: rgba(227, 169, 33, 0.34);
+    background: linear-gradient(135deg, rgba(255, 220, 115, 0.32) 0%, rgba(255, 196, 63, 0.22) 100%);
+    color: #7a5400;
+    box-shadow: 0 12px 24px rgba(227, 169, 33, 0.12);
 }
 
 [data-theme="light"] .create-post-intent-button,
@@ -794,7 +832,23 @@
 
 @media (max-width: 820px) {
     .create-post-intent-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: center;
+        gap: 6px;
+        overflow: visible;
+        padding-bottom: 0;
+    }
+
+    .create-post-intent-button {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 0 2px;
+        justify-items: center;
+        text-align: center;
+        padding: 10px 8px;
+        min-height: 84px;
+        gap: 4px;
     }
 
     .create-post-editor-footer,
@@ -830,12 +884,53 @@
         right: auto;
         width: 100%;
         max-width: none;
+        max-height: calc(100dvh - var(--app-mobile-nav-height) - env(safe-area-inset-bottom) - 140px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
     }
 }
 
 @media (max-width: 640px) {
     .create-post-shell {
         max-width: none;
+    }
+
+    .create-post-intent-copy,
+    .create-post-intent-button:hover .create-post-intent-copy,
+    .create-post-intent-button:focus-visible .create-post-intent-copy {
+        display: none;
+        opacity: 0;
+        visibility: hidden;
+        transform: none;
+    }
+
+    .create-post-intent-section {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        backdrop-filter: none;
+        box-shadow: none;
+    }
+
+    .create-post-editor-section {
+        gap: 8px;
+    }
+
+    .create-post-editor-card {
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        backdrop-filter: none;
+        box-shadow: none;
+    }
+
+    .create-post-editor-card:focus-within {
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
     }
 
     
@@ -847,23 +942,45 @@
     }
 
     .create-post-lock-panel,
-    .create-post-intent-section,
     .create-post-context-section {
         padding: calc(var(--spacing) * 1.5);
     }
 
+    .create-post-intent-grid {
+        gap: 4px;
+    }
+
     .create-post-intent-button {
-        min-height: 88px;
+        min-height: 74px;
+        padding: 8px 6px;
+        border-radius: 12px;
+        gap: 3px;
+    }
+
+    .create-post-intent-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        font-size: 0.68rem;
+    }
+    .create-post-select-prefix{
+        font-size: 0.6rem;
+    }
+
+    .create-post-intent-name {
+        font-size: 0.96rem;
+        line-height: 1.08;
     }
 
     .create-post-intent-copy {
-        width: min(200px, calc(100vw - 32px));
-        font-size: 0.86rem;
+        width: min(170px, calc(100vw - 24px));
+        font-size: 0.78rem;
+        padding: 8px 10px;
     }
 
     .create-post-editor-title {
         padding: calc(var(--spacing) * 1.8) calc(var(--spacing) * 1.6) calc(var(--spacing) * 0.75);
-        font-size: 1.2rem;
+        font-size: 1.42rem;
     }
 
     .create-post-editor-body {

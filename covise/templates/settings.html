@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | Settings</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'settings.css' %}?v=20260419i">
+    <link rel="stylesheet" href="{% static 'settings.css' %}?v=20260420a">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419i">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -75,7 +75,7 @@
                             </div>
                         </div>
                     </div>
-                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile"{% if not ui_user.avatar_url %} data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}"{% endif %}>
                         {% if ui_user.avatar_url %}
                         <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
                         {% else %}
@@ -95,7 +95,7 @@
                     {% if ui_user.avatar_url %}
                     <img class="avatar" src="{{ ui_user.avatar_url }}" alt="{{ settings_page.display_name }} profile photo">
                     {% else %}
-                    <div class="avatar">{{ ui_user.avatar_initials }}</div>
+                    <div class="avatar" data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}">{{ ui_user.avatar_initials }}</div>
                     {% endif %}
                     <div>
                         <div class="profile-name">{{ settings_page.display_name }}</div>
@@ -128,7 +128,7 @@
                     <div class="settings-row"><div class="row-copy"><strong>Phone Number</strong></div><div class="row-control input-action"><input type="text" name="phone_number" value="{{ settings_page.phone_number }}"></div></div>
                     <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Security</strong><span>Password, sign-ins, and two-factor authentication.</span></div></div><a class="outline-btn" href="{% url 'Account Security' %}">Security</a></div>
                     <div class="settings-row"><div class="row-copy"><strong>Guidelines</strong><span>{% if settings_page.platform_agreement_accepted %}Accepted on {{ settings_page.platform_agreement_accepted_at|date:"M j, Y" }}{% else %}Review the community standards for posting, outreach, and collaboration.{% endif %}</span></div><div class="row-control input-action"><a class="outline-btn guidelines-btn" href="{% url 'Agreement' %}">{% if settings_page.platform_agreement_accepted %}View Guidelines{% else %}Read Guidelines{% endif %}</a></div></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Profile Photo</strong><span>Choose an image, then save your account changes. Max {{ profile_photo_max_size_mb }} MB.</span></div><div class="row-control photo-row">{% if ui_user.avatar_url %}<img class="avatar-image small-avatar" src="{{ ui_user.avatar_url }}" alt="{{ settings_page.display_name }} profile photo">{% else %}<span class="avatar small-avatar">{{ ui_user.avatar_initials }}</span>{% endif %}<input id="profilePhotoInput" name="profile_image" type="file" accept="image/*" data-max-size-bytes="{{ profile_photo_max_size_bytes }}" hidden><label class="outline-btn" for="profilePhotoInput" id="profilePhotoTrigger">Upload Photo</label><button class="text-link danger-link" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button><span id="profilePhotoHint" class="photo-row-note" data-default-text="Max {{ profile_photo_max_size_mb }} MB.">Max {{ profile_photo_max_size_mb }} MB.</span></div></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Profile Photo</strong><span>Choose an image, then save your account changes. Max {{ profile_photo_max_size_mb }} MB.</span></div><div class="row-control photo-row">{% if ui_user.avatar_url %}<img class="avatar-image small-avatar" src="{{ ui_user.avatar_url }}" alt="{{ settings_page.display_name }} profile photo">{% else %}<span class="avatar small-avatar" data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}">{{ ui_user.avatar_initials }}</span>{% endif %}<input id="profilePhotoInput" name="profile_image" type="file" accept="image/*" data-max-size-bytes="{{ profile_photo_max_size_bytes }}" hidden><label class="outline-btn" for="profilePhotoInput" id="profilePhotoTrigger">Upload Photo</label><button class="text-link danger-link" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button><span id="profilePhotoHint" class="photo-row-note" data-default-text="Max {{ profile_photo_max_size_mb }} MB.">Max {{ profile_photo_max_size_mb }} MB.</span></div></div>
                     <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="personal_data">Save Changes</button></div>
                 </div>
             </section>
@@ -1006,6 +1006,7 @@
         })();
     </script>
     <script src="{% static 'notifications.js' %}"></script>
+    <script src="{% static 'avatar_fallback.js' %}?v=20260420a"></script>
     <script>
         (function () {
             var header = document.querySelector('.app-shell-header');

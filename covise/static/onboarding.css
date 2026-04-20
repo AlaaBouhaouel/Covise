@@ -201,7 +201,7 @@ textarea {
 .progress-label,
 .field-label,
 .helper-text {
-    color: var(--onboarding-muted);
+    color: var(--onboarding-accent);
 }
 
 .hero-copy h1,
@@ -310,6 +310,8 @@ textarea {
 
 .field-label {
     display: block;
+    color: var(--onboarding-text);
+    font-size: 0.92rem;
 }
 
 .field-head {
@@ -829,6 +831,27 @@ textarea {
 
     .choice-grid {
         grid-template-columns: 1fr;
+        gap: calc(var(--onboarding-spacing) * 1.1);
+    }
+
+    .choice-card {
+        min-height: 0;
+        gap: calc(var(--onboarding-spacing) * 0.55);
+        padding: calc(var(--onboarding-spacing) * 1.5) calc(var(--onboarding-spacing) * 1.7);
+        border-radius: 18px;
+    }
+
+    .choice-card-title {
+        font-family: "Darker Grotesque", sans-serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        line-height: 1.05;
+    }
+
+    .choice-card-description {
+        font-size: 0.98rem;
+        line-height: 1.18;
     }
 
     .back-link {

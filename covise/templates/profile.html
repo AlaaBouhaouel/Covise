@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | Profile</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260419j">
+    <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260420a">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419j">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -110,7 +110,7 @@
                             </div>
                         </div>
                     </div>
-                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile">
+                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile"{% if not viewer_ui_user.avatar_url %} data-rotating-avatar data-avatar-seed="{{ viewer_ui_user.avatar_initials }}"{% endif %}>
                         {% if viewer_ui_user.avatar_url %}
                         <img class="profile-button-image" src="{{ viewer_ui_user.avatar_url }}" alt="{{ viewer_ui_user.display_name }} profile photo">
                         {% else %}
@@ -128,7 +128,7 @@
                         {% if ui_user.avatar_url %}
                         <img class="avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }}'s avatar">
                         {% else %}
-                        <div class="avatar">{{ ui_user.avatar_initials }}</div>
+                        <div class="avatar" data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}">{{ ui_user.avatar_initials }}</div>
                         {% endif %}
                         </a>
                     <div class="hero-main">
@@ -1041,5 +1041,6 @@
             });
         })();
     </script>
+    <script src="{% static 'avatar_fallback.js' %}?v=20260420a"></script>
 </body>
 </html>

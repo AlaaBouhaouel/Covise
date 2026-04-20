@@ -24,39 +24,9 @@
           "placeholder": "Founder @ X or Backend Engineer"
         },
         {
-          "id": "one_liner",
-          "type": "multi_line_text",
-          "label": "What are you building?",
-          "required": true,
-          "placeholder": "2-3 lines max about what you are building and for whom",
-          "max_chars": 220
-        },
-        {
-          "id": "looking_for_type",
-          "type": "single_select",
-          "label": "What are you looking for?",
-          "required": true,
-          "options": [
-            "Technical co-founder",
-            "Business / operational co-founder",
-            "Industry expert co-founder",
-            "Investor / backer",
-            "Strategic advisor",
-            "Local GCC partner"
-          ]
-        }
-      ]
-    },
-    {
-      "step_id": "S2_INTENT_SETUP",
-      "title": "Set your intent",
-      "progress_label": "Intent setup",
-      "description": "Tell us what you want from CoVise right now and who you want to discover more of.",
-      "fields": [
-        {
           "id": "user_type",
           "type": "single_select_card",
-          "label": "What best describes your profile?",
+          "label": "What best describes you?",
           "required": true,
           "options": [
             {
@@ -84,6 +54,28 @@
               "label": "Founder with an idea outside the GCC",
               "description": "I am based outside the GCC and exploring a local partner or market entry."
             }
+          ]
+        },
+        {
+          "id": "one_liner",
+          "type": "multi_line_text",
+          "label": "What are you building?",
+          "required": true,
+          "placeholder": "2-3 lines max about what you are building and for whom",
+          "max_chars": 220
+        },
+        {
+          "id": "looking_for_type",
+          "type": "single_select_card",
+          "label": "What are you looking for?",
+          "required": true,
+          "options": [
+            "Technical co-founder",
+            "Business / operational co-founder",
+            "Industry expert co-founder",
+            "Investor / backer",
+            "Strategic advisor",
+            "Local GCC partner"
           ]
         }
       ]

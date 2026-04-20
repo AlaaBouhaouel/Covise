@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | Onboarding</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'onboarding.css' %}?v=20260420c">
+    <link rel="stylesheet" href="{% static 'onboarding.css' %}?v=20260420e">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         (function() {
@@ -54,7 +54,7 @@
                     <div class="step-fields" id="step-fields"></div>
 
                     <div class="step-actions">
-                        <button type="button" class="action secondary finish-later-link" id="finish-later-btn">Skip</button>
+                        <button type="button" class="action secondary finish-later-link" id="finish-later-btn">Save and Enter</button>
                         <button type="button" class="action primary" id="next-btn">Continue</button>
                     </div>
                 </section>
@@ -74,7 +74,7 @@
             submitUrl: "{% url 'Onboarding Submit' %}",
         };
     </script>
-    <script src="{% static 'onboarding.js' %}?v=20260420c"></script>
+    <script src="{% static 'onboarding.js' %}?v=20260420e"></script>
     {% endif %}
 </body>
 </html>
