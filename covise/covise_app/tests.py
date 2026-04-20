@@ -16,7 +16,7 @@ from .messaging import deliver_media_message
 from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, OnboardingResponse, Post, PostImage, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
 from .context_processors import user_ui_context
 from .user_context import build_ui_user_context
-from .views import _serialize_message
+from .views import _safe_media_url, _serialize_message
 
 
 class WaitlistEntryModelTests(TestCase):
@@ -845,6 +845,21 @@ class PostImageStorageTests(TestCase):
 
                 self.assertFalse(image_field.storage._use_s3())
                 self.assertEqual(image_url, "/media/post_images/local.png")
+        finally:
+            shutil.rmtree(temp_media_root, ignore_errors=True)
+
+    def test_safe_media_url_keeps_local_media_relative(self):
+        temp_media_root = mkdtemp(dir=".")
+        try:
+            with override_settings(
+                DEBUG=True,
+                MEDIA_ROOT=temp_media_root,
+                MEDIA_URL="/media/",
+                SITE_URL="https://covise.net",
+            ):
+                image_field = PostImage._meta.get_field("image")
+                field_file = image_field.attr_class(instance=PostImage(), field=image_field, name="post_images/local.png")
+                self.assertEqual(_safe_media_url(field_file), "/media/post_images/local.png")
         finally:
             shutil.rmtree(temp_media_root, ignore_errors=True)
 

@@ -3314,9 +3314,9 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
         z-index: 220;
     }
 
-    /*.home-secondary.is-open {
+    .home-secondary.is-open {
         transform: translateX(0);
-    }*/
+    }
 
     .home-secondary-close {
         display: none;

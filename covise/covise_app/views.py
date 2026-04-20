@@ -126,7 +126,7 @@ def _safe_media_url(field_file):
         url = field_file.url
     except Exception:
         return ""
-    return _absolute_site_url(url)
+    return url
 
 
 def _display_name(user):
