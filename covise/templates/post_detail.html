@@ -118,6 +118,11 @@
                     </div>
                     <h1 class="post-detail-title">{{ post.feed_title_html|safe }}</h1>
                     <div class="post-detail-content">{{ post.content_html|safe }}</div>
+                    {% if post.quote_content %}
+                    <div class="post-quote-block" data-qc="{{ post.quote_color|default:'#1e3a5f' }}">
+                        <p class="post-quote-text">{{ post.quote_content }}</p>
+                    </div>
+                    {% endif %}
                     {% if post.feed_images %}
                     <div class="post-gallery post-gallery-detail post-gallery-count-{{ post.feed_image_count }}">
                         {% for image in post.feed_images %}
@@ -1396,5 +1401,6 @@
         })();
     </script>
     <script src="{% static 'avatar_fallback.js' %}?v=20260420a"></script>
+    <script>document.querySelectorAll('.post-quote-block[data-qc]').forEach(function(el){el.style.background=el.getAttribute('data-qc');});</script>
 </body>
 </html>

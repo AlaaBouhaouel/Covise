@@ -729,6 +729,8 @@ class Post(models.Model):
     theme_color=models.CharField(max_length=20, choices=ThemeColor.choices, default=ThemeColor.DEFAULT)
     image=models.ImageField(upload_to="post_images/", storage=post_image_storage, blank=True, null=True)
     content=models.TextField()
+    quote_content=models.TextField(blank=True, default="")
+    quote_color=models.CharField(max_length=20, blank=True, default="")
     likes_number=models.IntegerField(default=0)
     comments_number=models.IntegerField(default=0)
     created_at=models.DateTimeField(auto_now_add=True)

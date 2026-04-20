@@ -1703,6 +1703,24 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
     background: rgba(120, 150, 255, 0.18);
     color: var(--white);
 }
+.post-quote-block {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1e3a5f;
+    margin-top: calc(var(--spacing) * 0.75);
+}
+
+.post-quote-text {
+    margin: 0;
+    padding: calc(var(--spacing) * 1.1) calc(var(--spacing) * 1.4);
+    font-family: 'Darker Grotesque', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 500;
+    font-style: italic;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.88);
+}
+
 .post-gallery {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

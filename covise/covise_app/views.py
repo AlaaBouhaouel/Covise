@@ -2834,11 +2834,23 @@ def _merge_private_conversations(user_a, user_b):
         return None
 
     with transaction.atomic():
-        conversations = list(
+        ordered_conversation_ids = list(
             _private_conversation_queryset(user_a, user_b)
-            .select_for_update()
             .order_by("-last_message_at", "-updated_at", "-created_at")
+            .values_list("id", flat=True)
         )
+        if not ordered_conversation_ids:
+            return None
+
+        locked_conversations = {
+            conversation.id: conversation
+            for conversation in Conversation.objects.filter(id__in=ordered_conversation_ids).select_for_update()
+        }
+        conversations = [
+            locked_conversations[conversation_id]
+            for conversation_id in ordered_conversation_ids
+            if conversation_id in locked_conversations
+        ]
         if not conversations:
             return None
 
@@ -3919,6 +3931,9 @@ def create_post(request):
     title = request.POST.get("title", "").strip()
     post_type = request.POST.get("post_type", Post.PostType.UPDATE).strip()
     content = request.POST.get("content", "").strip()
+    quote_content = request.POST.get("quote_content", "").strip()
+    raw_quote_color = request.POST.get("quote_color", "").strip()
+    quote_color = raw_quote_color if re.match(r'^#[0-9a-fA-F]{3,6}$', raw_quote_color) else ""
     uploaded_images = [image for image in request.FILES.getlist("images") if image]
     if not uploaded_images:
         legacy_image = request.FILES.get("image")
@@ -3929,6 +3944,8 @@ def create_post(request):
         "title": title,
         "post_type": post_type,
         "content": content,
+        "quote_content": quote_content,
+        "quote_color": quote_color,
     }
 
     valid_post_types = {choice for choice, _label in Post.PostType.choices}
@@ -3955,6 +3972,8 @@ def create_post(request):
             post_type=post_type,
             theme_color=Post.ThemeColor.DEFAULT,
             content=content,
+            quote_content=quote_content,
+            quote_color=quote_color,
         )
         for index, image_file in enumerate(uploaded_images[:6]):
             PostImage.objects.create(

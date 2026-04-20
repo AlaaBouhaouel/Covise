@@ -1726,3 +1726,47 @@ class MessagingConversationNormalizationTests(TestCase):
             response.context["message_error"],
             "We couldn't open this conversation right now. Please try again.",
         )
+
+    def test_accept_request_succeeds_with_duplicate_private_threads_present(self):
+        incoming_request = ConversationRequest.objects.create(
+            requester=self.other_user,
+            recipient=self.user,
+            status=ConversationRequest.Status.PENDING,
+        )
+        older_conversation = self._create_private_conversation(created_by=self.user)
+        newer_conversation = self._create_private_conversation(created_by=self.other_user)
+
+        older_message = Message.objects.create(
+            conversation=older_conversation,
+            sender=self.user,
+            body="Older thread",
+        )
+        newer_message = Message.objects.create(
+            conversation=newer_conversation,
+            sender=self.other_user,
+            body="Newer thread",
+        )
+        older_conversation.last_message_at = older_message.created_at
+        older_conversation.save(update_fields=["last_message_at"])
+        newer_conversation.last_message_at = newer_message.created_at
+        newer_conversation.save(update_fields=["last_message_at"])
+
+        response = self.client.post(
+            reverse("Respond To Conversation Request", args=[incoming_request.id, "accept"])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["ok"])
+        incoming_request.refresh_from_db()
+        self.assertEqual(incoming_request.status, ConversationRequest.Status.ACCEPTED)
+        self.assertIsNotNone(incoming_request.conversation_id)
+        merged_conversations = (
+            Conversation.objects.filter(
+                conversation_type=Conversation.ConversationType.PRIVATE,
+                participants=self.user,
+            )
+            .filter(participants=self.other_user)
+            .distinct()
+        )
+        self.assertEqual(merged_conversations.count(), 1)
