@@ -1629,6 +1629,66 @@ class MessagingConversationNormalizationTests(TestCase):
             ).exists()
         )
 
+    @patch("covise_app.views._merge_private_conversations")
+    def test_start_private_conversation_still_creates_request_when_merge_fails_for_non_friend(self, merge_mock):
+        merge_mock.side_effect = RuntimeError("merge exploded")
+
+        response = self.client.post(reverse("Start Private Conversation", args=[self.other_user.id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Requests"))
+        self.assertTrue(
+            ConversationRequest.objects.filter(
+                requester=self.user,
+                recipient=self.other_user,
+                status=ConversationRequest.Status.PENDING,
+            ).exists()
+        )
+
+    @patch("covise_app.views._merge_private_conversations")
+    def test_start_private_conversation_short_circuits_pending_request_before_merge(self, merge_mock):
+        ConversationRequest.objects.create(
+            requester=self.user,
+            recipient=self.other_user,
+            status=ConversationRequest.Status.PENDING,
+        )
+
+        response = self.client.post(reverse("Start Private Conversation", args=[self.other_user.id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Requests"))
+        self.assertEqual(
+            ConversationRequest.objects.filter(
+                requester=self.user,
+                recipient=self.other_user,
+                status=ConversationRequest.Status.PENDING,
+            ).count(),
+            1,
+        )
+        merge_mock.assert_not_called()
+
+    @patch("covise_app.views._normalize_contact_pair")
+    def test_start_private_conversation_redirects_to_messages_error_when_friend_normalization_fails(self, normalize_mock):
+        ConversationRequest.objects.create(
+            requester=self.user,
+            recipient=self.other_user,
+            status=ConversationRequest.Status.ACCEPTED,
+            responded_at=timezone.now(),
+        )
+        normalize_mock.side_effect = RuntimeError("normalize exploded")
+
+        response = self.client.post(reverse("Start Private Conversation", args=[self.other_user.id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"{reverse('Messages')}?error=conversation_unavailable")
+        self.assertFalse(
+            ConversationRequest.objects.filter(
+                requester=self.user,
+                recipient=self.other_user,
+                status=ConversationRequest.Status.PENDING,
+            ).exists()
+        )
+
     @patch("covise_app.views.dispatch_notification")
     def test_start_private_conversation_still_redirects_when_notification_dispatch_fails(self, dispatch_mock):
         dispatch_mock.side_effect = RuntimeError("notification failed")
@@ -1657,3 +1717,12 @@ class MessagingConversationNormalizationTests(TestCase):
         self.assertEqual(response.context["friend_options"], [])
         alert_mock.assert_called_once()
         self.assertEqual(alert_mock.call_args.kwargs["reason"], "normalization_failed")
+
+    def test_messages_page_maps_conversation_unavailable_error_code_to_friendly_message(self):
+        response = self.client.get(f"{reverse('Messages')}?error=conversation_unavailable")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["message_error"],
+            "We couldn't open this conversation right now. Please try again.",
+        )

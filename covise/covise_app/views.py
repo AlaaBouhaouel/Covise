@@ -4034,6 +4034,12 @@ def messages(request):
         )
         friend_options = []
 
+    message_error_code = request.GET.get("error", "").strip()
+    if message_error_code == "conversation_unavailable":
+        message_error = "We couldn't open this conversation right now. Please try again."
+    else:
+        message_error = message_error_code
+
     return render(
         request,
         'messages.html',
@@ -4041,7 +4047,7 @@ def messages(request):
             "conversation_data": serialized_conversations,
             "friend_options": friend_options,
             "active_conversation_id": active_conversation_id,
-            "message_error": request.GET.get("error", "").strip(),
+            "message_error": message_error,
         },
     )
 
@@ -4081,14 +4087,6 @@ def start_private_conversation(request, user_id):
     if not _can_view_profile(request.user, target_user):
         raise Http404("Profile not available")
 
-    existing_conversation = _merge_private_conversations(request.user, target_user)
-    if existing_conversation:
-        return redirect(f"{reverse('Messages')}?conversation={existing_conversation.id}")
-
-    if _are_friends(request.user, target_user):
-        conversation = _normalize_contact_pair(request.user, target_user)
-        return redirect(f"{reverse('Messages')}?conversation={conversation.id}")
-
     existing_request = (
         ConversationRequest.objects.filter(
             Q(requester=request.user, recipient=target_user) | Q(requester=target_user, recipient=request.user),
@@ -4099,6 +4097,44 @@ def start_private_conversation(request, user_id):
     )
     if existing_request:
         return redirect("Requests")
+
+    try:
+        existing_conversation = _merge_private_conversations(request.user, target_user)
+    except Exception as exc:
+        logger.exception(
+            "Failed to merge private conversations sender=%s target=%s",
+            request.user.id,
+            target_user.id,
+        )
+        send_messaging_failure_alert(
+            action="start_private_conversation",
+            reason="merge_failed",
+            actor=request.user,
+            target_user=target_user,
+            details={"exception": str(exc)},
+        )
+        existing_conversation = None
+    if existing_conversation:
+        return redirect(f"{reverse('Messages')}?conversation={existing_conversation.id}")
+
+    if _are_friends(request.user, target_user):
+        try:
+            conversation = _normalize_contact_pair(request.user, target_user)
+        except Exception as exc:
+            logger.exception(
+                "Failed to normalize private conversation sender=%s target=%s",
+                request.user.id,
+                target_user.id,
+            )
+            send_messaging_failure_alert(
+                action="start_private_conversation",
+                reason="normalize_failed",
+                actor=request.user,
+                target_user=target_user,
+                details={"exception": str(exc)},
+            )
+            return redirect(f"{reverse('Messages')}?error=conversation_unavailable")
+        return redirect(f"{reverse('Messages')}?conversation={conversation.id}")
 
     try:
         ConversationRequest.objects.create(
