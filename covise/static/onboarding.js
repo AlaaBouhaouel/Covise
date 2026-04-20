@@ -399,44 +399,75 @@
             input.name = field.id;
             input.className = "search-input";
             input.placeholder = "Search and select one option";
+            input.autocomplete = "off";
             input.required = !!field.required;
 
-            const listId = field.id + "_options";
-            input.setAttribute("list", listId);
-
-            const dataList = document.createElement("datalist");
-            dataList.id = listId;
-
-            options.forEach((option) => {
-                const item = document.createElement("option");
-                item.value = option.label;
-                dataList.appendChild(item);
-            });
-
-            const byLabel = new Map(options.map((option) => [option.label, option.value]));
-            const byValue = new Map(options.map((option) => [option.value, option.label]));
+            const byLabel = new Map(options.map((o) => [o.label, o.value]));
+            const byValue = new Map(options.map((o) => [o.value, o.label]));
 
             const selectedValue = currentSingleValue(field.id);
             if (selectedValue && byValue.has(selectedValue)) {
                 input.value = byValue.get(selectedValue);
             }
 
-            function syncValue() {
-                const entered = input.value.trim();
-                answers[field.id] = byLabel.get(entered) || "";
-                updateButtons();
+            const dropdown = document.createElement("div");
+            dropdown.className = "custom-dropdown";
+            dropdown.setAttribute("hidden", "");
+            document.body.appendChild(dropdown);
+
+            function positionDropdown() {
+                const r = input.getBoundingClientRect();
+                dropdown.style.top = (r.bottom + 4) + "px";
+                dropdown.style.left = r.left + "px";
+                dropdown.style.width = r.width + "px";
             }
 
-            input.addEventListener("input", syncValue);
-            input.addEventListener("change", syncValue);
+            function renderDropdown(filter) {
+                dropdown.innerHTML = "";
+                const lower = (filter || "").toLowerCase();
+                const visible = lower ? options.filter((o) => o.label.toLowerCase().includes(lower)) : options;
+                visible.forEach((option) => {
+                    const item = document.createElement("div");
+                    item.className = "custom-dropdown-option";
+                    item.textContent = option.label;
+                    const pick = (e) => {
+                        e.preventDefault();
+                        input.value = option.label;
+                        answers[field.id] = option.value;
+                        dropdown.setAttribute("hidden", "");
+                        updateButtons();
+                    };
+                    item.addEventListener("mousedown", pick);
+                    item.addEventListener("touchend", pick);
+                    dropdown.appendChild(item);
+                });
+            }
+
+            input.addEventListener("focus", () => {
+                renderDropdown(input.value);
+                positionDropdown();
+                dropdown.removeAttribute("hidden");
+            });
+            input.addEventListener("input", () => {
+                const entered = input.value.trim();
+                answers[field.id] = byLabel.get(entered) || "";
+                renderDropdown(input.value);
+                positionDropdown();
+                dropdown.removeAttribute("hidden");
+                updateButtons();
+            });
             input.addEventListener("blur", () => {
-                if (!answers[field.id]) {
-                    input.value = "";
-                }
+                setTimeout(() => {
+                    dropdown.setAttribute("hidden", "");
+                    if (!answers[field.id]) input.value = "";
+                }, 200);
             });
 
+            const reposSearchable = () => { if (!dropdown.hasAttribute("hidden")) positionDropdown(); };
+            window.addEventListener("scroll", reposSearchable, { passive: true });
+            window.addEventListener("resize", reposSearchable, { passive: true });
+
             wrap.appendChild(input);
-            wrap.appendChild(dataList);
             return wrap;
         }
 
@@ -495,11 +526,10 @@
         wrap.className = "multi-select-wrap";
 
         const options = getSingleOptions(field);
-        const byLabel = new Map(options.map((option) => [option.label, option.value]));
-        const byValue = new Map(options.map((option) => [option.value, option.label]));
-        const allowedValues = new Set(options.map((option) => option.value));
+        const byValue = new Map(options.map((o) => [o.value, o.label]));
+        const allowedValues = new Set(options.map((o) => o.value));
         const selected = new Set(
-            Array.isArray(answers[field.id]) ? answers[field.id].filter((value) => allowedValues.has(value)) : []
+            Array.isArray(answers[field.id]) ? answers[field.id].filter((v) => allowedValues.has(v)) : []
         );
 
         const chipInput = document.createElement("div");
@@ -513,24 +543,46 @@
         search.type = "text";
         search.className = "search-input";
         search.placeholder = "Search and select";
-        const listId = field.id + "_options";
-        search.setAttribute("list", listId);
+        search.autocomplete = "off";
         chipInput.appendChild(search);
 
-        const dataList = document.createElement("datalist");
-        dataList.id = listId;
+        const dropdown = document.createElement("div");
+        dropdown.className = "custom-dropdown";
+        dropdown.setAttribute("hidden", "");
+        document.body.appendChild(dropdown);
 
         function syncAnswer() {
             answers[field.id] = Array.from(selected);
         }
 
-        function renderSuggestions() {
-            dataList.innerHTML = "";
-            options.forEach((option) => {
-                if (selected.has(option.value)) return;
-                const item = document.createElement("option");
-                item.value = option.label;
-                dataList.appendChild(item);
+        function positionDropdown() {
+            const r = search.getBoundingClientRect();
+            dropdown.style.top = (r.bottom + 4) + "px";
+            dropdown.style.left = r.left + "px";
+            dropdown.style.width = r.width + "px";
+        }
+
+        function renderDropdown(filter) {
+            dropdown.innerHTML = "";
+            const lower = (filter || "").toLowerCase();
+            const visible = options.filter((o) => !selected.has(o.value) && (!lower || o.label.toLowerCase().includes(lower)));
+            visible.forEach((option) => {
+                const item = document.createElement("div");
+                item.className = "custom-dropdown-option";
+                item.textContent = option.label;
+                const pick = (e) => {
+                    e.preventDefault();
+                    if (field.max_selected && selected.size >= Number(field.max_selected)) return;
+                    selected.add(option.value);
+                    search.value = "";
+                    syncAnswer();
+                    renderDropdown("");
+                    renderChips();
+                    updateButtons();
+                };
+                item.addEventListener("mousedown", pick);
+                item.addEventListener("touchend", pick);
+                dropdown.appendChild(item);
             });
         }
 
@@ -548,7 +600,7 @@
                 remove.addEventListener("click", () => {
                     selected.delete(value);
                     syncAnswer();
-                    renderSuggestions();
+                    renderDropdown(search.value);
                     renderChips();
                     updateButtons();
                 });
@@ -558,40 +610,35 @@
             });
         }
 
-        function addSelectionFromSearch() {
-            const label = search.value.trim();
-            if (!label) return;
-
-            const value = byLabel.get(label);
-            search.value = "";
-            if (!value || selected.has(value)) return;
-
-            if (field.max_selected && selected.size >= Number(field.max_selected)) {
-                updateButtons();
-                return;
-            }
-
-            selected.add(value);
-            syncAnswer();
-            renderSuggestions();
-            renderChips();
-            updateButtons();
-        }
-
-        search.addEventListener("change", addSelectionFromSearch);
+        search.addEventListener("focus", () => {
+            renderDropdown(search.value);
+            positionDropdown();
+            dropdown.removeAttribute("hidden");
+        });
+        search.addEventListener("input", () => {
+            renderDropdown(search.value);
+            positionDropdown();
+            dropdown.removeAttribute("hidden");
+        });
+        search.addEventListener("blur", () => {
+            setTimeout(() => { dropdown.setAttribute("hidden", ""); }, 200);
+        });
         search.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
                 event.preventDefault();
-                addSelectionFromSearch();
+                const first = dropdown.querySelector(".custom-dropdown-option");
+                if (first) first.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
             }
         });
 
+        const reposMulti = () => { if (!dropdown.hasAttribute("hidden")) positionDropdown(); };
+        window.addEventListener("scroll", reposMulti, { passive: true });
+        window.addEventListener("resize", reposMulti, { passive: true });
+
         syncAnswer();
-        renderSuggestions();
         renderChips();
 
         wrap.appendChild(chipInput);
-        wrap.appendChild(dataList);
 
         if (field.max_selected) {
             const helper = document.createElement("p");
@@ -671,6 +718,7 @@
     }
 
     function renderStep() {
+        document.querySelectorAll(".custom-dropdown").forEach(function (el) { el.remove(); });
         const visibleSteps = ensureCurrentStepInBounds();
         const step = visibleSteps[currentIndex];
         setCompletionMessage("", "");
@@ -687,8 +735,8 @@
 
         const progress = ((currentIndex + 1) / visibleSteps.length) * 100;
         progressLineFill.style.width = progress + "%";
-        progressStep.textContent = "Step " + (currentIndex + 1) + " of " + visibleSteps.length;
-        progressLabel.textContent = normalizeText(step.progress_label || step.title || "Profile");
+        if (progressStep) progressStep.textContent = "Step " + (currentIndex + 1) + " of " + visibleSteps.length;
+        if (progressLabel) progressLabel.textContent = normalizeText(step.progress_label || step.title || "Profile");
 
         stepFields.innerHTML = "";
 

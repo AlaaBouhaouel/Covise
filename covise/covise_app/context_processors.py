@@ -1,5 +1,7 @@
 from django.urls import reverse
 
+from covise_app.user_context import _safe_file_url
+
 
 def _initials_from_name(name, email=""):
     if name:
@@ -52,12 +54,7 @@ def user_ui_context(request):
         bio = profile.bio or ""
         linkedin_url = profile.linkedin or ""
         github_url = profile.github or ""
-        profile_image = getattr(profile, "profile_image", None)
-        if profile_image:
-            try:
-                avatar_url = profile_image.url
-            except Exception:
-                avatar_url = ""
+        avatar_url = _safe_file_url(getattr(profile, "profile_image", None))
         has_profile_content = any([
             profile.bio,
             profile.linkedin,

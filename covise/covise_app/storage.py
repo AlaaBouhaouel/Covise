@@ -12,8 +12,8 @@ from django.utils.deconstruct import deconstructible
 @deconstructible
 class PostImageStorage(Storage):
     """
-    Store post images on S3 in production while keeping local filesystem storage
-    for development and any environment without valid AWS media settings.
+    Store media on S3 in production while keeping local filesystem storage for
+    development and any environment without valid AWS media settings.
     """
 
     def _use_s3(self):
@@ -52,6 +52,24 @@ class PostImageStorage(Storage):
         if not region or region == "us-east-1":
             return f"https://{bucket}.s3.amazonaws.com/{quote(normalized_name)}"
         return f"https://{bucket}.s3.{region}.amazonaws.com/{quote(normalized_name)}"
+
+    def _use_signed_urls(self):
+        return bool(getattr(settings, "AWS_S3_MEDIA_USE_SIGNED_URLS", True))
+
+    def _presigned_url_expiry(self):
+        expiry = int(getattr(settings, "AWS_S3_MEDIA_URL_EXPIRY", 3600) or 3600)
+        return max(60, expiry)
+
+    def _s3_presigned_url(self, name):
+        normalized_name = self._normalize_name(name)
+        return self._s3_client().generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+                "Key": normalized_name,
+            },
+            ExpiresIn=self._presigned_url_expiry(),
+        )
 
     def _open(self, name, mode="rb"):
         normalized_name = self._normalize_name(name)
@@ -125,6 +143,8 @@ class PostImageStorage(Storage):
         normalized_name = self._normalize_name(name)
         if not self._use_s3():
             return self._local_storage().url(normalized_name)
+        if self._use_signed_urls():
+            return self._s3_presigned_url(normalized_name)
         return self._s3_url(normalized_name)
 
 

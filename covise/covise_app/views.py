@@ -759,6 +759,7 @@ def _waitlist_to_onboarding_initial_answers(waitlist_source):
         initial_answers["profile_links"] = normalized_waitlist_links
     if non_gcc_business and source.get("custom_country"):
         initial_answers["home_country"] = source.get("custom_country")
+        initial_answers.setdefault("looking_for_type", "Local GCC partner")
 
     return _clean_onboarding_answers(initial_answers)
 
@@ -1970,7 +1971,7 @@ def _post_gallery_items(post, limit=6):
     gallery_images = list(gallery_relation.all()) if gallery_relation is not None else []
     for gallery_image in gallery_images:
         image_file = getattr(gallery_image, "image", None)
-        image_url = getattr(image_file, "url", "")
+        image_url = _safe_media_url(image_file)
         if image_url and image_url not in seen_urls:
             seen_urls.add(image_url)
             items.append({
@@ -1979,7 +1980,7 @@ def _post_gallery_items(post, limit=6):
             })
 
     legacy_image = getattr(post, "image", None)
-    legacy_url = getattr(legacy_image, "url", "") if legacy_image else ""
+    legacy_url = _safe_media_url(legacy_image)
     if legacy_url and legacy_url not in seen_urls:
         items.insert(0, {
             "url": legacy_url,
@@ -2049,10 +2050,7 @@ def _profile_avatar_url(profile):
     image = getattr(profile, "profile_image", None)
     if not image:
         return ""
-    try:
-        return image.url
-    except Exception:
-        return ""
+    return _safe_media_url(image)
 
 
 def _user_avatar_url(user):
@@ -2200,11 +2198,11 @@ def _send_post_alert_email(post):
     post_url = _absolute_site_url(reverse("Post Detail", args=[post.id]))
     created_at_label = timezone.localtime(post.created_at).strftime("%B %d, %Y at %I:%M %p")
     mentions = [f"@{mention.handle_text}" for mention in post.mentions.select_related("mentioned_user")]
-    image_urls = [
-        _absolute_site_url(image.image.url)
-        for image in post.gallery_images.all()
-        if getattr(getattr(image, "image", None), "url", "")
-    ]
+    image_urls = []
+    for image in post.gallery_images.all():
+        image_url = _safe_media_url(getattr(image, "image", None))
+        if image_url:
+            image_urls.append(image_url)
     safe_content_html = escape(post.content or "").replace("\n", "<br>")
     mention_markup = (
         "".join(f"<li>{escape(handle)}</li>" for handle in mentions)
@@ -2466,12 +2464,7 @@ def _get_or_create_private_conversation(user_a, user_b):
 
 def _serialize_message(message, *, viewer=None, is_ephemeral=False):
     sender_name = message.sender.full_name or message.sender.email
-    attachment_url = ""
-    if getattr(message, "attachment_file", None):
-        try:
-            attachment_url = message.attachment_file.url
-        except Exception:
-            attachment_url = ""
+    attachment_url = _safe_media_url(getattr(message, "attachment_file", None))
     reaction_counts, viewer_reactions = _message_reaction_payload(message, viewer=viewer)
     return {
         "id": (
@@ -5721,6 +5714,7 @@ def onboarding(request):
                     "description": request.session.get("waitlist_description", ""),
                     "custom_description": request.session.get("waitlist_custom_description", ""),
                     "venture_summary": request.session.get("waitlist_venture_summary", ""),
+                    "linkedin": request.session.get("waitlist_linkedin", ""),
                 }
             )
         )

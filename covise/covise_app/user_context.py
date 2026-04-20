@@ -8,6 +8,15 @@ from django.utils.timesince import timesince
 from covise_app.models import BlockedUser, SavedPost
 
 
+def _safe_file_url(field_file):
+    if not field_file:
+        return ""
+    try:
+        return field_file.url
+    except Exception:
+        return ""
+
+
 def _value_list(value):
     if value is None:
         return []
@@ -201,7 +210,7 @@ def build_ui_user_context(user):
         "github_url": getattr(profile, "github", "") if profile else "",
         "proof_of_work_url": getattr(profile, "proof_of_work_url", "") if profile else "",
         "avatar_initials": avatar_initials,
-        "avatar_url": getattr(getattr(profile, "profile_image", None), "url", "") if profile and getattr(profile, "profile_image", None) else "",
+        "avatar_url": _safe_file_url(getattr(profile, "profile_image", None)) if profile else "",
     }
 
 

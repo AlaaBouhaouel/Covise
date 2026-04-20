@@ -428,8 +428,9 @@ textarea {
 }
 
 .select-option input {
-    margin-top: 0.2rem;
-    accent-color: var(--onboarding-accent-strong);
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .select-option-copy {
@@ -501,6 +502,40 @@ textarea {
 
 .chip-input .search-input:focus {
     box-shadow: none;
+}
+
+.custom-dropdown {
+    position: fixed;
+    background: var(--onboarding-field);
+    border: 1px solid var(--onboarding-border);
+    border-radius: 14px;
+    max-height: 240px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 9999;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.custom-dropdown[hidden] {
+    display: none;
+}
+
+.custom-dropdown-option {
+    padding: 13px 18px;
+    cursor: pointer;
+    color: var(--onboarding-text);
+    font-size: 0.98rem;
+    line-height: 1.3;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.custom-dropdown-option:hover {
+    background: rgba(24, 35, 74, 0.55);
+}
+
+.custom-dropdown-option:active {
+    background: rgba(30, 46, 105, 0.5);
 }
 
 .helper-text {

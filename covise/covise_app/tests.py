@@ -7,11 +7,16 @@ from botocore.exceptions import ClientError
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.test import RequestFactory
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from .messaging import deliver_media_message
 from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, OnboardingResponse, Post, PostImage, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
+from .context_processors import user_ui_context
+from .user_context import build_ui_user_context
+from .views import _serialize_message
 
 
 class WaitlistEntryModelTests(TestCase):
@@ -618,6 +623,7 @@ class ProfilePageTests(TestCase):
         self.assertContains(response, "Looking for Cofounder")
 
 
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
 class CreatePostAlertEmailTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -685,6 +691,7 @@ class PostImageStorageTests(TestCase):
     )
 
     def setUp(self):
+        self.factory = RequestFactory()
         self.user = User.objects.create_user(
             email="storage@example.com",
             password="safe-password-123",
@@ -693,16 +700,29 @@ class PostImageStorageTests(TestCase):
         Profile.objects.create(
             user=self.user,
             full_name="Storage User",
+            country="Saudi Arabia",
+            linkedin="https://www.linkedin.com/in/storage-user/",
             has_accepted_platform_agreement=True,
+            onboarding_answers={
+                "one_liner": "Building a production-safe media pipeline.",
+                "looking_for_type": ["Technical co-founder"],
+                "profile_links": ["https://www.linkedin.com/in/storage-user/"],
+            },
         )
 
     def _missing_s3_object(self, *args, **kwargs):
         raise ClientError({"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject")
 
+    @patch("covise_app.views.RESEND_API_KEY", "")
     @patch("covise_app.storage.boto3.client")
     def test_create_post_uploads_gallery_images_to_s3_and_keeps_s3_url_on_model(self, mock_boto_client):
         mock_s3 = mock_boto_client.return_value
         mock_s3.head_object.side_effect = self._missing_s3_object
+        mock_s3.generate_presigned_url.side_effect = (
+            lambda operation, Params=None, ExpiresIn=None: (
+                f"https://signed.example/{Params['Key']}?expires={ExpiresIn}"
+            )
+        )
 
         self.client.force_login(self.user)
         response = self.client.post(
@@ -727,7 +747,7 @@ class PostImageStorageTests(TestCase):
         self.assertTrue(saved_image.image.name.startswith("post_images/"))
         self.assertEqual(
             saved_image.image.url,
-            f"https://covise-posts-test.s3.eu-central-1.amazonaws.com/{saved_image.image.name}",
+            f"https://signed.example/{saved_image.image.name}?expires=3600",
         )
 
         mock_s3.upload_fileobj.assert_called_once()
@@ -737,6 +757,84 @@ class PostImageStorageTests(TestCase):
         self.assertEqual(upload_args[2], saved_image.image.name)
         self.assertEqual(upload_extra_args["ContentType"], "image/png")
         self.assertEqual(upload_extra_args["ServerSideEncryption"], "AES256")
+
+    @patch("covise_app.views.RESEND_API_KEY", "")
+    @patch("covise_app.storage.boto3.client")
+    def test_uploaded_s3_gallery_image_reaches_post_detail_and_home_feed(self, mock_boto_client):
+        mock_s3 = mock_boto_client.return_value
+        mock_s3.head_object.side_effect = self._missing_s3_object
+        mock_s3.generate_presigned_url.side_effect = (
+            lambda operation, Params=None, ExpiresIn=None: (
+                f"https://signed.example/{Params['Key']}?expires={ExpiresIn}"
+            )
+        )
+
+        self.client.force_login(self.user)
+        create_response = self.client.post(
+            reverse("Create Post"),
+            {
+                "title": "S3 feed coverage",
+                "post_type": Post.PostType.UPDATE,
+                "content": "This post should render the same S3 image everywhere.",
+                "images": SimpleUploadedFile(
+                    "coverage.png",
+                    self.PNG_BYTES,
+                    content_type="image/png",
+                ),
+            },
+        )
+
+        self.assertEqual(create_response.status_code, 302)
+        created_post = Post.objects.get()
+        saved_image = PostImage.objects.get(post=created_post)
+        expected_url = (
+            f"https://signed.example/{saved_image.image.name}?expires=3600"
+        )
+
+        detail_response = self.client.get(reverse("Post Detail", args=[created_post.id]))
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertEqual(detail_response.context["post"].feed_images[0]["url"], expected_url)
+        self.assertContains(detail_response, expected_url)
+
+        home_response = self.client.get(reverse("Home"))
+        self.assertEqual(home_response.status_code, 200)
+        feed_post = next(item for item in home_response.context["posts"] if item.id == created_post.id)
+        self.assertEqual(feed_post.feed_images[0]["url"], expected_url)
+        self.assertContains(home_response, expected_url)
+
+    @patch("covise_app.storage.boto3.client")
+    def test_profile_image_uses_s3_url_in_shared_ui_contexts_and_rendered_pages(self, mock_boto_client):
+        mock_s3 = mock_boto_client.return_value
+        mock_s3.head_object.side_effect = self._missing_s3_object
+        mock_s3.generate_presigned_url.side_effect = (
+            lambda operation, Params=None, ExpiresIn=None: (
+                f"https://signed.example/{Params['Key']}?expires={ExpiresIn}"
+            )
+        )
+
+        self.user.profile.profile_image = SimpleUploadedFile(
+            "avatar.png",
+            self.PNG_BYTES,
+            content_type="image/png",
+        )
+        self.user.profile.save(update_fields=["profile_image"])
+
+        expected_url = (
+            f"https://signed.example/{self.user.profile.profile_image.name}?expires=3600"
+        )
+
+        helper_context = build_ui_user_context(self.user)
+        self.assertEqual(helper_context["avatar_url"], expected_url)
+
+        request = self.factory.get(reverse("Settings"))
+        request.user = self.user
+        processor_context = user_ui_context(request)
+        self.assertEqual(processor_context["ui_user"]["avatar_url"], expected_url)
+
+        self.client.force_login(self.user)
+        settings_response = self.client.get(reverse("Settings"))
+        self.assertEqual(settings_response.status_code, 200)
+        self.assertContains(settings_response, expected_url)
 
     def test_post_images_still_use_local_media_storage_in_debug(self):
         temp_media_root = mkdtemp(dir=".")
@@ -749,6 +847,86 @@ class PostImageStorageTests(TestCase):
                 self.assertEqual(image_url, "/media/post_images/local.png")
         finally:
             shutil.rmtree(temp_media_root, ignore_errors=True)
+
+
+@override_settings(
+    DEBUG=False,
+    SECURE_SSL_REDIRECT=False,
+    ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"],
+    AWS_ACCESS_KEY_ID="test-access-key",
+    AWS_SECRET_ACCESS_KEY="test-secret-key",
+    AWS_STORAGE_BUCKET_NAME="covise-posts-test",
+    AWS_S3_REGION_NAME="eu-central-1",
+)
+class MessageAttachmentStorageTests(TestCase):
+    TXT_BYTES = b"hello from covise chat"
+
+    def setUp(self):
+        self.sender = User.objects.create_user(
+            email="sender@example.com",
+            password="safe-password-123",
+            full_name="Sender User",
+        )
+        self.recipient = User.objects.create_user(
+            email="recipient@example.com",
+            password="safe-password-123",
+            full_name="Recipient User",
+        )
+        Profile.objects.create(user=self.sender, full_name="Sender User", has_accepted_platform_agreement=True)
+        Profile.objects.create(user=self.recipient, full_name="Recipient User", has_accepted_platform_agreement=True)
+        UserPreference.objects.create(user=self.sender)
+        UserPreference.objects.create(user=self.recipient)
+        self.conversation = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            created_by=self.sender,
+        )
+        self.conversation.participants.add(self.sender, self.recipient)
+
+    def _missing_s3_object(self, *args, **kwargs):
+        raise ClientError({"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject")
+
+    @patch("covise_app.messaging.dispatch_notification")
+    @patch("covise_app.storage.boto3.client")
+    def test_message_attachment_uploads_to_s3_and_serializes_bucket_url(self, mock_boto_client, _mock_dispatch_notification):
+        mock_s3 = mock_boto_client.return_value
+        mock_s3.head_object.side_effect = self._missing_s3_object
+        mock_s3.generate_presigned_url.side_effect = (
+            lambda operation, Params=None, ExpiresIn=None: (
+                f"https://signed.example/{Params['Key']}?expires={ExpiresIn}"
+            )
+        )
+
+        send_result = deliver_media_message(
+            conversation_id=self.conversation.id,
+            sender=self.sender,
+            uploaded_file=SimpleUploadedFile(
+                "notes.txt",
+                self.TXT_BYTES,
+                content_type="text/plain",
+            ),
+            requested_type=Message.MessageType.FILE,
+            caption="Attached notes",
+        )
+
+        message = send_result["message"]
+        self.assertEqual(message.message_type, Message.MessageType.FILE)
+        self.assertTrue(message.attachment_file.name.startswith("chat_media/"))
+
+        expected_url = (
+            f"https://signed.example/{message.attachment_file.name}?expires=3600"
+        )
+        self.assertEqual(message.attachment_file.url, expected_url)
+
+        serialized = _serialize_message(message, viewer=self.sender)
+        self.assertEqual(serialized["attachment_url"], expected_url)
+        self.assertEqual(serialized["attachment_name"], "notes.txt")
+
+        upload_args = mock_s3.upload_fileobj.call_args.args
+        upload_extra_args = mock_s3.upload_fileobj.call_args.kwargs["ExtraArgs"]
+        self.assertEqual(upload_args[1], "covise-posts-test")
+        self.assertEqual(upload_args[2], message.attachment_file.name)
+        self.assertEqual(upload_extra_args["ContentType"], "text/plain")
+        self.assertEqual(upload_extra_args["ServerSideEncryption"], "AES256")
 
 
 class MessagingConversationNormalizationTests(TestCase):

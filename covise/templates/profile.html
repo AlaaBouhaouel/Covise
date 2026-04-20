@@ -8,7 +8,6 @@
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260419j">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419j">
-    <link rel="stylesheet" href="{% static 'review_overlay.css' %}?v=20260419a">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -414,24 +413,6 @@
                         <a class="panel-link" href="{{ profile_saved_posts_url }}" aria-label="Open saved posts">
                             <i class="fa-solid fa-chevron-right"></i>
                         </a>
-                    </div>
-                    <div class="settings-stack saved-posts-list">
-                        {% for saved_post in saved_posts_preview %}
-                        <div class="settings-row saved-post-item">
-                            <div class="row-copy saved-post-copy">
-                                <strong>{{ saved_post.title }}</strong>
-                                <span>{{ saved_post.author }} &middot; Saved {{ saved_post.saved_at }}</span>
-                            </div>
-                            <a class="outline-btn saved-post-link" href="{% url 'Post Detail' saved_post.id %}">Open</a>
-                        </div>
-                        {% empty %}
-                        <div class="settings-row saved-post-item saved-post-item-empty">
-                            <div class="row-copy saved-post-copy">
-                                <strong>No saved posts yet</strong>
-                                <span>Bookmark posts from the feed or post page and they will show up here.</span>
-                            </div>
-                        </div>
-                        {% endfor %}
                     </div>
                 </section>
                 {% endif %}
@@ -1060,6 +1041,5 @@
             });
         })();
     </script>
-{% include "includes/review_overlay.html" %}
 </body>
 </html>

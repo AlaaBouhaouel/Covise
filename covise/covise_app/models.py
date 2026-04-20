@@ -623,7 +623,7 @@ class Message(models.Model):
         default=MessageType.TEXT,
     )
     body = models.TextField(blank=True, default="")
-    attachment_file = models.FileField(upload_to="chat_media/", blank=True, null=True)
+    attachment_file = models.FileField(upload_to="chat_media/", storage=post_image_storage, blank=True, null=True)
     attachment_name = models.CharField(max_length=255, blank=True, default="")
     attachment_content_type = models.CharField(max_length=120, blank=True, default="")
     attachment_size = models.PositiveBigIntegerField(blank=True, null=True)

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | Onboarding</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'onboarding.css' %}?v=20260419c">
+    <link rel="stylesheet" href="{% static 'onboarding.css' %}?v=20260419f">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         (function() {
@@ -28,22 +28,15 @@
                 </div>
 
                 <div class="hero-copy">
+                    {% if not onboarding_unavailable %}
+                    <div class="progress-line" aria-hidden="true">
+                        <div class="progress-line-fill" id="progress-line-fill"></div>
+                    </div>
+                    {% endif %}
                     <p class="eyebrow">Covise onboarding</p>
                     <h1 id="flow-name">Build your profile</h1>
                     <p class="hero-intro" id="flow-intro">A lighter setup so we understand who you are, what you are building, and what you bring.</p>
                 </div>
-
-                {% if not onboarding_unavailable %}
-                <div class="progress-panel">
-                    <div class="progress-meta">
-                        <span class="progress-step" id="progress-step">Step 1 of 1</span>
-                        <span class="progress-label" id="progress-label">Profile</span>
-                    </div>
-                    <div class="progress-line" aria-hidden="true">
-                        <div class="progress-line-fill" id="progress-line-fill"></div>
-                    </div>
-                </div>
-                {% endif %}
             </header>
 
             {% if onboarding_unavailable %}
@@ -82,7 +75,7 @@
             submitUrl: "{% url 'Onboarding Submit' %}",
         };
     </script>
-    <script src="{% static 'onboarding.js' %}?v=20260419c"></script>
+    <script src="{% static 'onboarding.js' %}?v=20260419f"></script>
     {% endif %}
 </body>
 </html>
