@@ -388,10 +388,13 @@
                                     </summary>
                                     <div class="post-more-dropdown">
                                         {% if post.user.id != request.user.id %}
-                                        <a class="feed-post-menu-action feed-post-menu-action--request" href="{% url 'Start Private Conversation' post.user.id %}">
-                                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                                            <span>Request</span>
-                                        </a>
+                                        <form method="post" action="{% url 'Start Private Conversation' post.user.id %}">
+                                            {% csrf_token %}
+                                            <button class="feed-post-menu-action feed-post-menu-action--request" type="submit">
+                                                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                                                <span>Request</span>
+                                            </button>
+                                        </form>
                                         <form method="post" action="{% url 'Toggle Block User' post.user.id %}">
                                             {% csrf_token %}
                                             <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
