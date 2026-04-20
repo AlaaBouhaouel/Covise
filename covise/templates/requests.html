@@ -74,12 +74,6 @@
             </header>
 
             <section class="projects" aria-label="Requests">
-                <div class="projects-head">
-                    <div class="projects-copy">
-                        <h1>Requests</h1>
-                        <p>Manage your incoming and outgoing connection requests.</p>
-                    </div>
-                </div>
 
                 <article class="dashboard-card widget" id="requestsCard">
                     <div class="widget-header">
@@ -92,35 +86,38 @@
                              style="grid-template-columns: auto 1fr auto; padding: calc(var(--spacing) * 1.25) 0; background: transparent; border: 0; {% if not forloop.last %}border-bottom: 1px solid rgba(120, 150, 255, 0.13);{% endif %} border-radius: 0; min-height: 56px;"
                              data-request-id="{{ req.id }}"
                              data-is-incoming="{{ req.is_incoming|yesno:'true,false' }}">
-                            {% if req.avatar_url %}
-                            <img class="match-avatar-image" src="{{ req.avatar_url }}" alt="{{ req.name }} avatar" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">
-                            {% else %}
-                            <div class="match-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: rgba(120, 150, 255, 0.18); border: 1px solid rgba(120, 150, 255, 0.24); display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0;">{{ req.avatar }}</div>
-                            {% endif %}
-                            <div class="match-info" style="display: grid; gap: 3px; min-width: 0;">
-                                <div class="match-name" style="padding-bottom: 0; font-size: 0.84rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ req.name }}</div>
-                                <div class="match-role" style="font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ req.description }}</div>
-                                <div style="display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;">
-                                    {% if req.is_incoming %}
-                                    <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--match_color); font-weight: 700;">Incoming</span>
-                                    {% else %}
-                                    <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 700;">Outgoing</span>
-                                    {% endif %}
-                                    &nbsp;·&nbsp;
-                                    {% if req.status == 'pending' %}
-                                    <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--pending_color); font-weight: 700;">Pending</span>
-                                    {% elif req.status == 'accepted' %}
-                                    <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--green); font-weight: 700;">Accepted</span>
-                                    {% else %}
-                                    <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--red); font-weight: 700;">Declined</span>
-                                    {% endif %}
+                            <div class="head-notif">
+                                {% if req.avatar_url %}
+                                <img class="match-avatar-image" src="{{ req.avatar_url }}" alt="{{ req.name }} avatar" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">
+                                {% else %}
+                                <div class="match-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: rgba(120, 150, 255, 0.18); border: 1px solid rgba(120, 150, 255, 0.24); display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0;">{{ req.avatar }}</div>
+                                {% endif %}
+                                
+                                <div class="match-info" style="display: grid; gap: 3px; min-width: 0;">
+                                    <div class="match-name" style="padding-bottom: 0; font-size: 0.84rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ req.name }}</div>
+                                    <div class="match-role" style="font-size: 0.7rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ req.description }}</div>
+                                    <div style=" width: 100%;display:flex; align-items: center;justify-content: space-between;  margin-top: 2px;">
+                                        {% if req.is_incoming %}
+                                        <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--match_color); font-weight: 700;">Incoming</span>
+                                        {% else %}
+                                        <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 700;">Outgoing</span>
+                                        {% endif %}
+                                        &nbsp;·&nbsp;
+                                        {% if req.status == 'pending' %}
+                                        <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--pending_color); font-weight: 700;">Pending</span>
+                                        {% elif req.status == 'accepted' %}
+                                        <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--green); font-weight: 700;">Accepted</span>
+                                        {% else %}
+                                        <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--red); font-weight: 700;">Declined</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                             {% if req.is_incoming and req.status == 'pending' %}
                             <div class="decision-actions" style="display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;">
                                 <button class="decision-btn accept" type="button" aria-label="Accept request"
                                         data-request-id="{{ req.id }}" data-request-action="accept"
-                                        style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(120, 220, 160, 0.4); background: rgba(120, 220, 160, 0.1); color: var(--green); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, border-color 0.2s;">
+                                        style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(120, 220, 160, 0.4); background: rgba(120, 220, 160, 0.1); color: var(--green); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, border-color 0.2s; ">
                                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="14" height="14">
                                         <path d="M5 12.5 9.5 17 19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
                                     </svg>
@@ -133,13 +130,6 @@
                                     </svg>
                                 </button>
                             </div>
-                            {% else %}
-                            <span style="padding: 4px 10px; border-radius: 999px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; flex-shrink: 0;
-                                {% if req.status == 'accepted' %}border: 1px solid rgba(120, 220, 160, 0.3); background: rgba(120, 220, 160, 0.08); color: var(--green);
-                                {% elif req.status == 'pending' %}border: 1px solid rgba(255, 207, 127, 0.3); background: rgba(255, 207, 127, 0.08); color: var(--pending_color);
-                                {% else %}border: 1px solid rgba(255, 100, 120, 0.3); background: rgba(255, 100, 120, 0.08); color: var(--red);{% endif %}">
-                                {{ req.status|title }}
-                            </span>
                             {% endif %}
                         </div>
                         {% empty %}

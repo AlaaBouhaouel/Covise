@@ -2717,7 +2717,14 @@ def _project_card_context(project):
 
 # Create your views here.
 def landing(request):
-    return render(request, 'landing.html')
+    print("[DEBUG landing] hit — user:", getattr(request.user, 'email', 'anon'), "authenticated:", getattr(request.user, 'is_authenticated', False), flush=True)
+    try:
+        response = render(request, 'landing.html')
+        print("[DEBUG landing] render OK", flush=True)
+        return response
+    except Exception as exc:
+        print("[DEBUG landing] render FAILED:", type(exc).__name__, exc, flush=True)
+        raise
 
 @login_required
 def home(request):

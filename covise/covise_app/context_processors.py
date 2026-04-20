@@ -19,6 +19,7 @@ def _initials_from_name(name, email=""):
 
 def user_ui_context(request):
     user = getattr(request, "user", None)
+    print(f"[DEBUG ctx] {request.path} — authenticated: {getattr(user, 'is_authenticated', False)}", flush=True)
 
     if not user or not user.is_authenticated:
         return {
@@ -50,18 +51,24 @@ def user_ui_context(request):
         profile = getattr(user, "profile", None)
     except Exception:
         profile = None
+    print(f"[DEBUG ctx] profile={'found' if profile else 'None'}", flush=True)
     if profile:
-        bio = profile.bio or ""
-        linkedin_url = profile.linkedin or ""
-        github_url = profile.github or ""
-        avatar_url = _safe_file_url(getattr(profile, "profile_image", None))
-        has_profile_content = any([
-            profile.bio,
-            profile.linkedin,
-            profile.github,
-            profile.country,
-            profile.phone_number,
-        ])
+        try:
+            bio = profile.bio or ""
+            linkedin_url = profile.linkedin or ""
+            github_url = profile.github or ""
+            avatar_url = _safe_file_url(getattr(profile, "profile_image", None))
+            has_profile_content = any([
+                profile.bio,
+                profile.linkedin,
+                profile.github,
+                profile.country,
+                profile.phone_number,
+            ])
+            print(f"[DEBUG ctx] profile fields ok, avatar_url={'set' if avatar_url else 'empty'}", flush=True)
+        except Exception as exc:
+            print(f"[DEBUG ctx] profile field access FAILED: {type(exc).__name__} {exc}", flush=True)
+            raise
 
     return {
         "ui_user": {
