@@ -16,7 +16,7 @@ from .messaging import deliver_media_message
 from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, OnboardingResponse, Post, PostImage, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
 from .context_processors import user_ui_context
 from .user_context import build_ui_user_context
-from .views import _safe_media_url, _serialize_message
+from .views import _has_profile_completion, _safe_media_url, _serialize_message, _waitlist_to_onboarding_initial_answers
 
 
 class WaitlistEntryModelTests(TestCase):
@@ -441,6 +441,7 @@ class PreviewPageTests(TestCase):
         self.assertContains(response, 'aria-label="Workspace"')
         self.assertNotContains(response, "Workspace Preview")
 
+
     def test_settings_page_marks_ai_permissions_unavailable(self):
         self.client.force_login(self.user)
 
@@ -517,6 +518,44 @@ class PreviewPageTests(TestCase):
         visible_entry = next(item for item in searchable_users if item["display_name"] == "Visible Founder")
         self.assertEqual(visible_entry["profile_url"], reverse("Public Profile", args=[visible_user.id]))
         self.assertIn("fintech network", visible_entry["search_text"].lower())
+
+
+class OnboardingPrefillTests(TestCase):
+    def test_waitlist_answers_prefill_building_text_and_matching_choice(self):
+        initial_answers = _waitlist_to_onboarding_initial_answers(
+            {
+                "email": "waitlist@example.com",
+                "description": "developer",
+                "venture_summary": "We are building an AI workflow copilot for finance teams.",
+                "country": "saudi_arabia",
+                "linkedin": "https://linkedin.com/in/waitlist-user",
+            }
+        )
+
+        self.assertEqual(initial_answers["email"], "waitlist@example.com")
+        self.assertEqual(initial_answers["user_type"], "developer")
+        self.assertEqual(
+            initial_answers["one_liner"],
+            "We are building an AI workflow copilot for finance teams.",
+        )
+        self.assertNotIn("location", initial_answers)
+        self.assertNotIn("profile_links", initial_answers)
+
+    def test_profile_completion_no_longer_requires_location_or_links(self):
+        user = User.objects.create_user(
+            email="onboarding-prefill@example.com",
+            password="safe-password-123",
+            full_name="Onboarding Prefill",
+        )
+        profile = Profile.objects.create(
+            user=user,
+            full_name="Onboarding Prefill",
+            one_liner="Building an operator network for founders.",
+            looking_for_type="Technical co-founder",
+            has_accepted_platform_agreement=True,
+        )
+
+        self.assertTrue(_has_profile_completion(profile))
 
 
 class ProfilePageTests(TestCase):
@@ -858,10 +897,28 @@ class PostImageStorageTests(TestCase):
                 SITE_URL="https://covise.net",
             ):
                 image_field = PostImage._meta.get_field("image")
-                field_file = image_field.attr_class(instance=PostImage(), field=image_field, name="post_images/local.png")
+                field_file = image_field.attr_class(
+                    instance=PostImage(),
+                    field=image_field,
+                    name="post_images/local.png",
+                )
                 self.assertEqual(_safe_media_url(field_file), "/media/post_images/local.png")
         finally:
             shutil.rmtree(temp_media_root, ignore_errors=True)
+
+    def test_presigned_media_urls_use_regional_bucket_host(self):
+        image_field = PostImage._meta.get_field("image")
+
+        url = image_field.storage._s3_presigned_url("profile_images/test.png")
+
+        self.assertIn(
+            "covise-posts-test.s3.eu-central-1.amazonaws.com/profile_images/test.png",
+            url,
+        )
+        self.assertNotIn(
+            "covise-posts-test.s3.amazonaws.com/profile_images/test.png",
+            url,
+        )
 
 
 @override_settings(

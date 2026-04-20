@@ -607,26 +607,12 @@ def _has_profile_completion(profile):
     onboarding_answers = _clean_onboarding_answers(getattr(profile, "onboarding_answers", {}))
     one_liner_value = onboarding_answers.get("one_liner", getattr(profile, "one_liner", None))
     looking_for_value = onboarding_answers.get("looking_for_type", getattr(profile, "looking_for_type", None))
-    location_value = (
-        str(getattr(profile, "country", "") or "").strip()
-        or _flatten_text_values(onboarding_answers.get("location"))
-        or _flatten_text_values(getattr(profile, "home_country", None))
-    )
-
-    collected_links = []
-    for link_value in onboarding_answers.get("profile_links", []), getattr(profile, "linkedin", ""), getattr(profile, "github", ""), getattr(profile, "proof_of_work_url", ""):
-        normalized_links, _ = _normalize_profile_links(link_value)
-        for link in normalized_links:
-            if link not in collected_links:
-                collected_links.append(link)
 
     has_building = bool(_flatten_text_values(one_liner_value))
     has_looking_for = bool(_flatten_text_values(looking_for_value))
-    has_location = bool(location_value)
-    has_links = bool(collected_links)
     legacy_onboarding = bool(getattr(profile, "source_onboarding_response_id", None) or str(getattr(profile, "flow_name", "") or "").strip())
 
-    return (has_building and has_looking_for and has_location and has_links) or legacy_onboarding
+    return (has_building and has_looking_for) or legacy_onboarding
 
 
 def _has_completed_extended_onboarding(profile):
@@ -716,8 +702,12 @@ def _waitlist_description_to_user_type(description_value, *, non_gcc_business=Fa
     normalized = str(description_value or "").strip().lower()
     if normalized == "founder_idea":
         return "foreign_founder" if non_gcc_business else "founder"
-    if normalized in {"developer", "operator"}:
-        return "specialist"
+    if normalized == "developer":
+        return "developer"
+    if normalized == "operator":
+        return "operator"
+    if normalized == "other":
+        return "other"
     return ""
 
 
@@ -751,12 +741,6 @@ def _waitlist_to_onboarding_initial_answers(waitlist_source):
         initial_answers["user_type"] = mapped_user_type
     if source.get("venture_summary"):
         initial_answers["one_liner"] = source.get("venture_summary")
-    waitlist_location = source.get("custom_country") or source.get("country")
-    if waitlist_location:
-        initial_answers["location"] = waitlist_location
-    normalized_waitlist_links, _ = _normalize_profile_links(source.get("linkedin", ""))
-    if normalized_waitlist_links:
-        initial_answers["profile_links"] = normalized_waitlist_links
     if non_gcc_business and source.get("custom_country"):
         initial_answers["home_country"] = source.get("custom_country")
         initial_answers.setdefault("looking_for_type", "Local GCC partner")
@@ -5683,17 +5667,8 @@ def onboarding(request):
         if profile:
             if getattr(profile, "bio", "") and "headline" not in initial_answers:
                 initial_answers["headline"] = profile.bio
-            if getattr(profile, "country", "") and "location" not in initial_answers:
-                initial_answers["location"] = profile.country
-            profile_links = []
-            stored_links, _ = _normalize_profile_links(initial_answers.get("profile_links", []))
-            profile_links.extend(stored_links)
-            for profile_link in [getattr(profile, "linkedin", ""), getattr(profile, "github", ""), getattr(profile, "proof_of_work_url", "")]:
-                normalized_links, _ = _normalize_profile_links(profile_link)
-                for normalized_link in normalized_links:
-                    if normalized_link not in profile_links:
-                        profile_links.append(normalized_link)
-            initial_answers["profile_links"] = profile_links[:5]
+        initial_answers.pop("location", None)
+        initial_answers.pop("profile_links", None)
         profile_completion_complete = _has_profile_completion(profile)
         if requested_step == "intent" and profile_completion_complete:
             start_step_id = "S2_INTENT_SETUP"

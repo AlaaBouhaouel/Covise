@@ -25,9 +25,7 @@
     const stepTitle = document.getElementById("step-title");
     const stepDescription = document.getElementById("step-description");
     const stepFields = document.getElementById("step-fields");
-    const backBtn = document.getElementById("back-btn");
     const finishLaterBtn = document.getElementById("finish-later-btn");
-    const altActionBtn = document.getElementById("alt-action-btn");
     const nextBtn = document.getElementById("next-btn");
     const completionNote = document.getElementById("completion-note");
 
@@ -773,28 +771,14 @@
             stepFields.appendChild(block);
         });
 
-        const profileStep = isProfileStep(step);
-        backBtn.disabled = false;
         finishLaterBtn.disabled = false;
-        altActionBtn.disabled = false;
-        backBtn.style.visibility = currentIndex === 0 ? "hidden" : "visible";
-        finishLaterBtn.hidden = profileStep || currentIndex === 0;
-        altActionBtn.hidden = !profileStep;
-        nextBtn.textContent = profileStep ? "Skip and Get started" : (currentIndex === visibleSteps.length - 1 ? "Complete" : "Next");
-        altActionBtn.textContent = "Continue onboarding";
+        nextBtn.textContent = "Continue onboarding";
         updateButtons();
     }
 
     function updateButtons() {
         const step = currentStep();
         const valid = validateStep(step);
-
-        if (isProfileStep(step)) {
-            nextBtn.disabled = !valid;
-            altActionBtn.disabled = !valid;
-            return;
-        }
-
         nextBtn.disabled = !valid;
     }
 
@@ -841,7 +825,6 @@
     async function completeProfileAndExit() {
         setCompletionMessage("Saving your profile...", "");
         nextBtn.disabled = true;
-        altActionBtn.disabled = true;
 
         try {
             await submitOnboarding({ profileCompleted: true, extendedCompleted: false });
@@ -860,7 +843,6 @@
     async function continueExtendedOnboarding() {
         setCompletionMessage("Saving your profile...", "");
         nextBtn.disabled = true;
-        altActionBtn.disabled = true;
 
         try {
             await submitOnboarding({ profileCompleted: true, extendedCompleted: false });
@@ -880,7 +862,7 @@
         const step = visibleSteps[currentIndex];
 
         if (isProfileStep(step)) {
-            await completeProfileAndExit();
+            await continueExtendedOnboarding();
             return;
         }
 
@@ -908,21 +890,15 @@
     }
 
     async function finishLater() {
-        if (finishLaterBtn.hidden) {
-            return;
-        }
-
         setCompletionMessage("Saving your progress...", "");
         finishLaterBtn.disabled = true;
         nextBtn.disabled = true;
-        backBtn.disabled = true;
 
         try {
             await submitOnboarding({ profileCompleted: true, extendedCompleted: false });
         } catch (error) {
             setCompletionMessage(error.message || "We could not save your progress right now. Please try again.", "error");
             finishLaterBtn.disabled = false;
-            backBtn.disabled = currentIndex === 0;
             updateButtons();
             return;
         }
@@ -933,15 +909,6 @@
         }, 400);
     }
 
-    function goBack() {
-        setCompletionMessage("", "");
-        if (currentIndex > 0) {
-            currentIndex -= 1;
-            renderStep();
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-    }
-
     function initializeStartStep() {
         const visibleSteps = getVisibleSteps();
         const index = visibleSteps.findIndex((step) => step.step_id === startStepId);
@@ -950,9 +917,7 @@
         }
     }
 
-    backBtn.addEventListener("click", goBack);
     finishLaterBtn.addEventListener("click", finishLater);
-    altActionBtn.addEventListener("click", continueExtendedOnboarding);
     nextBtn.addEventListener("click", goNext);
 
     initializeStartStep();

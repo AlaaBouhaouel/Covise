@@ -175,6 +175,11 @@ textarea {
     max-width: 720px;
 }
 
+.hero-progress {
+    display: grid;
+    gap: calc(var(--onboarding-spacing) * 1);
+}
+
 .eyebrow,
 .step-kicker,
 .field-label,
@@ -185,6 +190,10 @@ textarea {
     text-transform: uppercase;
     letter-spacing: 0.16em;
     font-size: 0.82rem;
+}
+
+.progress-step {
+    margin: 0;
 }
 
 .eyebrow,
@@ -552,9 +561,10 @@ textarea {
 
 .step-actions {
     display: flex;
+    width: 100%;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: calc(var(--onboarding-spacing) * 2);
 }
 
@@ -573,6 +583,7 @@ textarea {
 }
 
 .action.primary {
+    max-width:50% ;
     background: var(--onboarding-accent);
     color: #08101e;
 }
@@ -580,7 +591,7 @@ textarea {
 .action.secondary {
     background: transparent;
     color: var(--onboarding-text);
-    border-color: var(--onboarding-border);
+    text-decoration: underline;
 }
 
 .action.secondary:hover:not(:disabled) {
@@ -625,23 +636,11 @@ textarea {
 }
 
 .finish-later-link {
-    min-height: auto;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    color: var(--onboarding-muted);
-    text-decoration: underline;
-    text-underline-offset: 0.22em;
-    text-decoration-thickness: 1px;
-    letter-spacing: 0.08em;
-    margin-left: auto;
+    min-width: 220px;
 }
 
 .finish-later-link:hover {
     color: var(--onboarding-text);
-    border: 0;
-    background: transparent;
 }
 
 .upload-field {
@@ -801,14 +800,22 @@ textarea {
         padding: 0;
     }
 
+    .eyebrow {
+        font-size: 0.68rem;
+        letter-spacing: 0.12em;
+    }
+
+    .hero-intro {
+        display: none;
+    }
+
     .onboarding-hero,
     .step-panel {
         padding: calc(var(--onboarding-spacing) * 2.6);
         border-radius: 22px;
     }
 
-    .progress-meta,
-    .step-actions {
+    .progress-meta {
         flex-direction: column;
         align-items: stretch;
     }
@@ -824,9 +831,24 @@ textarea {
         grid-template-columns: 1fr;
     }
 
-    .action,
     .back-link {
         width: 100%;
+    }
+
+    .step-actions {
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: calc(var(--onboarding-spacing) * 1.2);
+    }
+
+    .step-actions .action {
+        width: auto;
+        min-width: 0;
+        flex: 0 1 auto;
+        padding: 0 calc(var(--onboarding-spacing) * 2);
+        font-size: 0.76rem;
+        letter-spacing: 0.08em;
     }
 
     .back-link {
@@ -842,13 +864,8 @@ textarea {
         align-self: flex-end;
     }
 
-    .step-back-link {
-        width: auto;
-    }
-
     .finish-later-link {
         width: auto;
-        margin-left: 0;
     }
 
     .upload-card {

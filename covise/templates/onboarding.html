@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | Onboarding</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'onboarding.css' %}?v=20260419f">
+    <link rel="stylesheet" href="{% static 'onboarding.css' %}?v=20260420c">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Darker+Grotesque:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         (function() {
@@ -24,16 +24,17 @@
                         <img src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo">
                         <span>CoVise</span>
                     </a>
-                    <a class="back-link" href="{% url 'Home' %}">Back</a>
                 </div>
 
                 <div class="hero-copy">
                     {% if not onboarding_unavailable %}
-                    <div class="progress-line" aria-hidden="true">
-                        <div class="progress-line-fill" id="progress-line-fill"></div>
+                    <div class="hero-progress">
+                        <p class="progress-step" id="progress-step"></p>
+                        <div class="progress-line" aria-hidden="true">
+                            <div class="progress-line-fill" id="progress-line-fill"></div>
+                        </div>
                     </div>
                     {% endif %}
-                    <p class="eyebrow">Covise onboarding</p>
                     <h1 id="flow-name">Build your profile</h1>
                     <p class="hero-intro" id="flow-intro">A lighter setup so we understand who you are, what you are building, and what you bring.</p>
                 </div>
@@ -53,10 +54,8 @@
                     <div class="step-fields" id="step-fields"></div>
 
                     <div class="step-actions">
-                        <button type="button" class="action ghost step-back-link" id="back-btn">Back</button>
-                        <button type="button" class="action ghost finish-later-link" id="finish-later-btn" hidden>Finish later</button>
-                        <button type="button" class="action secondary" id="alt-action-btn" hidden>Continue onboarding</button>
-                        <button type="button" class="action primary" id="next-btn">Next</button>
+                        <button type="button" class="action secondary finish-later-link" id="finish-later-btn">Skip</button>
+                        <button type="button" class="action primary" id="next-btn">Continue</button>
                     </div>
                 </section>
             </form>
@@ -75,7 +74,7 @@
             submitUrl: "{% url 'Onboarding Submit' %}",
         };
     </script>
-    <script src="{% static 'onboarding.js' %}?v=20260419f"></script>
+    <script src="{% static 'onboarding.js' %}?v=20260420c"></script>
     {% endif %}
 </body>
 </html>

@@ -44,65 +44,6 @@
             "Strategic advisor",
             "Local GCC partner"
           ]
-        },
-        {
-          "id": "location",
-          "type": "single_select_searchable",
-          "label": "Location",
-          "required": true,
-          "options": [
-            "Saudi Arabia",
-            "United Arab Emirates",
-            "Qatar",
-            "Kuwait",
-            "Bahrain",
-            "Oman",
-            "United States",
-            "United Kingdom",
-            "Germany",
-            "France",
-            "Netherlands",
-            "Sweden",
-            "Spain",
-            "Italy",
-            "Canada",
-            "Australia",
-            "India",
-            "Pakistan",
-            "Bangladesh",
-            "Sri Lanka",
-            "Turkey",
-            "Egypt",
-            "Jordan",
-            "Lebanon",
-            "Morocco",
-            "Tunisia",
-            "Nigeria",
-            "Kenya",
-            "Ghana",
-            "South Africa",
-            "Ethiopia",
-            "Singapore",
-            "Malaysia",
-            "Indonesia",
-            "Philippines",
-            "Vietnam",
-            "China",
-            "South Korea",
-            "Japan",
-            "Brazil",
-            "Mexico",
-            "Other"
-          ]
-        },
-        {
-          "id": "profile_links",
-          "type": "link_list",
-          "label": "Links",
-          "required": true,
-          "max_selected": 5,
-          "placeholder": "https://linkedin.com/in/username",
-          "helper_text": "Add up to 5 links: LinkedIn, website, GitHub, proof of work, or personal profile."
         }
       ]
     },
@@ -120,28 +61,28 @@
           "options": [
             {
               "value": "founder",
-              "label": "Founder",
+              "label": "Founder with an idea",
               "description": "I am building a venture and want the right people around it."
             },
             {
-              "value": "specialist",
-              "label": "Specialist / Operator",
-              "description": "I bring strong skills and want to build with the right venture."
+              "value": "developer",
+              "label": "Developer or technical builder",
+              "description": "I bring technical skill and want to build with the right venture."
             },
             {
-              "value": "investor",
-              "label": "Investor",
-              "description": "I want to connect with and support founders in the region."
+              "value": "operator",
+              "label": "Operator or specialist",
+              "description": "I bring execution strength and want to build with the right venture."
+            },
+            {
+              "value": "other",
+              "label": "Other",
+              "description": "My profile does not fit the main categories above."
             },
             {
               "value": "foreign_founder",
-              "label": "Foreign Founder",
+              "label": "Founder with an idea outside the GCC",
               "description": "I am based outside the GCC and exploring a local partner or market entry."
-            },
-            {
-              "value": "incubator",
-              "label": "Incubator / Accelerator",
-              "description": "We support startups and want to connect with the right founders."
             }
           ]
         }
@@ -226,8 +167,20 @@
       "progress_label": "Specialist profile",
       "description": "The essentials on what you do, your experience, and where you want to build.",
       "show_if": {
-        "field": "user_type",
-        "equals": "specialist"
+        "any_of": [
+          {
+            "field": "user_type",
+            "equals": "developer"
+          },
+          {
+            "field": "user_type",
+            "equals": "operator"
+          },
+          {
+            "field": "user_type",
+            "equals": "other"
+          }
+        ]
       },
       "fields": [
         {
