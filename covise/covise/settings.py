@@ -24,6 +24,14 @@ POST_ALERT_EMAILS = [
     ).split(',')
     if email.strip()
 ]
+NEW_ACCOUNT_ALERT_EMAILS = [
+    email.strip().lower()
+    for email in config(
+        'NEW_ACCOUNT_ALERT_EMAILS',
+        default='ellabouhawel@gmail.com,small345az@gmail.com',
+    ).split(',')
+    if email.strip()
+]
 
 DEBUG_RAW = str(config('DEBUG', default='false')).strip().lower()
 DEBUG = DEBUG_RAW in {'1', 'true', 'yes', 'on', 'debug', 'local'}

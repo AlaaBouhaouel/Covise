@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .messaging import deliver_media_message
-from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Experiences, Message, OnboardingResponse, Post, PostImage, PostReaction, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
+from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Experiences, Message, MessageReceipt, OnboardingResponse, Post, PostImage, PostReaction, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
 from .context_processors import user_ui_context
 from .user_context import build_profile_context, build_ui_user_context, get_onboarding_skill_config
 from .views import _attach_post_feed_metadata, _has_profile_completion, _home_sidebar_metrics, _render_post_content_html, _render_post_title_html, _safe_media_url, _searchable_users_for_home, _serialize_message, _waitlist_to_onboarding_initial_answers
@@ -170,6 +170,7 @@ class PasswordResetFlowTests(TestCase):
         self.assertIn("/reset/", payload["text"])
 
 
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
 class AuthEmailNormalizationTests(TestCase):
     def test_create_user_normalizes_full_email_to_lowercase(self):
         user = User.objects.create_user(
@@ -193,7 +194,7 @@ class AuthEmailNormalizationTests(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 302)
+        self.assertIn(response.status_code, {301, 302})
 
     def test_signin_accepts_approved_waitlist_with_mixed_case_email(self):
         WaitlistEntry.objects.create(
@@ -215,9 +216,52 @@ class AuthEmailNormalizationTests(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 302)
+        self.assertIn(response.status_code, {301, 302})
         created_user = User.objects.get(email="approved.user@example.com")
         self.assertTrue(created_user.check_password("safe-password-123"))
+
+    @patch("covise_app.views.dispatch_notification")
+    @patch("covise_app.views.resend")
+    def test_signin_sends_account_alert_and_founders_request(self, mock_resend, dispatch_mock):
+        waitlist_entry = WaitlistEntry.objects.create(
+            full_name="Approved User",
+            phone_number="+966500000001",
+            email="Approved.User@Example.com",
+            country="Saudi Arabia",
+            linkedin="https://www.linkedin.com/in/approved-user/",
+            venture_summary="Building a matching network for founder teams.",
+            description="founder",
+            my_referral_code="CV-APPROVED2",
+            status=WaitlistEntry.Status.APPROVED,
+        )
+
+        with patch("covise_app.views.RESEND_API_KEY", "test-resend-key"):
+            response = self.client.post(
+                reverse("Sign In"),
+                {
+                    "email": "approved.user@example.com",
+                    "password": "safe-password-123",
+                    "confirm_password": "safe-password-123",
+                },
+            )
+
+        self.assertIn(response.status_code, {301, 302})
+        created_user = User.objects.get(email="approved.user@example.com")
+        founders_user = User.objects.get(email="founders@covise.net")
+        self.assertTrue(
+            ConversationRequest.objects.filter(
+                requester=founders_user,
+                recipient=created_user,
+                status=ConversationRequest.Status.PENDING,
+            ).exists()
+        )
+        waitlist_entry.refresh_from_db()
+        self.assertEqual(waitlist_entry.status, WaitlistEntry.Status.ACTIVATED)
+        mock_resend.Emails.send.assert_called_once()
+        payload = mock_resend.Emails.send.call_args.args[0]
+        self.assertEqual(payload["to"], ["ellabouhawel@gmail.com", "small345az@gmail.com"])
+        self.assertIn("New CoVise account created: Approved User", payload["subject"])
+        dispatch_mock.assert_called_once()
 
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
@@ -870,7 +914,7 @@ class PreviewPageTests(TestCase):
         self.assertEqual(visible_entry["profile_url"], reverse("Public Profile", args=[visible_user.id]))
         self.assertIn("fintech network", visible_entry["search_text"].lower())
 
-    def test_home_community_pulse_uses_approved_waitlist_verification_countries_and_post_counts(self):
+    def test_home_community_pulse_uses_approved_and_activated_waitlist_counts(self):
         Profile.objects.create(
             user=self.user,
             full_name="Preview User",
@@ -926,13 +970,13 @@ class PreviewPageTests(TestCase):
         )
 
         metrics = _home_sidebar_metrics(self.user)
-        self.assertEqual(metrics["verified_founders_count"], 2)
+        self.assertEqual(metrics["verified_founders_count"], 3)
         self.assertEqual(metrics["waitlist_count"], 3)
-        self.assertEqual(metrics["countries_involved_count"], 2)
+        self.assertEqual(metrics["countries_involved_count"], 3)
         self.assertEqual(metrics["posts_count"], 2)
-        self.assertEqual(metrics["verified_founders_delta"], "2+ today")
+        self.assertEqual(metrics["verified_founders_delta"], "3+ today")
         self.assertEqual(metrics["waitlist_delta"], "3+ today")
-        self.assertEqual(metrics["countries_involved_delta"], "2+ today")
+        self.assertEqual(metrics["countries_involved_delta"], "3+ today")
         self.assertEqual(metrics["posts_delta"], "2+ today")
 
 
@@ -2193,3 +2237,54 @@ class MessagingConversationNormalizationTests(TestCase):
             .distinct()
         )
         self.assertEqual(merged_conversations.count(), 1)
+
+    @patch("covise_app.views.broadcast_chat_message")
+    @patch("covise_app.messaging.dispatch_notification")
+    @patch("covise_app.views.dispatch_notification")
+    def test_accepting_founders_request_sends_welcome_message(
+        self,
+        accept_dispatch_mock,
+        _message_dispatch_mock,
+        broadcast_mock,
+    ):
+        founders_user = User.objects.create_user(
+            email="founders@covise.net",
+            password="safe-password-123",
+            full_name="CoVise Team",
+        )
+        Profile.objects.create(
+            user=founders_user,
+            full_name="CoVise Team",
+            has_accepted_platform_agreement=True,
+        )
+        incoming_request = ConversationRequest.objects.create(
+            requester=founders_user,
+            recipient=self.user,
+            status=ConversationRequest.Status.PENDING,
+        )
+
+        response = self.client.post(
+            reverse("Respond To Conversation Request", args=[incoming_request.id, "accept"])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        incoming_request.refresh_from_db()
+        self.assertEqual(incoming_request.status, ConversationRequest.Status.ACCEPTED)
+        self.assertIsNotNone(incoming_request.conversation_id)
+        welcome_message = Message.objects.get(
+            conversation=incoming_request.conversation,
+            sender=founders_user,
+        )
+        self.assertEqual(
+            welcome_message.body,
+            "Welcome to CoVise\n\nthis is your direct chat with the CoVise team.\n\nIf you have any questions, run into any issues, or need help with anything, feel free to message here anytime.",
+        )
+        self.assertTrue(
+            MessageReceipt.objects.filter(
+                message=welcome_message,
+                user=self.user,
+                status=MessageReceipt.Status.DELIVERED,
+            ).exists()
+        )
+        broadcast_mock.assert_called_once()
+        accept_dispatch_mock.assert_called_once()

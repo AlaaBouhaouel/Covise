@@ -64,6 +64,11 @@ PENDING_2FA_NEXT_SESSION_KEY = "pending_2fa_next"
 PROFILE_PHOTO_MAX_SIZE_BYTES = int(getattr(settings, "PROFILE_PHOTO_MAX_SIZE_BYTES", 5 * 1024 * 1024))
 PROFILE_PHOTO_MAX_SIZE_MB = max(1, PROFILE_PHOTO_MAX_SIZE_BYTES // (1024 * 1024))
 HOME_PINNED_POST_EMAIL = "founders@covise.net"
+FOUNDERS_TEAM_WELCOME_MESSAGE = (
+    "Welcome to CoVise\n\n"
+    "this is your direct chat with the CoVise team.\n\n"
+    "If you have any questions, run into any issues, or need help with anything, feel free to message here anytime."
+)
 
 
 def _normalize_email(value):
@@ -105,6 +110,16 @@ def _post_alert_recipients():
         getattr(
             settings,
             "POST_ALERT_EMAILS",
+            ("ellabouhawel@gmail.com", "small345az@gmail.com"),
+        )
+    )
+
+
+def _new_account_alert_recipients():
+    return _normalize_email_list(
+        getattr(
+            settings,
+            "NEW_ACCOUNT_ALERT_EMAILS",
             ("ellabouhawel@gmail.com", "small345az@gmail.com"),
         )
     )
@@ -1009,6 +1024,190 @@ def _send_platform_welcome_email(user):
         from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "support@covise.net"),
         to=[user.email],
     ).send(fail_silently=False)
+
+
+def _founders_team_user():
+    founders_user = User.objects.filter(email__iexact=HOME_PINNED_POST_EMAIL).first()
+    if founders_user is None:
+        try:
+            founders_user = User.objects.create_user(
+                email=HOME_PINNED_POST_EMAIL,
+                full_name="CoVise Team",
+            )
+        except IntegrityError:
+            founders_user = User.objects.filter(email__iexact=HOME_PINNED_POST_EMAIL).first()
+
+    if founders_user is None:
+        return None
+
+    profile_defaults = {
+        "full_name": founders_user.full_name or "CoVise Team",
+        "has_accepted_platform_agreement": True,
+        "platform_agreement_accepted_at": timezone.now(),
+    }
+    profile, _ = Profile.objects.get_or_create(user=founders_user, defaults=profile_defaults)
+
+    update_fields = []
+    if not profile.full_name:
+        profile.full_name = founders_user.full_name or "CoVise Team"
+        update_fields.append("full_name")
+    if not profile.has_accepted_platform_agreement:
+        profile.has_accepted_platform_agreement = True
+        update_fields.append("has_accepted_platform_agreement")
+    if not profile.platform_agreement_accepted_at:
+        profile.platform_agreement_accepted_at = timezone.now()
+        update_fields.append("platform_agreement_accepted_at")
+    if update_fields:
+        profile.save(update_fields=update_fields)
+
+    return founders_user
+
+
+def _send_new_account_alert(user, waitlist_entry=None):
+    recipients = _new_account_alert_recipients()
+    if resend is None or not RESEND_API_KEY or not recipients:
+        logger.warning(
+            "Skipped new account alert for %s because email alerts are not configured.",
+            getattr(user, "email", ""),
+        )
+        return False
+
+    resend.api_key = RESEND_API_KEY
+    profile = getattr(user, "profile", None)
+    onboarding_answers = getattr(profile, "onboarding_answers", {}) or {}
+    waitlist_snapshot = getattr(profile, "waitlist_snapshot", {}) or {}
+
+    full_name = (getattr(profile, "full_name", "") or getattr(user, "full_name", "") or "CoVise Member").strip()
+    country = (
+        str(getattr(profile, "custom_country", "") or "").strip()
+        or str(getattr(profile, "country", "") or "").strip()
+        or str(getattr(waitlist_entry, "custom_country", "") or "").strip()
+        or str(getattr(waitlist_entry, "country", "") or "").strip()
+        or str(waitlist_snapshot.get("custom_country") or "").strip()
+        or str(waitlist_snapshot.get("country") or "").strip()
+        or "Not provided"
+    )
+    linkedin_url = (
+        str(getattr(profile, "linkedin", "") or "").strip()
+        or str(getattr(waitlist_entry, "linkedin", "") or "").strip()
+        or str(waitlist_snapshot.get("linkedin") or "").strip()
+        or "Not provided"
+    )
+    one_liner = (
+        _display_value(getattr(profile, "one_liner", None))
+        or _display_value(onboarding_answers.get("one_liner"))
+        or str(getattr(waitlist_entry, "venture_summary", "") or "").strip()
+        or str(waitlist_snapshot.get("venture_summary") or "").strip()
+        or "Not provided"
+    )
+    user_type = (
+        _display_value(getattr(profile, "user_type", None))
+        or _display_value(onboarding_answers.get("user_type"))
+        or str(getattr(waitlist_entry, "description", "") or "").strip()
+        or str(waitlist_snapshot.get("description") or "").strip()
+        or "Not provided"
+    )
+    timestamp = timezone.now().isoformat()
+    payload = {
+        "from": "CoVise Alerts <founders@covise.net>",
+        "to": list(recipients),
+        "subject": f"New CoVise account created: {full_name}",
+        "html": (
+            '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111827;">'
+            '<h1 style="font-size: 22px; margin: 0 0 16px;">New account created</h1>'
+            f"<p style=\"margin: 0 0 10px;\"><strong>Name:</strong> {escape(full_name)}</p>"
+            f"<p style=\"margin: 0 0 10px;\"><strong>Email:</strong> {escape(user.email)}</p>"
+            f"<p style=\"margin: 0 0 10px;\"><strong>Date:</strong> {escape(timestamp)}</p>"
+            f"<p style=\"margin: 0 0 10px;\"><strong>User type:</strong> {escape(user_type)}</p>"
+            f"<p style=\"margin: 0 0 10px;\"><strong>Country:</strong> {escape(country)}</p>"
+            f"<p style=\"margin: 0 0 10px;\"><strong>LinkedIn:</strong> {escape(linkedin_url)}</p>"
+            f"<p style=\"margin: 0 0 10px;\"><strong>One-liner:</strong> {escape(one_liner)}</p>"
+            "</div>"
+        ),
+    }
+
+    try:
+        resend.Emails.send(payload)
+        return True
+    except Exception:
+        logger.exception("Failed to send new account alert email for %s", user.email)
+        return False
+
+
+def _ensure_founders_team_request(user):
+    if not user or not getattr(user, "id", None):
+        return None
+
+    founders_user = _founders_team_user()
+    if founders_user is None or founders_user.id == user.id:
+        return None
+    if _is_blocked_pair(founders_user, user):
+        return None
+
+    pair_filter = Q(requester=founders_user, recipient=user) | Q(requester=user, recipient=founders_user)
+    existing_request = (
+        ConversationRequest.objects.filter(
+            pair_filter,
+            status__in=[ConversationRequest.Status.PENDING, ConversationRequest.Status.ACCEPTED],
+        )
+        .order_by("-created_at")
+        .first()
+    )
+    if existing_request:
+        return existing_request
+
+    request_item = ConversationRequest.objects.create(
+        requester=founders_user,
+        recipient=user,
+    )
+    dispatch_notification(
+        recipient=user,
+        actor=founders_user,
+        notification_type=Notification.NotificationType.CONVERSATION_REQUEST,
+        title=f"{_display_name(founders_user)} wants to start a private chat",
+        body="Open Messages to review the request and decide whether to accept it.",
+        target_url=reverse("Messages"),
+    )
+    return request_item
+
+
+def _send_founders_team_welcome_message(*, request_item, conversation):
+    if not request_item or not conversation:
+        return None
+    if _normalize_email(getattr(request_item.requester, "email", "")) != HOME_PINNED_POST_EMAIL:
+        return None
+
+    send_result = deliver_text_message(
+        conversation_id=conversation.id,
+        sender=request_item.requester,
+        message_text=FOUNDERS_TEAM_WELCOME_MESSAGE,
+    )
+    message = send_result["message"]
+    try:
+        broadcast_chat_message(
+            conversation=conversation,
+            message=message,
+            sender=request_item.requester,
+        )
+    except RealtimeDeliveryError as exc:
+        send_messaging_failure_alert(
+            action="founders_welcome_message",
+            reason=exc.code,
+            actor=request_item.requester,
+            conversation=conversation,
+            target_user=request_item.recipient,
+            details={"message_id": str(message.id), **exc.details},
+        )
+    except Exception as exc:
+        send_messaging_failure_alert(
+            action="founders_welcome_message",
+            reason="broadcast_failed",
+            actor=request_item.requester,
+            conversation=conversation,
+            target_user=request_item.recipient,
+            details={"message_id": str(message.id), "exception": str(exc)},
+        )
+    return message
 
 
 def _as_bool(value):
@@ -2375,22 +2574,27 @@ def _home_sidebar_metrics(user):
         timezone.datetime.combine(timezone.localdate(), timezone.datetime.min.time()),
         timezone.get_current_timezone(),
     )
-    approved_waitlist_entries = WaitlistEntry.objects.filter(status=WaitlistEntry.Status.APPROVED)
-    verified_founders_count = approved_waitlist_entries.count()
+    verified_waitlist_entries = WaitlistEntry.objects.filter(
+        status__in=[
+            WaitlistEntry.Status.APPROVED,
+            WaitlistEntry.Status.ACTIVATED,
+        ]
+    )
+    verified_founders_count = verified_waitlist_entries.count()
     waitlist_count = WaitlistEmailVerification.objects.count()
     posts_count = Post.objects.filter(user=user).count()
-    verified_founders_today = approved_waitlist_entries.filter(created_at__gte=start_of_day).count()
+    verified_founders_today = verified_waitlist_entries.filter(created_at__gte=start_of_day).count()
     waitlist_today = WaitlistEmailVerification.objects.filter(created_at__gte=start_of_day).count()
     posts_today = Post.objects.filter(user=user, created_at__gte=start_of_day).count()
 
     approved_country_keys = set()
-    for country, custom_country in approved_waitlist_entries.values_list("country", "custom_country"):
+    for country, custom_country in verified_waitlist_entries.values_list("country", "custom_country"):
         normalized_country = (custom_country or country or "").strip()
         if normalized_country:
             approved_country_keys.add(normalized_country.casefold())
 
     countries_involved_today = set()
-    for country, custom_country in approved_waitlist_entries.filter(created_at__gte=start_of_day).values_list("country", "custom_country"):
+    for country, custom_country in verified_waitlist_entries.filter(created_at__gte=start_of_day).values_list("country", "custom_country"):
         normalized_country = (custom_country or country or "").strip()
         if normalized_country:
             countries_involved_today.add(normalized_country.casefold())
@@ -2404,25 +2608,6 @@ def _home_sidebar_metrics(user):
         "countries_involved_delta": f"{len(countries_involved_today)}+ today",
         "posts_count": posts_count,
         "posts_delta": f"{posts_today}+ today",
-    }
-
-    return {
-        "verified_founders_count": verified_founders_count,
-        "verified_founders_today": verified_founders_today,
-        "verified_founders_delta": "Waitlist profiles",
-        "open_opportunities_count": open_opportunities_count,
-        "open_opportunities_week": open_opportunities_week,
-        "open_opportunities_delta": "Completed onboarding",
-        "new_matches_count": accepted_this_week_count + pending_requests_count,
-        "new_matches_today": new_matches_today,
-        "new_matches_delta_clean": f"{accepted_this_week_count} accepted this week - {pending_requests_count} pending",
-        "new_matches_delta": f"{accepted_this_week_count} accepted this week · {pending_requests_count} pending",
-        "waitlist_count": waitlist_count,
-        "same_domain_count": same_domain_count,
-        "same_domain_week": same_domain_count,
-        "same_domain_delta": "Shared skills or interests",
-        "pending_requests_count": pending_requests_count,
-        "accepted_this_week_count": accepted_this_week_count,
     }
 
 
@@ -4548,6 +4733,24 @@ def respond_to_conversation_request(request, request_id, action):
                 body="Your private conversation is ready. Open Messages to continue.",
                 target_url=f"{reverse('Messages')}?conversation={conversation.id}",
             )
+            try:
+                _send_founders_team_welcome_message(
+                    request_item=request_item,
+                    conversation=conversation,
+                )
+            except Exception as exc:
+                logger.exception(
+                    "Failed to send founders welcome message for request=%s",
+                    request_item.id,
+                )
+                send_messaging_failure_alert(
+                    action="respond_to_request",
+                    reason="founders_welcome_message_failed",
+                    actor=request_item.requester,
+                    conversation=conversation,
+                    target_user=request_item.recipient,
+                    details={"request_id": str(request_item.id), "exception": str(exc)},
+                )
             return JsonResponse({"ok": True, "conversation_id": str(conversation.id)})
         except Exception as exc:
             send_messaging_failure_alert(
@@ -6547,6 +6750,20 @@ def signin(request):
     if approved_waitlist_entry.status != WaitlistEntry.Status.ACTIVATED:
         approved_waitlist_entry.status = WaitlistEntry.Status.ACTIVATED
         approved_waitlist_entry.save(update_fields=["status"])
+    try:
+        _send_new_account_alert(user, waitlist_entry=approved_waitlist_entry)
+    except Exception:
+        logger.exception("Failed to trigger new account alert for %s", user.email)
+    try:
+        _ensure_founders_team_request(user)
+    except Exception as exc:
+        logger.exception("Failed to create founders team request for %s", user.email)
+        send_messaging_failure_alert(
+            action="signup_founders_request",
+            reason="request_create_failed",
+            actor=user,
+            details={"exception": str(exc)},
+        )
     user = authenticate(request, email=email, password=password)
     if user is None:
         context["error_message"] = "Your account was created, but we could not sign you in automatically. Please try logging in."
