@@ -11,14 +11,7 @@ class AgreementRequiredMiddleware:
     def __call__(self, request):
         user = getattr(request, "user", None)
         if user and getattr(user, "is_authenticated", False):
-            print(f"[DEBUG middleware] {request.path} — user: {getattr(user, 'email', '?')}", flush=True)
-            try:
-                profile, created = Profile.objects.get_or_create(user=user)
-                print(f"[DEBUG middleware] profile ok, created={created}, agreement={profile.has_accepted_platform_agreement}", flush=True)
-            except Exception as exc:
-                print(f"[DEBUG middleware] get_or_create FAILED: {type(exc).__name__} {exc}", flush=True)
-                raise
-            profile, _ = profile, created
+            profile, _ = Profile.objects.get_or_create(user=user)
             exempt_paths = {
                 reverse("Agreement"),
                 reverse("Onboarding"),

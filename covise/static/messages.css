@@ -343,10 +343,13 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
 .conv-search input { background: transparent; border: 0; color: var(--text); width: 100%; outline: none; }
 .conv-search input::placeholder { color: rgba(170, 183, 206, 0.66); }
 .conv-search-header { flex: 1; min-width: 220px; max-width: none; }
-.conv-tabs-shell { border: 1px solid rgba(120, 150, 255, 0.16); border-radius: 999px; background: rgba(10, 16, 28, 0.78); padding: 4px; }
-.conv-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-.tab-btn { border: 1px solid transparent; background: transparent; color: rgba(233, 237, 245, 0.9); border-radius: 999px; padding: 9px 12px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+.conv-tabs-shell { width: 100%; border: 1px solid rgba(120, 150, 255, 0.16); border-radius: 999px; background: rgba(10, 16, 28, 0.78); padding: 4px; }
+.conv-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.tab-btn { border: 1px solid transparent; background: transparent; color: rgba(233, 237, 245, 0.9); border-radius: 999px; padding: 9px 12px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; white-space: nowrap; min-width: 0; width: 100%; }
 .tab-btn.is-active { border-color: rgba(120, 150, 255, 0.36); background: rgba(55, 85, 165, 0.26); }
+.tab-btn__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tab-btn__icon { width: 22px; height: 22px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(120, 150, 255, 0.08); border: 1px solid rgba(120, 150, 255, 0.14); }
+.tab-btn__icon svg { width: 14px; height: 14px; }
 .tab-count {
     display: inline-flex;
     align-items: center;
@@ -1140,6 +1143,10 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
     .msg { max-width: 92%; }
     .notif-panel { right: 0; left: auto; }
     .conv-top-controls { flex-wrap: nowrap; }
+    .conv-tabs-shell { width: 100%; }
+    .conv-tabs { gap: 4px; }
+    .tab-btn { padding: 9px 10px; font-size: 0.7rem; }
+    .tab-btn__icon { width: 20px; height: 20px; }
     .emoji-picker-panel {
         right: 14px;
         left: 14px;
@@ -1230,4 +1237,10 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
         flex: 1;
         min-width: 0;
     }
+}
+
+@media (max-width: 420px) {
+    .tab-btn { padding: 8px 10px; font-size: 0.68rem; gap: 8px; }
+    .tab-btn__icon { width: 18px; height: 18px; }
+    .tab-btn__icon svg { width: 12px; height: 12px; }
 }

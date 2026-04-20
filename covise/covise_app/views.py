@@ -2717,14 +2717,7 @@ def _project_card_context(project):
 
 # Create your views here.
 def landing(request):
-    print("[DEBUG landing] hit — user:", getattr(request.user, 'email', 'anon'), "authenticated:", getattr(request.user, 'is_authenticated', False), flush=True)
-    try:
-        response = render(request, 'landing.html')
-        print("[DEBUG landing] render OK", flush=True)
-        return response
-    except Exception as exc:
-        print("[DEBUG landing] render FAILED:", type(exc).__name__, exc, flush=True)
-        raise
+    return render(request, 'landing.html')
 
 @login_required
 def home(request):
@@ -3460,8 +3453,17 @@ def create_post(request):
 
 @login_required
 def messages(request):
-    _normalize_visible_private_conversations(request.user)
-    _normalize_friend_contacts(request.user)
+    try:
+        _normalize_visible_private_conversations(request.user)
+        _normalize_friend_contacts(request.user)
+    except Exception as exc:
+        logger.exception("Messages page normalization failed for user=%s", request.user.id)
+        send_messaging_failure_alert(
+            action="load_messages_page",
+            reason="normalization_failed",
+            actor=request.user,
+            details={"exception": str(exc)},
+        )
     conversations = list(
         Conversation.objects.filter(participants=request.user)
         .prefetch_related("participants__profile", "messages__sender", "messages__reactions", "messages__receipts", "user_states")
@@ -3487,16 +3489,26 @@ def messages(request):
     elif serialized_conversations:
         active_conversation_id = serialized_conversations[0]["id"]
 
-    friend_options = [
-        {
-            "id": str(friend.id),
-            "display_name": friend.full_name or friend.email,
-            "avatar_initials": friend.avatar_initials,
-            "avatar_url": _user_avatar_url(friend),
-        }
-        for friend in _friend_queryset(request.user)
-        if not _has_user_blocked(request.user, friend)
-    ]
+    try:
+        friend_options = [
+            {
+                "id": str(friend.id),
+                "display_name": friend.full_name or friend.email,
+                "avatar_initials": friend.avatar_initials,
+                "avatar_url": _user_avatar_url(friend),
+            }
+            for friend in _friend_queryset(request.user)
+            if not _has_user_blocked(request.user, friend)
+        ]
+    except Exception as exc:
+        logger.exception("Messages page friend options failed for user=%s", request.user.id)
+        send_messaging_failure_alert(
+            action="load_messages_page",
+            reason="friend_options_failed",
+            actor=request.user,
+            details={"exception": str(exc)},
+        )
+        friend_options = []
 
     return render(
         request,

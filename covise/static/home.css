@@ -4134,6 +4134,12 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
     .footer-form button {
         width: 100%;
     }
+    .home-secondary {
+        padding-top: calc(var(--spacing)*8);
+        gap: calc(var(--spacing) * 4);
+        align-self: start;
+        align-content: start;
+    }
 }
 
 

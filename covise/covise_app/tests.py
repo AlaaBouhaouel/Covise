@@ -1361,3 +1361,16 @@ class MessagingConversationNormalizationTests(TestCase):
         self.assertTrue(
             ConversationRequest.objects.filter(id=accepted_request.id, conversation=canonical).exists()
         )
+
+    @patch("covise_app.views.send_messaging_failure_alert")
+    @patch("covise_app.views._normalize_visible_private_conversations")
+    def test_messages_page_still_renders_when_normalization_fails(self, normalize_mock, alert_mock):
+        normalize_mock.side_effect = RuntimeError("normalization exploded")
+
+        response = self.client.get(reverse("Messages"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["conversation_data"], [])
+        self.assertEqual(response.context["friend_options"], [])
+        alert_mock.assert_called_once()
+        self.assertEqual(alert_mock.call_args.kwargs["reason"], "normalization_failed")
