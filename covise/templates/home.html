@@ -89,7 +89,7 @@
                 </div>
                 <div class="home-header-actions">
                     
-                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Switch light or dark mode">
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Switch light or dark mode" data-demo="Switch between dark and light mode here whenever you want a brighter workspace." data-demo-pos="left">
                         <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                         <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                     </button>
@@ -942,7 +942,7 @@
                                 <h2>Welcome, {{ first_name }}</h2>
                                 <p>{{ home_welcome_subtitle }}</p>
                             </div>
-                            <a class="welcome-post-button" href="{% url 'Create Post' %}" aria-label="Create a post" title="Open the create post page">
+                            <a class="welcome-post-button" href="{% url 'Create Post' %}" aria-label="Create a post" title="Open the create post page" data-demo="Use this POST button to share an update, ask the community something, or publish a quick win." data-demo-pos="side">
                                 <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
                                 <span>POST</span>
                             </a>
@@ -1364,11 +1364,14 @@
 </script>
 <script>
     (function() {
-        // Interactive demo is temporarily disabled.
-        return;
-
-        var demoTargets = Array.prototype.slice.call(document.querySelectorAll('[data-demo]'));
+        var demoStorageKey = 'covise-home-demo-v1';
+        var themeToggle = document.getElementById('themeToggle');
+        var postButton = document.querySelector('.welcome-post-button[data-demo]');
+        var demoTargets = [themeToggle, postButton].filter(Boolean);
         if (!demoTargets.length) return;
+        try {
+            if (localStorage.getItem(demoStorageKey) === 'done') return;
+        } catch (error) {}
 
         var guide = document.createElement('div');
         guide.className = 'demo-guide';
@@ -1387,6 +1390,25 @@
         var skipBtn = guide.querySelector('.demo-guide-skip');
         var activeIndex = -1;
         var activeTarget = null;
+        var secondary = document.getElementById('homeSecondary');
+        var secondaryToggle = document.getElementById('appMobileBackTrigger') || document.getElementById('mobileSidebarToggle');
+        var secondaryBackdrop = document.getElementById('sidebarBackdrop');
+        var autoOpenedSecondary = false;
+
+        function rememberComplete() {
+            try {
+                localStorage.setItem(demoStorageKey, 'done');
+            } catch (error) {}
+        }
+
+        function setSecondaryOpen(open) {
+            if (!secondary || !secondaryToggle || !secondaryBackdrop) return;
+            secondary.classList.toggle('is-open', open);
+            secondaryToggle.classList.toggle('is-open', open);
+            secondaryToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            secondaryBackdrop.hidden = !open;
+            document.body.classList.toggle('secondary-open', open);
+        }
 
         function clearFocus() {
             if (activeTarget) activeTarget.classList.remove('demo-focus');
@@ -1397,6 +1419,10 @@
             activeTarget = null;
             activeIndex = -1;
             guide.classList.remove('is-active', 'pos-left', 'pos-side', 'pos-bottom');
+            if (autoOpenedSecondary) {
+                setSecondaryOpen(false);
+                autoOpenedSecondary = false;
+            }
         }
 
         function positionGuide(target) {
@@ -1445,6 +1471,7 @@
 
         function showStep(index) {
             if (index < 0 || index >= demoTargets.length) {
+                rememberComplete();
                 hideGuide();
                 return;
             }
@@ -1452,12 +1479,27 @@
             clearFocus();
             activeIndex = index;
             activeTarget = demoTargets[index];
+            if (
+                secondary &&
+                activeTarget &&
+                secondary.contains(activeTarget) &&
+                window.innerWidth <= 1100 &&
+                !secondary.classList.contains('is-open')
+            ) {
+                setSecondaryOpen(true);
+                autoOpenedSecondary = true;
+            }
+            if (activeTarget && typeof activeTarget.scrollIntoView === 'function') {
+                activeTarget.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            }
             activeTarget.classList.add('demo-focus');
             guideText.textContent = activeTarget.getAttribute('data-demo') || '';
             nextBtn.textContent = (activeIndex === demoTargets.length - 1) ? 'Finish' : 'Next';
 
             guide.classList.add('is-active');
-            positionGuide(activeTarget);
+            window.setTimeout(function() {
+                if (activeTarget) positionGuide(activeTarget);
+            }, 160);
         }
 
         function startTour() {
@@ -1473,6 +1515,7 @@
         skipBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            rememberComplete();
             hideGuide();
         });
 
@@ -1488,7 +1531,7 @@
             }
         }, { passive: true });
 
-        startTour();
+        window.setTimeout(startTour, 420);
     })();
 </script>
 <script>

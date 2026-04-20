@@ -3840,6 +3840,55 @@ p {
     color: #1f3358;
 }
 
+[data-theme="light"] .profile-section-page-head {
+    background:
+        radial-gradient(circle at top right, rgba(98, 145, 236, 0.12), transparent 36%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 246, 255, 0.94));
+    border-color: rgba(76, 112, 181, 0.14);
+    box-shadow: 0 18px 36px rgba(76, 112, 181, 0.08);
+}
+
+[data-theme="light"] .profile-section-panel {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(245, 249, 255, 0.92));
+    border-color: rgba(76, 112, 181, 0.12);
+    box-shadow: 0 20px 40px rgba(76, 112, 181, 0.08);
+}
+
+[data-theme="light"] .profile-section-page-head__action,
+[data-theme="light"] .profile-section-back {
+    color: #3b5f9f;
+}
+
+[data-theme="light"] .profile-section-page-head__action:hover,
+[data-theme="light"] .profile-section-page-head__action:focus-visible,
+[data-theme="light"] .profile-section-back:hover,
+[data-theme="light"] .profile-section-back:focus-visible {
+    color: #213a6f;
+}
+
+[data-theme="light"] .profile-panel-subcopy,
+[data-theme="light"] .profile-section-head p,
+[data-theme="light"] .profile-section-page-head p,
+[data-theme="light"] .profile-photo-row__controls,
+[data-theme="light"] .profile-editor-card__head p,
+[data-theme="light"] .profile-editor-card p,
+[data-theme="light"] .profile-viewer-card p,
+[data-theme="light"] .profile-section-empty span {
+    color: #5c7098;
+}
+
+[data-theme="light"] .profile-field span {
+    color: #6176a1;
+}
+
+[data-theme="light"] .profile-field input::placeholder,
+[data-theme="light"] .profile-field textarea::placeholder,
+[data-theme="light"] .profile-report-input::placeholder,
+[data-theme="light"] .profile-report-textarea::placeholder {
+    color: rgba(74, 85, 128, 0.64);
+}
+
 [data-theme="light"] .primary-btn {
     border-color: rgba(77, 112, 190, 0.26);
     background: linear-gradient(135deg, #4f79d8, #3f66c4);

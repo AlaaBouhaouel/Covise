@@ -35,6 +35,9 @@
     display: grid;
     gap: calc(var(--spacing) * 1.3);
 }
+.create-post-intent-section, .create-post-intent-grid{
+    background-color: transparent !important;
+}
 
 .create-post-head-row,
 .create-post-actions,
