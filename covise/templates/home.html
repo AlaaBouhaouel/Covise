@@ -392,11 +392,11 @@
                                     </summary>
                                     <div class="post-more-dropdown">
                                         {% if post.user.id != request.user.id %}
-                                        <form method="post" action="{% url 'Start Private Conversation' post.user.id %}">
-                                            {% csrf_token %}
-                                            <button class="feed-post-menu-action feed-post-menu-action--request" type="submit">
-                                                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                                                <span>Request</span>
+                                          <form method="post" action="{% url 'Start Private Conversation' post.user.id %}">
+                                              {% csrf_token %}
+                                              <button class="feed-post-menu-action feed-post-menu-action--request" type="submit">
+                                                  <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                                                  <span>Request</span>
                                             </button>
                                         </form>
                                         <form method="post" action="{% url 'Toggle Block User' post.user.id %}">
@@ -406,30 +406,33 @@
                                                 <span>Block</span>
                                             </button>
                                         </form>
-                                        <form method="post" action="{% url 'Report User Profile' post.user.id %}">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="report_reason" value="Reported from home feed post menu">
-                                            <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
-                                                <i class="fa-solid fa-flag" aria-hidden="true"></i>
-                                                <span>Report</span>
-                                            </button>
-                                        </form>
-                                        {% else %}
+                                          <form method="post" action="{% url 'Report User Profile' post.user.id %}">
+                                              {% csrf_token %}
+                                              <input type="hidden" name="report_reason" value="Reported from home feed post menu">
+                                              <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
+                                                  <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                                                  <span>Report</span>
+                                              </button>
+                                          </form>
+                                          {% endif %}
+                                        {% if post.viewer_can_edit %}
                                         <a class="feed-post-menu-action" href="{% url 'Edit Post' post.id %}">
-                                            <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
-                                            <span>Edit</span>
-                                        </a>
-                                        <form method="post" action="{% url 'Delete Post' post.id %}">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                            <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
-                                                <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
-                                                <span>Delete</span>
-                                            </button>
-                                        </form>
+                                              <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                                              <span>Edit</span>
+                                          </a>
                                         {% endif %}
-                                    </div>
-                                </details>
+                                        {% if post.viewer_can_delete %}
+                                        <form method="post" action="{% url 'Delete Post' post.id %}">
+                                              {% csrf_token %}
+                                              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                              <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
+                                                  <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                                                  <span>Delete</span>
+                                              </button>
+                                          </form>
+                                        {% endif %}
+                                      </div>
+                                  </details>
                             </div>
                             <div class="structured-post-tools">
                                     <div class="structured-badges">

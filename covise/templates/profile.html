@@ -165,6 +165,17 @@
                                             <span>{% if is_blocked_user %}Unblock User{% else %}Block User{% endif %}</span>
                                         </button>
                                     </form>
+                                    {% if founders_can_delete_account %}
+                                    <form action="{% url 'Founders Delete Account' viewed_user_id %}" method="post" onsubmit="return window.confirm('Delete this account permanently?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <input type="hidden" name="delete_feedback" value="Deleted by founders admin from public profile.">
+                                        <button class="hero-actions-menu__item hero-actions-menu__item--danger" type="submit">
+                                            <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                                            <span>Delete Account</span>
+                                        </button>
+                                    </form>
+                                    {% endif %}
                                 </div>
                             </div>
                             {% endif %}
@@ -189,6 +200,14 @@
                                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                     <button class="primary-action secondary danger-action" type="submit">{% if is_blocked_user %}Unblock User{% else %}Block User{% endif %}</button>
                                 </form>
+                                {% if founders_can_delete_account %}
+                                <form action="{% url 'Founders Delete Account' viewed_user_id %}" method="post" onsubmit="return window.confirm('Delete this account permanently?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <input type="hidden" name="delete_feedback" value="Deleted by founders admin from public profile.">
+                                    <button class="primary-action secondary danger-action" type="submit">Delete Account</button>
+                                </form>
+                                {% endif %}
                             </div>
                         </div>
                         {% endif %}

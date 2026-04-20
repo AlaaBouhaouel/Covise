@@ -70,6 +70,10 @@ def _normalize_email(value):
     return str(value or "").strip().lower()
 
 
+def _is_founders_admin(user):
+    return bool(user and getattr(user, "is_authenticated", False) and _normalize_email(getattr(user, "email", "")) == HOME_PINNED_POST_EMAIL)
+
+
 def _normalize_email_list(value):
     if not value:
         return ()
@@ -2521,6 +2525,8 @@ def _attach_post_feed_metadata(posts, current_user=None):
         post.owner_display_name = _display_name(post.user)
         post.feed_post_type_label = _post_type_display_label(post)
         post.is_founders_spotlight = _normalize_email(getattr(post.user, "email", "")) == HOME_PINNED_POST_EMAIL
+        post.viewer_can_delete = bool(current_user and (current_user.id == post.user_id or _is_founders_admin(current_user)))
+        post.viewer_can_edit = bool(current_user and current_user.id == post.user_id)
     _attach_post_reaction_metadata(posts, current_user=current_user)
     return posts
 
@@ -3493,7 +3499,7 @@ def toggle_post_reaction(request, post_id, reaction):
 @require_POST
 def delete_post(request, post_id):
     post = get_object_or_404(Post.objects.prefetch_related("gallery_images"), id=post_id)
-    if request.user.id != post.user_id:
+    if request.user.id != post.user_id and not _is_founders_admin(request.user):
         return JsonResponse({"ok": False, "error": "You cannot delete this post."}, status=403)
 
     if post.image:
@@ -5316,6 +5322,7 @@ def _build_profile_display_context(request, target_user, is_own_profile):
     is_blocked_user = target_user.id in viewer_blocked_ids and not is_own_profile
     messaging_blocked = _is_blocked_pair(request.user, target_user) and not is_own_profile
     is_friend = _are_friends(request.user, target_user) and not is_own_profile
+    founders_can_delete_account = _is_founders_admin(request.user) and not is_own_profile
     report_error_code = request.GET.get("report_error", "").strip()
     report_error_message = ""
     if report_error_code == "empty":
@@ -5392,6 +5399,7 @@ def _build_profile_display_context(request, target_user, is_own_profile):
         "is_blocked_user": is_blocked_user,
         "messaging_blocked": messaging_blocked,
         "is_friend": is_friend,
+        "founders_can_delete_account": founders_can_delete_account,
         "is_onboarded": is_onboarded,
         "extended_onboarding_complete": extended_onboarding_complete,
         "profile_error_message": (
@@ -6303,6 +6311,43 @@ def delete_account(request):
         return redirect(f"{_append_query_params(redirect_url, delete_account='error')}#danger-zone")
 
     return redirect("Landing Page")
+
+
+@login_required
+@require_POST
+def founders_delete_account(request, user_id):
+    if not _is_founders_admin(request.user):
+        return JsonResponse({"ok": False, "error": "Forbidden"}, status=403)
+
+    target_user = get_object_or_404(User, id=user_id)
+    if target_user.id == request.user.id:
+        return JsonResponse({"ok": False, "error": "Use your own account settings to delete this account."}, status=400)
+
+    redirect_url = _safe_redirect_url(request, reverse("Home"))
+    delete_feedback = request.POST.get("delete_feedback", "").strip() or "Deleted by founders admin."
+
+    deletion_request = AccountDeletionRequest.objects.create(
+        user=target_user,
+        user_id_snapshot=target_user.id,
+        email_snapshot=target_user.email,
+        feedback=delete_feedback,
+        status=AccountDeletionRequest.Status.PENDING,
+    )
+
+    target_email = target_user.email
+    try:
+        deletion_request.status = AccountDeletionRequest.Status.COMPLETED
+        deletion_request.processed_at = timezone.now()
+        deletion_request.save(update_fields=["status", "processed_at"])
+        target_user.delete()
+        logger.info("Founders admin deleted account for user with email: %s", target_email)
+    except Exception:
+        deletion_request.status = AccountDeletionRequest.Status.FAILED
+        deletion_request.processed_at = timezone.now()
+        deletion_request.save(update_fields=["status", "processed_at"])
+        return redirect(_append_query_params(redirect_url, deleted_account="error"))
+
+    return redirect(_append_query_params(redirect_url, deleted_account="1"))
 
 
 @login_required

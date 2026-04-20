@@ -145,6 +145,31 @@ class PublicIdentityPrivacyTests(TestCase):
         self.assertEqual(helper_context["display_name"], "CoVise Member")
 
 
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class PasswordResetFlowTests(TestCase):
+    @patch("covise_app.forms.resend")
+    def test_forgot_password_uses_covise_resend_sender(self, mock_resend):
+        with patch("covise_app.forms.RESEND_API_KEY", "test-resend-key"):
+            user = User.objects.create_user(
+                email="reset-user@example.com",
+                password="safe-password-123",
+                full_name="Reset User",
+            )
+
+            response = self.client.post(
+                reverse("Forgot Password"),
+                {"email": "reset-user@example.com"},
+            )
+
+        self.assertRedirects(response, reverse("Forgot Password Sent"))
+        mock_resend.Emails.send.assert_called_once()
+        payload = mock_resend.Emails.send.call_args.args[0]
+        self.assertEqual(payload["from"], "CoVise <founders@covise.net>")
+        self.assertEqual(payload["to"], [user.email])
+        self.assertIn("Reset your CoVise password", payload["subject"])
+        self.assertIn("/reset/", payload["text"])
+
+
 class AuthEmailNormalizationTests(TestCase):
     def test_create_user_normalizes_full_email_to_lowercase(self):
         user = User.objects.create_user(
@@ -605,6 +630,60 @@ class AccountRequestActionTests(TestCase):
         self.assertFalse(User.objects.filter(email="requests@example.com").exists())
         deletion_request = AccountDeletionRequest.objects.get(email_snapshot="requests@example.com")
         self.assertEqual(deletion_request.status, AccountDeletionRequest.Status.COMPLETED)
+
+    def test_founders_admin_can_delete_another_account(self):
+        founders_user = User.objects.create_user(
+            email="founders@covise.net",
+            password="safe-password-123",
+            full_name="Founders",
+        )
+        Profile.objects.create(
+            user=founders_user,
+            full_name="Founders",
+            has_accepted_platform_agreement=True,
+        )
+        target_user = User.objects.create_user(
+            email="delete-target@example.com",
+            password="safe-password-123",
+            full_name="Delete Target",
+        )
+        Profile.objects.create(
+            user=target_user,
+            full_name="Delete Target",
+            has_accepted_platform_agreement=True,
+        )
+        self.client.force_login(founders_user)
+
+        response = self.client.post(
+            reverse("Founders Delete Account", args=[target_user.id]),
+            {
+                "next": reverse("Home"),
+                "delete_feedback": "Deleted by founders admin in test.",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"{reverse('Home')}?deleted_account=1")
+        self.assertFalse(User.objects.filter(id=target_user.id).exists())
+        deletion_request = AccountDeletionRequest.objects.get(email_snapshot="delete-target@example.com")
+        self.assertEqual(deletion_request.status, AccountDeletionRequest.Status.COMPLETED)
+
+    def test_non_founders_user_cannot_delete_another_account(self):
+        target_user = User.objects.create_user(
+            email="blocked-target@example.com",
+            password="safe-password-123",
+            full_name="Blocked Target",
+        )
+        Profile.objects.create(
+            user=target_user,
+            full_name="Blocked Target",
+            has_accepted_platform_agreement=True,
+        )
+
+        response = self.client.post(reverse("Founders Delete Account", args=[target_user.id]))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(User.objects.filter(id=target_user.id).exists())
 
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
@@ -1265,6 +1344,34 @@ class DeletePostTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Post.objects.filter(id=post.id).exists())
+
+    def test_founders_admin_can_delete_any_post(self):
+        founders_user = User.objects.create_user(
+            email="founders@covise.net",
+            password="safe-password-123",
+            full_name="Founders",
+        )
+        Profile.objects.create(
+            user=founders_user,
+            full_name="Founders",
+            has_accepted_platform_agreement=True,
+        )
+        post = Post.objects.create(
+            user=self.user,
+            title="Founders can remove me",
+            post_type=Post.PostType.UPDATE,
+            content="This post should be removable by founders admin.",
+        )
+        self.client.force_login(founders_user)
+
+        response = self.client.post(
+            reverse("Delete Post", args=[post.id]),
+            {"next": reverse("Home")},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Home"))
+        self.assertFalse(Post.objects.filter(id=post.id).exists())
 
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])

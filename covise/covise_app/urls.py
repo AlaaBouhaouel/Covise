@@ -1,6 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from .forms import CoVisePasswordResetForm
 
 
 from django.contrib.sitemaps.views import sitemap
@@ -56,6 +57,7 @@ urlpatterns = [
     path('notifications/<int:notification_id>/read/', views.notifications_mark_read, name='Notifications Mark Read'),
     path('notifications/read-all/', views.notifications_mark_all_read, name='Notifications Mark All Read'),
     path('users/<uuid:user_id>/block/', views.toggle_block_user, name='Toggle Block User'),
+    path('users/<uuid:user_id>/delete/', views.founders_delete_account, name='Founders Delete Account'),
     path('map/', views.map_view, name='Map'),
     path('chatbot/', views.chatbot, name='Chatbot'),
     path('profile/', views.profile, name='Profile'),
@@ -92,8 +94,11 @@ urlpatterns = [
         'forgot-password/',
         auth_views.PasswordResetView.as_view(
             template_name='forgot_password.html',
+            form_class=CoVisePasswordResetForm,
             email_template_name='registration/password_reset_email.txt',
+            html_email_template_name='registration/password_reset_email.html',
             subject_template_name='registration/password_reset_subject.txt',
+            from_email='CoVise <founders@covise.net>',
             success_url='/forgot-password/sent/',
         ),
         name='Forgot Password',
