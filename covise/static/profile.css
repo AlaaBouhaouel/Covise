@@ -3425,6 +3425,7 @@ p {
 }
 
 [data-theme="light"] .profile-onboarding-panel h2,
+[data-theme="light"] .profile-onboarding-panel p,
 [data-theme="light"] .profile-onboarding-panel__arrow {
     color: #f4fff8 !important;
 }
@@ -3681,15 +3682,40 @@ p {
 .profile-photo-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: calc(var(--spacing) * 1.1);
+    grid-column: 1 / -1;
     padding: 14px 16px;
     border-radius: 18px;
     border: 1px solid rgba(118, 145, 203, 0.16);
     background: rgba(10, 16, 28, 0.52);
 }
 
+.first-col {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 1.4);
+    min-width: 0;
+}
+
 .profile-photo-row__preview {
     flex-shrink: 0;
+}
+
+.small-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.avatar-image.small-avatar {
+    object-fit: cover;
+    display: block;
+    border: 1px solid rgba(120, 150, 255, 0.26);
 }
 
 .profile-photo-row__controls {
@@ -3863,6 +3889,33 @@ p {
     font-size: 0.88rem;
 }
 
+.outline-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    width: fit-content;
+    padding: 0 calc(var(--spacing) * 1.6);
+    border-radius: 999px;
+    border: 1px solid rgba(120, 150, 255, 0.26);
+    background: rgba(120, 150, 255, 0.08);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+}
+
+.outline-btn:hover,
+.outline-btn:focus-visible {
+    transform: translateY(-1px);
+    border-color: rgba(120, 150, 255, 0.42);
+    background: rgba(120, 150, 255, 0.14);
+    outline: none;
+}
+
 .primary-btn {
     display: inline-flex;
     align-items: center;
@@ -4004,7 +4057,8 @@ p {
 
 [data-theme="light"] .skills-picker-toggle,
 [data-theme="light"] .skills-picker-panel,
-[data-theme="light"] .selector-pill {
+[data-theme="light"] .selector-pill,
+[data-theme="light"] .outline-btn {
     background: rgba(246, 249, 255, 0.92);
     border-color: rgba(103, 130, 181, 0.18);
     color: #1f3358;

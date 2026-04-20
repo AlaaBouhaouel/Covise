@@ -355,7 +355,7 @@
                  </div>
                  <div class="structured-feed">
                     {% for post in posts %}
-                    <article class="structured-post {{ post.theme_class }}{% if post.is_founders_spotlight %} structured-post--founders-spotlight{% endif %}" data-post-id="{{ post.id }}" data-post-url="{% url 'Post Detail' post.id %}" data-post-type="{{ post.post_type }}" data-post-owner="{{ post.owner_display_name|lower }}" data-post-country="{{ post.feed_country|lower }}">
+                    <article class="structured-post {{ post.theme_class }}{% if post.is_founders_spotlight %} structured-post--founders-spotlight{% endif %}" data-post-id="{{ post.id }}" data-post-url="{% url 'Post Detail' post.id %}" data-post-type="{{ post.post_type }}" data-post-owner="{{ post.owner_display_name|lower }}" data-post-country="{{ post.feed_country_display|default:post.feed_country|lower }}">
                         <div class="structured-post-head">
                             <div class="structured-post-head-main">
                                 <div class="structured-post-meta">
@@ -378,10 +378,10 @@
                                         <div class="structured-post-subtitle">
                                             {% if not post.is_founders_spotlight %}
                                             {{ post.feed_post_type_label }}
-                                            {% if post.feed_country %} · {{ post.feed_country }}{% endif %}
+                                            {% if post.feed_country_display|default:post.feed_country %} · {{ post.feed_country_display|default:post.feed_country }}{% endif %}
                                             · {{ post.relative_time }}
                                             {% else %}
-                                            {% if post.feed_country %}{{ post.feed_country }} · {% endif %}{{ post.relative_time }}
+                                            {% if post.feed_country_display|default:post.feed_country %}{{ post.feed_country_display|default:post.feed_country }} · {% endif %}{{ post.relative_time }}
                                             {% endif %}
                                         </div>
                                     </div>
@@ -415,6 +415,10 @@
                                             </button>
                                         </form>
                                         {% else %}
+                                        <a class="feed-post-menu-action" href="{% url 'Edit Post' post.id %}">
+                                            <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                                            <span>Edit</span>
+                                        </a>
                                         <form method="post" action="{% url 'Delete Post' post.id %}">
                                             {% csrf_token %}
                                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -722,13 +726,16 @@
                         }
 
                         restoredFeedReloadSide = window.sessionStorage.getItem(feedReloadStorageKey) || '';
-                        if (getNavigationType() === 'reload' && restoredFeedReloadSide) {
+                        if (getNavigationType() === 'reload') {
+                            var initialReloadSide = restoredFeedReloadSide || 'top';
                             showFeedLoader(
-                                restoredFeedReloadSide,
-                                restoredFeedReloadSide === 'bottom' ? 'Loading more posts' : 'Refreshing feed',
+                                initialReloadSide,
+                                initialReloadSide === 'bottom' ? 'Loading more posts' : 'Refreshing feed',
                                 760
                             );
-                            window.setTimeout(completePendingFeedReload, 1200);
+                            if (restoredFeedReloadSide) {
+                                window.setTimeout(completePendingFeedReload, 1200);
+                            }
                         }
                         window.addEventListener('scroll', queueBoundaryCheck, { passive: true });
                         window.addEventListener('resize', function() {
@@ -904,6 +911,9 @@
                                     if (otherMenu !== menu) otherMenu.removeAttribute('open');
                                 });
                             });
+                            menu.addEventListener('click', function(event) {
+                                event.stopPropagation();
+                            });
                         });
                         document.addEventListener('click', function(event) {
                             feedSection.querySelectorAll('.post-more-menu[open]').forEach(function(menu) {
@@ -920,7 +930,7 @@
                         });
                         feedSection.querySelectorAll('.structured-post').forEach(function(card) {
                             card.addEventListener('click', function(event) {
-                                if (event.target.closest('a, button, input, textarea, label, summary, details, form')) return;
+                                if (event.target.closest('a, button, input, textarea, label, summary, details, form, .post-more-menu, .post-more-dropdown, .feed-post-menu-action')) return;
                                 var postUrl = card.getAttribute('data-post-url');
                                 if (postUrl) window.location.href = postUrl;
                             });

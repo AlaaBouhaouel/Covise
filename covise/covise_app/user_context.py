@@ -8,6 +8,38 @@ from django.utils.timesince import timesince
 from covise_app.models import BlockedUser, SavedPost
 
 
+DEFAULT_ONBOARDING_SKILL_OPTIONS = [
+    "Backend engineer",
+    "Frontend engineer",
+    "Full-stack engineer",
+    "Mobile engineer",
+    "AI / ML engineer",
+    "Data engineer",
+    "Product Management",
+    "Product strategy",
+    "UI / UX design",
+    "Brand design",
+    "Go-to-market",
+    "Growth marketing",
+    "Performance marketing",
+    "Content marketing",
+    "Sales",
+    "Business development",
+    "Operations",
+    "Supply chain",
+    "Customer success",
+    "Community building",
+    "Finance",
+    "Fundraising",
+    "Investor relations",
+    "Legal",
+    "Compliance",
+    "Partnerships",
+    "Recruiting",
+    "Project management",
+]
+
+
 def _safe_file_url(field_file):
     if not field_file:
         return ""
@@ -37,6 +69,31 @@ def _value_list(value):
 
 def _value_text(value, separator=", "):
     return separator.join(_value_list(value))
+
+
+def _country_display_label(value):
+    text = str(value or "").strip()
+    if not text:
+        return ""
+
+    country_map = {
+        "saudi_arabia": "Saudi Arabia",
+        "united_arab_emirates": "United Arab Emirates",
+        "uae": "UAE",
+        "gcc_wide": "GCC-wide",
+        "mena_wide": "MENA-wide",
+    }
+    normalized = text.casefold()
+    if normalized in country_map:
+        return country_map[normalized]
+
+    if "_" in text:
+        return " ".join(part.capitalize() for part in text.split("_") if part)
+
+    if text == text.lower():
+        return " ".join(part.capitalize() for part in text.split() if part)
+
+    return text
 
 
 def _score_value(value, default):
@@ -105,7 +162,7 @@ def _preferences_dict(preferences):
 @lru_cache(maxsize=1)
 def get_onboarding_skill_config():
     flow_path = Path(__file__).resolve().parent / "boarding.json"
-    default_config = {"options": [], "max_selected": 8}
+    default_config = {"options": list(DEFAULT_ONBOARDING_SKILL_OPTIONS), "max_selected": 8}
     try:
         with flow_path.open(encoding="utf-8-sig") as handle:
             flow = json.load(handle)
@@ -348,7 +405,7 @@ def build_profile_context(user):
 
     return {
         "headline": profile.bio or _value_text(profile.one_liner) or defaults["headline"],
-        "location": profile.country or _value_text(profile.home_country) or defaults["location"],
+        "location": _country_display_label(profile.country) or _country_display_label(_value_text(profile.home_country)) or defaults["location"],
         "what_im_building": _value_text(profile.one_liner) or defaults["what_im_building"],
         "what_im_building_tags": what_im_building_tags,
         "looking_for": _value_text(profile.looking_for_skills) or _value_text(profile.looking_for_type) or defaults["looking_for"],
@@ -460,7 +517,7 @@ def build_settings_context(user):
     ] if profile else []
     location = ""
     if profile:
-        location = getattr(profile, "country", "") or _value_text(getattr(profile, "home_country", None))
+        location = _country_display_label(getattr(profile, "country", "")) or _country_display_label(_value_text(getattr(profile, "home_country", None)))
     cofounder_badge_available, show_cofounder_badge = _cofounder_badge_state(profile)
 
     saved_post_items = build_saved_post_items(user)

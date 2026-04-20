@@ -541,6 +541,21 @@
                     .map(function (option) { return option.getAttribute('data-skill-option'); })
             );
 
+            function setPanelOpen(isOpen) {
+                if (!toggle || !panel) return;
+                panel.hidden = !isOpen;
+                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                if (isOpen && search) {
+                    window.setTimeout(function () {
+                        try {
+                            search.focus({ preventScroll: true });
+                        } catch (error) {
+                            search.focus();
+                        }
+                    }, 0);
+                }
+            }
+
             function syncHiddenInput() {
                 if (hiddenInput) hiddenInput.value = Array.from(selected).join('|');
             }
@@ -568,7 +583,9 @@
                     remove.type = 'button';
                     remove.textContent = 'x';
                     remove.setAttribute('aria-label', 'Remove ' + skill);
-                    remove.addEventListener('click', function () {
+                    remove.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
                         selected.delete(skill);
                         updateUi();
                     });
@@ -598,7 +615,9 @@
             }
 
             options.forEach(function (option) {
-                option.addEventListener('click', function () {
+                option.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     var skill = option.getAttribute('data-skill-option');
                     if (selected.has(skill)) {
                         selected.delete(skill);
@@ -612,25 +631,31 @@
             });
 
             if (toggle && panel) {
-                toggle.addEventListener('click', function () {
-                    var willOpen = panel.hidden;
-                    panel.hidden = !panel.hidden;
-                    toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-                    if (willOpen && search) search.focus();
+                toggle.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setPanelOpen(panel.hidden);
                 });
 
                 document.addEventListener('click', function (event) {
                     if (!picker.contains(event.target)) {
-                        panel.hidden = true;
-                        toggle.setAttribute('aria-expanded', 'false');
+                        setPanelOpen(false);
                     }
                 });
             }
 
             if (search) {
+                search.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    if (panel.hidden) setPanelOpen(true);
+                });
+                search.addEventListener('focus', function () {
+                    if (panel.hidden) setPanelOpen(true);
+                });
                 search.addEventListener('input', filterOptions);
                 search.addEventListener('keydown', function (event) {
                     if (event.key === 'Enter') event.preventDefault();
+                    if (event.key === 'Escape') setPanelOpen(false);
                 });
             }
 

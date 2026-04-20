@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow, noarchive">
-    <title>CoVise | Create Post</title>
+    <title>CoVise | {{ post_page_title|default:"Create Post" }}</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'home.css' %}?v=20260420g">
     <link rel="stylesheet" href="{% static 'create_post.css' %}?v=20260420m">
@@ -74,7 +74,7 @@
             </header>
 
             <section class="create-post-shell feed-shell" aria-label="Create post">
-                <form class="structured-post create-post-form-card" action="{% url 'Create Post' %}" method="post" enctype="multipart/form-data">
+                <form class="structured-post create-post-form-card" action="{{ post_form_action|default:'' }}" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input id="post-type" name="post_type" type="hidden" value="{{ form_data.post_type|default:'update' }}">
                     <input id="post-title" name="title" type="hidden" value="{{ form_data.title|default:'' }}">
@@ -84,10 +84,10 @@
 
                     <div class="create-post-head">
                         <div class="create-post-head-row">
-                            <span class="create-post-kicker">Create Post</span>
-                            <a class="create-post-back-link" href="{% url 'Home' %}" title="Back to Home">
+                            <span class="create-post-kicker">{{ post_kicker|default:"Create Post" }}</span>
+                            <a class="create-post-back-link" href="{{ post_back_url|default:'' }}" title="{{ post_back_label|default:'Back to feed' }}">
                                 <span aria-hidden="true">&larr;</span>
-                                <span>Back to feed</span>
+                                <span>{{ post_back_label|default:"Back to feed" }}</span>
                             </a>
                         </div>
                         <div class="create-post-page-header">
@@ -207,9 +207,9 @@
 
                     <div class="create-post-actions">
                         <span class="create-post-visibility">Visible to all community members</span>
-                        <button class="create-post-primary" type="submit" title="Publish this post">
+                        <button class="create-post-primary" type="submit" title="{{ post_submit_label|default:'Post to network' }}">
                             <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                            <span>Post to network</span>
+                            <span>{{ post_submit_label|default:"Post to network" }}</span>
                         </button>
                     </div>
                 </form>
@@ -855,10 +855,18 @@
             form.addEventListener('submit', syncFields);
 
             setPostType(typeInput.value);
+            if (quoteInput && sanitizeText(quoteInput.value).length > 0) {
+                quoteVisible = true;
+                if (postQuoteBlock) postQuoteBlock.hidden = false;
+                if (postQuoteText) {
+                    postQuoteText.value = quoteInput.value;
+                    autoResize(postQuoteText);
+                }
+                applyQuoteColor((quoteColorInput && quoteColorInput.value) ? quoteColorInput.value : currentQuoteColor);
+            }
             syncImagePreviewVisibility();
             if (isFirstPost) {
                 setPlaceholders('free');
-                applyTemplate('introduction');
             } else {
                 setActiveIntent(resolveInitialIntent());
             }

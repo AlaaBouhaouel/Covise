@@ -143,6 +143,31 @@ def _public_profile_url(user):
     return _absolute_site_url(reverse("Public Profile", args=[user.id]))
 
 
+def _country_display_label(value):
+    text = str(value or "").strip()
+    if not text:
+        return ""
+
+    country_map = {
+        "saudi_arabia": "Saudi Arabia",
+        "united_arab_emirates": "United Arab Emirates",
+        "uae": "UAE",
+        "gcc_wide": "GCC-wide",
+        "mena_wide": "MENA-wide",
+    }
+    normalized = text.casefold()
+    if normalized in country_map:
+        return country_map[normalized]
+
+    if "_" in text:
+        return " ".join(part.capitalize() for part in text.split("_") if part)
+
+    if text == text.lower():
+        return " ".join(part.capitalize() for part in text.split() if part)
+
+    return text
+
+
 def _serialize_model_fields(instance, *, exclude=None):
     if not instance:
         return {}
@@ -2133,9 +2158,9 @@ def _profile_country_label(profile):
     if not profile:
         return ""
     return (
-        str(getattr(profile, "country", "") or "").strip()
-        or _display_value(getattr(profile, "home_country", None), "")
-        or str(getattr(profile, "custom_country", "") or "").strip()
+        _country_display_label(getattr(profile, "country", ""))
+        or _country_display_label(_display_value(getattr(profile, "home_country", None), ""))
+        or _country_display_label(getattr(profile, "custom_country", ""))
     )
 
 
@@ -2477,6 +2502,7 @@ def _attach_post_feed_metadata(posts, current_user=None):
         post.feed_images = _post_gallery_items(post, limit=6)
         post.feed_image_count = len(post.feed_images)
         post.feed_country = _profile_country_label(profile)
+        post.feed_country_display = _country_display_label(post.feed_country)
         post.content_html = _render_post_content_html(post)
         post.owner_display_name = post.user.full_name or post.user.email
         post.feed_post_type_label = _post_type_display_label(post)
@@ -2561,17 +2587,13 @@ def _post_type_display_label(post):
         return ""
 
     post_type = (getattr(post, "post_type", "") or "").strip()
-    title = " ".join((getattr(post, "title", "") or "").split()).casefold()
-    content = str(getattr(post, "content", "") or "")
-
-    if (
-        post_type == Post.PostType.UPDATE
-        and title.startswith("hey this is ")
-        and "Based in:" in content
-        and "Background:" in content
-        and "What I'm building or looking to build:" in content
-        and "One thing I can help others with:" in content
-    ):
+    if post_type == Post.PostType.UPDATE and not Post.objects.filter(
+        user=post.user,
+    ).exclude(
+        id=post.id,
+    ).filter(
+        Q(created_at__lt=post.created_at) | Q(created_at=post.created_at, id__lt=post.id),
+    ).exists():
         return "Introduction"
 
     return post.get_post_type_display()
@@ -3600,11 +3622,10 @@ def _send_message_report_email(reporter, reported_user, message, reason):
         return False
 
 
-@login_required
-def create_post(request):
-    full_name = (request.user.full_name or "").strip()
+def _build_post_editor_context(user, *, form_data=None, error_message="", edit_post=None):
+    full_name = (user.full_name or "").strip()
     first_name = full_name.split()[0] if full_name else "..."
-    profile = getattr(request.user, "profile", None)
+    profile = getattr(user, "profile", None)
     onboarding_answers = getattr(profile, "onboarding_answers", {}) or {}
     waitlist_snapshot = getattr(profile, "waitlist_snapshot", {}) or {}
 
@@ -3992,28 +4013,62 @@ def create_post(request):
             "description": "Start from a blank post and choose your own format.",
         },
     ]
-    is_first_post = not Post.objects.filter(user=request.user).exists()
+    is_first_post = False if edit_post else not Post.objects.filter(user=user).exists()
     intro_template = template_payloads["introduction"]
-    initial_template_key = "introduction" if is_first_post else ""
+    initial_template_key = ""
+
+    if edit_post:
+        default_form_data = {
+            "title": edit_post.title or "",
+            "post_type": edit_post.post_type or Post.PostType.UPDATE,
+            "content": edit_post.content or "",
+            "quote_content": edit_post.quote_content or "",
+            "quote_color": edit_post.quote_color or "",
+        }
+    else:
+        default_form_data = {
+            "title": "",
+            "post_type": intro_template["post_type"] if is_first_post else Post.PostType.UPDATE,
+            "content": "",
+            "quote_content": "",
+            "quote_color": "",
+        }
+
+    if form_data:
+        default_form_data.update(form_data)
 
     context = {
         "first_name": first_name,
         "is_first_post": is_first_post,
+        "is_editing": bool(edit_post),
+        "edit_post": edit_post,
+        "post_page_title": "Edit Post" if edit_post else "Create Post",
+        "post_kicker": "Edit Post" if edit_post else "Create Post",
+        "post_form_action": reverse("Edit Post", args=[edit_post.id]) if edit_post else reverse("Create Post"),
+        "post_submit_label": "Save Changes" if edit_post else "Post to network",
+        "post_back_url": reverse("Post Detail", args=[edit_post.id]) if edit_post else reverse("Home"),
+        "post_back_label": "Back to post" if edit_post else "Back to feed",
         "initial_template_key": initial_template_key,
         "post_type_choices": Post.PostType.choices,
         "template_cards": template_cards,
         "template_payloads": template_payloads,
-        "form_data": {
-            "title": intro_template["title"] if is_first_post else "",
-            "post_type": intro_template["post_type"] if is_first_post else Post.PostType.UPDATE,
-            "content": intro_template["content"] if is_first_post else "",
-        },
+        "form_data": default_form_data,
+        "error_message": error_message,
     }
+    return context
+
+
+def _render_post_editor(request, context, *, status=200):
+    response = render(request, "create_post.html", context, status=status)
+    response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return response
+
+
+def _save_post_from_editor(request, *, post=None):
+    context = _build_post_editor_context(request.user, edit_post=post)
 
     if request.method != "POST":
-        response = render(request, "create_post.html", context)
-        response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
-        return response
+        return _render_post_editor(request, context)
 
     title = request.POST.get("title", "").strip()
     post_type = request.POST.get("post_type", Post.PostType.UPDATE).strip()
@@ -4038,36 +4093,53 @@ def create_post(request):
     valid_post_types = {choice for choice, _label in Post.PostType.choices}
     if not title or not content:
         context["error_message"] = "Title and post content are required."
-        return render(request, "create_post.html", context, status=400)
+        return _render_post_editor(request, context, status=400)
 
     if len(uploaded_images) > 6:
         context["error_message"] = "You can upload up to 6 images per post."
-        return render(request, "create_post.html", context, status=400)
+        return _render_post_editor(request, context, status=400)
 
     if post_type not in valid_post_types:
         context["error_message"] = "Select a valid post type."
-        return render(request, "create_post.html", context, status=400)
+        return _render_post_editor(request, context, status=400)
 
-    if is_first_post:
+    if context["is_first_post"]:
         post_type = Post.PostType.UPDATE
         context["form_data"]["post_type"] = post_type
 
     with transaction.atomic():
-        post = Post.objects.create(
-            user=request.user,
-            title=title,
-            post_type=post_type,
-            theme_color=Post.ThemeColor.DEFAULT,
-            content=content,
-            quote_content=quote_content,
-            quote_color=quote_color,
-        )
-        for index, image_file in enumerate(uploaded_images[:6]):
-            PostImage.objects.create(
-                post=post,
-                image=image_file,
-                sort_order=index,
+        if post is None:
+            post = Post.objects.create(
+                user=request.user,
+                title=title,
+                post_type=post_type,
+                theme_color=Post.ThemeColor.DEFAULT,
+                content=content,
+                quote_content=quote_content,
+                quote_color=quote_color,
             )
+        else:
+            post.title = title
+            post.post_type = post_type
+            post.content = content
+            post.quote_content = quote_content
+            post.quote_color = quote_color
+            post.save(update_fields=["title", "post_type", "content", "quote_content", "quote_color"])
+
+        if uploaded_images:
+            post.gallery_images.all().delete()
+            if getattr(post, "image", None):
+                post.image.delete(save=False)
+                post.image = None
+                post.save(update_fields=["image"])
+            for index, image_file in enumerate(uploaded_images[:6]):
+                PostImage.objects.create(
+                    post=post,
+                    image=image_file,
+                    sort_order=index,
+                )
+
+        PostMention.objects.filter(post=post).delete()
         mention_matches = _resolve_post_mentions(content, exclude_user_id=request.user.id)
         for raw_handle, mentioned_user in mention_matches:
             PostMention.objects.get_or_create(
@@ -4076,10 +4148,25 @@ def create_post(request):
                 handle_text=raw_handle,
             )
     _attach_post_feed_metadata([post], current_user=request.user)
+    if context["is_editing"]:
+        return redirect("Post Detail", post_id=post.id)
     _create_post_notifications(post)
     _create_post_mention_notifications(post)
     _send_post_alert_email(post)
     return redirect("Post Detail", post_id=post.id)
+
+
+@login_required
+def create_post(request):
+    return _save_post_from_editor(request)
+
+
+@login_required
+def edit_post(request, post_id):
+    post = get_object_or_404(Post.objects.prefetch_related("gallery_images"), id=post_id)
+    if post.user_id != request.user.id:
+        return JsonResponse({"error": "Forbidden"}, status=403)
+    return _save_post_from_editor(request, post=post)
 
 def _load_messages_page_state(user):
     try:

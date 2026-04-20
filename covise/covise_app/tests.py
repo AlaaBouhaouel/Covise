@@ -16,8 +16,8 @@ from django.utils import timezone
 from .messaging import deliver_media_message
 from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, OnboardingResponse, Post, PostImage, PostReaction, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
 from .context_processors import user_ui_context
-from .user_context import build_ui_user_context
-from .views import _has_profile_completion, _home_sidebar_metrics, _render_post_content_html, _render_post_title_html, _safe_media_url, _serialize_message, _waitlist_to_onboarding_initial_answers
+from .user_context import build_profile_context, build_ui_user_context, get_onboarding_skill_config
+from .views import _attach_post_feed_metadata, _has_profile_completion, _home_sidebar_metrics, _render_post_content_html, _render_post_title_html, _safe_media_url, _serialize_message, _waitlist_to_onboarding_initial_answers
 
 
 class WaitlistEntryModelTests(TestCase):
@@ -38,6 +38,75 @@ class WaitlistEntryModelTests(TestCase):
             {value for value, _ in WaitlistEntry.Status.choices},
             {"pending", "approved", "activated", "rejected"},
         )
+
+
+class OnboardingSkillConfigTests(TestCase):
+    def test_skill_config_has_fallback_options_when_boarding_json_has_no_skills_field(self):
+        get_onboarding_skill_config.cache_clear()
+        config = get_onboarding_skill_config()
+
+        self.assertGreater(len(config["options"]), 0)
+        self.assertIn("Backend engineer", config["options"])
+        self.assertEqual(config["max_selected"], 8)
+
+
+class CountryDisplayFormattingTests(TestCase):
+    def test_profile_context_formats_slug_country_labels_for_display(self):
+        user = User.objects.create_user(
+            email="country-format@example.com",
+            password="safe-password-123",
+            full_name="Country Format User",
+        )
+        Profile.objects.create(
+            user=user,
+            full_name="Country Format User",
+            country="saudi_arabia",
+            has_accepted_platform_agreement=True,
+        )
+
+        context = build_profile_context(user)
+
+        self.assertEqual(context["location"], "Saudi Arabia")
+
+    def test_profile_context_formats_plain_lowercase_country_labels_for_display(self):
+        user = User.objects.create_user(
+            email="country-plain@example.com",
+            password="safe-password-123",
+            full_name="Country Plain User",
+        )
+        Profile.objects.create(
+            user=user,
+            full_name="Country Plain User",
+            country="qatar",
+            has_accepted_platform_agreement=True,
+        )
+
+        context = build_profile_context(user)
+
+        self.assertEqual(context["location"], "Qatar")
+
+    def test_post_feed_metadata_formats_slug_country_labels_for_display(self):
+        user = User.objects.create_user(
+            email="country-feed@example.com",
+            password="safe-password-123",
+            full_name="Country Feed User",
+        )
+        Profile.objects.create(
+            user=user,
+            full_name="Country Feed User",
+            country="saudi_arabia",
+            has_accepted_platform_agreement=True,
+        )
+        post = Post.objects.create(
+            user=user,
+            title="Test post",
+            content="Testing country display in feed.",
+            post_type=Post.PostType.UPDATE,
+        )
+
+        _attach_post_feed_metadata([post], current_user=user)
+
+        self.assertEqual(post.feed_country_display, "Saudi Arabia")
 
 
 class AuthEmailNormalizationTests(TestCase):
@@ -998,6 +1067,41 @@ class CreatePostTemplatePrefillTests(TestCase):
         self.assertIn("Technical co-founder", template_payloads["share_update"]["content"])
         self.assertIn("MVP / Saudi Arabia", template_payloads["share_update"]["content"])
 
+    def test_first_post_editor_starts_blank_but_stays_in_introduction_mode(self):
+        first_post_user = User.objects.create_user(
+            email="first-post@example.com",
+            password="safe-password-123",
+            full_name="First Post User",
+        )
+        Profile.objects.create(
+            user=first_post_user,
+            full_name="First Post User",
+            has_accepted_platform_agreement=True,
+        )
+        self.client.force_login(first_post_user)
+
+        response = self.client.get(reverse("Create Post"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["is_first_post"])
+        self.assertEqual(response.context["form_data"]["title"], "")
+        self.assertEqual(response.context["form_data"]["content"], "")
+        self.assertEqual(response.context["form_data"]["post_type"], Post.PostType.UPDATE)
+
+    def test_first_update_post_displays_as_introduction(self):
+        self.client.force_login(self.user)
+        first_post = Post.objects.create(
+            user=self.user,
+            title="My own intro",
+            post_type=Post.PostType.UPDATE,
+            content="Free form introduction content.",
+        )
+
+        response = self.client.get(reverse("Post Detail", args=[first_post.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Introduction")
+
     def test_non_free_intent_templates_fallback_to_dot_placeholders_when_profile_is_missing(self):
         self.profile.bio = ""
         self.profile.country = ""
@@ -1092,6 +1196,75 @@ class DeletePostTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Post.objects.filter(id=post.id).exists())
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class EditPostTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="edit-post-owner@example.com",
+            password="safe-password-123",
+            full_name="Edit Post Owner",
+        )
+        self.other_user = User.objects.create_user(
+            email="edit-post-other@example.com",
+            password="safe-password-123",
+            full_name="Edit Post Other",
+        )
+        Profile.objects.create(
+            user=self.user,
+            full_name="Edit Post Owner",
+            has_accepted_platform_agreement=True,
+        )
+        Profile.objects.create(
+            user=self.other_user,
+            full_name="Edit Post Other",
+            has_accepted_platform_agreement=True,
+        )
+
+    def test_post_owner_can_edit_post(self):
+        post = Post.objects.create(
+            user=self.user,
+            title="Original title",
+            post_type=Post.PostType.UPDATE,
+            content="Original content",
+            quote_content="Original quote",
+            quote_color="#1e3a5f",
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("Edit Post", args=[post.id]),
+            {
+                "title": "Updated title",
+                "post_type": Post.PostType.ASK,
+                "content": "Updated content with @nobody",
+                "quote_content": "Updated quote",
+                "quote_color": "#2d1b4e",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Post Detail", args=[post.id]))
+        post.refresh_from_db()
+        self.assertEqual(post.title, "Updated title")
+        self.assertEqual(post.post_type, Post.PostType.ASK)
+        self.assertEqual(post.content, "Updated content with @nobody")
+        self.assertEqual(post.quote_content, "Updated quote")
+        self.assertEqual(post.quote_color, "#2d1b4e")
+
+    def test_non_owner_cannot_edit_post(self):
+        post = Post.objects.create(
+            user=self.user,
+            title="Owner post",
+            post_type=Post.PostType.UPDATE,
+            content="Leave this alone.",
+        )
+        self.client.force_login(self.other_user)
+
+        response = self.client.get(reverse("Edit Post", args=[post.id]))
+
+        self.assertEqual(response.status_code, 403)
 
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])

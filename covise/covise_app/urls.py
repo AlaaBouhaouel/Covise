@@ -28,6 +28,7 @@ urlpatterns = [
     path('', views.landing, name='Landing Page'),
     path('home/', views.home, name='Home'),
     path('posts/create/', views.create_post, name='Create Post'),
+    path('posts/<int:post_id>/edit/', views.edit_post, name='Edit Post'),
     path('posts/<int:post_id>/', views.post_detail, name='Post Detail'),
     path('posts/<int:post_id>/comment/', views.add_comment, name='add_comment'),
     path('posts/<int:post_id>/save/', views.toggle_saved_post, name='Toggle Saved Post'),
