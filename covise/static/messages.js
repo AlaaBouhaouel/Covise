@@ -497,7 +497,7 @@
             });
 
         if (!directConversations().length) {
-            directList.innerHTML = '<div class="request-item"><div><h3>No conversations yet</h3><p>Start a conversation from a founder profile and it will show up here.</p></div></div>';
+            directList.innerHTML = '<div class="request-item"><div><h3>No conversations yet</h3></div></div>';
         }
 
         groupConversations()

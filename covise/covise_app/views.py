@@ -1554,10 +1554,14 @@ def _handle_settings_post(request, *, template_name, redirect_url, section_slug=
 
     try:
         if save_section == "personal_data":
+            full_name = request.POST.get("full_name", "").strip()
             email = request.POST.get("email", "").strip()
             phone_number = request.POST.get("phone_number", "").strip()
             profile_photo_action = request.POST.get("profile_photo_action", "").strip()
             uploaded_profile_image = request.FILES.get("profile_image")
+            if full_name != (user.full_name or "").strip():
+                user.full_name = full_name
+                user.save(update_fields=["full_name"])
             if email and email != user.email:
                 if User.objects.filter(email=email).exclude(pk=user.pk).exists():
                     context = _build_settings_view_context(request, section_slug=section_slug)
@@ -1567,8 +1571,9 @@ def _handle_settings_post(request, *, template_name, redirect_url, section_slug=
                 user.email = email
                 user.save(update_fields=["email"])
 
+            profile.full_name = full_name
             profile.phone_number = phone_number
-            profile_update_fields = ["phone_number"]
+            profile_update_fields = ["full_name", "phone_number"]
 
             if profile_photo_action == "remove":
                 if profile.profile_image:

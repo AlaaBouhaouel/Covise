@@ -1949,6 +1949,9 @@ button.text-link[disabled] {
     text-align: center;
     padding-bottom: calc(var(--spacing) * 2);
 }
+.settings-hub-card--danger{
+    background-color: rgba(93, 4, 4, 0.4);
+}
 
 .logo-light { display: none; }
 [data-theme="light"] .logo-dark { display: none; }
@@ -1971,6 +1974,18 @@ button.text-link[disabled] {
     .modal-actions {
         align-items: flex-start;
         flex-direction: column;
+    }
+    .settings-row{
+        border: none;
+        background-color: transparent;
+        padding: 0;
+        margin-bottom: calc(var(--spacing));
+        border-radius: 0;
+        padding-bottom: calc(var(--spacing)*1.5);
+        border-bottom: 1px solid var(--border);
+    }
+    .row-copy .with-icon{
+        flex-direction: row !important;
     }
 
     .row-control,
@@ -2109,7 +2124,7 @@ button.text-link[disabled] {
     }
 
     .settings-hub-link {
-        padding: calc(var(--spacing) * 1.9) calc(var(--spacing) * 1.8);
+        padding: 0;
     }
 
     .settings-hub-icon {
@@ -2128,8 +2143,15 @@ button.text-link[disabled] {
 
     .settings-page-head {
         gap: calc(var(--spacing) * 1);
-        padding-top: calc(var(--spacing) * 0.75);
-        padding-bottom: calc(var(--spacing) * 0.75);
+        background-color: transparent;
+        padding: 0;
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-direction: row;
+        min-height: 10vh;
+
     }
 
     .settings-page-head h1 {

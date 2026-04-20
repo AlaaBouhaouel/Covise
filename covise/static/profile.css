@@ -561,6 +561,13 @@ p {
     height: 48px;
     font-size: 0.9rem;}
 
+.hero-title-row {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 0.9);
+    width: 100%;
+}
+
 .hero-main h1 {
     font-family: var(--font-display);
     font-size: clamp(1.35rem, 1.8vw, 1.85rem);
@@ -569,6 +576,7 @@ p {
     align-items: center;
     gap: calc(var(--spacing) * 0.75);
     line-height: 1.1;
+    margin: 0;
 }
 
 .verified-badge {
@@ -667,6 +675,84 @@ p {
     align-items: center;
     gap: calc(var(--spacing) * 1);
     margin-left: auto;
+}
+
+.hero-actions-menu {
+    position: relative;
+    display: none;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.hero-actions-menu__toggle {
+    width: 42px;
+    min-width: 42px;
+    padding: 0 !important;
+}
+
+.hero-actions-menu__toggle::after {
+    content: none !important;
+}
+
+.hero-actions-menu__panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 180px;
+    padding: 8px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: rgba(10, 16, 30, 0.96);
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.32);
+    display: grid;
+    gap: 6px;
+    z-index: 30;
+}
+
+.hero-actions-menu__panel[hidden] {
+    display: none !important;
+}
+
+.hero-actions-menu__panel form {
+    width: 100%;
+}
+
+.hero-actions-menu__item {
+    width: 100%;
+    min-height: 42px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    padding: 0 14px;
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.hero-actions-menu__item i {
+    width: 14px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.hero-actions-menu__item--danger {
+    background-color: rgba(93, 4, 4, 0.4);
+    border-color: rgba(164, 58, 58, 0.34);
+    color: #ff8c96;
+}
+
+.hero-actions-menu__item:hover,
+.hero-actions-menu__item:focus-visible {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    outline: none;
 }
 
 .profile-onboarding-cta-row {
@@ -2739,7 +2825,7 @@ p {
     .headline {
         font-size: 0.76rem;
         line-height: 1.4;
-        margin-top: 0;
+        margin: calc(var(--spacing)) 0;
     }
 
     .meta {
@@ -2791,13 +2877,27 @@ p {
         margin: calc(var(--spacing) * 1) calc(var(--spacing) * 1.4) 0 calc(var(--spacing) * 1.4);
     }
 
-    .hero-actions-group {
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
-        min-width: 0;
-        margin-left: 0;
-        gap: calc(var(--spacing) * 0.75);
+    .hero-actions-group--desktop {
+        display: none;
+    }
+
+    .hero-actions-menu--mobile {
+        display: block;
+    }
+
+    .hero-title-row {
+        gap: 12px;
+    }
+
+    .hero-actions-menu__toggle {
+        width: 38px;
+        min-width: 38px;
+        min-height: 38px !important;
+        padding: 0 !important;
+    }
+
+    .hero-actions-menu__panel {
+        min-width: 164px;
     }
 
     .hero-actions form,
@@ -3171,6 +3271,30 @@ p {
 
 [data-theme="light"] .report-action {
     color: #1f4b93 !important;
+}
+
+[data-theme="light"] .hero-actions-menu__panel {
+    background: var(--light-panel-strong);
+    border-color: var(--light-surface-border);
+    box-shadow: 0 18px 42px rgba(76, 112, 181, 0.16);
+}
+
+[data-theme="light"] .hero-actions-menu__item {
+    background: var(--light-panel-bg);
+    border-color: var(--light-surface-border);
+    color: #1f4b93;
+}
+
+[data-theme="light"] .hero-actions-menu__item--danger {
+    background: rgba(214, 90, 90, 0.14);
+    border-color: rgba(181, 83, 83, 0.26);
+    color: var(--light-danger-text);
+}
+
+[data-theme="light"] .hero-actions-menu__item:hover,
+[data-theme="light"] .hero-actions-menu__item:focus-visible {
+    background: rgba(98, 145, 236, 0.1);
+    border-color: var(--light-active-border);
 }
 
 [data-theme="light"] .report-action:hover,

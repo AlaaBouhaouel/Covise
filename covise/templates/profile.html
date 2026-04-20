@@ -132,20 +132,43 @@
                         {% endif %}
                         </a>
                     <div class="hero-main">
-                        <h1>
-                            <a href="{% url 'Public Profile' viewed_user_id %}" class="unstyled-link">{{ ui_user.display_name }}</a>
-                            <span class="verified-badge" aria-label="Verified profile">
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 3L14.78 5.22L18 6L18.78 9.22L21 12L18.78 14.78L18 18L14.78 18.78L12 21L9.22 18.78L6 18L5.22 14.78L3 12L5.22 9.22L6 6L9.22 5.22L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            {% if profile_show_cofounder_badge %}
-                            <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
-                                <i class="fa-solid fa-user-group" aria-hidden="true"></i>
-                            </span>
+                        <div class="hero-title-row">
+                            <h1>
+                                <a href="{% url 'Public Profile' viewed_user_id %}" class="unstyled-link">{{ ui_user.display_name }}</a>
+                                <span class="verified-badge" aria-label="Verified profile">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M12 3L14.78 5.22L18 6L18.78 9.22L21 12L18.78 14.78L18 18L14.78 18.78L12 21L9.22 18.78L6 18L5.22 14.78L3 12L5.22 9.22L6 6L9.22 5.22L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                {% if profile_show_cofounder_badge %}
+                                <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
+                                    <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                                </span>
+                                {% endif %}
+                            </h1>
+                            {% if not is_own_profile %}
+                            <div class="hero-actions-menu hero-actions-menu--mobile">
+                                <button class="primary-action secondary hero-actions-menu__toggle" type="button" aria-label="More profile actions" aria-expanded="false" data-profile-more-toggle>
+                                    <i class="fa-solid fa-ellipsis" aria-hidden="true"></i>
+                                </button>
+                                <div class="hero-actions-menu__panel" hidden data-profile-more-menu>
+                                    <button class="hero-actions-menu__item" data-open-profile-report type="button">
+                                        <i class="fa-regular fa-flag" aria-hidden="true"></i>
+                                        <span>Report</span>
+                                    </button>
+                                    <form action="{% url 'Toggle Block User' viewed_user_id %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button class="hero-actions-menu__item hero-actions-menu__item--danger" type="submit">
+                                            <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                                            <span>{% if is_blocked_user %}Unblock User{% else %}Block User{% endif %}</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                             {% endif %}
-                        </h1>
+                        </div>
                         <p class="headline">{{ profile_page.headline }}</p>
                         <p class="meta">{{ profile_page.location }}</p>
                         {% if is_own_profile %}
@@ -157,10 +180,10 @@
                         <div class="hero-actions">
                             <form action="{% url 'Start Private Conversation' viewed_user_id %}" method="post">
                                 {% csrf_token %}
-                                <button class="primary-action" type="submit"{% if messaging_blocked %} disabled{% endif %}>{% if is_friend %}Message{% else %}Request Private Chat{% endif %}</button>
+                                <button class="primary-action" type="submit"{% if messaging_blocked %} disabled{% endif %}>{% if is_friend %}Message{% else %}Request{% endif %}</button>
                             </form>
-                            <div class="hero-actions-group">
-                                <button class="primary-action secondary report-action" id="openProfileReportModal" type="button">Report</button>
+                            <div class="hero-actions-group hero-actions-group--desktop">
+                                <button class="primary-action secondary report-action" data-open-profile-report type="button">Report</button>
                                 <form action="{% url 'Toggle Block User' viewed_user_id %}" method="post">
                                     {% csrf_token %}
                                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -582,20 +605,22 @@
     <script>
         (function () {
             var modal = document.getElementById('profileReportModal');
-            var openButton = document.getElementById('openProfileReportModal');
-            if (!modal || !openButton) return;
+            var openButtons = document.querySelectorAll('[data-open-profile-report]');
+            if (!modal || !openButtons.length) return;
 
             function closeModal() {
                 modal.hidden = true;
             }
 
-            openButton.addEventListener('click', function () {
-                modal.hidden = false;
-                var checked = modal.querySelector('input[name="report_reason"]:checked');
-                if (!checked) {
-                    var firstOption = modal.querySelector('input[name="report_reason"]');
-                    if (firstOption) firstOption.focus();
-                }
+            openButtons.forEach(function (openButton) {
+                openButton.addEventListener('click', function () {
+                    modal.hidden = false;
+                    var checked = modal.querySelector('input[name="report_reason"]:checked');
+                    if (!checked) {
+                        var firstOption = modal.querySelector('input[name="report_reason"]');
+                        if (firstOption) firstOption.focus();
+                    }
+                });
             });
 
             modal.querySelectorAll('[data-close-report-modal]').forEach(function (button) {
@@ -624,6 +649,36 @@
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape' && !modal.hidden) {
                     closeModal();
+                }
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            var toggle = document.querySelector('[data-profile-more-toggle]');
+            var menu = document.querySelector('[data-profile-more-menu]');
+            if (!toggle || !menu) return;
+
+            function closeMenu() {
+                menu.hidden = true;
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+
+            toggle.addEventListener('click', function (event) {
+                event.stopPropagation();
+                var willOpen = menu.hidden;
+                menu.hidden = !willOpen;
+                toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            });
+
+            menu.addEventListener('click', function (event) {
+                event.stopPropagation();
+            });
+
+            document.addEventListener('click', closeMenu);
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeMenu();
                 }
             });
         })();

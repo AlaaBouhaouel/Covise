@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | {{ profile_section_title }}</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260420a">
+    <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260420b">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419j">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -63,102 +63,13 @@
             </a>
         </aside>
 
-        <main class="main app-shell-main">
-            <header class="home-header app-shell-header" aria-label="Profile top bar">
-                <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
-                    <span class="home-brand-wordmark">CoVise</span>
+        <main class="main app-shell-main profile-section-main">
+            <section class="panel profile-section-page-head">
+                <h1>{{ profile_section_title }}</h1>
+                <a class="profile-section-back" href="{{ profile_home_url }}" aria-label="Back to profile">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
                 </a>
-                <div class="home-header-search">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <path d="M20 20l-3.5-3.5"></path>
-                    </svg>
-                    <input type="search" placeholder="{{ profile_section_title }}" aria-label="{{ profile_section_title }}">
-                </div>
-                <div class="home-header-actions">
-                    <button class="theme-toggle" id="profileThemeToggle" aria-label="Toggle light/dark mode" aria-pressed="false" type="button">
-                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                    </button>
-                    <div class="notif-wrap">
-                        <button class="notification-bell" id="notifBell" aria-label="Toggle notifications" type="button">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M15 17H9M18 17V11a6 6 0 1 0-12 0v6l-2 2h16l-2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                            <span class="notification-badge" aria-hidden="true">4</span>
-                        </button>
-                        <div id="notifPanel" class="notif-panel">
-                            <div class="notif-panel-head">
-                                <span class="notif-panel-title">Network Activity</span>
-                                <span class="notif-panel-meta">4 new</span>
-                            </div>
-                            <div class="activity-feed activity-feed-plain">
-                                <div class="feed-item"><div class="feed-text"><strong>Ahmed K.</strong><br>joined from Riyadh - looking for a tech co-founder</div><div class="feed-time">2h ago</div></div>
-                                <div class="feed-item"><div class="feed-text"><strong>New project posted</strong><br>B2B logistics platform, UAE expansion</div><div class="feed-time">4h ago</div></div>
-                                <div class="feed-item"><div class="feed-text"><strong>Sara M. &amp; Faisal A.</strong><br>started a Trial Build together</div><div class="feed-time">6h ago</div></div>
-                                <div class="feed-item"><div class="feed-text"><strong>Nora H.</strong><br>joined from Dubai - open to cross-border partnerships</div><div class="feed-time">9h ago</div></div>
-                            </div>
-                        </div>
-                    </div>
-                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile"{% if not viewer_ui_user.avatar_url %} data-rotating-avatar data-avatar-seed="{{ viewer_ui_user.avatar_initials }}"{% endif %}>
-                        {% if viewer_ui_user.avatar_url %}
-                        <img class="profile-button-image" src="{{ viewer_ui_user.avatar_url }}" alt="{{ viewer_ui_user.display_name }} profile photo">
-                        {% else %}
-                        <span>{{ viewer_ui_user.avatar_initials }}</span>
-                        {% endif %}
-                    </a>
-                </div>
-            </header>
 
-            <section class="profile-hero panel profile-section-hero">
-                <div class="hero-body">
-                    <a href="{{ profile_home_url }}" class="unstyled-link" aria-label="View {{ ui_user.display_name }} profile">
-                        {% if ui_user.avatar_url %}
-                        <img class="avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }}'s avatar">
-                        {% else %}
-                        <div class="avatar" data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}">{{ ui_user.avatar_initials }}</div>
-                        {% endif %}
-                    </a>
-                    <div class="hero-main">
-                        <h1>
-                            <a href="{{ profile_home_url }}" class="unstyled-link">{{ ui_user.display_name }}</a>
-                            <span class="verified-badge" aria-label="Verified profile">
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 3L14.78 5.22L18 6L18.78 9.22L21 12L18.78 14.78L18 18L14.78 18.78L12 21L9.22 18.78L6 18L5.22 14.78L3 12L5.22 9.22L6 6L9.22 5.22L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            {% if profile_show_cofounder_badge %}
-                            <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
-                                <i class="fa-solid fa-user-group" aria-hidden="true"></i>
-                            </span>
-                            {% endif %}
-                        </h1>
-                        <p class="headline">{{ profile_page.headline }}</p>
-                        <p class="meta">{{ profile_page.location }}</p>
-                        {% if is_own_profile %}
-                        <div class="hero-actions">
-                            <a class="primary-action" href="{{ profile_home_url }}">Back to profile</a>
-                            <a class="primary-action secondary" href="{% url 'Settings' %}">Settings</a>
-                        </div>
-                        {% else %}
-                        <div class="hero-actions">
-                            <form action="{% url 'Start Private Conversation' viewed_user_id %}" method="post">
-                                {% csrf_token %}
-                                <button class="primary-action" type="submit"{% if messaging_blocked %} disabled{% endif %}>{% if is_friend %}Message{% else %}Request Private Chat{% endif %}</button>
-                            </form>
-                            <div class="hero-actions-group">
-                                <button class="primary-action secondary report-action" id="openProfileReportModal" type="button">Report</button>
-                                <form action="{% url 'Toggle Block User' viewed_user_id %}" method="post">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                    <button class="primary-action secondary danger-action" type="submit">{% if is_blocked_user %}Unblock User{% else %}Block User{% endif %}</button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
             </section>
 
             {% if profile_section_success_message %}
@@ -184,17 +95,6 @@
             {% endif %}
 
             <section class="panel profile-section-panel">
-                <div class="profile-section-head">
-                    <div>
-                        <a class="profile-section-back" href="{{ profile_home_url }}">Back to profile</a>
-                        <h2>{{ profile_section_title }}</h2>
-                        <p>{{ profile_section_description }}</p>
-                    </div>
-                    {% if profile_section_key == "posts" and is_own_profile %}
-                    <a class="primary-action" href="{% url 'Create Post' %}">Create Post</a>
-                    {% endif %}
-                </div>
-
                 {% if not can_view_profile_data and not is_own_profile %}
                 <div class="profile-section-empty">
                     <strong>Profile details are private.</strong>
@@ -204,6 +104,27 @@
                 <form class="profile-section-form" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="profile-section-grid">
+                        <div class="profile-photo-row">
+                            <div class="first-col">
+                                <label class="outline-btn" for="profileSectionPhotoInput">{% if ui_user.avatar_url %}Change Photo{% else %}Upload Photo{% endif %}</label>
+
+                                <div class="profile-photo-row__preview">
+                                    {% if ui_user.avatar_url %}
+                                    <img class="avatar-image small-avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
+                                    {% else %}
+                                    <span class="avatar small-avatar" data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}">{{ ui_user.avatar_initials }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="profile-photo-row__controls">
+                                <input id="profileSectionPhotoInput" name="profile_image" type="file" accept="image/*" hidden>
+                                {% if ui_user.avatar_url %}
+                                <label class="outline-btn" for="profileSectionPhotoInput">Upload Another Picture</label>
+                                {% endif %}
+                                <button class="text-link danger-link" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button>
+                                <span>Max {{ profile_photo_max_size_mb }} MB.</span>
+                            </div>
+                        </div>
                         <label class="profile-field">
                             <span>Email</span>
                             <input type="email" name="email" value="{{ settings_page.email }}">
@@ -241,21 +162,6 @@
                             <input type="text" name="skills" value="{{ settings_page.skills_selected|join:', ' }}" placeholder="Separate skills with commas">
                         </label>
                     </div>
-                    <div class="profile-photo-row">
-                        <div class="profile-photo-row__preview">
-                            {% if ui_user.avatar_url %}
-                            <img class="avatar-image small-avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
-                            {% else %}
-                            <span class="avatar small-avatar" data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}">{{ ui_user.avatar_initials }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="profile-photo-row__controls">
-                            <input id="profileSectionPhotoInput" name="profile_image" type="file" accept="image/*" hidden>
-                            <label class="outline-btn" for="profileSectionPhotoInput">Upload Photo</label>
-                            <button class="text-link danger-link" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button>
-                            <span>Max {{ profile_photo_max_size_mb }} MB.</span>
-                        </div>
-                    </div>
                     <div class="profile-section-actions">
                         <button class="primary-btn" type="submit">Save Changes</button>
                     </div>
@@ -282,7 +188,6 @@
                                 <textarea name="desc" rows="4">{{ experience.desc }}</textarea>
                             </label>
                         </div>
-                        {% if is_own_profile %}
                         <div class="profile-editor-actions">
                             <button class="primary-btn" type="submit">Save Experience</button>
                             <button class="text-link danger-link" type="submit" name="action" value="delete">Delete</button>
@@ -300,7 +205,6 @@
                     {% empty %}
                     <div class="profile-section-empty">
                         <strong>{% if is_own_profile %}No experience entries yet.{% else %}No public experience shared yet.{% endif %}</strong>
-                        <span>{% if is_own_profile %}Add roles, dates, and impact so people understand your track record faster.{% else %}This member has not added any public experience entries yet.{% endif %}</span>
                     </div>
                     {% endfor %}
 
@@ -354,7 +258,6 @@
                                 <textarea name="desc" rows="4">{{ project.desc }}</textarea>
                             </label>
                         </div>
-                        {% if is_own_profile %}
                         <div class="profile-editor-actions">
                             <button class="primary-btn" type="submit">Save Project</button>
                             <button class="text-link danger-link" type="submit" name="action" value="delete">Delete</button>
@@ -372,7 +275,6 @@
                     {% empty %}
                     <div class="profile-section-empty">
                         <strong>{% if is_own_profile %}No active projects yet.{% else %}No public projects shared yet.{% endif %}</strong>
-                        <span>{% if is_own_profile %}Add what you are building now so people can understand your current momentum.{% else %}This member has not added any public projects yet.{% endif %}</span>
                     </div>
                     {% endfor %}
 
@@ -424,14 +326,13 @@
                     {% empty %}
                     <div class="profile-section-empty">
                         <strong>No saved posts yet.</strong>
-                        <span>Bookmark posts from the feed or post page and they will show up here.</span>
                     </div>
                     {% endfor %}
                 </div>
                 {% elif profile_section_key == "posts" %}
                 <div class="structured-feed profile-section-posts-feed">
                     {% for post in posts %}
-                    <article class="structured-post {{ post.theme_class }}">
+                    <article class="structured-post {{ post.theme_class }} profile-post-card-link" data-post-url="{% url 'Post Detail' post.id %}" tabindex="0" role="link" aria-label="Open post by {{ post.user.full_name|default:post.user.email }}">
                         <div class="structured-post-head">
                             <div class="structured-post-meta">
                                 {% if post.avatar_url %}
@@ -453,9 +354,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <a class="panel-link panel-link--small" href="{% url 'Post Detail' post.id %}" aria-label="Open post">
-                                <i class="fa-solid fa-chevron-right"></i>
-                            </a>
                         </div>
                         <div class="structured-post-body is-clamped">{{ post.content_html|safe }}</div>
                         {% if post.feed_images %}
@@ -470,7 +368,6 @@
                         <div class="structured-post-footer profile-post-preview-footer">
                             <span class="profile-post-preview-meta"><i class="fa-regular fa-thumbs-up"></i><span>{{ post.likes_number }}</span></span>
                             <span class="profile-post-preview-meta"><i class="fa-regular fa-comment"></i><span>{{ post.comments.count }}</span></span>
-                            <a class="outline-btn" href="{% url 'Post Detail' post.id %}">Open</a>
                         </div>
                     </article>
                     {% empty %}
@@ -630,6 +527,24 @@
                 if (!panel.contains(event.target) && !bell.contains(event.target)) {
                     panel.classList.remove('is-open');
                 }
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            Array.prototype.slice.call(document.querySelectorAll('.profile-post-card-link[data-post-url]')).forEach(function (card) {
+                function openPost(event) {
+                    if (event.target.closest('a, button, input, textarea, select, label, form')) return;
+                    var targetUrl = card.getAttribute('data-post-url');
+                    if (targetUrl) window.location.href = targetUrl;
+                }
+
+                card.addEventListener('click', openPost);
+                card.addEventListener('keydown', function (event) {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    openPost(event);
+                });
             });
         })();
     </script>
