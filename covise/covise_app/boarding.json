@@ -63,20 +63,6 @@
           "required": true,
           "placeholder": "2-3 lines max about what you are building and for whom",
           "max_chars": 220
-        },
-        {
-          "id": "looking_for_type",
-          "type": "single_select_card",
-          "label": "What are you looking for?",
-          "required": true,
-          "options": [
-            "Technical co-founder",
-            "Business / operational co-founder",
-            "Industry expert co-founder",
-            "Investor / backer",
-            "Strategic advisor",
-            "Local GCC partner"
-          ]
         }
       ]
     },

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | {{ profile_section_title }}</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260420c">
+    <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260420d">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419j">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -157,10 +157,40 @@
                             <span>Headline / Bio</span>
                             <textarea name="bio" rows="4">{{ settings_page.bio }}</textarea>
                         </label>
-                        <label class="profile-field profile-field--full">
+                        <div class="profile-field profile-field--full">
                             <span>Top Skills</span>
-                            <input type="text" name="skills" value="{{ settings_page.skills_selected|join:', ' }}" placeholder="Separate skills with commas">
-                        </label>
+                            <div class="skills-control">
+                                <input type="hidden" name="skills" value="{{ settings_page.skills_selected|join:'|' }}">
+                                <div class="skills-picker" id="profileSkillsPicker" data-max-selected="{{ settings_page.skills_max_selected }}">
+                                    <button class="skills-picker-toggle" type="button" aria-expanded="false">
+                                        <span>Select top skills</span>
+                                        <span class="skills-picker-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span>
+                                    </button>
+                                    <div class="skills-picker-panel" hidden>
+                                        <input class="skills-search-input" type="search" placeholder="Search skills" aria-label="Search skills">
+                                        <div class="skills-picker-meta">
+                                            <span class="skills-picker-count">0 selected</span>
+                                            <span>Max {{ settings_page.skills_max_selected }}</span>
+                                        </div>
+                                        <div class="skills-options-grid">
+                                            {% for skill in settings_page.skills_options %}
+                                            <button class="selector-pill{% if skill in settings_page.skills_selected %} is-active{% endif %}" type="button" data-skill-option="{{ skill }}">{{ skill }}</button>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="skills-chip-list">
+                                        {% for skill in settings_page.skills_selected %}
+                                        <span class="skills-chip" data-skill-chip="{{ skill }}">
+                                            <span>{{ skill }}</span>
+                                            <button type="button" aria-label="Remove {{ skill }}" data-skill-remove="{{ skill }}">x</button>
+                                        </span>
+                                        {% empty %}
+                                        <span class="skills-empty-state">No skills selected yet.</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="profile-section-actions">
                         <button class="primary-btn" type="submit">Save Changes</button>
@@ -490,6 +520,122 @@
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape' && !modal.hidden) closeModal();
             });
+        })();
+    </script>
+    <script>
+        (function () {
+            var picker = document.getElementById('profileSkillsPicker');
+            if (!picker) return;
+
+            var hiddenInput = picker.closest('.skills-control') ? picker.closest('.skills-control').querySelector('input[type="hidden"][name="skills"]') : null;
+            var toggle = picker.querySelector('.skills-picker-toggle');
+            var panel = picker.querySelector('.skills-picker-panel');
+            var search = picker.querySelector('.skills-search-input');
+            var count = picker.querySelector('.skills-picker-count');
+            var chipList = picker.querySelector('.skills-chip-list');
+            var options = Array.prototype.slice.call(picker.querySelectorAll('[data-skill-option]'));
+            var maxSelected = parseInt(picker.dataset.maxSelected || '8', 10);
+            var selected = new Set(
+                options
+                    .filter(function (option) { return option.classList.contains('is-active'); })
+                    .map(function (option) { return option.getAttribute('data-skill-option'); })
+            );
+
+            function syncHiddenInput() {
+                if (hiddenInput) hiddenInput.value = Array.from(selected).join('|');
+            }
+
+            function renderChips() {
+                chipList.innerHTML = '';
+                if (!selected.size) {
+                    var empty = document.createElement('span');
+                    empty.className = 'skills-empty-state';
+                    empty.textContent = 'No skills selected yet.';
+                    chipList.appendChild(empty);
+                    return;
+                }
+
+                Array.from(selected).forEach(function (skill) {
+                    var chip = document.createElement('span');
+                    chip.className = 'skills-chip';
+                    chip.setAttribute('data-skill-chip', skill);
+
+                    var label = document.createElement('span');
+                    label.textContent = skill;
+                    chip.appendChild(label);
+
+                    var remove = document.createElement('button');
+                    remove.type = 'button';
+                    remove.textContent = 'x';
+                    remove.setAttribute('aria-label', 'Remove ' + skill);
+                    remove.addEventListener('click', function () {
+                        selected.delete(skill);
+                        updateUi();
+                    });
+                    chip.appendChild(remove);
+                    chipList.appendChild(chip);
+                });
+            }
+
+            function updateUi() {
+                options.forEach(function (option) {
+                    var skill = option.getAttribute('data-skill-option');
+                    var isSelected = selected.has(skill);
+                    option.classList.toggle('is-active', isSelected);
+                    option.classList.toggle('is-disabled', !isSelected && selected.size >= maxSelected);
+                });
+                if (count) count.textContent = selected.size + ' selected';
+                syncHiddenInput();
+                renderChips();
+            }
+
+            function filterOptions() {
+                var query = (search && search.value ? search.value : '').trim().toLowerCase();
+                options.forEach(function (option) {
+                    var matches = !query || option.getAttribute('data-skill-option').toLowerCase().indexOf(query) !== -1;
+                    option.hidden = !matches;
+                });
+            }
+
+            options.forEach(function (option) {
+                option.addEventListener('click', function () {
+                    var skill = option.getAttribute('data-skill-option');
+                    if (selected.has(skill)) {
+                        selected.delete(skill);
+                        updateUi();
+                        return;
+                    }
+                    if (selected.size >= maxSelected) return;
+                    selected.add(skill);
+                    updateUi();
+                });
+            });
+
+            if (toggle && panel) {
+                toggle.addEventListener('click', function () {
+                    var willOpen = panel.hidden;
+                    panel.hidden = !panel.hidden;
+                    toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                    if (willOpen && search) search.focus();
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!picker.contains(event.target)) {
+                        panel.hidden = true;
+                        toggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+
+            if (search) {
+                search.addEventListener('input', filterOptions);
+                search.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter') event.preventDefault();
+                });
+            }
+
+            updateUi();
+            filterOptions();
         })();
     </script>
     <script>

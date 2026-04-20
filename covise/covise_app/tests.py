@@ -187,6 +187,54 @@ class SecurityAuthenticationTests(TestCase):
 
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class AgreementWelcomeEmailTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="agreement@example.com",
+            password="safe-password-123",
+            full_name="Agreement User",
+        )
+        self.profile = Profile.objects.create(
+            user=self.user,
+            full_name="Agreement User",
+            has_accepted_platform_agreement=False,
+        )
+        UserPreference.objects.create(user=self.user)
+        self.client.force_login(self.user)
+
+    @patch("covise_app.views.resend")
+    def test_accepting_agreement_sends_welcome_email_and_redirects(self, mock_resend):
+        with patch("covise_app.views.RESEND_API_KEY", "test-resend-key"):
+            response = self.client.post(
+                reverse("Agreement"),
+                {"agree": "on", "next": reverse("Home")},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Home"))
+        self.profile.refresh_from_db()
+        self.assertTrue(self.profile.has_accepted_platform_agreement)
+        self.assertEqual(self.profile.platform_agreement_version, "2026.04")
+        mock_resend.Emails.send.assert_called_once()
+        payload = mock_resend.Emails.send.call_args.args[0]
+        self.assertEqual(payload["subject"], "Welcome to CoVise")
+        self.assertEqual(payload["to"], [self.user.email])
+        self.assertIn("community access is now active", payload["html"])
+
+    @patch("covise_app.views._send_platform_welcome_email", side_effect=RuntimeError("email failed"))
+    def test_accepting_agreement_still_redirects_when_welcome_email_fails(self, _mock_send):
+        response = self.client.post(
+            reverse("Agreement"),
+            {"agree": "on", "next": reverse("Home")},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Home"))
+        self.profile.refresh_from_db()
+        self.assertTrue(self.profile.has_accepted_platform_agreement)
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
 class ProfileSectionPageTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(

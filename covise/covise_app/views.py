@@ -62,6 +62,7 @@ PENDING_2FA_USER_SESSION_KEY = "pending_2fa_user_id"
 PENDING_2FA_NEXT_SESSION_KEY = "pending_2fa_next"
 PROFILE_PHOTO_MAX_SIZE_BYTES = int(getattr(settings, "PROFILE_PHOTO_MAX_SIZE_BYTES", 5 * 1024 * 1024))
 PROFILE_PHOTO_MAX_SIZE_MB = max(1, PROFILE_PHOTO_MAX_SIZE_BYTES // (1024 * 1024))
+HOME_PINNED_POST_EMAIL = "founders@covise.net"
 
 
 def _normalize_email(value):
@@ -926,6 +927,62 @@ def _send_waitlist_verification_email(email_verification):
         ),
     }
     resend.Emails.send(payload)
+
+
+def _send_platform_welcome_email(user):
+    display_name = _display_name(user).split("@")[0] if "@" in _display_name(user) else _display_name(user)
+    first_name = (display_name or "Founder").split()[0]
+    home_url = _absolute_site_url(reverse("Home"))
+    profile_url = _public_profile_url(user)
+    subject = "Welcome to CoVise"
+
+    if resend is not None and RESEND_API_KEY:
+        resend.api_key = RESEND_API_KEY
+        payload = {
+            "from": "CoVise <founders@covise.net>",
+            "to": [user.email],
+            "subject": subject,
+            "html": (
+                '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 24px; color: #e2e8f0; background: #0f1117; border-radius: 12px;">'
+                '<div style="text-align: center; margin-bottom: 32px;">'
+                '<img src="https://logo-im-g.s3.eu-central-1.amazonaws.com/covise_logo.png" alt="CoVise" style="height: 40px; margin-bottom: 8px;">'
+                '<h1 style="font-size: 28px; font-weight: 700; color: #ffffff; margin: 0;">CoVise</h1>'
+                '<p style="font-size: 13px; color: #64748b; margin: 4px 0 0; letter-spacing: 0.05em;">THE FOUNDERS COMMUNITY</p>'
+                "</div>"
+                '<hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 0 0 28px;">'
+                f'<p style="font-size: 15px; color: #cbd5e1; margin: 0 0 8px;">Hey {escape(first_name)}, this is the CoVise Team,</p>'
+                '<p style="font-size: 15px; color: #cbd5e1; margin: 0 0 20px;">Welcome in. Your community access is now active.</p>'
+                '<p style="font-size: 15px; color: #94a3b8; margin: 0 0 8px;">You can now explore founders, post updates, send requests, and start building inside CoVise.</p>'
+                '<p style="font-size: 15px; color: #94a3b8; margin: 0 0 24px;">We recommend starting by opening your home feed, completing your profile, and making your first post.</p>'
+                '<div style="text-align: center; margin: 0 0 28px;">'
+                f'<a href="{home_url}" style="display: inline-block; padding: 14px 24px; border-radius: 10px; background: rgba(59,130,246,0.14); border: 1px solid rgba(59,130,246,0.24); color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700;">Open CoVise</a>'
+                "</div>"
+                '<div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 18px 20px; margin: 0 0 28px;">'
+                f'<p style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 8px;">Your Profile</p>'
+                f'<p style="font-size: 14px; color: #ffffff; margin: 0;">{escape(profile_url)}</p>'
+                "</div>"
+                '<hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 0 0 20px;">'
+                '<p style="font-size: 13px; color: #cbd5e1; margin: 0;">- The CoVise Team</p>'
+                '<p style="font-size: 12px; color: #cbd5e1; margin: 12px 0 0;">You are receiving this because you agreed to the CoVise community guidelines and your access is now enabled.</p>'
+                "</div>"
+            ),
+        }
+        resend.Emails.send(payload)
+        return
+
+    body = (
+        f"Welcome to CoVise, {first_name}.\n\n"
+        "Your community access is now active.\n\n"
+        f"Open CoVise: {home_url}\n"
+        f"Your profile: {profile_url}\n\n"
+        "You can now explore founders, post updates, send requests, and start building inside CoVise.\n"
+    )
+    EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "support@covise.net"),
+        to=[user.email],
+    ).send(fail_silently=False)
 
 
 def _as_bool(value):
@@ -2422,6 +2479,8 @@ def _attach_post_feed_metadata(posts, current_user=None):
         post.feed_country = _profile_country_label(profile)
         post.content_html = _render_post_content_html(post)
         post.owner_display_name = post.user.full_name or post.user.email
+        post.feed_post_type_label = _post_type_display_label(post)
+        post.is_founders_spotlight = _normalize_email(getattr(post.user, "email", "")) == HOME_PINNED_POST_EMAIL
     _attach_post_reaction_metadata(posts, current_user=current_user)
     return posts
 
@@ -2495,6 +2554,27 @@ def _build_post_feed_title(post):
 
 def _render_post_title_html(title):
     return _render_post_content_segment_html(title or "")
+
+
+def _post_type_display_label(post):
+    if not post:
+        return ""
+
+    post_type = (getattr(post, "post_type", "") or "").strip()
+    title = " ".join((getattr(post, "title", "") or "").split()).casefold()
+    content = str(getattr(post, "content", "") or "")
+
+    if (
+        post_type == Post.PostType.UPDATE
+        and title.startswith("hey this is ")
+        and "Based in:" in content
+        and "Background:" in content
+        and "What I'm building or looking to build:" in content
+        and "One thing I can help others with:" in content
+    ):
+        return "Introduction"
+
+    return post.get_post_type_display()
 
 
 def _post_theme_class(post):
@@ -3205,7 +3285,14 @@ def home(request):
 
     blocked_ids = _blocked_user_ids(request.user)
     posts = _mark_saved_posts(
-        Post.objects.select_related("user", "user__profile").prefetch_related("gallery_images", "mentions__mentioned_user").exclude(user_id__in=blocked_ids).order_by("-created_at"),
+        Post.objects.select_related("user", "user__profile").prefetch_related("gallery_images", "mentions__mentioned_user").exclude(user_id__in=blocked_ids).order_by(
+            Case(
+                When(user__email__iexact=HOME_PINNED_POST_EMAIL, then=0),
+                default=1,
+                output_field=IntegerField(),
+            ),
+            "-created_at",
+        ),
         request.user,
     )
     _attach_post_feed_metadata(posts, current_user=request.user)
@@ -5577,6 +5664,10 @@ def agreement(request):
                 "platform_agreement_version",
             ]
         )
+        try:
+            _send_platform_welcome_email(request.user)
+        except Exception:
+            logger.exception("Failed to send platform welcome email for user=%s", request.user.id)
         return redirect(next_url)
 
     return render(

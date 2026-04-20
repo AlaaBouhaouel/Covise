@@ -415,9 +415,18 @@
 
             function positionDropdown() {
                 const r = input.getBoundingClientRect();
-                dropdown.style.top = (r.bottom + 4) + "px";
-                dropdown.style.left = r.left + "px";
-                dropdown.style.width = r.width + "px";
+                const viewport = window.visualViewport;
+                const viewportTop = viewport ? viewport.offsetTop : 0;
+                const viewportHeight = viewport ? viewport.height : window.innerHeight;
+                const margin = 8;
+                const rawSpaceBelow = viewportTop + viewportHeight - r.bottom - margin;
+                const rawSpaceAbove = r.top - viewportTop - margin;
+                const openAbove = rawSpaceBelow < 160 && rawSpaceAbove > rawSpaceBelow;
+                const maxHeight = Math.min(240, Math.max(120, openAbove ? rawSpaceAbove : rawSpaceBelow));
+                dropdown.style.top = openAbove ? Math.max(viewportTop + margin, r.top - maxHeight - 4) + "px" : (r.bottom + 4) + "px";
+                dropdown.style.left = Math.max(12, r.left) + "px";
+                dropdown.style.width = Math.min(r.width, window.innerWidth - 24) + "px";
+                dropdown.style.maxHeight = Math.max(120, maxHeight) + "px";
             }
 
             function renderDropdown(filter) {
@@ -435,23 +444,23 @@
                         dropdown.setAttribute("hidden", "");
                         updateButtons();
                     };
-                    item.addEventListener("mousedown", pick);
-                    item.addEventListener("touchend", pick);
+                    item.addEventListener("pointerdown", pick);
                     dropdown.appendChild(item);
                 });
             }
 
-            input.addEventListener("focus", () => {
+            function openDropdown() {
                 renderDropdown(input.value);
                 positionDropdown();
                 dropdown.removeAttribute("hidden");
-            });
+            }
+
+            input.addEventListener("focus", openDropdown);
+            input.addEventListener("click", openDropdown);
             input.addEventListener("input", () => {
                 const entered = input.value.trim();
                 answers[field.id] = byLabel.get(entered) || "";
-                renderDropdown(input.value);
-                positionDropdown();
-                dropdown.removeAttribute("hidden");
+                openDropdown();
                 updateButtons();
             });
             input.addEventListener("blur", () => {
@@ -464,6 +473,10 @@
             const reposSearchable = () => { if (!dropdown.hasAttribute("hidden")) positionDropdown(); };
             window.addEventListener("scroll", reposSearchable, { passive: true });
             window.addEventListener("resize", reposSearchable, { passive: true });
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener("resize", reposSearchable, { passive: true });
+                window.visualViewport.addEventListener("scroll", reposSearchable, { passive: true });
+            }
 
             wrap.appendChild(input);
             return wrap;
@@ -555,9 +568,18 @@
 
         function positionDropdown() {
             const r = search.getBoundingClientRect();
-            dropdown.style.top = (r.bottom + 4) + "px";
-            dropdown.style.left = r.left + "px";
-            dropdown.style.width = r.width + "px";
+            const viewport = window.visualViewport;
+            const viewportTop = viewport ? viewport.offsetTop : 0;
+            const viewportHeight = viewport ? viewport.height : window.innerHeight;
+            const margin = 8;
+            const rawSpaceBelow = viewportTop + viewportHeight - r.bottom - margin;
+            const rawSpaceAbove = r.top - viewportTop - margin;
+            const openAbove = rawSpaceBelow < 160 && rawSpaceAbove > rawSpaceBelow;
+            const maxHeight = Math.min(240, Math.max(120, openAbove ? rawSpaceAbove : rawSpaceBelow));
+            dropdown.style.top = openAbove ? Math.max(viewportTop + margin, r.top - maxHeight - 4) + "px" : (r.bottom + 4) + "px";
+            dropdown.style.left = Math.max(12, r.left) + "px";
+            dropdown.style.width = Math.min(r.width, window.innerWidth - 24) + "px";
+            dropdown.style.maxHeight = Math.max(120, maxHeight) + "px";
         }
 
         function renderDropdown(filter) {
@@ -578,8 +600,7 @@
                     renderChips();
                     updateButtons();
                 };
-                item.addEventListener("mousedown", pick);
-                item.addEventListener("touchend", pick);
+                item.addEventListener("pointerdown", pick);
                 dropdown.appendChild(item);
             });
         }
@@ -608,15 +629,16 @@
             });
         }
 
-        search.addEventListener("focus", () => {
+        function openDropdown() {
             renderDropdown(search.value);
             positionDropdown();
             dropdown.removeAttribute("hidden");
-        });
+        }
+
+        search.addEventListener("focus", openDropdown);
+        search.addEventListener("click", openDropdown);
         search.addEventListener("input", () => {
-            renderDropdown(search.value);
-            positionDropdown();
-            dropdown.removeAttribute("hidden");
+            openDropdown();
         });
         search.addEventListener("blur", () => {
             setTimeout(() => { dropdown.setAttribute("hidden", ""); }, 200);
@@ -632,6 +654,10 @@
         const reposMulti = () => { if (!dropdown.hasAttribute("hidden")) positionDropdown(); };
         window.addEventListener("scroll", reposMulti, { passive: true });
         window.addEventListener("resize", reposMulti, { passive: true });
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener("resize", reposMulti, { passive: true });
+            window.visualViewport.addEventListener("scroll", reposMulti, { passive: true });
+        }
 
         syncAnswer();
         renderChips();

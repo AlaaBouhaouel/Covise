@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>CoVise | Home</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'home.css' %}?v=20260420i">
+    <link rel="stylesheet" href="{% static 'home.css' %}?v=20260420j">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419h">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -149,7 +149,7 @@
                             <form action="{% url 'Chatbot' %}" method="get" class="post-widget">
                                 <div style="position: relative;">
                                     <input class="post-input" id="advisorInput" type="text" name="prompt" placeholder="Ask CoVise Advisor anything..." style="padding-right: 44px;">
-                                    <button type="submit" aria-label="Send" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(120,150,255,0.35); background: rgba(120,150,255,0.14); color: var(--text); display: grid; place-items: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;" onmouseover="this.style.borderColor='rgba(120,150,255,0.6)';this.style.background='rgba(120,150,255,0.26)';" onmouseout="this.style.borderColor='rgba(120,150,255,0.35)';this.style.background='rgba(120,150,255,0.14)';">
+                                    <button type="submit" aria-label="Send" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(120,150,255,0.6); background: rgba(120,150,255,0.14); color: var(--text); display: grid; place-items: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;" onmouseover="this.style.borderColor='rgba(120,150,255,0.6)';this.style.background='rgba(120,150,255,0.26)';" onmouseout="this.style.borderColor='rgba(120,150,255,0.6)';this.style.background='rgba(120,150,255,0.14)';">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                             <line x1="22" y1="2" x2="11" y2="13"></line>
                                             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -355,7 +355,7 @@
                  </div>
                  <div class="structured-feed">
                     {% for post in posts %}
-                    <article class="structured-post {{ post.theme_class }}" data-post-id="{{ post.id }}" data-post-url="{% url 'Post Detail' post.id %}" data-post-type="{{ post.post_type }}" data-post-owner="{{ post.owner_display_name|lower }}" data-post-country="{{ post.feed_country|lower }}">
+                    <article class="structured-post {{ post.theme_class }}{% if post.is_founders_spotlight %} structured-post--founders-spotlight{% endif %}" data-post-id="{{ post.id }}" data-post-url="{% url 'Post Detail' post.id %}" data-post-type="{{ post.post_type }}" data-post-owner="{{ post.owner_display_name|lower }}" data-post-country="{{ post.feed_country|lower }}">
                         <div class="structured-post-head">
                             <div class="structured-post-head-main">
                                 <div class="structured-post-meta">
@@ -376,9 +376,13 @@
                                             {% endif %}
                                         </div>
                                         <div class="structured-post-subtitle">
-                                            {{ post.get_post_type_display }}
+                                            {% if not post.is_founders_spotlight %}
+                                            {{ post.feed_post_type_label }}
                                             {% if post.feed_country %} · {{ post.feed_country }}{% endif %}
                                             · {{ post.relative_time }}
+                                            {% else %}
+                                            {% if post.feed_country %}{{ post.feed_country }} · {% endif %}{{ post.relative_time }}
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>

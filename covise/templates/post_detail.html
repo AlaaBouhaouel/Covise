@@ -103,7 +103,7 @@
                                 {% endif %}
                             </div>
                             <div class="post-detail-sub">
-                                {{ post.get_post_type_display }}
+                                {{ post.feed_post_type_label }}
                                 {% if post.feed_country %} · {{ post.feed_country }}{% endif %}
                                 · {{ post.relative_time }}
                             </div>
@@ -1401,6 +1401,6 @@
         })();
     </script>
     <script src="{% static 'avatar_fallback.js' %}?v=20260420a"></script>
-    <script>document.querySelectorAll('.post-quote-block[data-qc]').forEach(function(el){el.style.background=el.getAttribute('data-qc');});</script>
+        <script>document.querySelectorAll('.post-quote-block[data-qc]').forEach(function(el){el.style.background=el.getAttribute('data-qc');});</script>
 </body>
 </html>
