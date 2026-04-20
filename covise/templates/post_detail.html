@@ -128,13 +128,13 @@
                     </div>
                     {% endif %}
                     <div class="post-detail-actions">
-                        <button class="action-btn like-btn" type="button" title="Like this post" data-count="{{ post.likes_number }}" data-liked="false">
-                            <i class="fa-regular fa-thumbs-up"></i>
+                        <button class="action-btn like-btn{% if post.viewer_liked %} is-active{% endif %}" type="button" title="Like this post" data-post-id="{{ post.id }}" data-count="{{ post.likes_number }}" data-liked="{% if post.viewer_liked %}true{% else %}false{% endif %}">
+                            <i class="{% if post.viewer_liked %}fa-solid{% else %}fa-regular{% endif %} fa-thumbs-up"></i>
                             <span class="count">{{ post.likes_number }}</span>
                         </button>
-                        <button class="action-btn dislike-btn" type="button" title="Dislike this post" data-count="0" data-disliked="false">
-                            <i class="fa-regular fa-thumbs-down"></i>
-                            <span class="dislike-count">0</span>
+                        <button class="action-btn dislike-btn{% if post.viewer_disliked %} is-active{% endif %}" type="button" title="Dislike this post" data-post-id="{{ post.id }}" data-count="{{ post.dislikes_number }}" data-disliked="{% if post.viewer_disliked %}true{% else %}false{% endif %}">
+                            <i class="{% if post.viewer_disliked %}fa-solid{% else %}fa-regular{% endif %} fa-thumbs-down"></i>
+                            <span class="dislike-count">{{ post.dislikes_number }}</span>
                         </button>
                         <button class="action-btn comment-jump-btn" type="button" aria-label="Jump to comments" title="Jump to comments">
                             <i class="fa-regular fa-comment"></i>
@@ -836,73 +836,82 @@
                 });
             }
 
+            function applyPostReactionState(scope, data) {
+                if (!scope || !data) return;
+                var likeButton = scope.querySelector('.like-btn');
+                var dislikeButton = scope.querySelector('.dislike-btn');
+                var counts = data.reaction_counts || {};
+                var userReaction = data.user_reaction || '';
+                if (likeButton) {
+                    likeButton.setAttribute('data-count', String(counts.thumbs_up || 0));
+                    likeButton.setAttribute('data-liked', userReaction === 'thumbs_up' ? 'true' : 'false');
+                    likeButton.classList.toggle('is-active', userReaction === 'thumbs_up');
+                    var likeIcon = likeButton.querySelector('i');
+                    var likeCountNode = likeButton.querySelector('.count');
+                    if (likeIcon) likeIcon.className = (userReaction === 'thumbs_up' ? 'fa-solid' : 'fa-regular') + ' fa-thumbs-up';
+                    if (likeCountNode) likeCountNode.textContent = String(counts.thumbs_up || 0);
+                }
+                if (dislikeButton) {
+                    dislikeButton.setAttribute('data-count', String(counts.thumbs_down || 0));
+                    dislikeButton.setAttribute('data-disliked', userReaction === 'thumbs_down' ? 'true' : 'false');
+                    dislikeButton.classList.toggle('is-active', userReaction === 'thumbs_down');
+                    var dislikeIcon = dislikeButton.querySelector('i');
+                    var dislikeCountNode = dislikeButton.querySelector('.dislike-count');
+                    if (dislikeIcon) dislikeIcon.className = (userReaction === 'thumbs_down' ? 'fa-solid' : 'fa-regular') + ' fa-thumbs-down';
+                    if (dislikeCountNode) dislikeCountNode.textContent = String(counts.thumbs_down || 0);
+                }
+            }
+
+            function sendPostReaction(button, reaction) {
+                var postId = button.getAttribute('data-post-id');
+                var scope = button.closest('.post-detail-actions');
+                if (!postId || !scope) return Promise.resolve(null);
+                if (button.dataset.loading === 'true') return Promise.resolve(null);
+                button.dataset.loading = 'true';
+                return fetch('/posts/' + postId + '/react/' + reaction + '/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(function(response) {
+                        return response.json().then(function(data) {
+                            if (!response.ok || !data.ok) {
+                                throw new Error((data && data.error) || 'Could not update reaction.');
+                            }
+                            applyPostReactionState(scope, data);
+                            return data;
+                        });
+                    })
+                    .catch(function(error) {
+                        console.error(error);
+                        return null;
+                    })
+                    .finally(function() {
+                        delete button.dataset.loading;
+                    });
+            }
+
             document.querySelectorAll('.post-detail-actions .like-btn').forEach(function(button) {
                 button.addEventListener('click', function() {
-                    var icon = button.querySelector('i');
-                    var countNode = button.querySelector('.count');
-                    var count = Number(button.getAttribute('data-count') || '0');
-                    var liked = button.getAttribute('data-liked') === 'true';
-                    var dislikeButton = document.querySelector('.dislike-btn');
-                    if (liked) {
-                        count -= 1;
-                        button.setAttribute('data-liked', 'false');
-                        icon.className = 'fa-regular fa-thumbs-up';
-                    } else {
-                        if (dislikeButton && dislikeButton.getAttribute('data-disliked') === 'true') {
-                            var dislikeIcon = dislikeButton.querySelector('i');
-                            var dislikeCountNode = dislikeButton.querySelector('.dislike-count');
-                            var dislikeCount = Number(dislikeButton.getAttribute('data-count') || '0');
-                            dislikeButton.setAttribute('data-disliked', 'false');
-                            dislikeButton.setAttribute('data-count', String(Math.max(0, dislikeCount - 1)));
-                            dislikeCountNode.textContent = String(Math.max(0, dislikeCount - 1));
-                            dislikeIcon.className = 'fa-regular fa-thumbs-down';
-                            dislikeButton.classList.remove('is-active');
+                    var wasLiked = button.getAttribute('data-liked') === 'true';
+                    sendPostReaction(button, 'thumbs_up').then(function(data) {
+                        if (data && !wasLiked && data.user_reaction === 'thumbs_up') {
+                            spawnReactionBurst(button, 'thumbs_up');
                         }
-                        count += 1;
-                        button.setAttribute('data-liked', 'true');
-                        icon.className = 'fa-solid fa-thumbs-up';
-                    }
-                    button.setAttribute('data-count', String(count));
-                    countNode.textContent = String(count);
-                    button.classList.toggle('is-active', !liked);
-                    if (!liked) {
-                        spawnReactionBurst(button, 'thumbs_up');
-                    }
+                    });
                 });
             });
 
             document.querySelectorAll('.post-detail-actions .dislike-btn').forEach(function(button) {
                 button.addEventListener('click', function() {
-                    var icon = button.querySelector('i');
-                    var countNode = button.querySelector('.dislike-count');
-                    var count = Number(button.getAttribute('data-count') || '0');
-                    var disliked = button.getAttribute('data-disliked') === 'true';
-                    var likeButton = document.querySelector('.like-btn');
-                    if (disliked) {
-                        count -= 1;
-                        button.setAttribute('data-disliked', 'false');
-                        icon.className = 'fa-regular fa-thumbs-down';
-                    } else {
-                        if (likeButton && likeButton.getAttribute('data-liked') === 'true') {
-                            var likeIcon = likeButton.querySelector('i');
-                            var likeCountNode = likeButton.querySelector('.count');
-                            var likeCount = Number(likeButton.getAttribute('data-count') || '0');
-                            likeButton.setAttribute('data-liked', 'false');
-                            likeButton.setAttribute('data-count', String(Math.max(0, likeCount - 1)));
-                            likeCountNode.textContent = String(Math.max(0, likeCount - 1));
-                            likeIcon.className = 'fa-regular fa-thumbs-up';
-                            likeButton.classList.remove('is-active');
+                    var wasDisliked = button.getAttribute('data-disliked') === 'true';
+                    sendPostReaction(button, 'thumbs_down').then(function(data) {
+                        if (data && !wasDisliked && data.user_reaction === 'thumbs_down') {
+                            spawnReactionBurst(button, 'thumbs_down');
                         }
-                        count += 1;
-                        button.setAttribute('data-disliked', 'true');
-                        icon.className = 'fa-solid fa-thumbs-down';
-                    }
-                    button.setAttribute('data-count', String(count));
-                    countNode.textContent = String(count);
-                    button.classList.toggle('is-active', !disliked);
-                    if (!disliked) {
-                        spawnReactionBurst(button, 'thumbs_down');
-                    }
+                    });
                 });
             });
             document.querySelectorAll('.post-detail-actions .bookmark-btn').forEach(function(button) {

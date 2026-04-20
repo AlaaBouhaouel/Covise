@@ -24,7 +24,7 @@ from django.utils import timezone
 from django.utils.html import escape
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.timesince import timesince
-from .models import OnboardingResponse, Profile, User, UserPreference, WaitlistEmailVerification, WaitlistEntry, Post, PostImage, PostMention, Comment, CommentReaction, SavedPost, BlockedUser, Notification, ConversationUserState, Experiences, Active_projects, Project, Conversation, Message, MessageReceipt, MessageReaction, ConversationRequest, AccountDeletionRequest, AccountPauseRequest, DataDeletionRequest, DataExportRequest, SignInEvent, TwoFactorChallenge
+from .models import OnboardingResponse, Profile, User, UserPreference, WaitlistEmailVerification, WaitlistEntry, Post, PostImage, PostMention, PostReaction, Comment, CommentReaction, SavedPost, BlockedUser, Notification, ConversationUserState, Experiences, Active_projects, Project, Conversation, Message, MessageReceipt, MessageReaction, ConversationRequest, AccountDeletionRequest, AccountPauseRequest, DataDeletionRequest, DataExportRequest, SignInEvent, TwoFactorChallenge
 from covise_app.utils import delete_s3_object, generate_referral_code, upload_cv_to_s3
 from covise_app.user_context import build_profile_card_context, build_profile_context, build_saved_post_items, build_settings_context, build_ui_user_context, get_onboarding_skill_config
 from covise_app.profile_sync import PROFILE_ONBOARDING_FIELD_IDS, sync_profile_for_user
@@ -1978,6 +1978,10 @@ MESSAGE_REACTION_ACTION_MAP = {
     "thumbs_up": MessageReaction.ReactionType.THUMBS_UP,
     "fire": MessageReaction.ReactionType.FIRE,
 }
+POST_REACTION_ACTION_MAP = {
+    "thumbs_up": PostReaction.ReactionType.THUMBS_UP,
+    "thumbs_down": PostReaction.ReactionType.THUMBS_DOWN,
+}
 
 
 def _normalize_handle_token(value):
@@ -2402,7 +2406,7 @@ def _post_gallery_items(post, limit=6):
     return items[:limit]
 
 
-def _attach_post_feed_metadata(posts):
+def _attach_post_feed_metadata(posts, current_user=None):
     for post in posts:
         profile = getattr(post.user, "profile", None)
         post.avatar_url = _profile_avatar_url(profile)
@@ -2418,7 +2422,47 @@ def _attach_post_feed_metadata(posts):
         post.feed_country = _profile_country_label(profile)
         post.content_html = _render_post_content_html(post)
         post.owner_display_name = post.user.full_name or post.user.email
+    _attach_post_reaction_metadata(posts, current_user=current_user)
     return posts
+
+
+def _attach_post_reaction_metadata(posts, current_user=None):
+    post_list = list(posts)
+    if not post_list:
+        return post_list
+
+    reactions = list(PostReaction.objects.filter(post__in=post_list))
+    counts_by_post_id = {}
+    viewer_reactions_by_post_id = {}
+
+    for reaction in reactions:
+        counts = counts_by_post_id.setdefault(
+            reaction.post_id,
+            {
+                PostReaction.ReactionType.THUMBS_UP: 0,
+                PostReaction.ReactionType.THUMBS_DOWN: 0,
+            },
+        )
+        counts[reaction.reaction] = counts.get(reaction.reaction, 0) + 1
+        if current_user and reaction.user_id == current_user.id:
+            viewer_reactions_by_post_id[reaction.post_id] = reaction.reaction
+
+    for post in post_list:
+        counts = counts_by_post_id.get(
+            post.id,
+            {
+                PostReaction.ReactionType.THUMBS_UP: 0,
+                PostReaction.ReactionType.THUMBS_DOWN: 0,
+            },
+        )
+        viewer_reaction = viewer_reactions_by_post_id.get(post.id, "")
+        post.likes_number = counts.get(PostReaction.ReactionType.THUMBS_UP, 0)
+        post.dislikes_number = counts.get(PostReaction.ReactionType.THUMBS_DOWN, 0)
+        post.viewer_post_reaction = viewer_reaction
+        post.viewer_liked = viewer_reaction == PostReaction.ReactionType.THUMBS_UP
+        post.viewer_disliked = viewer_reaction == PostReaction.ReactionType.THUMBS_DOWN
+
+    return post_list
 
 
 def _relative_time_label(value):
@@ -3152,7 +3196,7 @@ def home(request):
         Post.objects.select_related("user", "user__profile").prefetch_related("gallery_images", "mentions__mentioned_user").exclude(user_id__in=blocked_ids).order_by("-created_at"),
         request.user,
     )
-    _attach_post_feed_metadata(posts)
+    _attach_post_feed_metadata(posts, current_user=request.user)
 
     full_name = (request.user.full_name or "").strip()
     first_name = full_name.split()[0] if full_name else "User"
@@ -3182,7 +3226,7 @@ def post_detail(request, post_id):
     )
     if post.user_id in _blocked_user_ids(request.user):
         raise Http404("Post not available")
-    _attach_post_feed_metadata([post])
+    _attach_post_feed_metadata([post], current_user=request.user)
     post.comment_threads = _build_comment_tree(
         Comment.objects.filter(post=post).select_related("user", "user__profile", "parent", "post").prefetch_related("reactions").order_by("created_at"),
         current_user=request.user,
@@ -3263,6 +3307,68 @@ def toggle_saved_post(request, post_id):
 
     SavedPost.objects.create(user=request.user, post=post)
     return JsonResponse({"ok": True, "saved": True})
+
+
+@login_required
+@require_POST
+def toggle_post_reaction(request, post_id, reaction):
+    reaction_type = POST_REACTION_ACTION_MAP.get(reaction)
+    if not reaction_type:
+        return JsonResponse({"ok": False, "error": "Invalid reaction."}, status=400)
+
+    post = get_object_or_404(Post.objects.select_related("user"), id=post_id)
+    if post.user_id in _blocked_user_ids(request.user):
+        return JsonResponse({"ok": False, "error": "Post not available."}, status=404)
+
+    existing_reaction = PostReaction.objects.filter(user=request.user, post=post).first()
+    if existing_reaction and existing_reaction.reaction == reaction_type:
+        existing_reaction.delete()
+        viewer_reaction = ""
+    else:
+        PostReaction.objects.update_or_create(
+            user=request.user,
+            post=post,
+            defaults={"reaction": reaction_type},
+        )
+        viewer_reaction = reaction_type
+
+    reaction_totals = PostReaction.objects.filter(post=post).aggregate(
+        thumbs_up=Count("id", filter=Q(reaction=PostReaction.ReactionType.THUMBS_UP)),
+        thumbs_down=Count("id", filter=Q(reaction=PostReaction.ReactionType.THUMBS_DOWN)),
+    )
+    likes_number = reaction_totals["thumbs_up"] or 0
+    dislikes_number = reaction_totals["thumbs_down"] or 0
+    if post.likes_number != likes_number:
+        post.likes_number = likes_number
+        post.save(update_fields=["likes_number"])
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "reaction_counts": {
+                "thumbs_up": likes_number,
+                "thumbs_down": dislikes_number,
+            },
+            "user_reaction": viewer_reaction,
+        }
+    )
+
+
+@login_required
+@require_POST
+def delete_post(request, post_id):
+    post = get_object_or_404(Post.objects.prefetch_related("gallery_images"), id=post_id)
+    if request.user.id != post.user_id:
+        return JsonResponse({"ok": False, "error": "You cannot delete this post."}, status=403)
+
+    if post.image:
+        post.image.delete(save=False)
+    _delete_file_field_for_queryset(post.gallery_images.all(), "image")
+    post.delete()
+
+    redirect_url = _safe_redirect_url(request, reverse("Home"))
+    return redirect(redirect_url)
+
 
 def notify(user_email, who, reason):
     if resend is None or not RESEND_API_KEY:
@@ -3863,7 +3969,7 @@ def create_post(request):
                 mentioned_user=mentioned_user,
                 handle_text=raw_handle,
             )
-    _attach_post_feed_metadata([post])
+    _attach_post_feed_metadata([post], current_user=request.user)
     _create_post_notifications(post)
     _create_post_mention_notifications(post)
     _send_post_alert_email(post)
@@ -3991,11 +4097,30 @@ def start_private_conversation(request, user_id):
         .distinct()
         .first()
     )
-    if not existing_request:
+    if existing_request:
+        return redirect("Requests")
+
+    try:
         ConversationRequest.objects.create(
             requester=request.user,
             recipient=target_user,
         )
+    except Exception as exc:
+        logger.exception(
+            "Failed to create private conversation request sender=%s target=%s",
+            request.user.id,
+            target_user.id,
+        )
+        send_messaging_failure_alert(
+            action="start_private_conversation",
+            reason="request_create_failed",
+            actor=request.user,
+            target_user=target_user,
+            details={"exception": str(exc)},
+        )
+        return redirect(f"{reverse('Public Profile', args=[target_user.id])}?request_error=1")
+
+    try:
         dispatch_notification(
             recipient=target_user,
             actor=request.user,
@@ -4004,7 +4129,20 @@ def start_private_conversation(request, user_id):
             body="Open Messages to review the request and decide whether to accept it.",
             target_url=reverse("Messages"),
         )
-    return redirect("Messages")
+    except Exception as exc:
+        logger.exception(
+            "Failed to dispatch private conversation request notification sender=%s target=%s",
+            request.user.id,
+            target_user.id,
+        )
+        send_messaging_failure_alert(
+            action="start_private_conversation",
+            reason="request_notification_failed",
+            actor=request.user,
+            target_user=target_user,
+            details={"exception": str(exc)},
+        )
+    return redirect("Requests")
 
 
 @login_required
@@ -4924,7 +5062,7 @@ def _build_profile_display_context(request, target_user, is_own_profile):
         )
     ) if can_view_profile_data else []
     if posts:
-        _attach_post_feed_metadata(posts)
+        _attach_post_feed_metadata(posts, current_user=request.user)
         _attach_post_comment_threads(posts, current_user=request.user)
 
     saved_posts = build_saved_post_items(request.user) if is_own_profile else []
@@ -4977,7 +5115,13 @@ def _build_profile_display_context(request, target_user, is_own_profile):
         "is_friend": is_friend,
         "is_onboarded": is_onboarded,
         "extended_onboarding_complete": extended_onboarding_complete,
-        "profile_error_message": "Messaging is disabled because one of you has blocked the other." if request.GET.get("blocked_message") == "1" else "",
+        "profile_error_message": (
+            "Messaging is disabled because one of you has blocked the other."
+            if request.GET.get("blocked_message") == "1"
+            else "We could not send your request right now. Please try again."
+            if request.GET.get("request_error") == "1"
+            else ""
+        ),
         "profile_report_success_message": (
             "Your report has been sent. Our team will review it, and this user was added to your blocked list."
             if request.GET.get("reported") == "blocked"

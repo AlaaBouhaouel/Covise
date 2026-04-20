@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .messaging import deliver_media_message
-from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, OnboardingResponse, Post, PostImage, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
+from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, OnboardingResponse, Post, PostImage, PostReaction, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
 from .context_processors import user_ui_context
 from .user_context import build_ui_user_context
 from .views import _has_profile_completion, _home_sidebar_metrics, _render_post_content_html, _render_post_title_html, _safe_media_url, _serialize_message, _waitlist_to_onboarding_initial_answers
@@ -164,6 +164,56 @@ class SecurityAuthenticationTests(TestCase):
         self.assertRedirects(response, f"{reverse('Settings')}?security=2fa-disabled")
         self.preferences.refresh_from_db()
         self.assertFalse(self.preferences.two_factor_enabled)
+
+    def test_settings_account_can_update_full_name(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("Settings Section", args=["account"]),
+            {
+                "save_section": "personal_data",
+                "full_name": "Updated Secure User",
+                "email": self.user.email,
+                "phone_number": "+966500000009",
+            },
+        )
+
+        self.assertRedirects(response, f"{reverse('Settings Section', args=['account'])}?saved=1")
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.full_name, "Updated Secure User")
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.full_name, "Updated Secure User")
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class ProfileSectionPageTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="profile-sections@example.com",
+            password="safe-password-123",
+            full_name="Profile Sections User",
+        )
+        Profile.objects.create(
+            user=self.user,
+            full_name="Profile Sections User",
+            has_accepted_platform_agreement=True,
+        )
+        UserPreference.objects.create(user=self.user)
+        self.client.force_login(self.user)
+
+    def test_profile_section_pages_render_successfully(self):
+        section_urls = [
+            reverse("Profile Personal Data"),
+            reverse("Profile Experience"),
+            reverse("Profile Active Projects"),
+            reverse("Profile Saved Posts"),
+            reverse("Profile Posts"),
+        ]
+
+        for url in section_urls:
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
 
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
@@ -938,6 +988,175 @@ class CreatePostTemplatePrefillTests(TestCase):
         self.assertIn("Building in [Industry / Stage / Location]", template_payloads["share_update"]["content"])
 
 
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class DeletePostTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="delete-post-owner@example.com",
+            password="safe-password-123",
+            full_name="Delete Post Owner",
+        )
+        self.other_user = User.objects.create_user(
+            email="delete-post-other@example.com",
+            password="safe-password-123",
+            full_name="Delete Post Other",
+        )
+        Profile.objects.create(
+            user=self.user,
+            full_name="Delete Post Owner",
+            has_accepted_platform_agreement=True,
+        )
+        Profile.objects.create(
+            user=self.other_user,
+            full_name="Delete Post Other",
+            has_accepted_platform_agreement=True,
+        )
+
+    def test_post_owner_can_delete_post_and_return_to_home(self):
+        post = Post.objects.create(
+            user=self.user,
+            title="Delete me",
+            post_type=Post.PostType.UPDATE,
+            content="Delete this post from the feed.",
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("Delete Post", args=[post.id]),
+            {"next": reverse("Home")},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Home"))
+        self.assertFalse(Post.objects.filter(id=post.id).exists())
+
+    def test_non_owner_cannot_delete_post(self):
+        post = Post.objects.create(
+            user=self.user,
+            title="Keep me",
+            post_type=Post.PostType.UPDATE,
+            content="Another user should not delete this.",
+        )
+        self.client.force_login(self.other_user)
+
+        response = self.client.post(reverse("Delete Post", args=[post.id]))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Post.objects.filter(id=post.id).exists())
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class PostReactionTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="post-reactor@example.com",
+            password="safe-password-123",
+            full_name="Post Reactor",
+        )
+        self.author = User.objects.create_user(
+            email="post-author@example.com",
+            password="safe-password-123",
+            full_name="Post Author",
+        )
+        Profile.objects.create(
+            user=self.user,
+            full_name="Post Reactor",
+            has_accepted_platform_agreement=True,
+        )
+        Profile.objects.create(
+            user=self.author,
+            full_name="Post Author",
+            has_accepted_platform_agreement=True,
+        )
+        self.post = Post.objects.create(
+            user=self.author,
+            title="Reaction Post",
+            post_type=Post.PostType.UPDATE,
+            content="Testing persisted post reactions.",
+        )
+        self.client.force_login(self.user)
+
+    def test_toggle_post_reaction_persists_like_and_marks_detail_viewer_state(self):
+        response = self.client.post(reverse("Toggle Post Reaction", args=[self.post.id, "thumbs_up"]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(
+            response.content,
+            {
+                "ok": True,
+                "reaction_counts": {
+                    "thumbs_up": 1,
+                    "thumbs_down": 0,
+                },
+                "user_reaction": "thumbs_up",
+            },
+        )
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.likes_number, 1)
+        self.assertTrue(
+            PostReaction.objects.filter(
+                user=self.user,
+                post=self.post,
+                reaction=PostReaction.ReactionType.THUMBS_UP,
+            ).exists()
+        )
+
+        detail_response = self.client.get(reverse("Post Detail", args=[self.post.id]))
+
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertTrue(detail_response.context["post"].viewer_liked)
+        self.assertEqual(detail_response.context["post"].likes_number, 1)
+
+    def test_toggle_post_reaction_switches_and_removes_existing_reaction(self):
+        PostReaction.objects.create(
+            user=self.user,
+            post=self.post,
+            reaction=PostReaction.ReactionType.THUMBS_UP,
+        )
+        self.post.likes_number = 1
+        self.post.save(update_fields=["likes_number"])
+
+        switch_response = self.client.post(reverse("Toggle Post Reaction", args=[self.post.id, "thumbs_down"]))
+
+        self.assertEqual(switch_response.status_code, 200)
+        self.assertJSONEqual(
+            switch_response.content,
+            {
+                "ok": True,
+                "reaction_counts": {
+                    "thumbs_up": 0,
+                    "thumbs_down": 1,
+                },
+                "user_reaction": "thumbs_down",
+            },
+        )
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.likes_number, 0)
+        self.assertTrue(
+            PostReaction.objects.filter(
+                user=self.user,
+                post=self.post,
+                reaction=PostReaction.ReactionType.THUMBS_DOWN,
+            ).exists()
+        )
+
+        remove_response = self.client.post(reverse("Toggle Post Reaction", args=[self.post.id, "thumbs_down"]))
+
+        self.assertEqual(remove_response.status_code, 200)
+        self.assertJSONEqual(
+            remove_response.content,
+            {
+                "ok": True,
+                "reaction_counts": {
+                    "thumbs_up": 0,
+                    "thumbs_down": 0,
+                },
+                "user_reaction": "",
+            },
+        )
+        self.assertFalse(PostReaction.objects.filter(user=self.user, post=self.post).exists())
+
+
 class PostContentFormattingTests(TestCase):
     def test_render_post_content_html_formats_bold_and_italic_markers(self):
         post = Post(
@@ -1395,6 +1614,35 @@ class MessagingConversationNormalizationTests(TestCase):
         self.assertEqual(response.url, f"{reverse('Messages')}?conversation={canonical.id}")
         self.assertTrue(
             ConversationRequest.objects.filter(id=accepted_request.id, conversation=canonical).exists()
+        )
+
+    def test_start_private_conversation_creates_pending_request_and_redirects_to_requests_page(self):
+        response = self.client.post(reverse("Start Private Conversation", args=[self.other_user.id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Requests"))
+        self.assertTrue(
+            ConversationRequest.objects.filter(
+                requester=self.user,
+                recipient=self.other_user,
+                status=ConversationRequest.Status.PENDING,
+            ).exists()
+        )
+
+    @patch("covise_app.views.dispatch_notification")
+    def test_start_private_conversation_still_redirects_when_notification_dispatch_fails(self, dispatch_mock):
+        dispatch_mock.side_effect = RuntimeError("notification failed")
+
+        response = self.client.post(reverse("Start Private Conversation", args=[self.other_user.id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Requests"))
+        self.assertTrue(
+            ConversationRequest.objects.filter(
+                requester=self.user,
+                recipient=self.other_user,
+                status=ConversationRequest.Status.PENDING,
+            ).exists()
         )
 
     @patch("covise_app.views.send_messaging_failure_alert")

@@ -737,6 +737,23 @@ class Post(models.Model):
         ordering = ["-created_at"]
 
 
+class PostReaction(models.Model):
+    class ReactionType(models.TextChoices):
+        THUMBS_UP = "thumbs_up", "Thumbs up"
+        THUMBS_DOWN = "thumbs_down", "Thumbs down"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="post_reactions")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reactions")
+    reaction = models.CharField(max_length=20, choices=ReactionType.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "post"], name="unique_user_post_reaction")
+        ]
+        ordering = ["created_at"]
+
+
 class PostImage(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="gallery_images")
     image = models.ImageField(upload_to="post_images/", storage=post_image_storage)
