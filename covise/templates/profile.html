@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | Profile</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260420a">
+    <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260420b">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419j">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -331,7 +331,6 @@
                     </div>
                     <div class="looking-block">
                         <h2>Looking For</h2>
-                        <p class="looking-text">{{ profile_page.looking_for }}</p>
                         <div class="tags">
                             {% for tag in profile_page.looking_for_tags %}
                             <span class="tag {{ tag.color }}">{{ tag.label }}</span>
@@ -343,26 +342,35 @@
                 </article>
                 {% if is_own_profile %}
                 <section class="panel profile-panel-card">
-                    <div class="profile-panel-head">
-                        <div>
+                    <a class="profile-section-entry" href="{{ profile_personal_data_url }}" aria-label="Open personal data">
+                        <span class="profile-section-entry__icon" aria-hidden="true">
+                            <i class="fa-solid fa-id-card"></i>
+                        </span>
+                        <div class="profile-section-entry__copy">
                             <h2>Personal Data</h2>
                             <p class="profile-panel-subcopy">Contact info, links, location, and profile details you can update.</p>
                         </div>
-                        <a class="panel-link" href="{{ profile_personal_data_url }}" aria-label="Open personal data">
+                        <span class="panel-link" aria-hidden="true">
                             <i class="fa-solid fa-chevron-right"></i>
-                        </a>
-                    </div>
+                        </span>
+                    </a>
                 </section>
                 {% endif %}
 
                 <article class="two-col">
                     <section class="panel profile-panel-card">
-                        <div class="profile-panel-head">
-                            <h2>Experience</h2>
-                            <a class="panel-link" href="{{ profile_experience_url }}" aria-label="Open experience">
+                        <a class="profile-section-entry" href="{{ profile_experience_url }}" aria-label="Open experience">
+                            <span class="profile-section-entry__icon" aria-hidden="true">
+                                <i class="fa-solid fa-briefcase"></i>
+                            </span>
+                            <div class="profile-section-entry__copy">
+                                <h2>Experience</h2>
+                                <p class="profile-panel-subcopy">Track record, roles, and execution history.</p>
+                            </div>
+                            <span class="panel-link" aria-hidden="true">
                                 <i class="fa-solid fa-chevron-right"></i>
-                            </a>
-                        </div>
+                            </span>
+                        </a>
                         <div class="panel-list-wrap">
                             <div class="exp-items panel-list-content">
                                 {% for experience in experience_preview %}
@@ -379,12 +387,18 @@
                     </section>
 
                     <section class="panel projects-section profile-panel-card">
-                        <div class="profile-panel-head">
-                            <h2>Active Projects</h2>
-                            <a class="panel-link" href="{{ profile_active_projects_url }}" aria-label="Open active projects">
+                        <a class="profile-section-entry" href="{{ profile_active_projects_url }}" aria-label="Open active projects">
+                            <span class="profile-section-entry__icon" aria-hidden="true">
+                                <i class="fa-solid fa-diagram-project"></i>
+                            </span>
+                            <div class="profile-section-entry__copy">
+                                <h2>Active Projects</h2>
+                                <p class="profile-panel-subcopy">What you are building right now and where it stands.</p>
+                            </div>
+                            <span class="panel-link" aria-hidden="true">
                                 <i class="fa-solid fa-chevron-right"></i>
-                            </a>
-                        </div>
+                            </span>
+                        </a>
                         <div class="panel-list-wrap">
                             <div class="panel-list-content project-list-content">
                                 {% for project in active_projects_preview %}
@@ -405,32 +419,38 @@
             
                 {% if is_own_profile %}
                 <section class="panel saved-posts-panel profile-panel-card">
-                    <div class="profile-panel-head">
-                        <div>
+                    <a class="profile-section-entry" href="{{ profile_saved_posts_url }}" aria-label="Open saved posts">
+                        <span class="profile-section-entry__icon" aria-hidden="true">
+                            <i class="fa-solid fa-bookmark"></i>
+                        </span>
+                        <div class="profile-section-entry__copy">
                             <h2>Saved Posts</h2>
                             <p class="profile-panel-subcopy">Things you bookmarked to revisit later.</p>
                         </div>
-                        <a class="panel-link" href="{{ profile_saved_posts_url }}" aria-label="Open saved posts">
+                        <span class="panel-link" aria-hidden="true">
                             <i class="fa-solid fa-chevron-right"></i>
-                        </a>
-                    </div>
+                        </span>
+                    </a>
                 </section>
                 {% endif %}
 
                 {% if can_view_profile_data %}
                 <section class="panel posts profile-panel-card">
-                    <div class="profile-panel-head">
-                        <div>
+                    <a class="profile-section-entry" href="{{ profile_posts_url }}" aria-label="Open posts">
+                        <span class="profile-section-entry__icon" aria-hidden="true">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </span>
+                        <div class="profile-section-entry__copy">
                             <h2>Posts</h2>
                             <p class="profile-panel-subcopy">{% if is_own_profile %}Your latest updates on CoVise.{% else %}Recent public updates from this member.{% endif %}</p>
                         </div>
-                        <a class="panel-link" href="{{ profile_posts_url }}" aria-label="Open posts">
+                        <span class="panel-link" aria-hidden="true">
                             <i class="fa-solid fa-chevron-right"></i>
-                        </a>
-                    </div>
+                        </span>
+                    </a>
                     <div class="structured-feed">
                         {% for post in posts_preview %}
-                        <article class="structured-post {{ post.theme_class }}">
+                        <article class="structured-post {{ post.theme_class }} profile-post-card-link" data-post-url="{% url 'Post Detail' post.id %}" tabindex="0" role="link" aria-label="Open post by {{ post.user.full_name|default:post.user.email }}">
                             <div class="structured-post-head">
                                 <div class="structured-post-meta">
                                     {% if post.avatar_url %}
@@ -466,7 +486,6 @@
                             <div class="structured-post-footer profile-post-preview-footer">
                                 <span class="profile-post-preview-meta"><i class="fa-regular fa-thumbs-up"></i><span>{{ post.likes_number }}</span></span>
                                 <span class="profile-post-preview-meta"><i class="fa-regular fa-comment"></i><span>{{ post.comments.count }}</span></span>
-                                <a class="outline-btn" href="{% url 'Post Detail' post.id %}">Open</a>
                             </div>
                         </article>
                         {% empty %}
@@ -1038,6 +1057,24 @@
                     });
                     postsSection.hidden = !!query && visiblePosts === 0 && postsSection.textContent.toLowerCase().indexOf(query) === -1;
                 }
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            Array.prototype.slice.call(document.querySelectorAll('.profile-post-card-link[data-post-url]')).forEach(function (card) {
+                function openPost(event) {
+                    if (event.target.closest('a, button, input, textarea, select, label, form')) return;
+                    var targetUrl = card.getAttribute('data-post-url');
+                    if (targetUrl) window.location.href = targetUrl;
+                }
+
+                card.addEventListener('click', openPost);
+                card.addEventListener('keydown', function (event) {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    openPost(event);
+                });
             });
         })();
     </script>

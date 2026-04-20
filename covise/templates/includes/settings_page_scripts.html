@@ -1,0 +1,422 @@
+{% load static %}
+<script>
+    (function () {
+        var toggleButton = document.getElementById('settingsThemeToggle');
+        if (toggleButton) {
+            function applyThemeState() {
+                var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                toggleButton.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+            }
+            toggleButton.addEventListener('click', function () {
+                var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                if (isLight) {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('covise-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('covise-theme', 'light');
+                }
+                applyThemeState();
+            });
+            applyThemeState();
+        }
+
+        var bell = document.getElementById('notifBell');
+        var panel = document.getElementById('notifPanel');
+        if (bell && panel) {
+            bell.addEventListener('click', function (event) {
+                event.stopPropagation();
+                panel.classList.toggle('is-open');
+            });
+            document.addEventListener('click', function (event) {
+                if (!panel.contains(event.target) && !bell.contains(event.target)) panel.classList.remove('is-open');
+            });
+        }
+
+        function updateHiddenField(field, value, source) {
+            var root = source ? source.closest('form') : document;
+            var input = root ? root.querySelector('input[type="hidden"][name="' + field + '"]') : null;
+            if (input) input.value = value;
+        }
+
+        Array.prototype.slice.call(document.querySelectorAll('.toggle-switch:not(.locked)')).forEach(function (toggle) {
+            toggle.addEventListener('click', function () {
+                if (toggle.disabled) return;
+                var active = toggle.classList.toggle('active');
+                toggle.setAttribute('aria-pressed', active ? 'true' : 'false');
+                if (toggle.dataset.field) updateHiddenField(toggle.dataset.field, active ? 'true' : 'false', toggle);
+            });
+        });
+
+        Array.prototype.slice.call(document.querySelectorAll('.single-select')).forEach(function (group) {
+            group.querySelectorAll('.selector-pill').forEach(function (pill) {
+                pill.addEventListener('click', function () {
+                    group.querySelectorAll('.selector-pill').forEach(function (item) { item.classList.remove('is-active'); });
+                    pill.classList.add('is-active');
+                    if (group.dataset.group && pill.dataset.value) updateHiddenField(group.dataset.group, pill.dataset.value, pill);
+                });
+            });
+        });
+
+        Array.prototype.slice.call(document.querySelectorAll('.multi-select .selector-pill')).forEach(function (pill) {
+            pill.addEventListener('click', function () {
+                pill.classList.toggle('is-active');
+                var group = pill.closest('.multi-select');
+                if (!group || !group.dataset.group) return;
+                var selected = Array.prototype.slice.call(group.querySelectorAll('.selector-pill.is-active')).map(function (item) {
+                    return item.textContent.trim();
+                });
+                updateHiddenField(group.dataset.group, selected.join('|'), pill);
+            });
+        });
+
+        Array.prototype.slice.call(document.querySelectorAll('.multi-select[data-group]')).forEach(function (group) {
+            var selected = Array.prototype.slice.call(group.querySelectorAll('.selector-pill.is-active')).map(function (item) {
+                return item.textContent.trim();
+            });
+            updateHiddenField(group.dataset.group, selected.join('|'), group);
+        });
+
+        Array.prototype.slice.call(document.querySelectorAll('.skills-picker')).forEach(function (picker) {
+            var hiddenInput = picker.closest('.skills-control') ? picker.closest('.skills-control').querySelector('input[type="hidden"][name="skills"]') : null;
+            var toggle = picker.querySelector('.skills-picker-toggle');
+            var panel = picker.querySelector('.skills-picker-panel');
+            var search = picker.querySelector('.skills-search-input');
+            var count = picker.querySelector('.skills-picker-count');
+            var chipList = picker.querySelector('.skills-chip-list');
+            var options = Array.prototype.slice.call(picker.querySelectorAll('[data-skill-option]'));
+            var maxSelected = parseInt(picker.dataset.maxSelected || '8', 10);
+            var selected = new Set(
+                options
+                    .filter(function (option) { return option.classList.contains('is-active'); })
+                    .map(function (option) { return option.getAttribute('data-skill-option'); })
+            );
+
+            function syncHiddenInput() {
+                if (hiddenInput) hiddenInput.value = Array.from(selected).join('|');
+            }
+
+            function renderChips() {
+                chipList.innerHTML = '';
+                if (!selected.size) {
+                    var empty = document.createElement('span');
+                    empty.className = 'skills-empty-state';
+                    empty.textContent = 'No skills selected yet.';
+                    chipList.appendChild(empty);
+                    return;
+                }
+
+                Array.from(selected).forEach(function (skill) {
+                    var chip = document.createElement('span');
+                    chip.className = 'skills-chip';
+                    chip.setAttribute('data-skill-chip', skill);
+
+                    var label = document.createElement('span');
+                    label.textContent = skill;
+                    chip.appendChild(label);
+
+                    var remove = document.createElement('button');
+                    remove.type = 'button';
+                    remove.textContent = 'x';
+                    remove.setAttribute('aria-label', 'Remove ' + skill);
+                    remove.setAttribute('data-skill-remove', skill);
+                    remove.addEventListener('click', function () {
+                        selected.delete(skill);
+                        updateUi();
+                    });
+                    chip.appendChild(remove);
+                    chipList.appendChild(chip);
+                });
+            }
+
+            function updateUi() {
+                options.forEach(function (option) {
+                    var skill = option.getAttribute('data-skill-option');
+                    var isSelected = selected.has(skill);
+                    option.classList.toggle('is-active', isSelected);
+                    option.classList.toggle('is-disabled', !isSelected && selected.size >= maxSelected);
+                });
+                if (count) count.textContent = selected.size + ' selected';
+                syncHiddenInput();
+                renderChips();
+            }
+
+            function filterOptions() {
+                var query = (search && search.value ? search.value : '').trim().toLowerCase();
+                options.forEach(function (option) {
+                    var matches = !query || option.getAttribute('data-skill-option').toLowerCase().indexOf(query) !== -1;
+                    option.hidden = !matches;
+                });
+            }
+
+            options.forEach(function (option) {
+                option.addEventListener('click', function () {
+                    var skill = option.getAttribute('data-skill-option');
+                    if (selected.has(skill)) {
+                        selected.delete(skill);
+                        updateUi();
+                        return;
+                    }
+                    if (selected.size >= maxSelected) return;
+                    selected.add(skill);
+                    updateUi();
+                });
+            });
+
+            if (toggle && panel) {
+                toggle.addEventListener('click', function () {
+                    var willOpen = panel.hidden;
+                    panel.hidden = !panel.hidden;
+                    toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                    if (willOpen && search) search.focus();
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!picker.contains(event.target)) {
+                        panel.hidden = true;
+                        toggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+
+            if (search) {
+                search.addEventListener('input', filterOptions);
+                search.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter') event.preventDefault();
+                });
+            }
+
+            updateUi();
+            filterOptions();
+        });
+
+        Array.prototype.slice.call(document.querySelectorAll('[data-toggle-panel]')).forEach(function (button) {
+            button.addEventListener('click', function () {
+                var targetPanel = document.getElementById(button.getAttribute('data-toggle-panel'));
+                if (!targetPanel) return;
+                var willShow = targetPanel.hidden;
+                targetPanel.hidden = !targetPanel.hidden;
+                if (willShow) {
+                    var firstInput = targetPanel.querySelector('input, textarea');
+                    if (firstInput) firstInput.focus();
+                }
+            });
+        });
+
+        Array.prototype.slice.call(document.querySelectorAll('[data-hide-panel]')).forEach(function (button) {
+            button.addEventListener('click', function () {
+                var targetPanel = document.getElementById(button.getAttribute('data-hide-panel'));
+                if (!targetPanel) return;
+                targetPanel.hidden = true;
+                targetPanel.querySelectorAll('input, textarea').forEach(function (field) {
+                    field.value = '';
+                });
+            });
+        });
+
+        var savedPostsToggle = document.getElementById('savedPostsToggle');
+        var savedPostsAll = document.getElementById('savedPostsAll');
+        if (savedPostsToggle && savedPostsAll) {
+            savedPostsToggle.addEventListener('click', function () {
+                var willShow = savedPostsAll.hidden;
+                savedPostsAll.hidden = !savedPostsAll.hidden;
+                savedPostsToggle.textContent = willShow ? 'Show less' : 'View all';
+                savedPostsToggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+            });
+        }
+
+        var blockedUsersToggle = document.getElementById('blockedUsersToggle');
+        var blockedUsersAll = document.getElementById('blockedUsersAll');
+        if (blockedUsersToggle && blockedUsersAll) {
+            blockedUsersToggle.addEventListener('click', function () {
+                var willShow = blockedUsersAll.hidden;
+                blockedUsersAll.hidden = !blockedUsersAll.hidden;
+                blockedUsersToggle.textContent = willShow ? 'Show less' : 'View all';
+                blockedUsersToggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+            });
+        }
+
+        function syncBanner(toggleId, bannerId) {
+            var toggle = document.getElementById(toggleId);
+            var banner = document.getElementById(bannerId);
+            if (!toggle || !banner) return;
+            if (toggle.classList.contains('locked')) {
+                banner.hidden = true;
+                return;
+            }
+            banner.hidden = !toggle.classList.contains('active');
+            toggle.addEventListener('click', function () { banner.hidden = !toggle.classList.contains('active'); });
+        }
+
+        syncBanner('pauseMatchingToggle', 'pauseMatchingBanner');
+        syncBanner('aiPostToggle', 'aiPostBanner');
+        syncBanner('aiMessageToggle', 'aiMessageBanner');
+
+        var aiMasterToggle = document.getElementById('aiMasterToggle');
+        var aiPermissionShell = document.getElementById('aiPermissionShell');
+        function syncAiPermissions() {
+            if (!aiMasterToggle || !aiPermissionShell) return;
+            if (aiPermissionShell.dataset.unavailable === 'true') {
+                aiPermissionShell.classList.add('permissions-disabled');
+                aiPermissionShell.querySelectorAll('.toggle-switch').forEach(function (toggle) { toggle.disabled = true; });
+                return;
+            }
+            var enabled = aiMasterToggle.classList.contains('active');
+            aiPermissionShell.classList.toggle('permissions-disabled', !enabled);
+            aiPermissionShell.querySelectorAll('.toggle-switch:not(.locked)').forEach(function (toggle) { toggle.disabled = !enabled; });
+        }
+        if (aiMasterToggle && !aiMasterToggle.classList.contains('locked')) {
+            aiMasterToggle.addEventListener('click', syncAiPermissions);
+        }
+        syncAiPermissions();
+
+        function flashSaveButtons() {
+            Array.prototype.slice.call(document.querySelectorAll('button[type="submit"].primary-btn, button[type="submit"].wide-btn')).forEach(function (button) {
+                if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent.trim();
+                button.disabled = true;
+                button.textContent = 'Saved';
+                button.style.backgroundColor = '#111111';
+                button.style.color = '#ffffff';
+                button.style.borderColor = '#111111';
+                setTimeout(function () {
+                    button.disabled = false;
+                    button.textContent = button.dataset.defaultLabel;
+                    button.style.backgroundColor = '';
+                    button.style.color = '';
+                    button.style.borderColor = '';
+                }, 1500);
+            });
+        }
+
+        Array.prototype.slice.call(document.querySelectorAll('form[data-settings-form]')).forEach(function (settingsForm) {
+            settingsForm.addEventListener('submit', function (event) {
+                if (settingsForm.dataset.submitting === 'true') {
+                    event.preventDefault();
+                    return;
+                }
+                settingsForm.dataset.submitting = 'true';
+                Array.prototype.slice.call(settingsForm.querySelectorAll('button[type="submit"]')).forEach(function (button) {
+                    if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent.trim();
+                    button.textContent = 'Saved';
+                    button.style.backgroundColor = '#111111';
+                    button.style.color = '#ffffff';
+                    button.style.borderColor = '#111111';
+                });
+            });
+        });
+
+        if (document.body.dataset.saveSuccess === 'true') {
+            flashSaveButtons();
+        }
+
+        Array.prototype.slice.call(document.querySelectorAll('[data-open-modal]')).forEach(function (button) {
+            button.addEventListener('click', function () {
+                var modal = document.getElementById(button.getAttribute('data-open-modal'));
+                if (modal) modal.hidden = false;
+            });
+        });
+        Array.prototype.slice.call(document.querySelectorAll('.modal-close')).forEach(function (button) {
+            button.addEventListener('click', function () {
+                var modal = button.closest('.modal-backdrop');
+                if (modal) modal.hidden = true;
+            });
+        });
+        Array.prototype.slice.call(document.querySelectorAll('.modal-backdrop')).forEach(function (modal) {
+            modal.addEventListener('click', function (event) {
+                if (event.target === modal) modal.hidden = true;
+            });
+        });
+
+        function bindDeleteInput(inputId, buttonId, feedbackId) {
+            var input = document.getElementById(inputId);
+            var button = document.getElementById(buttonId);
+            var feedback = feedbackId ? document.getElementById(feedbackId) : null;
+            if (!input || !button) return;
+            function syncState() {
+                var feedbackReady = !feedback || feedback.value.trim().length > 0;
+                var enabled = input.value === 'DELETE' && feedbackReady;
+                button.disabled = !enabled;
+                button.classList.toggle('disabled-delete', !enabled);
+            }
+            input.addEventListener('input', syncState);
+            if (feedback) feedback.addEventListener('input', syncState);
+        }
+
+        bindDeleteInput('dangerDeleteInput', 'dangerDeleteButton', 'dangerDeleteFeedback');
+
+        var profilePhotoInput = document.getElementById('profilePhotoInput');
+        var profilePhotoTrigger = document.getElementById('profilePhotoTrigger');
+        var profilePhotoHint = document.getElementById('profilePhotoHint');
+        if (profilePhotoInput && profilePhotoTrigger) {
+            profilePhotoInput.addEventListener('change', function () {
+                var selectedFile = profilePhotoInput.files && profilePhotoInput.files.length ? profilePhotoInput.files[0] : null;
+                var selected = selectedFile ? selectedFile.name : '';
+                var maxSizeBytes = Number(profilePhotoInput.getAttribute('data-max-size-bytes') || '0');
+                var maxSizeMb = maxSizeBytes > 0 ? Math.max(1, Math.floor(maxSizeBytes / (1024 * 1024))) : 0;
+                if (selectedFile && maxSizeBytes > 0 && selectedFile.size > maxSizeBytes) {
+                    profilePhotoInput.value = '';
+                    profilePhotoTrigger.textContent = 'Upload Photo';
+                    if (profilePhotoHint) {
+                        profilePhotoHint.textContent = 'File too large. Max ' + maxSizeMb + ' MB.';
+                        profilePhotoHint.classList.add('is-error');
+                    }
+                    return;
+                }
+                profilePhotoTrigger.textContent = selected ? 'Selected: ' + selected : 'Upload Photo';
+                if (profilePhotoHint) {
+                    var defaultText = profilePhotoHint.getAttribute('data-default-text') || '';
+                    profilePhotoHint.textContent = defaultText;
+                    profilePhotoHint.classList.remove('is-error');
+                }
+            });
+        }
+
+        var settingsSearchInput = document.getElementById('settingsHeaderSearch');
+        if (settingsSearchInput) {
+            var searchableSections = Array.prototype.slice.call(document.querySelectorAll('[data-settings-searchable]'));
+            settingsSearchInput.addEventListener('input', function () {
+                var query = settingsSearchInput.value.trim().toLowerCase();
+                searchableSections.forEach(function (section) {
+                    var rows = Array.prototype.slice.call(section.querySelectorAll('.settings-row'));
+                    var header = section.querySelector('.section-top');
+                    var sectionMatches = !query || (header && header.textContent.toLowerCase().indexOf(query) !== -1) || section.textContent.toLowerCase().indexOf(query) !== -1;
+                    var visibleRows = 0;
+
+                    rows.forEach(function (row) {
+                        var visible = !query || sectionMatches || row.textContent.toLowerCase().indexOf(query) !== -1;
+                        row.hidden = !visible;
+                        if (visible) visibleRows += 1;
+                    });
+
+                    if (rows.length) {
+                        section.hidden = !!query && !sectionMatches && visibleRows === 0;
+                    } else {
+                        section.hidden = !!query && !section.textContent.toLowerCase().includes(query);
+                    }
+                });
+            });
+        }
+    })();
+</script>
+<script src="{% static 'notifications.js' %}"></script>
+<script src="{% static 'avatar_fallback.js' %}?v=20260420a"></script>
+<script>
+    (function () {
+        var header = document.querySelector('.app-shell-header');
+        if (!header) return;
+
+        var ticking = false;
+
+        function syncHeaderScrollState() {
+            header.classList.toggle('is-scrolled', (window.pageYOffset || document.documentElement.scrollTop || 0) > 12);
+            ticking = false;
+        }
+
+        syncHeaderScrollState();
+        window.addEventListener('scroll', function () {
+            if (ticking) return;
+            ticking = true;
+            window.requestAnimationFrame(syncHeaderScrollState);
+        }, { passive: true });
+    })();
+</script>

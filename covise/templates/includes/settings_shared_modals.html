@@ -1,0 +1,59 @@
+<div class="modal-backdrop" id="dangerDeleteModal" hidden>
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3>Delete your account?</h3>
+            <button class="modal-close" type="button">x</button>
+        </div>
+        <p>This will permanently delete your profile, matches, messages, workspace, and all data. This action cannot be reversed.</p>
+        <form class="delete-account-form" method="post" action="{% url 'Delete Account' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ settings_return_url }}">
+            <label class="modal-label" for="dangerDeleteFeedback">Before you go, what went wrong?</label>
+            <textarea class="modal-input modal-textarea" id="dangerDeleteFeedback" name="delete_feedback" placeholder="Tell us what made you want to leave." required></textarea>
+            <input class="modal-input" id="dangerDeleteInput" name="confirm_delete" type="text" placeholder='Type "DELETE" to confirm'>
+            <div class="modal-actions">
+                <button class="danger-fill-btn disabled-delete" id="dangerDeleteButton" type="submit" disabled>Permanently Delete</button>
+                <button class="outline-btn modal-close" type="button">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="dataDeletionModal" hidden>
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3>Request data deletion?</h3>
+            <button class="modal-close" type="button">x</button>
+        </div>
+        <p>This will immediately delete your messages, onboarding, waitlist, profile content, and other user data while keeping the minimum account shell needed for login.</p>
+        <form method="post" action="{% url 'Request Data Deletion' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ settings_return_url }}">
+            <div class="modal-actions">
+                <button class="danger-fill-btn" type="submit">Confirm Request</button>
+                <button class="outline-btn modal-close" type="button">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="aiActivityModal" hidden>
+    <div class="modal-card wide-modal">
+        <div class="modal-head">
+            <h3>AI Activity Log</h3>
+            <button class="modal-close" type="button">x</button>
+        </div>
+        <div class="table-wrap">
+            <table class="settings-table">
+                <thead>
+                    <tr><th>Action</th><th>Date</th><th>Status</th><th>Undo</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Suggested profile improvement</td><td>Mar 13</td><td class="success">Completed</td><td>-</td></tr>
+                    <tr><td>Generated milestone plan draft</td><td>Mar 12</td><td class="amber">Pending review</td><td><button class="text-link" type="button">Undo</button></td></tr>
+                    <tr><td>Drafted post: MVP update</td><td>Mar 11</td><td class="success">Approved by you</td><td>-</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

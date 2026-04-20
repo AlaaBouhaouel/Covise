@@ -459,7 +459,7 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
     background: var(--warn-bg);
     color: var(--warn);
 }
-.messages-stream { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 22px 24px; display: grid; align-content: start; gap: 16px; }
+.messages-stream { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 22px 24px; display: grid; align-content: end; gap: 16px; }
 #messagesStream::-webkit-scrollbar {
     width: 9px;
 }
@@ -1131,6 +1131,19 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
 }
 
 @media (max-width: 760px) {
+    .messages-app.mobile-chat-open ~ .app-mobile-nav {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(calc(100% + 24px));
+        transition: transform 0.22s ease, opacity 0.22s ease, visibility 0s linear 0.22s;
+    }
+
+    .messages-app.mobile-chat-open {
+        height: 100vh;
+        height: 100dvh;
+    }
+
     .messages-app, .messages-app.details-open { grid-template-columns: 1fr; }
     .conversation-panel, .chat-panel { border-right: 0; }
     .chat-panel { display: none; }
@@ -1233,9 +1246,16 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
         min-width: 0;
     }
 
+    .chat-input-bar {
+        padding: 10px 12px 12px;
+        gap: 8px;
+    }
+
     .chat-input-bar input {
         flex: 1;
         min-width: 0;
+        padding: 9px 12px;
+        min-height: 38px;
     }
 }
 

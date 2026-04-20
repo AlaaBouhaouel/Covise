@@ -297,6 +297,15 @@ class AccountRequestActionTests(TestCase):
         attachment = mail.outbox[0].attachments[0]
         self.assertTrue(attachment[0].endswith(".zip"))
 
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_request_data_export_respects_next_subpage(self):
+        response = self.client.post(
+            reverse("Request Data Export"),
+            {"next": reverse("Settings Section", args=["legal-compliance"])},
+        )
+
+        self.assertRedirects(response, f"{reverse('Settings Section', args=['legal-compliance'])}?data_export=completed")
+
     def test_pause_and_reactivate_account_creates_request_records(self):
         response = self.client.post(
             reverse("Request Account Pause"),
@@ -318,6 +327,32 @@ class AccountRequestActionTests(TestCase):
         profile.refresh_from_db()
         self.assertFalse(profile.is_account_paused)
         self.assertEqual(AccountPauseRequest.objects.filter(user=self.user).count(), 2)
+
+    def test_account_pause_respects_next_subpage(self):
+        response = self.client.post(
+            reverse("Request Account Pause"),
+            {
+                "action": "pause",
+                "next": reverse("Settings Section", args=["danger-zone"]),
+            },
+        )
+
+        self.assertRedirects(response, f"{reverse('Settings Section', args=['danger-zone'])}?account_pause=paused")
+
+    def test_settings_hub_lists_section_links(self):
+        response = self.client.get(reverse("Settings"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("Settings Section", args=["account"]))
+        self.assertContains(response, reverse("Settings Section", args=["notifications"]))
+        self.assertContains(response, "Experience &amp; Projects")
+
+    def test_settings_subpage_renders_requested_section(self):
+        response = self.client.get(reverse("Settings Section", args=["ai-preferences"]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "CoVise AI Agent is not available yet.")
+        self.assertContains(response, 'data-unavailable="true"', html=False)
 
     def test_delete_account_creates_audit_request_before_deleting_user(self):
         with patch("covise_app.views.EmailMessage.send", return_value=1):

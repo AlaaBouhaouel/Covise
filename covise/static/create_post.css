@@ -892,6 +892,132 @@
     }
 }
 
+/* Quote section */
+.create-post-quote-trigger-row {
+    display: none;
+    padding: 0 calc(var(--spacing) * 2.2) calc(var(--spacing) * 0.75);
+}
+
+.create-post-editor-card.has-body-content .create-post-quote-trigger-row {
+    display: flex;
+}
+
+.create-post-quote-trigger {
+    width: 26px;
+    height: 26px;
+    min-height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.9);
+    color: #0a1018;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.create-post-quote-trigger:hover {
+    background: #ffffff;
+    transform: scale(1.1);
+}
+
+.create-post-quote-block {
+    margin: 0 calc(var(--spacing) * 1.5) calc(var(--spacing) * 1.5);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    transition: background 0.25s ease;
+}
+
+.create-post-quote-block[hidden] {
+    display: none !important;
+}
+
+.create-post-quote-palette {
+    display: flex;
+    gap: 7px;
+    padding: calc(var(--spacing) * 0.9) calc(var(--spacing) * 1.25) calc(var(--spacing) * 0.65);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.create-post-quote-swatch {
+    width: 18px;
+    height: 18px;
+    min-height: 18px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.create-post-quote-swatch:hover {
+    transform: scale(1.25);
+}
+
+.create-post-quote-swatch.is-active {
+    border-color: rgba(255, 255, 255, 0.8);
+    transform: scale(1.18);
+}
+
+.create-post-quote-text {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.92);
+    outline: none;
+    resize: none;
+    display: block;
+    overflow: hidden;
+    padding: calc(var(--spacing) * 1.1) calc(var(--spacing) * 1.4) calc(var(--spacing) * 1.4);
+    font-family: 'Darker Grotesque', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.5;
+    font-style: italic;
+    min-height: 76px;
+}
+
+.create-post-quote-text::placeholder {
+    color: rgba(255, 255, 255, 0.38);
+    font-style: italic;
+}
+
+.create-post-quote-remove {
+    position: absolute;
+    top: 7px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    min-height: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.24);
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.create-post-quote-remove:hover {
+    background: rgba(0, 0, 0, 0.44);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .create-post-quote-trigger {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(76, 112, 181, 0.35);
+    color: #1b2d55;
+}
+
 @media (max-width: 640px) {
     .create-post-shell {
         max-width: none;

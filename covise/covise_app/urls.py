@@ -76,6 +76,7 @@ urlpatterns = [
     path('settings/request-data-deletion/', views.request_data_deletion, name='Request Data Deletion'),
     path('settings/delete-account/', views.delete_account, name='Delete Account'),
     path('settings/security/', views.account_security, name='Account Security'),
+    path('settings/<slug:section_slug>/', views.settings_section, name='Settings Section'),
     path('agreement/', views.agreement, name='Agreement'),
     path('logout/', views.logout_page, name='Logout'),
     path('terms/', views.terms, name='Terms'),

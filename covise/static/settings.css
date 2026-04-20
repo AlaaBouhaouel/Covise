@@ -378,6 +378,24 @@ p {
     color: #1f2850;
 }
 
+[data-theme="light"] .settings-hub-link:hover,
+[data-theme="light"] .settings-hub-link:focus-visible {
+    background: var(--light-hover-bg);
+}
+
+[data-theme="light"] .settings-hub-chevron,
+[data-theme="light"] .settings-page-back {
+    background: rgba(98, 145, 236, 0.12);
+    border-color: rgba(76, 112, 181, 0.18);
+    color: #21437f;
+}
+
+[data-theme="light"] .settings-hub-icon {
+    background: rgba(98, 145, 236, 0.12);
+    border-color: rgba(76, 112, 181, 0.18);
+    color: #21437f;
+}
+
 .notif-wrap {
     position: relative;
 }
@@ -507,6 +525,125 @@ p {
     color: var(--muted);
     font-size: 0.88rem;
     margin-top: calc(var(--spacing) * 1);
+}
+
+.settings-hub-list {
+    display: grid;
+    gap: calc(var(--spacing) * 2);
+}
+
+.settings-hub-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.settings-hub-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 2);
+    width: 100%;
+    padding: calc(var(--spacing) * 2.3) calc(var(--spacing) * 2.4);
+    color: inherit;
+    text-decoration: none;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.settings-hub-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    border: 1px solid rgba(120, 150, 255, 0.22);
+    background: rgba(120, 150, 255, 0.09);
+    color: #dfe8ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.settings-hub-icon i {
+    font-size: 0.96rem;
+}
+
+.settings-hub-link:hover,
+.settings-hub-link:focus-visible {
+    background: rgba(120, 150, 255, 0.06);
+}
+
+.settings-hub-copy {
+    display: grid;
+    gap: calc(var(--spacing) * 0.5);
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.settings-hub-title {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.settings-hub-summary {
+    color: var(--muted);
+    font-size: 0.86rem;
+    line-height: 1.45;
+}
+
+.settings-hub-chevron {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid rgba(120, 150, 255, 0.22);
+    background: rgba(120, 150, 255, 0.09);
+    color: #dfe8ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.settings-subpage-main {
+    grid-template-rows: auto auto auto 1fr auto;
+}
+
+.settings-page-head {
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    gap: calc(var(--spacing) * 1.5);
+    padding-top: calc(var(--spacing) * 1.25);
+    padding-bottom: calc(var(--spacing) * 1.25);
+}
+
+.settings-page-head h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 2.2vw, 1.9rem);
+    font-weight: 700;
+}
+
+.settings-page-back {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid rgba(120, 150, 255, 0.22);
+    background: rgba(120, 150, 255, 0.08);
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.settings-page-back:hover,
+.settings-page-back:focus-visible {
+    transform: translateX(-1px);
+    background: rgba(120, 150, 255, 0.14);
+    border-color: rgba(120, 150, 255, 0.34);
+}
+
+.settings-detail-panel {
+    margin-top: 0;
 }
 
 .panel {
@@ -1969,6 +2106,34 @@ button.text-link[disabled] {
 
     .panel {
         padding: calc(var(--spacing) * 2);
+    }
+
+    .settings-hub-link {
+        padding: calc(var(--spacing) * 1.9) calc(var(--spacing) * 1.8);
+    }
+
+    .settings-hub-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+    }
+
+    .settings-hub-title {
+        font-size: 0.94rem;
+    }
+
+    .settings-hub-summary {
+        font-size: 0.8rem;
+    }
+
+    .settings-page-head {
+        gap: calc(var(--spacing) * 1);
+        padding-top: calc(var(--spacing) * 0.75);
+        padding-bottom: calc(var(--spacing) * 0.75);
+    }
+
+    .settings-page-head h1 {
+        font-size: 1.28rem;
     }
 
     .profile {

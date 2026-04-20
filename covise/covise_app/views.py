@@ -7,7 +7,7 @@ import uuid
 import zipfile
 from datetime import timedelta
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.serializers.json import DjangoJSONEncoder
@@ -22,6 +22,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.html import escape
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.timesince import timesince
 from .models import OnboardingResponse, Profile, User, UserPreference, WaitlistEmailVerification, WaitlistEntry, Post, PostImage, PostMention, Comment, CommentReaction, SavedPost, BlockedUser, Notification, ConversationUserState, Experiences, Active_projects, Project, Conversation, Message, MessageReceipt, MessageReaction, ConversationRequest, AccountDeletionRequest, AccountPauseRequest, DataDeletionRequest, DataExportRequest, SignInEvent, TwoFactorChallenge
 from covise_app.utils import delete_s3_object, generate_referral_code, upload_cv_to_s3
@@ -1353,6 +1354,418 @@ def _build_settings_page_context(request):
     settings_page["account_pause"] = _build_account_pause_context(request.user)
     settings_page["data_deletion_request"] = _build_data_deletion_context(request.user)
     return settings_page
+
+
+SETTINGS_SECTION_ORDER = (
+    "account",
+    "profile-details",
+    "saved-posts",
+    "blocked-users",
+    "experience-projects",
+    "profile-preferences",
+    "ai-preferences",
+    "notifications",
+    "matching-preferences",
+    "legal-compliance",
+    "danger-zone",
+)
+
+
+SETTINGS_SECTION_CONFIG = {
+    "account": {
+        "title": "Account",
+        "summary": "Email, phone, photo, security, and platform guidelines.",
+        "icon": "fa-solid fa-circle-user",
+    },
+    "profile-details": {
+        "title": "Profile Details",
+        "summary": "Links, location, bio, and top skills used across your profile.",
+        "icon": "fa-solid fa-id-card",
+    },
+    "saved-posts": {
+        "title": "Saved Posts",
+        "summary": "Your bookmarked posts, ready to reopen anytime.",
+        "icon": "fa-solid fa-bookmark",
+    },
+    "blocked-users": {
+        "title": "Blocked Users",
+        "summary": "People you have blocked from messaging and feed visibility.",
+        "icon": "fa-solid fa-ban",
+    },
+    "experience-projects": {
+        "title": "Experience & Projects",
+        "summary": "Add work history and active ventures without leaving settings.",
+        "icon": "fa-solid fa-briefcase",
+    },
+    "profile-preferences": {
+        "title": "Profile Preferences",
+        "summary": "Visibility, search, badge, and matching presence controls.",
+        "icon": "fa-solid fa-eye",
+    },
+    "ai-preferences": {
+        "title": "CoVise AI Agent",
+        "summary": "Preview the upcoming AI permissions and activity controls.",
+        "icon": "fa-solid fa-robot",
+    },
+    "notifications": {
+        "title": "Notifications",
+        "summary": "Email and in-app notification preferences in one place.",
+        "icon": "fa-solid fa-bell",
+    },
+    "matching-preferences": {
+        "title": "Matching Preferences",
+        "summary": "Who you want to match with and where you are open to build.",
+        "icon": "fa-solid fa-sliders",
+    },
+    "legal-compliance": {
+        "title": "Legal & Compliance",
+        "summary": "Agreements, policies, exports, and data deletion requests.",
+        "icon": "fa-solid fa-scale-balanced",
+    },
+    "danger-zone": {
+        "title": "Danger Zone",
+        "summary": "Pause or permanently delete your account.",
+        "icon": "fa-solid fa-triangle-exclamation",
+    },
+}
+
+
+def _append_query_params(url, **params):
+    parsed = urlsplit(url)
+    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    for key, value in params.items():
+        if value is None:
+            query.pop(key, None)
+        else:
+            query[key] = str(value)
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, urlencode(query), parsed.fragment))
+
+
+def _safe_redirect_url(request, fallback_url):
+    next_url = (request.POST.get("next") or request.GET.get("next") or "").strip()
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return fallback_url
+
+
+def _get_settings_section_config(section_slug):
+    config = SETTINGS_SECTION_CONFIG.get(section_slug)
+    if not config:
+        raise Http404("Settings section not found")
+    return {
+        "slug": section_slug,
+        "url": reverse("Settings Section", args=[section_slug]),
+        **config,
+    }
+
+
+def _build_settings_sections():
+    return [_get_settings_section_config(section_slug) for section_slug in SETTINGS_SECTION_ORDER]
+
+
+def _build_settings_view_context(request, section_slug=None):
+    context = {
+        "profile_photo_max_size_bytes": PROFILE_PHOTO_MAX_SIZE_BYTES,
+        "profile_photo_max_size_mb": PROFILE_PHOTO_MAX_SIZE_MB,
+        "settings_page": _build_settings_page_context(request),
+        "settings_sections": _build_settings_sections(),
+        "settings_return_url": reverse("Settings"),
+        "settings_form_action": reverse("Settings"),
+    }
+    if section_slug:
+        section = _get_settings_section_config(section_slug)
+        context.update(
+            {
+                "settings_active_section": section_slug,
+                "settings_section": section,
+                "settings_section_title": section["title"],
+                "settings_section_summary": section["summary"],
+                "settings_return_url": section["url"],
+                "settings_form_action": section["url"],
+            }
+        )
+    if request.GET.get("saved") == "1":
+        context["success_message"] = "Saved successfully."
+        context["save_success"] = True
+    if request.GET.get("saved") == "2":
+        context["error_message"] = "An error occurred while saving. Please try again."
+        context["save_success"] = False
+    if request.GET.get("blocked") == "1":
+        context["success_message"] = "User blocked successfully."
+        context["save_success"] = True
+    if request.GET.get("unblocked") == "1":
+        context["success_message"] = "User unblocked successfully."
+        context["save_success"] = True
+    if request.GET.get("delete_account") == "todo":
+        context["error_message"] = "Delete account is wired to a backend view but not implemented yet."
+        context["save_success"] = False
+    if request.GET.get("delete_account") == "error":
+        context["error_message"] = "We could not delete your account right now. Please try again."
+        context["save_success"] = False
+    if request.GET.get("data_export") == "completed":
+        context["success_message"] = "Your data export was emailed successfully."
+        context["save_success"] = True
+    if request.GET.get("data_export") == "error":
+        context["error_message"] = "We could not prepare your data export right now. Please try again."
+        context["save_success"] = False
+    if request.GET.get("account_pause") == "paused":
+        context["success_message"] = "Your account is now paused. You can still browse and reactivate anytime."
+        context["save_success"] = True
+    if request.GET.get("account_pause") == "reactivated":
+        context["success_message"] = "Your account has been reactivated."
+        context["save_success"] = True
+    if request.GET.get("account_pause") == "blocked":
+        context["error_message"] = "Your account is paused. Reactivate it to resume posting, messaging, and other activity."
+        context["save_success"] = False
+    if request.GET.get("account_pause") == "error":
+        context["error_message"] = "We could not update your pause status right now. Please try again."
+        context["save_success"] = False
+    if request.GET.get("data_deletion") == "completed":
+        context["success_message"] = "Your user data was deleted while keeping your login account active."
+        context["save_success"] = True
+    if request.GET.get("data_deletion") == "error":
+        context["error_message"] = "We could not complete your data deletion right now. Please try again."
+        context["save_success"] = False
+    security_action = request.GET.get("security", "").strip()
+    if security_action == "2fa-enabled":
+        context["success_message"] = "Two-factor authentication is now enabled."
+        context["save_success"] = True
+    if security_action == "2fa-disabled":
+        context["success_message"] = "Two-factor authentication has been disabled."
+        context["save_success"] = True
+    if security_action == "session-ended":
+        context["success_message"] = "That session has been logged out."
+        context["save_success"] = True
+    if security_action == "other-sessions-ended":
+        context["success_message"] = "All other active sessions have been logged out."
+        context["save_success"] = True
+    return context
+
+
+def _handle_settings_post(request, *, template_name, redirect_url, section_slug=None):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    preferences, _ = UserPreference.objects.get_or_create(user=request.user)
+    user = request.user
+    save_section = request.POST.get("save_section")
+
+    try:
+        if save_section == "personal_data":
+            email = request.POST.get("email", "").strip()
+            phone_number = request.POST.get("phone_number", "").strip()
+            profile_photo_action = request.POST.get("profile_photo_action", "").strip()
+            uploaded_profile_image = request.FILES.get("profile_image")
+            if email and email != user.email:
+                if User.objects.filter(email=email).exclude(pk=user.pk).exists():
+                    context = _build_settings_view_context(request, section_slug=section_slug)
+                    context["error_message"] = "This email is already registered on CoVise. Please sign in instead."
+                    context["save_success"] = False
+                    return render(request, template_name, context)
+                user.email = email
+                user.save(update_fields=["email"])
+
+            profile.phone_number = phone_number
+            profile_update_fields = ["phone_number"]
+
+            if profile_photo_action == "remove":
+                if profile.profile_image:
+                    profile.profile_image.delete(save=False)
+                profile.profile_image = None
+                profile_update_fields.append("profile_image")
+            elif uploaded_profile_image:
+                if uploaded_profile_image.size > PROFILE_PHOTO_MAX_SIZE_BYTES:
+                    context = _build_settings_view_context(request, section_slug=section_slug)
+                    context["error_message"] = f"Profile photo must be {PROFILE_PHOTO_MAX_SIZE_MB} MB or smaller."
+                    context["save_success"] = False
+                    return render(request, template_name, context)
+                profile.profile_image = uploaded_profile_image
+                profile_update_fields.append("profile_image")
+
+            profile.save(update_fields=profile_update_fields)
+
+        if save_section == "professional_data":
+            linkedin = request.POST.get("linkedin", "").strip()
+            github = request.POST.get("github", "").strip()
+            proof_of_work_url = request.POST.get("proof_of_work_url", "").strip()
+            location = request.POST.get("location", "").strip()
+            nationality = request.POST.get("nationality", "").strip()
+            bio = request.POST.get("bio", "").strip()
+
+            profile.linkedin = linkedin
+            profile.github = github
+            profile.proof_of_work_url = proof_of_work_url
+            profile.country = location
+            profile.nationality = nationality
+            profile.bio = bio
+            skill_config = get_onboarding_skill_config()
+            allowed_skills = set(skill_config["options"])
+            submitted_skills = [item.strip() for item in request.POST.get("skills", "").split("|") if item.strip()]
+            deduped_skills = []
+            for item in submitted_skills:
+                if item in allowed_skills and item not in deduped_skills:
+                    deduped_skills.append(item)
+            deduped_skills = deduped_skills[:skill_config["max_selected"]]
+            profile.skills = deduped_skills
+            profile.save(update_fields=["linkedin", "github", "proof_of_work_url", "country", "nationality", "bio", "skills"])
+
+        if save_section == "experiences":
+            title = request.POST.get("title", "").strip()
+            date = request.POST.get("date", "").strip()
+            desc = request.POST.get("desc", "").strip()
+            Experiences.objects.create(
+                user=request.user,
+                title=title,
+                date=date,
+                desc=desc,
+            )
+
+        if save_section == "projects":
+            name = request.POST.get("name", "").strip()
+            status = request.POST.get("status", "").strip()
+            desc = request.POST.get("desc", "").strip()
+            Active_projects.objects.create(
+                user=request.user,
+                name=name,
+                status=status,
+                desc=desc,
+            )
+
+        if save_section == "profile_preferences":
+            profile_visibility = request.POST.get("profile_visibility")
+            show_conviction_score = request.POST.get("show_conviction_score")
+            show_cv_to_matches = request.POST.get("show_cv_to_matches")
+            show_linkedin_to_matches = request.POST.get("show_linkedin_to_matches")
+            appear_in_search = request.POST.get("appear_in_search")
+            pause_matching = request.POST.get("pause_matching")
+            show_cofounder_badge = request.POST.get("show_cofounder_badge")
+            if profile_visibility:
+                preferences.profile_visibility = profile_visibility
+            preferences.show_conviction_score = _as_bool(show_conviction_score)
+            preferences.show_cv_to_matches = _as_bool(show_cv_to_matches)
+            preferences.show_linkedin_to_matches = _as_bool(show_linkedin_to_matches)
+            preferences.appear_in_search = _as_bool(appear_in_search)
+            preferences.pause_matching = _as_bool(pause_matching)
+            if show_cofounder_badge is not None:
+                onboarding_answers = dict(getattr(profile, "onboarding_answers", {}) or {})
+                onboarding_answers["show_cofounder_badge"] = _as_bool(show_cofounder_badge)
+                profile.onboarding_answers = onboarding_answers
+                profile.save(update_fields=["onboarding_answers"])
+            preferences.save(update_fields=["profile_visibility", "show_conviction_score", "show_cv_to_matches", "show_linkedin_to_matches", "appear_in_search", "pause_matching"])
+
+        if save_section == "ai_preferences":
+            ai_enabled = request.POST.get("ai_enabled")
+            read_profile_data = request.POST.get("read_profile_data")
+            ai_read_messages = request.POST.get("ai_read_messages")
+            ai_read_workspace = request.POST.get("ai_read_workspace")
+            ai_post_updates = request.POST.get("ai_post_updates")
+            ai_send_messages = request.POST.get("ai_send_messages")
+            ai_edit_workspace = request.POST.get("ai_edit_workspace")
+            ai_manage_milestones = request.POST.get("ai_manage_milestones")
+
+            preferences.ai_enabled = _as_bool(ai_enabled)
+            preferences.read_profile_data = _as_bool(read_profile_data)
+            preferences.ai_read_messages = _as_bool(ai_read_messages)
+            preferences.ai_read_workspace = _as_bool(ai_read_workspace)
+            preferences.ai_post_updates = _as_bool(ai_post_updates)
+            preferences.ai_send_messages = _as_bool(ai_send_messages)
+            preferences.ai_edit_workspace = _as_bool(ai_edit_workspace)
+            preferences.ai_manage_milestones = _as_bool(ai_manage_milestones)
+            preferences.save(update_fields=["ai_enabled", "read_profile_data", "ai_read_messages", "ai_read_workspace", "ai_post_updates", "ai_send_messages", "ai_edit_workspace", "ai_manage_milestones"])
+
+        if save_section == "notifications":
+            profile, _created = Profile.objects.get_or_create(user=request.user)
+            email_frequency = request.POST.get("email_frequency")
+            receive_email_notifications = request.POST.get("receive_email_notifications")
+            email_new_match = request.POST.get("email_new_match")
+            email_new_message = request.POST.get("email_new_message")
+            email_connection_request = request.POST.get("email_connection_request")
+            email_request_accepted = request.POST.get("email_request_accepted")
+            email_milestone_reminder = request.POST.get("email_milestone_reminder")
+            email_workspace_activity = request.POST.get("email_workspace_activity")
+            email_platform_updates = request.POST.get("email_platform_updates")
+            email_marketing = request.POST.get("email_marketing")
+            in_app_new_match = request.POST.get("in_app_new_match")
+            in_app_new_message = request.POST.get("in_app_new_message")
+            in_app_connection_request = request.POST.get("in_app_connection_request")
+            in_app_request_accepted = request.POST.get("in_app_request_accepted")
+            in_app_milestone_reminder = request.POST.get("in_app_milestone_reminder")
+            in_app_workspace_activity = request.POST.get("in_app_workspace_activity")
+            in_app_platform_updates = request.POST.get("in_app_platform_updates")
+            in_app_marketing = request.POST.get("in_app_marketing")
+
+            if email_frequency:
+                preferences.email_frequency = email_frequency
+            profile.receive_email_notifications = _as_bool(receive_email_notifications)
+            preferences.email_new_match = _as_bool(email_new_match)
+            preferences.email_new_message = _as_bool(email_new_message)
+            preferences.email_connection_request = _as_bool(email_connection_request)
+            preferences.email_request_accepted = _as_bool(email_request_accepted)
+            preferences.email_milestone_reminder = _as_bool(email_milestone_reminder)
+            preferences.email_workspace_activity = _as_bool(email_workspace_activity)
+            preferences.email_platform_updates = _as_bool(email_platform_updates)
+            preferences.email_marketing = _as_bool(email_marketing)
+            preferences.in_app_new_match = _as_bool(in_app_new_match)
+            preferences.in_app_new_message = _as_bool(in_app_new_message)
+            preferences.in_app_connection_request = _as_bool(in_app_connection_request)
+            preferences.in_app_request_accepted = _as_bool(in_app_request_accepted)
+            preferences.in_app_milestone_reminder = _as_bool(in_app_milestone_reminder)
+            preferences.in_app_workspace_activity = _as_bool(in_app_workspace_activity)
+            preferences.in_app_platform_updates = _as_bool(in_app_platform_updates)
+            preferences.in_app_marketing = _as_bool(in_app_marketing)
+            profile.save(update_fields=["receive_email_notifications"])
+            preferences.save(update_fields=["email_frequency", "email_new_match", "email_new_message", "email_connection_request", "email_request_accepted", "email_milestone_reminder", "email_workspace_activity", "email_platform_updates", "email_marketing", "in_app_new_match", "in_app_new_message", "in_app_connection_request", "in_app_request_accepted", "in_app_milestone_reminder", "in_app_workspace_activity", "in_app_platform_updates", "in_app_marketing"])
+
+        if save_section == "matching_preferences":
+            preferred_cofounder_types = request.POST.get("preferred_cofounder_types")
+            preferred_industries = request.POST.get("preferred_industries")
+            preferred_gcc_markets = request.POST.get("preferred_gcc_markets")
+            minimum_commitment = request.POST.get("minimum_commitment")
+            open_to_foreign_founders = request.POST.get("open_to_foreign_founders")
+            pause_matching = request.POST.get("pause_matching")
+            preferences.preferred_cofounder_types = _split_pipe_list(preferred_cofounder_types)
+            preferences.preferred_industries = _split_pipe_list(preferred_industries)
+            preferences.preferred_gcc_markets = _split_pipe_list(preferred_gcc_markets)
+            if minimum_commitment:
+                preferences.minimum_commitment = minimum_commitment
+            preferences.open_to_foreign_founders = _as_bool(open_to_foreign_founders)
+            preferences.pause_matching = _as_bool(pause_matching)
+            preferences.save(update_fields=["preferred_cofounder_types", "pause_matching", "preferred_industries", "preferred_gcc_markets", "minimum_commitment", "open_to_foreign_founders"])
+
+        if save_section == "security":
+            security_action = request.POST.get("security_action", "").strip()
+
+            if security_action == "enable_2fa":
+                preferences.two_factor_enabled = True
+                preferences.save(update_fields=["two_factor_enabled"])
+                return redirect(_append_query_params(redirect_url, security="2fa-enabled"))
+
+            if security_action == "disable_2fa":
+                preferences.two_factor_enabled = False
+                preferences.save(update_fields=["two_factor_enabled"])
+                return redirect(_append_query_params(redirect_url, security="2fa-disabled"))
+
+            if security_action == "logout_session":
+                session_key = request.POST.get("session_key", "").strip()
+                if session_key:
+                    Session.objects.filter(session_key=session_key).delete()
+                    if session_key == request.session.session_key:
+                        logout(request)
+                        return redirect(f"{reverse('Login')}?logged_out=1")
+                return redirect(_append_query_params(redirect_url, security="session-ended"))
+
+            if security_action == "logout_other_sessions":
+                current_session_key = request.session.session_key or ""
+                for session in _active_user_sessions(request.user):
+                    if session.session_key and session.session_key != current_session_key:
+                        session.delete()
+                return redirect(_append_query_params(redirect_url, security="other-sessions-ended"))
+
+        return redirect(_append_query_params(redirect_url, saved="1"))
+    except Exception:
+        return redirect(_append_query_params(redirect_url, saved="2"))
 
 
 def _agreement_next_url(request):
@@ -5250,296 +5663,33 @@ def chatbot(request):
     return response
 @login_required
 def settings(request):
-    profile, _ = Profile.objects.get_or_create(user=request.user)
-    preferences, _ = UserPreference.objects.get_or_create(user=request.user)
+    if request.method == "POST":
+        return _handle_settings_post(
+            request,
+            template_name="settings.html",
+            redirect_url=reverse("Settings"),
+        )
 
-    user = request.user
-    context = {
-        "profile_photo_max_size_bytes": PROFILE_PHOTO_MAX_SIZE_BYTES,
-        "profile_photo_max_size_mb": PROFILE_PHOTO_MAX_SIZE_MB,
-    }
+    context = _build_settings_view_context(request)
+    return render(request, "settings.html", context)
 
-    print(request.method)
+
+@login_required
+def settings_section(request, section_slug):
+    section = _get_settings_section_config(section_slug)
+    template_name = "settings_section.html"
+    redirect_url = section["url"]
 
     if request.method == "POST":
-        print ("save_section ",request.POST.get("save_section"))
+        return _handle_settings_post(
+            request,
+            template_name=template_name,
+            redirect_url=redirect_url,
+            section_slug=section_slug,
+        )
 
-        try:
-            if request.POST.get("save_section") == "personal_data":
-                email=request.POST.get("email", "").strip()
-                phone_number=request.POST.get("phone_number", "").strip()
-                profile_photo_action = request.POST.get("profile_photo_action", "").strip()
-                uploaded_profile_image = request.FILES.get("profile_image")
-                if email and email != user.email:
-                    if User.objects.filter(email=email).exclude(pk=user.pk).exists():
-                        context["settings_page"] = _build_settings_page_context(request)
-                        context["error_message"] = "This email is already registered on CoVise. Please sign in instead."
-                        context["save_success"] = False
-                        return render(request, "settings.html", context)
-                    user.email = email
-                    user.save(update_fields=["email"])
-
-                print ("phone_number ",request.POST.get("phone_number"))
-
-                profile.phone_number = phone_number
-                profile_update_fields = ["phone_number"]
-
-                if profile_photo_action == "remove":
-                    if profile.profile_image:
-                        profile.profile_image.delete(save=False)
-                    profile.profile_image = None
-                    profile_update_fields.append("profile_image")
-                elif uploaded_profile_image:
-                    if uploaded_profile_image.size > PROFILE_PHOTO_MAX_SIZE_BYTES:
-                        context["settings_page"] = _build_settings_page_context(request)
-                        context["error_message"] = f"Profile photo must be {PROFILE_PHOTO_MAX_SIZE_MB} MB or smaller."
-                        context["save_success"] = False
-                        return render(request, "settings.html", context)
-                    profile.profile_image = uploaded_profile_image
-                    profile_update_fields.append("profile_image")
-
-                profile.save(update_fields=profile_update_fields)
-
-                print("Saved phone number in profile :", profile.phone_number)
-
-            if request.POST.get("save_section") == "professional_data":
-                linkedin=request.POST.get("linkedin", "").strip()
-                github=request.POST.get("github", "").strip()
-                proof_of_work_url=request.POST.get("proof_of_work_url", "").strip()
-                location=request.POST.get("location", "").strip()
-                nationality=request.POST.get("nationality", "").strip()
-                bio=request.POST.get("bio", "").strip()
-
-                profile.linkedin = linkedin
-                profile.github = github
-                profile.proof_of_work_url = proof_of_work_url
-                profile.country = location
-                profile.nationality = nationality
-                profile.bio = bio
-                skill_config = get_onboarding_skill_config()
-                allowed_skills = set(skill_config["options"])
-                submitted_skills = [item.strip() for item in request.POST.get("skills", "").split("|") if item.strip()]
-                deduped_skills = []
-                for item in submitted_skills:
-                    if item in allowed_skills and item not in deduped_skills:
-                        deduped_skills.append(item)
-                deduped_skills = deduped_skills[:skill_config["max_selected"]]
-                profile.skills = deduped_skills
-                profile.save(update_fields=["linkedin", "github", "proof_of_work_url", "country", "nationality", "bio", "skills"])
-
-            if request.POST.get("save_section")=="experiences":
-                title=request.POST.get("title", "").strip()
-                date=request.POST.get("date", "").strip()
-                desc=request.POST.get("desc", "").strip()
-                Experiences.objects.create(
-                    user=request.user,
-                    title=title,
-                    date=date,
-                    desc=desc,
-                )
-
-            if request.POST.get("save_section")=="projects":
-                name=request.POST.get("name", "").strip()
-                status=request.POST.get("status", "").strip()
-                desc=request.POST.get("desc", "").strip()
-                Active_projects.objects.create(
-                    user=request.user,
-                    name=name,
-                    status=status,
-                    desc=desc,
-                )
-
-            if request.POST.get("save_section") == "profile_preferences":
-                profile_visibility = request.POST.get("profile_visibility")
-                show_conviction_score = request.POST.get("show_conviction_score")
-                show_cv_to_matches = request.POST.get("show_cv_to_matches")
-                show_linkedin_to_matches = request.POST.get("show_linkedin_to_matches")
-                appear_in_search= request.POST.get("appear_in_search")
-                pause_matching = request.POST.get("pause_matching")
-                show_cofounder_badge = request.POST.get("show_cofounder_badge")
-                if profile_visibility:
-                    preferences.profile_visibility = profile_visibility
-                preferences.show_conviction_score = _as_bool(show_conviction_score)
-                preferences.show_cv_to_matches = _as_bool(show_cv_to_matches)
-                preferences.show_linkedin_to_matches = _as_bool(show_linkedin_to_matches)
-                preferences.appear_in_search = _as_bool(appear_in_search)
-                preferences.pause_matching = _as_bool(pause_matching)
-                if show_cofounder_badge is not None:
-                    onboarding_answers = dict(getattr(profile, "onboarding_answers", {}) or {})
-                    onboarding_answers["show_cofounder_badge"] = _as_bool(show_cofounder_badge)
-                    profile.onboarding_answers = onboarding_answers
-                    profile.save(update_fields=["onboarding_answers"])
-                preferences.save(update_fields=["profile_visibility", "show_conviction_score", "show_cv_to_matches", "show_linkedin_to_matches", "appear_in_search", "pause_matching"])
-
-            if request.POST.get("save_section") == "ai_preferences":
-                ai_enabled = request.POST.get("ai_enabled")
-                read_profile_data = request.POST.get("read_profile_data")
-                ai_read_messages = request.POST.get("ai_read_messages")
-                ai_read_workspace = request.POST.get("ai_read_workspace")
-                ai_post_updates = request.POST.get("ai_post_updates")
-                ai_send_messages = request.POST.get("ai_send_messages")
-                ai_edit_workspace = request.POST.get("ai_edit_workspace")
-                ai_manage_milestones = request.POST.get("ai_manage_milestones")
-
-                preferences.ai_enabled = _as_bool(ai_enabled)
-                preferences.read_profile_data = _as_bool(read_profile_data)
-                preferences.ai_read_messages = _as_bool(ai_read_messages)
-                preferences.ai_read_workspace = _as_bool(ai_read_workspace)
-                preferences.ai_post_updates = _as_bool(ai_post_updates)
-                preferences.ai_send_messages = _as_bool(ai_send_messages)
-                preferences.ai_edit_workspace = _as_bool(ai_edit_workspace)
-                preferences.ai_manage_milestones = _as_bool(ai_manage_milestones)
-                preferences.save(update_fields=["ai_enabled", "read_profile_data", "ai_read_messages", "ai_read_workspace", "ai_post_updates", "ai_send_messages", "ai_edit_workspace", "ai_manage_milestones"])
-
-            if request.POST.get("save_section") == "notifications":
-                profile, _created = Profile.objects.get_or_create(user=request.user)
-                email_frequency = request.POST.get("email_frequency")
-                receive_email_notifications = request.POST.get("receive_email_notifications")
-                email_new_match = request.POST.get("email_new_match")
-                email_new_message = request.POST.get("email_new_message")
-                email_connection_request = request.POST.get("email_connection_request")
-                email_request_accepted = request.POST.get("email_request_accepted")
-                email_milestone_reminder = request.POST.get("email_milestone_reminder")
-                email_workspace_activity = request.POST.get("email_workspace_activity")
-                email_platform_updates = request.POST.get("email_platform_updates")
-                email_marketing = request.POST.get("email_marketing")
-                in_app_new_match = request.POST.get("in_app_new_match")
-                in_app_new_message = request.POST.get("in_app_new_message")
-                in_app_connection_request = request.POST.get("in_app_connection_request")
-                in_app_request_accepted = request.POST.get("in_app_request_accepted")
-                in_app_milestone_reminder = request.POST.get("in_app_milestone_reminder")
-                in_app_workspace_activity = request.POST.get("in_app_workspace_activity")
-                in_app_platform_updates = request.POST.get("in_app_platform_updates")
-                in_app_marketing = request.POST.get("in_app_marketing")
-
-                if email_frequency:
-                    preferences.email_frequency = email_frequency
-                profile.receive_email_notifications = _as_bool(receive_email_notifications)
-                preferences.email_new_match = _as_bool(email_new_match)
-                preferences.email_new_message = _as_bool(email_new_message)
-                preferences.email_connection_request = _as_bool(email_connection_request)
-                preferences.email_request_accepted = _as_bool(email_request_accepted)
-                preferences.email_milestone_reminder = _as_bool(email_milestone_reminder)
-                preferences.email_workspace_activity = _as_bool(email_workspace_activity)
-                preferences.email_platform_updates = _as_bool(email_platform_updates)
-                preferences.email_marketing = _as_bool(email_marketing)
-                preferences.in_app_new_match = _as_bool(in_app_new_match)
-                preferences.in_app_new_message = _as_bool(in_app_new_message)
-                preferences.in_app_connection_request = _as_bool(in_app_connection_request)
-                preferences.in_app_request_accepted = _as_bool(in_app_request_accepted)
-                preferences.in_app_milestone_reminder = _as_bool(in_app_milestone_reminder)
-                preferences.in_app_workspace_activity = _as_bool(in_app_workspace_activity)
-                preferences.in_app_platform_updates = _as_bool(in_app_platform_updates)
-                preferences.in_app_marketing = _as_bool(in_app_marketing)
-                profile.save(update_fields=["receive_email_notifications"])
-                preferences.save(update_fields=["email_frequency", "email_new_match", "email_new_message", "email_connection_request", "email_request_accepted", "email_milestone_reminder", "email_workspace_activity", "email_platform_updates", "email_marketing", "in_app_new_match", "in_app_new_message", "in_app_connection_request", "in_app_request_accepted", "in_app_milestone_reminder", "in_app_workspace_activity", "in_app_platform_updates", "in_app_marketing"])
-
-            if request.POST.get("save_section") == "matching_preferences":
-                preferred_cofounder_types = request.POST.get("preferred_cofounder_types")
-                preferred_industries = request.POST.get("preferred_industries")
-                preferred_gcc_markets = request.POST.get("preferred_gcc_markets")
-                minimum_commitment = request.POST.get("minimum_commitment")
-                open_to_foreign_founders = request.POST.get("open_to_foreign_founders")
-                pause_matching = request.POST.get("pause_matching")
-                preferences.preferred_cofounder_types = _split_pipe_list(preferred_cofounder_types)
-                preferences.preferred_industries = _split_pipe_list(preferred_industries)
-                preferences.preferred_gcc_markets = _split_pipe_list(preferred_gcc_markets)
-                if minimum_commitment:
-                    preferences.minimum_commitment = minimum_commitment
-                preferences.open_to_foreign_founders = _as_bool(open_to_foreign_founders)
-                preferences.pause_matching = _as_bool(pause_matching)
-                preferences.save(update_fields=["preferred_cofounder_types", "pause_matching", "preferred_industries", "preferred_gcc_markets", "minimum_commitment", "open_to_foreign_founders"])
-
-            if request.POST.get("save_section") == "security":
-                security_action = request.POST.get("security_action", "").strip()
-
-                if security_action == "enable_2fa":
-                    preferences.two_factor_enabled = True
-                    preferences.save(update_fields=["two_factor_enabled"])
-                    return redirect(f"{reverse('Settings')}?security=2fa-enabled")
-
-                if security_action == "disable_2fa":
-                    preferences.two_factor_enabled = False
-                    preferences.save(update_fields=["two_factor_enabled"])
-                    return redirect(f"{reverse('Settings')}?security=2fa-disabled")
-
-                if security_action == "logout_session":
-                    session_key = request.POST.get("session_key", "").strip()
-                    if session_key:
-                        Session.objects.filter(session_key=session_key).delete()
-                        if session_key == request.session.session_key:
-                            logout(request)
-                            return redirect(f"{reverse('Login')}?logged_out=1")
-                    return redirect(f"{reverse('Settings')}?security=session-ended")
-
-                if security_action == "logout_other_sessions":
-                    current_session_key = request.session.session_key or ""
-                    for session in _active_user_sessions(request.user):
-                        if session.session_key and session.session_key != current_session_key:
-                            session.delete()
-                    return redirect(f"{reverse('Settings')}?security=other-sessions-ended")
-
-            return redirect(f"{reverse('Settings')}?saved=1")
-        except Exception:
-            return redirect(f"{reverse('Settings')}?saved=2")
-
-    context["settings_page"] = _build_settings_page_context(request)
-    if request.GET.get("saved") == "1":
-        context["success_message"] = "Saved successfully."
-        context["save_success"] = True
-    if request.GET.get("saved") == "2":
-        context["error_message"] = "An error occurred while saving. Please try again."
-        context["save_success"] = False
-    if request.GET.get("blocked") == "1":
-        context["success_message"] = "User blocked successfully."
-        context["save_success"] = True
-    if request.GET.get("unblocked") == "1":
-        context["success_message"] = "User unblocked successfully."
-        context["save_success"] = True
-    if request.GET.get("delete_account") == "todo":
-        context["error_message"] = "Delete account is wired to a backend view but not implemented yet."
-        context["save_success"] = False
-    if request.GET.get("delete_account") == "error":
-        context["error_message"] = "We could not delete your account right now. Please try again."
-        context["save_success"] = False
-    if request.GET.get("data_export") == "completed":
-        context["success_message"] = "Your data export was emailed successfully."
-        context["save_success"] = True
-    if request.GET.get("data_export") == "error":
-        context["error_message"] = "We could not prepare your data export right now. Please try again."
-        context["save_success"] = False
-    if request.GET.get("account_pause") == "paused":
-        context["success_message"] = "Your account is now paused. You can still browse and reactivate anytime."
-        context["save_success"] = True
-    if request.GET.get("account_pause") == "reactivated":
-        context["success_message"] = "Your account has been reactivated."
-        context["save_success"] = True
-    if request.GET.get("account_pause") == "blocked":
-        context["error_message"] = "Your account is paused. Reactivate it to resume posting, messaging, and other activity."
-        context["save_success"] = False
-    if request.GET.get("account_pause") == "error":
-        context["error_message"] = "We could not update your pause status right now. Please try again."
-        context["save_success"] = False
-    if request.GET.get("data_deletion") == "completed":
-        context["success_message"] = "Your user data was deleted while keeping your login account active."
-        context["save_success"] = True
-    if request.GET.get("data_deletion") == "error":
-        context["error_message"] = "We could not complete your data deletion right now. Please try again."
-        context["save_success"] = False
-    security_action = request.GET.get("security", "").strip()
-    if security_action == "2fa-enabled":
-        context["success_message"] = "Two-factor authentication is now enabled."
-        context["save_success"] = True
-    if security_action == "2fa-disabled":
-        context["success_message"] = "Two-factor authentication has been disabled."
-        context["save_success"] = True
-    if security_action == "session-ended":
-        context["success_message"] = "That session has been logged out."
-        context["save_success"] = True
-    if security_action == "other-sessions-ended":
-        context["success_message"] = "All other active sessions have been logged out."
-        context["save_success"] = True
-    return render(request, 'settings.html', context)
+    context = _build_settings_view_context(request, section_slug=section_slug)
+    return render(request, template_name, context)
 
 
 @login_required
@@ -5597,6 +5747,7 @@ def account_security(request):
 @login_required
 @require_POST
 def request_data_export(request):
+    redirect_url = _safe_redirect_url(request, reverse("Settings"))
     export_request = DataExportRequest.objects.create(
         user=request.user,
         status=DataExportRequest.Status.PENDING,
@@ -5607,20 +5758,21 @@ def request_data_export(request):
         export_request.status = DataExportRequest.Status.COMPLETED
         export_request.completed_at = timezone.now()
         export_request.save(update_fields=["status", "completed_at"])
-        return redirect(f"{reverse('Settings')}?data_export=completed")
+        return redirect(_append_query_params(redirect_url, data_export="completed"))
     except Exception:
         export_request.status = DataExportRequest.Status.FAILED
         export_request.save(update_fields=["status"])
-        return redirect(f"{reverse('Settings')}?data_export=error")
+        return redirect(_append_query_params(redirect_url, data_export="error"))
 
 
 @login_required
 @require_POST
 def request_account_pause(request):
+    redirect_url = _safe_redirect_url(request, reverse("Settings"))
     profile, _ = Profile.objects.get_or_create(user=request.user)
     action = request.POST.get("action", "").strip().lower()
     if action not in {AccountPauseRequest.Action.PAUSE, AccountPauseRequest.Action.REACTIVATE}:
-        return redirect(f"{reverse('Settings')}?account_pause=error")
+        return redirect(_append_query_params(redirect_url, account_pause="error"))
 
     pause_request = AccountPauseRequest.objects.create(
         user=request.user,
@@ -5634,23 +5786,24 @@ def request_account_pause(request):
             profile.save(update_fields=["is_account_paused", "account_paused_at"])
             pause_request.processed_at = timezone.now()
             pause_request.save(update_fields=["processed_at"])
-            return redirect(f"{reverse('Settings')}?account_pause=paused")
+            return redirect(_append_query_params(redirect_url, account_pause="paused"))
 
         profile.is_account_paused = False
         profile.account_paused_at = None
         profile.save(update_fields=["is_account_paused", "account_paused_at"])
         pause_request.processed_at = timezone.now()
         pause_request.save(update_fields=["processed_at"])
-        return redirect(f"{reverse('Settings')}?account_pause=reactivated")
+        return redirect(_append_query_params(redirect_url, account_pause="reactivated"))
     except Exception:
         pause_request.status = AccountPauseRequest.Status.FAILED
         pause_request.save(update_fields=["status"])
-        return redirect(f"{reverse('Settings')}?account_pause=error")
+        return redirect(_append_query_params(redirect_url, account_pause="error"))
 
 
 @login_required
 @require_POST
 def request_data_deletion(request):
+    redirect_url = _safe_redirect_url(request, reverse("Settings"))
     deletion_request = DataDeletionRequest.objects.create(
         user=request.user,
         status=DataDeletionRequest.Status.PENDING,
@@ -5672,17 +5825,18 @@ def request_data_deletion(request):
         deletion_request.notes = "Data wipe failed before completion."
         deletion_request.processed_at = timezone.now()
         deletion_request.save(update_fields=["status", "notes", "processed_at"])
-        return redirect(f"{reverse('Settings')}?data_deletion=error")
-    return redirect(f"{reverse('Settings')}?data_deletion=completed")
+        return redirect(_append_query_params(redirect_url, data_deletion="error"))
+    return redirect(_append_query_params(redirect_url, data_deletion="completed"))
 
 
 @login_required
 @require_POST
 def delete_account(request):
+    redirect_url = _safe_redirect_url(request, reverse("Settings"))
     confirm_text = request.POST.get("confirm_delete", "").strip()
     delete_feedback = request.POST.get("delete_feedback", "").strip()
     if confirm_text != "DELETE" or not delete_feedback:
-        return redirect(f"{reverse('Settings')}#danger-zone")
+        return redirect(f"{redirect_url}#danger-zone")
 
     deletion_request = AccountDeletionRequest.objects.create(
         user=request.user,
@@ -5709,7 +5863,7 @@ def delete_account(request):
         deletion_request.status = AccountDeletionRequest.Status.FAILED
         deletion_request.processed_at = timezone.now()
         deletion_request.save(update_fields=["status", "processed_at"])
-        return redirect(f"{reverse('Settings')}?delete_account=error#danger-zone")
+        return redirect(f"{_append_query_params(redirect_url, delete_account='error')}#danger-zone")
 
     return redirect("Landing Page")
 

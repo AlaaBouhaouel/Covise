@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>CoVise | Settings</title>
+    <title>CoVise | {{ settings_section_title }}</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'settings.css' %}?v=20260420b">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419i">
@@ -43,69 +43,12 @@
             </a>
         </aside>
 
-        <main class="main app-shell-main">
-            <header class="home-header app-shell-header" aria-label="Settings top bar">
-                <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
-                    <span class="home-brand-wordmark">CoVise</span>
+        <main class="main app-shell-main settings-subpage-main">
+            <section class="panel settings-page-head">
+                <h1>{{ settings_section_title }}</h1>
+                <a class="settings-page-back" href="{% url 'Settings' %}" aria-label="Back to settings">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
                 </a>
-                <div class="home-header-search">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <path d="M20 20l-3.5-3.5"></path>
-                    </svg>
-                    <input id="settingsHeaderSearch" type="search" placeholder="Search settings" aria-label="Search settings sections and labels">
-                </div>
-                <div class="home-header-actions">
-                    <button class="theme-toggle" id="settingsThemeToggle" aria-label="Toggle light dark mode" aria-pressed="false" type="button">
-                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                    </button>
-                    <div class="notif-wrap">
-                        <button class="notification-bell" id="notifBell" aria-label="Toggle notifications" type="button">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 17H9M18 17V11a6 6 0 1 0-12 0v6l-2 2h16l-2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                            <span class="notification-badge" aria-hidden="true">4</span>
-                        </button>
-                        <div id="notifPanel" class="notif-panel">
-                            <div class="notif-panel-head"><span class="notif-panel-title">Network Activity</span><span class="notif-panel-meta">4 new</span></div>
-                            <div class="activity-feed">
-                                <div class="feed-item"><div class="feed-text"><strong>Ahmed K.</strong><br>joined from Riyadh - looking for a tech co-founder</div><div class="feed-time">2h ago</div></div>
-                                <div class="feed-item"><div class="feed-text"><strong>New project posted</strong><br>B2B logistics platform, UAE expansion</div><div class="feed-time">4h ago</div></div>
-                                <div class="feed-item"><div class="feed-text"><strong>Sara M. &amp; Faisal A.</strong><br>started a Trial Build together</div><div class="feed-time">6h ago</div></div>
-                                <div class="feed-item"><div class="feed-text"><strong>Nora H.</strong><br>joined from Dubai - open to cross-border partnerships</div><div class="feed-time">9h ago</div></div>
-                            </div>
-                        </div>
-                    </div>
-                    <a class="profile-button" href="{% url 'Profile' %}" aria-label="Profile"{% if not ui_user.avatar_url %} data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}"{% endif %}>
-                        {% if ui_user.avatar_url %}
-                        <img class="profile-button-image" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
-                        {% else %}
-                        <span>{{ ui_user.avatar_initials }}</span>
-                        {% endif %}
-                    </a>
-                </div>
-            </header>
-
-            <header class="page-header">
-                <h1>Settings</h1>
-                <p>Manage your profile and workspace preferences section by section.</p>
-            </header>
-
-            <section class="panel profile">
-                <div class="profile-left">
-                    {% if ui_user.avatar_url %}
-                    <img class="avatar" src="{{ ui_user.avatar_url }}" alt="{{ settings_page.display_name }} profile photo">
-                    {% else %}
-                    <div class="avatar" data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}">{{ ui_user.avatar_initials }}</div>
-                    {% endif %}
-                    <div>
-                        <div class="profile-name">{{ settings_page.display_name }}</div>
-                        <div class="profile-role">{{ settings_page.current_role|default:"Profile in progress" }}</div>
-                    </div>
-                </div>
-                <div class="profile-info">
-                    <div><span>Email</span><strong>{{ settings_page.email }}</strong></div>
-                    <div><span>Location</span><strong>{{ settings_page.location|default:"Add your location" }}</strong></div>
-                </div>
             </section>
 
             {% if success_message %}
@@ -116,26 +59,7 @@
             <div class="submit-banner submit-banner-error">{{ error_message }}</div>
             {% endif %}
 
-            <section class="settings-hub-list">
-                {% for section in settings_sections %}
-                <article class="panel settings-hub-card {% if section.slug == 'danger-zone' %}settings-hub-card--danger{% endif %}" data-settings-searchable>
-                    <a class="settings-hub-link" href="{{ section.url }}">
-                        {% if section.icon %}
-                        <span class="settings-hub-icon" aria-hidden="true">
-                            <i class="{{ section.icon }}"></i>
-                        </span>
-                        {% endif %}
-                        <div class="settings-hub-copy">
-                            <strong class="settings-hub-title">{{ section.title }}</strong>
-                            <span class="settings-hub-summary">{{ section.summary }}</span>
-                        </div>
-                        <span class="settings-hub-chevron" aria-hidden="true">
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </span>
-                    </a>
-                </article>
-                {% endfor %}
-            </section>
+            {% include "includes/settings_sections_content.html" %}
 
             <footer class="footer"><p>2026 CoVise. All rights reserved.</p></footer>
         </main>

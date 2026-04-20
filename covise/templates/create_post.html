@@ -79,6 +79,8 @@
                     <input id="post-type" name="post_type" type="hidden" value="{{ form_data.post_type|default:'update' }}">
                     <input id="post-title" name="title" type="hidden" value="{{ form_data.title|default:'' }}">
                     <input id="post-content" name="content" type="hidden" value="{{ form_data.content|default:'' }}">
+                    <input id="post-quote" name="quote_content" type="hidden" value="{{ form_data.quote_content|default:'' }}">
+                    <input id="post-quote-color" name="quote_color" type="hidden" value="{{ form_data.quote_color|default:'' }}">
 
                     <div class="create-post-head">
                         <div class="create-post-head-row">
@@ -148,6 +150,23 @@
                                 aria-label="Post content"
                                 placeholder="Share your update, question, idea, or win..."
                             >{{ form_data.content|default:'' }}</textarea>
+                            <div class="create-post-quote-trigger-row" id="quoteTriggerRow">
+                                <button class="create-post-quote-trigger" id="postQuoteTrigger" type="button" aria-label="Add a quote section" title="Add a quote section">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+                                </button>
+                            </div>
+                            <div class="create-post-quote-block" id="postQuoteBlock" hidden style="background:#1e3a5f;">
+                                <div class="create-post-quote-palette" id="quotePalette">
+                                    <button class="create-post-quote-swatch is-active" type="button" data-color="#1e3a5f" style="background:#1e3a5f" aria-label="Navy" title="Navy"></button>
+                                    <button class="create-post-quote-swatch" type="button" data-color="#2d1b4e" style="background:#2d1b4e" aria-label="Indigo" title="Indigo"></button>
+                                    <button class="create-post-quote-swatch" type="button" data-color="#083028" style="background:#083028" aria-label="Teal" title="Teal"></button>
+                                    <button class="create-post-quote-swatch" type="button" data-color="#3a1a00" style="background:#3a1a00" aria-label="Amber" title="Amber"></button>
+                                    <button class="create-post-quote-swatch" type="button" data-color="#2d0a14" style="background:#2d0a14" aria-label="Rose" title="Rose"></button>
+                                    <button class="create-post-quote-swatch" type="button" data-color="#141926" style="background:#141926" aria-label="Slate" title="Slate"></button>
+                                </div>
+                                <textarea class="create-post-quote-text" id="postQuoteText" placeholder="Add a quote, highlight, or key insight..." rows="2"></textarea>
+                                <button class="create-post-quote-remove" id="postQuoteRemove" type="button" aria-label="Remove quote section" title="Remove quote section">&times;</button>
+                            </div>
                             <div class="create-post-editor-footer">
                                 <span class="create-post-char-count" id="charCount">0 characters</span>
                                 <div class="create-post-editor-tools">
@@ -233,6 +252,16 @@
             var typeInput = document.getElementById('post-type');
             var typeLabel = document.getElementById('postTypeLabel');
             var charCount = document.getElementById('charCount');
+            var quoteInput = document.getElementById('post-quote');
+            var quoteColorInput = document.getElementById('post-quote-color');
+            var postQuoteTrigger = document.getElementById('postQuoteTrigger');
+            var postQuoteBlock = document.getElementById('postQuoteBlock');
+            var postQuoteText = document.getElementById('postQuoteText');
+            var postQuoteRemove = document.getElementById('postQuoteRemove');
+            var quotePalette = document.getElementById('quotePalette');
+            var quoteSwatches = quotePalette ? Array.prototype.slice.call(quotePalette.querySelectorAll('.create-post-quote-swatch')) : [];
+            var currentQuoteColor = '#1e3a5f';
+            var quoteVisible = false;
             var templateDataNode = document.getElementById('create-post-templates');
             var intentButtons = Array.prototype.slice.call(document.querySelectorAll('.create-post-intent-button[data-intent]'));
             var contextPanels = Array.prototype.slice.call(document.querySelectorAll('.create-post-context-inner[id^="ctx-"]'));
@@ -292,6 +321,8 @@
             function syncFields() {
                 titleInput.value = sanitizeText(titleEditor.value);
                 contentInput.value = sanitizeText(bodyEditor.value);
+                if (quoteInput) quoteInput.value = (quoteVisible && postQuoteText) ? sanitizeText(postQuoteText.value) : '';
+                if (quoteColorInput) quoteColorInput.value = quoteVisible ? currentQuoteColor : '';
             }
 
             function autoResize(field) {
@@ -302,8 +333,15 @@
 
             function updateCount() {
                 if (!charCount) return;
-                var total = titleEditor.value.length + bodyEditor.value.length;
+                var quoteLen = (quoteVisible && postQuoteText) ? postQuoteText.value.length : 0;
+                var total = titleEditor.value.length + bodyEditor.value.length + quoteLen;
                 charCount.textContent = total + ' character' + (total === 1 ? '' : 's');
+            }
+
+            function syncQuoteTrigger() {
+                var hasContent = bodyEditor.value.trim().length > 0;
+                var editorCard = document.getElementById('createPostEditor');
+                if (editorCard) editorCard.classList.toggle('has-body-content', hasContent);
             }
 
             function updateEditorMetrics() {
@@ -311,6 +349,7 @@
                 autoResize(bodyEditor);
                 updateCount();
                 syncFields();
+                syncQuoteTrigger();
             }
 
             function setActiveEditor(field) {
@@ -779,6 +818,52 @@
                 if (event.key === 'Escape') {
                     closeTypeMenu();
                 }
+            });
+
+            function applyQuoteColor(color) {
+                currentQuoteColor = color;
+                if (postQuoteBlock) postQuoteBlock.style.background = color;
+                quoteSwatches.forEach(function(swatch) {
+                    swatch.classList.toggle('is-active', swatch.getAttribute('data-color') === color);
+                });
+                if (quoteColorInput && quoteVisible) quoteColorInput.value = color;
+            }
+
+            if (postQuoteTrigger) {
+                postQuoteTrigger.addEventListener('click', function() {
+                    quoteVisible = true;
+                    if (postQuoteBlock) postQuoteBlock.hidden = false;
+                    if (postQuoteText) {
+                        autoResize(postQuoteText);
+                        postQuoteText.focus();
+                    }
+                    applyQuoteColor(currentQuoteColor);
+                    syncFields();
+                });
+            }
+
+            if (postQuoteRemove) {
+                postQuoteRemove.addEventListener('click', function() {
+                    quoteVisible = false;
+                    if (postQuoteBlock) postQuoteBlock.hidden = true;
+                    if (postQuoteText) postQuoteText.value = '';
+                    syncFields();
+                    updateCount();
+                });
+            }
+
+            if (postQuoteText) {
+                postQuoteText.addEventListener('input', function() {
+                    autoResize(postQuoteText);
+                    updateCount();
+                    syncFields();
+                });
+            }
+
+            quoteSwatches.forEach(function(swatch) {
+                swatch.addEventListener('click', function() {
+                    applyQuoteColor(swatch.getAttribute('data-color') || currentQuoteColor);
+                });
             });
 
             form.addEventListener('submit', syncFields);
