@@ -10,6 +10,7 @@ except ImportError:
     resend = None
 
 from covise_app.models import Notification, UserPreference
+from covise_app.display_utils import public_display_name
 
 
 RESEND_API_KEY = getattr(settings, "RESEND_API", "")
@@ -90,7 +91,7 @@ def _absolute_target_url(target_url):
 def _notification_email_html(notification):
     actor_name = ""
     if notification.actor_id and notification.actor:
-        actor_name = notification.actor.full_name or notification.actor.email
+        actor_name = public_display_name(notification.actor)
     cta_url = _absolute_target_url(notification.target_url)
     timestamp = timezone.localtime(notification.created_at).strftime("%B %d, %Y at %I:%M %p")
     subtitle = actor_name if actor_name else "CoVise notification"
@@ -157,7 +158,7 @@ def dispatch_notification(*, recipient, actor=None, notification_type, title, bo
 def serialize_notification(notification):
     actor_name = ""
     if notification.actor_id and notification.actor:
-        actor_name = notification.actor.full_name or notification.actor.email
+        actor_name = public_display_name(notification.actor)
     return {
         "id": notification.id,
         "notification_type": notification.notification_type,

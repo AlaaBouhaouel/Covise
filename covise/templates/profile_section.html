@@ -362,17 +362,17 @@
                 {% elif profile_section_key == "posts" %}
                 <div class="structured-feed profile-section-posts-feed">
                     {% for post in posts %}
-                    <article class="structured-post {{ post.theme_class }} profile-post-card-link" data-post-url="{% url 'Post Detail' post.id %}" tabindex="0" role="link" aria-label="Open post by {{ post.user.full_name|default:post.user.email }}">
+                    <article class="structured-post {{ post.theme_class }} profile-post-card-link" data-post-url="{% url 'Post Detail' post.id %}" tabindex="0" role="link" aria-label="Open post by {{ post.owner_display_name }}">
                         <div class="structured-post-head">
                             <div class="structured-post-meta">
                                 {% if post.avatar_url %}
-                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile"><img class="structured-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.user.full_name|default:post.user.email }} avatar"></a>
+                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.owner_display_name }} profile"><img class="structured-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.owner_display_name }} avatar"></a>
                                 {% else %}
-                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile"><div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div></a>
+                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.owner_display_name }} profile"><div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div></a>
                                 {% endif %}
                                 <div>
                                     <div class="structured-post-title">
-                                        <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a>
+                                        <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.owner_display_name }}</a>
                                         {% if post.show_cofounder_badge %}
                                         <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
                                             <i class="fa-solid fa-user-group" aria-hidden="true"></i>

@@ -132,7 +132,7 @@
         <div class="settings-row">
             <div class="row-copy">
                 <strong>{{ blocked_user.display_name }}</strong>
-                <span>{{ blocked_user.email }} - Blocked {{ blocked_user.blocked_at }}</span>
+                <span>Blocked {{ blocked_user.blocked_at }}</span>
             </div>
             <form method="post" action="{% url 'Toggle Block User' blocked_user.id %}">
                 {% csrf_token %}
@@ -155,7 +155,7 @@
         <div class="settings-row">
             <div class="row-copy">
                 <strong>{{ blocked_user.display_name }}</strong>
-                <span>{{ blocked_user.email }} - Blocked {{ blocked_user.blocked_at }}</span>
+                <span>Blocked {{ blocked_user.blocked_at }}</span>
             </div>
             <form method="post" action="{% url 'Toggle Block User' blocked_user.id %}">
                 {% csrf_token %}

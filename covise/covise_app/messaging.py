@@ -12,6 +12,7 @@ except ImportError:
     resend = None
 
 from covise_app.models import Conversation, ConversationUserState, Message, MessageReceipt, User
+from covise_app.display_utils import public_display_name
 from covise_app.notifications import dispatch_notification
 
 
@@ -266,7 +267,7 @@ def _live_message_payload(*, conversation, message, sender):
         "message_id": str(message_id),
         "message": getattr(message, "body", "") or "",
         "sender_id": str(sender.id),
-        "sender_name": sender.full_name or sender.email,
+        "sender_name": public_display_name(sender),
         "created_at": created_at.isoformat(),
         "receipt": message_receipt_state_for_viewer(message, viewer=sender),
         "message_type": message_type,
@@ -290,7 +291,7 @@ def _deliver_notification(*, conversation, sender, recipients, message):
                 title = (
                     f"New message in {conversation.group_name or 'your group'}"
                     if conversation.conversation_type == Conversation.ConversationType.GROUP
-                    else f"New message from {sender.full_name or sender.email}"
+                    else f"New message from {public_display_name(sender)}"
                 )
                 dispatch_notification(
                     recipient=recipient,

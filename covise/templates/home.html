@@ -359,16 +359,16 @@
                         <div class="structured-post-head">
                             <div class="structured-post-head-main">
                                 <div class="structured-post-meta">
-                                    <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
+                                    <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.owner_display_name }} profile">
                                         {% if post.avatar_url %}
-                                        <img class="structured-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.user.full_name|default:post.user.email }} avatar">
+                                        <img class="structured-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.owner_display_name }} avatar">
                                         {% else %}
                                         <div class="structured-avatar {% cycle 'a' 'b' 'c' 'd' 'e' 'f' %}">{{ post.user.avatar_initials }}</div>
                                         {% endif %}
                                     </a>
                                     <div class="structured-post-meta-copy">
                                         <div class="structured-post-title">
-                                            <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a>
+                                            <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.owner_display_name }}</a>
                                             {% if post.show_cofounder_badge %}
                                             <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
                                                 <i class="fa-solid fa-user-group" aria-hidden="true"></i>
@@ -1677,7 +1677,6 @@
             if (!normalizedQuery) return -1;
 
             var name = normalizeSearchText(user.display_name);
-            var email = normalizeSearchText(user.email);
             var location = normalizeSearchText(user.location);
             var headline = normalizeSearchText(user.headline);
             var searchText = normalizeSearchText(user.search_text);
@@ -1686,10 +1685,6 @@
             if (name === normalizedQuery) score = Math.max(score, 1200);
             else if (name.indexOf(normalizedQuery) === 0) score = Math.max(score, 980);
             else if (name.indexOf(normalizedQuery) !== -1) score = Math.max(score, 840);
-
-            if (email === normalizedQuery) score = Math.max(score, 1100);
-            else if (email.indexOf(normalizedQuery) === 0) score = Math.max(score, 900);
-            else if (email.indexOf(normalizedQuery) !== -1) score = Math.max(score, 760);
 
             if (location.indexOf(normalizedQuery) !== -1) score = Math.max(score, 620);
             if (headline.indexOf(normalizedQuery) !== -1) score = Math.max(score, 580);
@@ -1796,7 +1791,7 @@
 
                 var meta = document.createElement('span');
                 meta.className = 'home-search-result-meta';
-                meta.textContent = user.location ? (user.email + ' · ' + user.location) : user.email;
+                meta.textContent = user.location || user.headline || 'CoVise member';
 
                 copy.appendChild(name);
                 copy.appendChild(meta);

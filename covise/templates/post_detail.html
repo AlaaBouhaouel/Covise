@@ -86,16 +86,16 @@
                     <div class="post-detail-head">
                         <div class="post-detail-head-main">
                     <div class="post-detail-meta">
-                        <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.user.full_name|default:post.user.email }} profile">
+                        <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.owner_display_name }} profile">
                             {% if post.avatar_url %}
-                            <img class="post-detail-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.user.full_name|default:post.user.email }} avatar">
+                            <img class="post-detail-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.owner_display_name }} avatar">
                             {% else %}
                             <div class="post-detail-avatar">{{ post.user.avatar_initials }}</div>
                             {% endif %}
                         </a>
                         <div class="post-detail-meta-copy">
                             <div class="post-detail-author">
-                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.user.full_name|default:post.user.email }}</a>
+                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.owner_display_name }}</a>
                                 {% if post.show_cofounder_badge %}
                                 <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
                                     <i class="fa-solid fa-user-group" aria-hidden="true"></i>

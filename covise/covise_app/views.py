@@ -5,7 +5,7 @@ import random
 import re
 import uuid
 import zipfile
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 from django.conf import settings
@@ -28,6 +28,7 @@ from .models import OnboardingResponse, Profile, User, UserPreference, WaitlistE
 from covise_app.utils import delete_s3_object, generate_referral_code, upload_cv_to_s3
 from covise_app.user_context import build_profile_card_context, build_profile_context, build_saved_post_items, build_settings_context, build_ui_user_context, get_onboarding_skill_config
 from covise_app.profile_sync import PROFILE_ONBOARDING_FIELD_IDS, sync_profile_for_user
+from covise_app.display_utils import public_display_name
 from covise_app.messaging import (
     MessagingError,
     RealtimeDeliveryError,
@@ -134,7 +135,7 @@ def _safe_media_url(field_file):
 def _display_name(user):
     if not user:
         return ""
-    return user.full_name or user.email
+    return public_display_name(user)
 
 
 def _public_profile_url(user):
@@ -369,13 +370,11 @@ def _build_data_export_payload(user):
                 "requester": {
                     "id": str(item.requester_id),
                     "name": _display_name(item.requester),
-                    "email": item.requester.email,
                     "profile_url": _public_profile_url(item.requester),
                 },
                 "recipient": {
                     "id": str(item.recipient_id),
                     "name": _display_name(item.recipient),
-                    "email": item.recipient.email,
                     "profile_url": _public_profile_url(item.recipient),
                 },
             }
@@ -394,7 +393,6 @@ def _build_data_export_payload(user):
                     {
                         "id": str(participant.id),
                         "name": _display_name(participant),
-                        "email": participant.email,
                         "profile_url": _public_profile_url(participant),
                     }
                     for participant in conversation.participants.all()
@@ -582,8 +580,7 @@ def _blocked_user_items(user):
         items.append(
             {
                 "id": blocked_user.id,
-                "display_name": blocked_user.full_name or blocked_user.email.split("@")[0],
-                "email": blocked_user.email,
+                "display_name": _display_name(blocked_user),
                 "avatar_initials": blocked_user.avatar_initials,
                 "avatar_url": _user_avatar_url(blocked_user),
             }
@@ -1702,10 +1699,16 @@ def _handle_settings_post(request, *, template_name, redirect_url, section_slug=
             title = request.POST.get("title", "").strip()
             date = request.POST.get("date", "").strip()
             desc = request.POST.get("desc", "").strip()
+            experience_date = _experience_datetime_from_input(date)
+            if title and date and desc and experience_date is None:
+                context = _build_settings_view_context(request, section_slug=section_slug)
+                context["error_message"] = "Please enter a valid experience date."
+                context["save_success"] = False
+                return render(request, "settings_section.html", context, status=400)
             Experiences.objects.create(
                 user=request.user,
                 title=title,
-                date=date,
+                date=experience_date or date,
                 desc=desc,
             )
 
@@ -2030,6 +2033,19 @@ def _normalized_overlap_tokens(value):
     return tokens
 
 
+def _experience_datetime_from_input(raw_value):
+    text = str(raw_value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.strptime(text, "%Y-%m-%d")
+    except ValueError:
+        return None
+    if timezone.is_naive(parsed):
+        return timezone.make_aware(parsed, timezone.get_current_timezone())
+    return parsed
+
+
 def _profile_domain_tokens(profile):
     if not profile:
         return set()
@@ -2198,7 +2214,7 @@ def _searchable_users_for_home(user):
         except Profile.DoesNotExist:
             profile = None
 
-        display_name = (candidate.full_name or "").strip() or candidate.email.split("@")[0]
+        display_name = _display_name(candidate)
         location = _profile_country_label(profile)
         headline = (
             str(getattr(profile, "bio", "") or "").strip()
@@ -2209,8 +2225,7 @@ def _searchable_users_for_home(user):
         skills = ", ".join(_top_skill_labels(getattr(profile, "skills", None), limit=4))
         searchable_text = " ".join(
             part for part in [
-                candidate.full_name,
-                candidate.email,
+                display_name,
                 location,
                 headline,
                 role,
@@ -2218,13 +2233,12 @@ def _searchable_users_for_home(user):
             ] if part
         )
         items.append(
-            {
-                "id": str(candidate.id),
-                "display_name": display_name,
-                "email": candidate.email,
-                "avatar_initials": candidate.avatar_initials,
-                "avatar_url": _profile_avatar_url(profile),
-                "profile_url": reverse("Profile") if candidate.id == user.id else reverse("Public Profile", args=[candidate.id]),
+                {
+                    "id": str(candidate.id),
+                    "display_name": display_name,
+                    "avatar_initials": candidate.avatar_initials,
+                    "avatar_url": _profile_avatar_url(profile),
+                    "profile_url": reverse("Profile") if candidate.id == user.id else reverse("Public Profile", args=[candidate.id]),
                 "location": location,
                 "headline": headline,
                 "search_text": searchable_text,
@@ -2446,7 +2460,7 @@ def _home_quick_requests(user, limit=2):
 
         items.append({
             "id": str(request_item.id),
-            "display_name": other_user.full_name or other_user.email,
+            "display_name": _display_name(other_user),
             "avatar_initials": other_user.avatar_initials,
             "avatar_url": _user_avatar_url(other_user),
             "status": request_item.status,
@@ -2504,7 +2518,7 @@ def _attach_post_feed_metadata(posts, current_user=None):
         post.feed_country = _profile_country_label(profile)
         post.feed_country_display = _country_display_label(post.feed_country)
         post.content_html = _render_post_content_html(post)
-        post.owner_display_name = post.user.full_name or post.user.email
+        post.owner_display_name = _display_name(post.user)
         post.feed_post_type_label = _post_type_display_label(post)
         post.is_founders_spotlight = _normalize_email(getattr(post.user, "email", "")) == HOME_PINNED_POST_EMAIL
     _attach_post_reaction_metadata(posts, current_user=current_user)
@@ -2643,7 +2657,7 @@ def _build_comment_tree(comments, current_user=None, max_visual_depth=3):
 
     for comment in ordered_comments:
         comment.child_comments = []
-        comment.author_name = comment.user.full_name or comment.user.email
+        comment.author_name = _display_name(comment.user)
         comment.avatar_url = _comment_avatar_url(comment)
         comment.relative_created_at = _relative_time_label(comment.created_at)
         comment.can_edit = bool(current_user and current_user.id == comment.user_id)
@@ -2710,7 +2724,7 @@ def _onboarded_user_queryset(*, exclude_user_id=None):
 
 def _create_post_notifications(post):
     author = post.user
-    actor_name = author.full_name or author.email
+    actor_name = _display_name(author)
     title = f"{actor_name} published a new post"
     body = (post.feed_title or post.title or post.get_post_type_display())[:180]
     target_url = reverse("Post Detail", args=[post.id])
@@ -2740,7 +2754,7 @@ def _create_post_mention_notifications(post):
             recipient=recipient,
             actor=author,
             notification_type=Notification.NotificationType.POST_MENTION,
-            title=f"{author.full_name or author.email} mentioned you in a post",
+            title=f"{_display_name(author)} mentioned you in a post",
             body=(post.feed_title or post.title or "Open the post to see the mention.")[:180],
             target_url=target_url,
         )
@@ -2757,7 +2771,7 @@ def _send_post_alert_email(post):
 
     resend.api_key = RESEND_API_KEY
     author = post.user
-    author_name = author.full_name or author.email
+    author_name = _display_name(author)
     post_url = _absolute_site_url(reverse("Post Detail", args=[post.id]))
     created_at_label = timezone.localtime(post.created_at).strftime("%B %d, %Y at %I:%M %p")
     mentions = [f"@{mention.handle_text}" for mention in post.mentions.select_related("mentioned_user")]
@@ -3053,7 +3067,7 @@ def _get_or_create_private_conversation(user_a, user_b):
 
 
 def _serialize_message(message, *, viewer=None, is_ephemeral=False):
-    sender_name = message.sender.full_name or message.sender.email
+    sender_name = _display_name(message.sender)
     attachment_url = _safe_media_url(getattr(message, "attachment_file", None))
     reaction_counts, viewer_reactions = _message_reaction_payload(message, viewer=viewer)
     return {
@@ -3098,12 +3112,12 @@ def _serialize_conversation(conversation, current_user):
     if is_group:
         for participant in conversation.participants.all():
             group_participants.append(
-                {
-                    "id": str(participant.id),
-                    "display_name": participant.full_name or participant.email,
-                    "avatar_initials": participant.avatar_initials,
-                    "avatar_url": _user_avatar_url(participant),
-                }
+                    {
+                        "id": str(participant.id),
+                        "display_name": _display_name(participant),
+                        "avatar_initials": participant.avatar_initials,
+                        "avatar_url": _user_avatar_url(participant),
+                    }
             )
     status = (
         f"{len(group_participants)} members"
@@ -3138,7 +3152,7 @@ def _serialize_conversation(conversation, current_user):
             "name": message.attachment_name or "Attachment",
             "url": _serialize_message(message, viewer=current_user).get("attachment_url", ""),
             "created_at": message.created_at.isoformat(),
-            "sender_name": message.sender.full_name or message.sender.email,
+            "sender_name": _display_name(message.sender),
             "attachment_size": message.attachment_size,
         }
         for message in messages
@@ -3155,7 +3169,7 @@ def _serialize_conversation(conversation, current_user):
         "conversation_type": conversation.conversation_type,
         "partner_id": str(partner.id) if not is_group else "",
         "blocked_by_current_user": _has_user_blocked(current_user, partner) if not is_group else False,
-        "name": conversation.group_name if is_group else (partner.full_name or partner.email),
+        "name": conversation.group_name if is_group else _display_name(partner),
         "avatar": _group_avatar_initials(conversation.group_name) if is_group else partner.avatar_initials,
         "avatar_url": "" if is_group else _user_avatar_url(partner),
         "preview": preview,
@@ -3193,7 +3207,7 @@ def _serialize_conversation_request(request_item, current_user):
         description = "Wants to start a private conversation."
     return {
         "id": str(request_item.id),
-        "name": other_user.full_name or other_user.email,
+        "name": _display_name(other_user),
         "avatar": other_user.avatar_initials,
         "avatar_url": _user_avatar_url(other_user),
         "description": description,
@@ -3397,7 +3411,7 @@ def add_comment(request, post_id):
             "id": comment.id,
             "post_id": post.id,
             "user_id": request.user.id,
-            "author": request.user.full_name or request.user.email,
+            "author": _display_name(request.user),
             "avatar_initials": request.user.avatar_initials,
             "content": comment.content,
             "created_at": "just now",
@@ -3538,8 +3552,8 @@ def _send_user_report_email(reporter, reported_user, reason):
 
     resend.api_key = RESEND_API_KEY
     timestamp = timezone.now().isoformat()
-    reporter_name = reporter.full_name or reporter.email
-    reported_name = reported_user.full_name or reported_user.email
+    reporter_name = _display_name(reporter)
+    reported_name = _display_name(reported_user)
     payload = {
         "from": "CoVise Alerts <founders@covise.net>",
         "to": [REPORT_ALERT_EMAIL],
@@ -3588,8 +3602,8 @@ def _send_message_report_email(reporter, reported_user, message, reason):
 
     resend.api_key = RESEND_API_KEY
     timestamp = timezone.now().isoformat()
-    reporter_name = reporter.full_name or reporter.email
-    reported_name = reported_user.full_name or reported_user.email
+    reporter_name = _display_name(reporter)
+    reported_name = _display_name(reported_user)
     message_preview = _message_preview_text(message)
     payload = {
         "from": "CoVise Alerts <founders@covise.net>",
@@ -4204,7 +4218,7 @@ def _load_messages_page_state(user):
         friend_options = [
             {
                 "id": str(friend.id),
-                "display_name": friend.full_name or friend.email,
+                "display_name": _display_name(friend),
                 "avatar_initials": friend.avatar_initials,
                 "avatar_url": _user_avatar_url(friend),
             }
@@ -4390,7 +4404,7 @@ def start_private_conversation(request, user_id):
             recipient=target_user,
             actor=request.user,
             notification_type=Notification.NotificationType.CONVERSATION_REQUEST,
-            title=f"{request.user.full_name or request.user.email} wants to start a private chat",
+            title=f"{_display_name(request.user)} wants to start a private chat",
             body="Open Messages to review the request and decide whether to accept it.",
             target_url=reverse("Messages"),
         )
@@ -4524,7 +4538,7 @@ def respond_to_conversation_request(request, request_id, action):
                 recipient=request_item.requester,
                 actor=request.user,
                 notification_type=Notification.NotificationType.REQUEST_ACCEPTED,
-                title=f"{request.user.full_name or request.user.email} accepted your chat request",
+                title=f"{_display_name(request.user)} accepted your chat request",
                 body="Your private conversation is ready. Open Messages to continue.",
                 target_url=f"{reverse('Messages')}?conversation={conversation.id}",
             )
@@ -5165,9 +5179,9 @@ def toggle_block_user(request, user_id):
                 "ok": True,
                 "blocked": blocked_now,
                 "message": (
-                    f"You blocked {target_user.full_name or target_user.email}."
+                    f"You blocked {_display_name(target_user)}."
                     if blocked_now
-                    else f"You unblocked {target_user.full_name or target_user.email}."
+                    else f"You unblocked {_display_name(target_user)}."
                 ),
             }
         )
@@ -5552,15 +5566,20 @@ def profile_experience(request):
             context["profile_section_error_message"] = "Title, date, and description are required."
             return render(request, "profile_section.html", context, status=400)
 
+        experience_date = _experience_datetime_from_input(date)
+        if experience_date is None:
+            context["profile_section_error_message"] = "Please enter a valid experience date."
+            return render(request, "profile_section.html", context, status=400)
+
         if action == "update":
             experience = get_object_or_404(Experiences, id=experience_id, user=request.user)
             experience.title = title
-            experience.date = date
+            experience.date = experience_date
             experience.desc = desc
             experience.save(update_fields=["title", "date", "desc"])
             return redirect(f"{reverse('Profile Experience')}?status=updated")
 
-        Experiences.objects.create(user=request.user, title=title, date=date, desc=desc)
+        Experiences.objects.create(user=request.user, title=title, date=experience_date, desc=desc)
         return redirect(f"{reverse('Profile Experience')}?status=created")
 
     return render(request, "profile_section.html", context)

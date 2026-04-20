@@ -14,10 +14,10 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .messaging import deliver_media_message
-from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Message, OnboardingResponse, Post, PostImage, PostReaction, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
+from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Experiences, Message, OnboardingResponse, Post, PostImage, PostReaction, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
 from .context_processors import user_ui_context
 from .user_context import build_profile_context, build_ui_user_context, get_onboarding_skill_config
-from .views import _attach_post_feed_metadata, _has_profile_completion, _home_sidebar_metrics, _render_post_content_html, _render_post_title_html, _safe_media_url, _serialize_message, _waitlist_to_onboarding_initial_answers
+from .views import _attach_post_feed_metadata, _has_profile_completion, _home_sidebar_metrics, _render_post_content_html, _render_post_title_html, _safe_media_url, _searchable_users_for_home, _serialize_message, _waitlist_to_onboarding_initial_answers
 
 
 class WaitlistEntryModelTests(TestCase):
@@ -107,6 +107,42 @@ class CountryDisplayFormattingTests(TestCase):
         _attach_post_feed_metadata([post], current_user=user)
 
         self.assertEqual(post.feed_country_display, "Saudi Arabia")
+
+
+class PublicIdentityPrivacyTests(TestCase):
+    def test_searchable_users_do_not_expose_other_user_email_addresses(self):
+        viewer = User.objects.create_user(
+            email="viewer@example.com",
+            password="safe-password-123",
+            full_name="Viewer User",
+        )
+        candidate = User.objects.create_user(
+            email="privatefounder@example.com",
+            password="safe-password-123",
+        )
+        Profile.objects.create(
+            user=candidate,
+            country="qatar",
+            bio="Building a private founder network.",
+            has_accepted_platform_agreement=True,
+        )
+
+        searchable_users = _searchable_users_for_home(viewer)
+        candidate_entry = next(item for item in searchable_users if item["id"] == str(candidate.id))
+
+        self.assertEqual(candidate_entry["display_name"], "CoVise Member")
+        self.assertNotIn("email", candidate_entry)
+        self.assertNotIn("privatefounder@example.com", candidate_entry["search_text"].lower())
+
+    def test_ui_user_context_uses_safe_public_fallback_name(self):
+        user = User.objects.create_user(
+            email="noname@example.com",
+            password="safe-password-123",
+        )
+
+        helper_context = build_ui_user_context(user)
+
+        self.assertEqual(helper_context["display_name"], "CoVise Member")
 
 
 class AuthEmailNormalizationTests(TestCase):
@@ -254,6 +290,24 @@ class SecurityAuthenticationTests(TestCase):
         self.user.profile.refresh_from_db()
         self.assertEqual(self.user.profile.full_name, "Updated Secure User")
 
+    def test_settings_experiences_saves_timezone_aware_datetime_from_date_input(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("Settings Section", args=["experience-projects"]),
+            {
+                "save_section": "experiences",
+                "title": "Operator",
+                "date": "2022-06-01",
+                "desc": "Ran early operations.",
+            },
+        )
+
+        self.assertRedirects(response, f"{reverse('Settings Section', args=['experience-projects'])}?saved=1")
+        experience = Experiences.objects.get(user=self.user, title="Operator")
+        self.assertTrue(timezone.is_aware(experience.date))
+        self.assertEqual(experience.date.date().isoformat(), "2022-06-01")
+
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
 class AgreementWelcomeEmailTests(TestCase):
@@ -332,6 +386,21 @@ class ProfileSectionPageTests(TestCase):
             with self.subTest(url=url):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
+
+    def test_profile_experience_saves_timezone_aware_datetime_from_date_input(self):
+        response = self.client.post(
+            reverse("Profile Experience"),
+            {
+                "title": "Founder",
+                "date": "2022-06-01",
+                "desc": "Built the first version.",
+            },
+        )
+
+        self.assertRedirects(response, f"{reverse('Profile Experience')}?status=created")
+        experience = Experiences.objects.get(user=self.user, title="Founder")
+        self.assertTrue(timezone.is_aware(experience.date))
+        self.assertEqual(experience.date.date().isoformat(), "2022-06-01")
 
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])

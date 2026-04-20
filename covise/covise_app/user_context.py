@@ -5,6 +5,7 @@ from pathlib import Path
 from django.urls import reverse
 from django.utils.timesince import timesince
 
+from covise_app.display_utils import public_display_name
 from covise_app.models import BlockedUser, SavedPost
 
 
@@ -245,11 +246,7 @@ def build_saved_post_items(user):
 def build_ui_user_context(user):
     profile = getattr(user, "profile", None)
 
-    display_name = (getattr(user, "full_name", "") or "").strip()
-    if not display_name and profile:
-        display_name = (getattr(profile, "full_name", "") or "").strip()
-    if not display_name:
-        display_name = (getattr(user, "email", "") or "CoVise User").split("@")[0]
+    display_name = public_display_name(user)
 
     parts = [part for part in display_name.split() if part]
     if len(parts) >= 2:
@@ -428,11 +425,7 @@ def build_profile_card_context(user):
     profile_page = build_profile_context(user)
     profile = getattr(user, "profile", None)
 
-    display_name = (getattr(user, "full_name", "") or "").strip()
-    if not display_name and profile:
-        display_name = (getattr(profile, "full_name", "") or "").strip()
-    if not display_name:
-        display_name = (getattr(user, "email", "") or "CoVise User").split("@")[0]
+    display_name = public_display_name(user)
 
     parts = [part for part in display_name.split() if part]
     if len(parts) >= 2:
@@ -524,8 +517,7 @@ def build_settings_context(user):
     blocked_user_items = [
         {
             "id": relationship.blocked.id,
-            "display_name": relationship.blocked.full_name or relationship.blocked.email.split("@")[0],
-            "email": relationship.blocked.email,
+            "display_name": public_display_name(relationship.blocked),
             "avatar_initials": getattr(relationship.blocked, "avatar_initials", "CV"),
             "blocked_at": f"{timesince(relationship.created_at)} ago",
         }
