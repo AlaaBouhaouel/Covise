@@ -85,7 +85,9 @@ body {
     display: flex;
     min-height: 100vh;
 }
-
+.main{
+    margin-top: 5vh;
+}
 .sidebar {
     position: fixed;
     top: 0;
@@ -229,7 +231,7 @@ body {
 }
 
 .dashboard-card {
-    background: var(--panel);
+    background: var(--bg-deep);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: calc(var(--spacing) * 2.25);
@@ -1352,6 +1354,7 @@ body {
 
 }
 .empty-state { display: none;}
+.mobile-close-chat {text-decoration: none;}
 @media (max-width: 1100px) {
     .main {
         padding: calc(var(--spacing) * 4) calc(var(--spacing) * 4) calc(var(--spacing) * 12);
@@ -1486,7 +1489,9 @@ body {
     .left-panel {
         display: none;
     }
-
+    .match-info{
+        width: 100%;
+    }
     .projects-copy h1 {
         font-size: 1.8rem;
     }
@@ -1498,5 +1503,15 @@ body {
     .founder-meta,
     .project-stats {
         font-size: 0.72rem;
+    }
+    .head-notif{
+        display: flex;
+        gap: calc(var(--spacing)*2);
+    }
+    .dashboard-card {
+        
+        padding: calc(var(--spacing) * 1.25);
+
+
     }
 }

@@ -8,7 +8,10 @@
     <title>CoVise | Requests</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'requests.css' %}">
+    <link rel="stylesheet" href="{% static 'messages.css' %}">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script>
         (function() {
@@ -60,18 +63,16 @@
             </a>
         </aside>
 
+
         <main class="main">
-            <header class="home-header">
-                <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
-                    <span style="font-family: 'Syne', sans-serif; font-size: 1.18rem; font-weight: 800; letter-spacing: -0.05em;">CoVise</span>
-                </a>
-                <div class="home-header-actions">
-                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
-                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                    </button>
+            <div class="conv-top">
+                <div class="conv-top-title">
+                    <h1>Requests</h1>
+                    <div class="conv-top-title-actions">
+                        <a class="mobile-close-chat" href="../" ><i class="fa-solid fa-arrow-left"></i></a>
+                    </div>
                 </div>
-            </header>
+            </div>
 
             <section class="projects" aria-label="Requests">
 
@@ -106,9 +107,9 @@
                                         {% if req.status == 'pending' %}
                                         <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--pending_color); font-weight: 700;">Pending</span>
                                         {% elif req.status == 'accepted' %}
-                                        <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--green); font-weight: 700;">Accepted</span>
+                                        <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em;  font-weight: 700; color: var(--match_color); border: 1px solid var(--green); border-radius: 10px; background: rgba(120, 220, 160, 0.5); color: var(--green); padding: calc(var(--spacing)*0.3) calc(var(--spacing)*1.3);">Accepted</span>
                                         {% else %}
-                                        <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--red); font-weight: 700;">Declined</span>
+                                        <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em;  font-weight: 700; color: var(--match_color); border: 1px solid var(--green); border-radius: 10px; background: rgba(220, 120, 120, 0.5); color: var(--red); padding: calc(var(--spacing)*0.3) calc(var(--spacing)*1.3);">Declined</span>
                                         {% endif %}
                                     </div>
                                 </div>
