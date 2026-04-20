@@ -970,7 +970,7 @@
                     <article class="dashboard-card widget">
                         <div class="widget-header">
                             <div class="widget-title">Quick Requests</div>
-                            <div class="widget-action">Review</div>
+                            <a class="widget-action" href="{% url 'Requests' %}" style="text-decoration: none;">View All</a>
                         </div>
                         <div class="match-cards" style="gap: 0;">
                             {% for request_item in home_quick_requests %}

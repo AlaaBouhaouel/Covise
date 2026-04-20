@@ -3473,15 +3473,6 @@ def messages(request):
                 conversation=conversation,
                 details={"exception": str(exc)},
             )
-    conversation_requests = list(
-        ConversationRequest.objects.filter(Q(requester=request.user) | Q(recipient=request.user), status=ConversationRequest.Status.PENDING)
-        .select_related("requester__profile", "recipient__profile")
-    )
-    conversation_requests = [
-        item for item in conversation_requests if not _is_blocked_pair(item.requester, item.recipient)
-    ]
-    serialized_requests = [_serialize_conversation_request(item, request.user) for item in conversation_requests]
-
     requested_conversation_id = request.GET.get("conversation", "").strip()
     active_conversation_id = ""
     if requested_conversation_id and any(item["id"] == requested_conversation_id for item in serialized_conversations):
@@ -3505,12 +3496,33 @@ def messages(request):
         'messages.html',
         {
             "conversation_data": serialized_conversations,
-            "conversation_requests": serialized_requests,
             "friend_options": friend_options,
             "active_conversation_id": active_conversation_id,
             "message_error": request.GET.get("error", "").strip(),
         },
     )
+
+
+@login_required
+def requests_page(request):
+    conversation_requests = list(
+        ConversationRequest.objects.filter(Q(requester=request.user) | Q(recipient=request.user))
+        .select_related("requester__profile", "recipient__profile")
+        .order_by(
+            Case(
+                When(recipient=request.user, status=ConversationRequest.Status.PENDING, then=0),
+                When(requester=request.user, status=ConversationRequest.Status.PENDING, then=1),
+                default=2,
+                output_field=IntegerField(),
+            ),
+            "-created_at",
+        )
+    )
+    conversation_requests = [
+        item for item in conversation_requests if not _is_blocked_pair(item.requester, item.recipient)
+    ]
+    serialized = [_serialize_conversation_request(item, request.user) for item in conversation_requests]
+    return render(request, "requests.html", {"conversation_requests": serialized})
 
 
 @login_required

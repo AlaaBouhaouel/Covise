@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>CoVise | Requests</title>
+    <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'requests.css' %}">
+    <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var theme = localStorage.getItem('covise-theme');
+            if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+</head>
+<body class="has-app-mobile-nav">
+    <div class="layout">
+        <aside class="sidebar" aria-label="Primary">
+            <a class="sidebar-link" href="{% url 'Home' %}" aria-label="Home">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <path d="M3 10.5L12 3l9 7.5"></path>
+                    <path d="M5 10.5V21h14V10.5"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Projects' %}" aria-label="Projects">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <rect x="3" y="4" width="7" height="7"></rect>
+                    <rect x="14" y="4" width="7" height="7"></rect>
+                    <rect x="3" y="15" width="7" height="7"></rect>
+                    <rect x="14" y="15" width="7" height="7"></rect>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Messages' %}" aria-label="Messages">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <path d="M4 6h16v10H7l-3 3V6z"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Workspace' %}" aria-label="Workspace">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <path d="M3 7h18v12H3z"></path>
+                    <path d="M9 7V5h6v2"></path>
+                    <path d="M3 12h18"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Profile' %}" aria-label="Profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <circle cx="12" cy="8" r="4"></circle>
+                    <path d="M4 21c1.8-4 5-6 8-6s6.2 2 8 6"></path>
+                </svg>
+            </a>
+            <a class="sidebar-link" href="{% url 'Settings' %}" aria-label="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </a>
+        </aside>
+
+        <main class="main">
+            <header class="home-header">
+                <a class="home-brand" href="{% url 'Home' %}" aria-label="CoVise home">
+                    <span style="font-family: 'Syne', sans-serif; font-size: 1.18rem; font-weight: 800; letter-spacing: -0.05em;">CoVise</span>
+                </a>
+                <div class="home-header-actions">
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </button>
+                </div>
+            </header>
+
+            <section class="projects" aria-label="Requests">
+                <div class="projects-head">
+                    <div class="projects-copy">
+                        <h1>Requests</h1>
+                        <p>Manage your incoming and outgoing connection requests.</p>
+                    </div>
+                </div>
+
+                <article class="dashboard-card widget" id="requestsCard">
+                    <div class="widget-header">
+                        <div class="widget-title">All Requests</div>
+                        <div class="widget-action" id="requestsCount"></div>
+                    </div>
+                    <div class="match-cards" style="gap: 0;" id="requestsList">
+                        {% for req in conversation_requests %}
+                        <div class="match-card request-match-card"
+                             style="grid-template-columns: auto 1fr auto; padding: calc(var(--spacing) * 1.25) 0; background: transparent; border: 0; {% if not forloop.last %}border-bottom: 1px solid rgba(120, 150, 255, 0.13);{% endif %} border-radius: 0; min-height: 56px;"
+                             data-request-id="{{ req.id }}"
+                             data-is-incoming="{{ req.is_incoming|yesno:'true,false' }}">
+                            {% if req.avatar_url %}
+                            <img class="match-avatar-image" src="{{ req.avatar_url }}" alt="{{ req.name }} avatar" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">
+                            {% else %}
+                            <div class="match-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: rgba(120, 150, 255, 0.18); border: 1px solid rgba(120, 150, 255, 0.24); display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0;">{{ req.avatar }}</div>
+                            {% endif %}
+                            <div class="match-info" style="display: grid; gap: 3px; min-width: 0;">
+                                <div class="match-name" style="padding-bottom: 0; font-size: 0.84rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ req.name }}</div>
+                                <div class="match-role" style="font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ req.description }}</div>
+                                <div style="display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;">
+                                    {% if req.is_incoming %}
+                                    <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--match_color); font-weight: 700;">Incoming</span>
+                                    {% else %}
+                                    <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 700;">Outgoing</span>
+                                    {% endif %}
+                                    &nbsp;·&nbsp;
+                                    {% if req.status == 'pending' %}
+                                    <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--pending_color); font-weight: 700;">Pending</span>
+                                    {% elif req.status == 'accepted' %}
+                                    <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--green); font-weight: 700;">Accepted</span>
+                                    {% else %}
+                                    <span style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--red); font-weight: 700;">Declined</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if req.is_incoming and req.status == 'pending' %}
+                            <div class="decision-actions" style="display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                                <button class="decision-btn accept" type="button" aria-label="Accept request"
+                                        data-request-id="{{ req.id }}" data-request-action="accept"
+                                        style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(120, 220, 160, 0.4); background: rgba(120, 220, 160, 0.1); color: var(--green); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, border-color 0.2s;">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="14" height="14">
+                                        <path d="M5 12.5 9.5 17 19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </button>
+                                <button class="decision-btn reject" type="button" aria-label="Decline request"
+                                        data-request-id="{{ req.id }}" data-request-action="decline"
+                                        style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255, 100, 120, 0.3); background: rgba(255, 100, 120, 0.08); color: var(--red); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, border-color 0.2s;">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="14" height="14">
+                                        <path d="M7 7l10 10M17 7 7 17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            {% else %}
+                            <span style="padding: 4px 10px; border-radius: 999px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; flex-shrink: 0;
+                                {% if req.status == 'accepted' %}border: 1px solid rgba(120, 220, 160, 0.3); background: rgba(120, 220, 160, 0.08); color: var(--green);
+                                {% elif req.status == 'pending' %}border: 1px solid rgba(255, 207, 127, 0.3); background: rgba(255, 207, 127, 0.08); color: var(--pending_color);
+                                {% else %}border: 1px solid rgba(255, 100, 120, 0.3); background: rgba(255, 100, 120, 0.08); color: var(--red);{% endif %}">
+                                {{ req.status|title }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div style="padding: calc(var(--spacing) * 3) 0; text-align: center; grid-column: 1 / -1;">
+                            <div style="color: var(--muted); font-size: 0.84rem;">No requests yet.</div>
+                            <div style="color: var(--muted); font-size: 0.72rem; margin-top: 6px;">Connection requests will appear here when you receive or send them.</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </article>
+            </section>
+        </main>
+    </div>
+
+    {% include "includes/app_mobile_nav.html" with active_page='messages' %}
+
+    {% csrf_token %}
+    <script>
+    (function () {
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        document.querySelectorAll('[data-request-action]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const requestId = btn.dataset.requestId;
+                const action = btn.dataset.requestAction;
+                btn.disabled = true;
+                fetch('/messages/requests/' + requestId + '/' + action + '/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken },
+                })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data.ok && data.conversation_id) {
+                        window.location.href = '/messages/?conversation=' + data.conversation_id;
+                    } else {
+                        window.location.reload();
+                    }
+                })
+                .catch(function () {
+                    btn.disabled = false;
+                });
+            });
+        });
+
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function () {
+                const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                if (isLight) {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('covise-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('covise-theme', 'light');
+                }
+            });
+        }
+    })();
+    </script>
+</body>
+</html>

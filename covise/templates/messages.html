@@ -85,16 +85,20 @@
             </div>
             <div class="conv-tabs-shell">
             <div class="conv-tabs">
-                <button class="tab-btn is-active" id="directTabBtn" data-tab="direct">Direct</button>
-                <button class="tab-btn" id="groupsTabBtn" data-tab="groups">Groups</button>
-                <button class="tab-btn" id="requestsTabBtn" data-tab="requests">Requests <span class="tab-count" id="requestsTabCount" hidden>0</span></button>
+                <button class="tab-btn is-active" id="directTabBtn" data-tab="direct">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14" aria-hidden="true"><path d="M4 6h16v10H7l-3 3V6z"/></svg>
+                    Direct
+                </button>
+                <button class="tab-btn" id="groupsTabBtn" data-tab="groups">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14" aria-hidden="true"><circle cx="9" cy="7" r="3"/><path d="M3 21v-1a6 6 0 0 1 6-6h0"/><circle cx="17" cy="10" r="3"/><path d="M21 21v-1a5 5 0 0 0-8-4"/></svg>
+                    Groups
+                </button>
             </div>
             </div>
             <button class="panel-btn create-group-btn" id="createGroupBtn" type="button" hidden>Create Group</button>
             <div class="conv-list-wrap">
                 <div class="conversation-list" id="directList"></div>
                 <div class="conversation-list is-hidden" id="groupsList"></div>
-                <div class="requests-list is-hidden" id="requestsList"></div>
             </div>
         </section>
 
@@ -221,7 +225,6 @@
     {{ request.user.username|json_script:"current-username" }}
     {{ request.user.id|json_script:"current-user-id" }}
     {{ conversation_data|json_script:"conversation-data" }}
-    {{ conversation_requests|json_script:"conversation-request-data" }}
     {{ friend_options|json_script:"friend-options" }}
     {{ active_conversation_id|json_script:"active-conversation-id" }}
     {{ message_error|json_script:"message-error" }}

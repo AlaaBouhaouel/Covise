@@ -2,9 +2,6 @@
     const conversations = JSON.parse(
         document.getElementById("conversation-data").textContent
     );
-    const conversationRequests = JSON.parse(
-        document.getElementById("conversation-request-data").textContent
-    );
     const friendOptions = JSON.parse(
         document.getElementById("friend-options").textContent
     );
@@ -24,8 +21,6 @@
     const searchInput = document.getElementById("conversationSearch");
     const directTabBtn = document.getElementById("directTabBtn");
     const groupsTabBtn = document.getElementById("groupsTabBtn");
-    const requestsTabBtn = document.getElementById("requestsTabBtn");
-    const requestsTabCount = document.getElementById("requestsTabCount");
     const createGroupBtn = document.getElementById("createGroupBtn");
     const panelMoreMenuBtn = document.getElementById("panelMoreMenuBtn");
     const panelMoreMenu = document.getElementById("panelMoreMenu");
@@ -50,7 +45,6 @@
     const convictionFill = document.getElementById("convictionFill");
     const convictionValue = document.getElementById("convictionValue");
     const viewFullProfileBtn = document.getElementById("viewFullProfileBtn");
-    const requestsList = document.getElementById("requestsList");
     const moreMenu = document.getElementById("moreMenu");
     const modalBackdrop = document.getElementById("modalBackdrop");
     const modalTitle = document.getElementById("modalTitle");
@@ -450,16 +444,12 @@
 
     function buildChatStatusLine(conversation) {
         if (!conversation) {
-            return "Choose a conversation to start chatting";
+            return "";
         }
         if (conversation.conversation_type === "group") {
-            return conversation.status || "Group conversation";
+            return conversation.status || "";
         }
-        const parts = [];
-        if (conversation.skills) parts.push(conversation.skills);
-        if (conversation.country) parts.push(conversation.country);
-        if (!parts.length && conversation.status) parts.push(conversation.status);
-        return parts.join(" · ") || "CoVise member";
+        return conversation.country || "";
     }
 
     function conversationProfileUrl(conversation) {
@@ -467,76 +457,6 @@
             return "#";
         }
         return `/profile/user/${conversation.partner_id}/`;
-    }
-
-    function renderRequests() {
-        const incomingRequests = conversationRequests.filter((requestItem) => requestItem.is_incoming);
-        const requestCount = incomingRequests.length;
-        if (requestsTabBtn && requestsTabCount) {
-            requestsTabCount.textContent = String(requestCount);
-            requestsTabCount.hidden = requestCount === 0;
-        }
-        requestsList.innerHTML = "";
-
-        if (!requestCount) {
-            requestsList.innerHTML = '<article class="request-item request-empty"><div><h3>No pending requests</h3></div></article>';
-            return;
-        }
-
-        incomingRequests.forEach((requestItem) => {
-            const element = document.createElement("article");
-            element.className = "request-item";
-            let actionsHtml = '<div class="request-actions">';
-            actionsHtml += `<button class="accept" type="button" aria-label="Accept request" title="Accept" data-request-id="${requestItem.id}" data-action="accept">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>`;
-            actionsHtml += `<button class="decline" type="button" aria-label="Decline request" title="Decline" data-request-id="${requestItem.id}" data-action="decline">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>`;
-            actionsHtml += "</div>";
-            element.innerHTML = `
-                <div class="request-main">
-                    <div class="avatar">${avatarInnerMarkup(requestItem.avatar, requestItem.avatar_url, requestItem.name)}</div>
-                    <div class="request-copy"><h3>${requestItem.name}</h3><p>${requestItem.description}</p></div>
-                </div>
-                ${actionsHtml}
-            `;
-
-            element.querySelectorAll("[data-request-id]").forEach((button) => {
-                button.addEventListener("click", () => {
-                    fetch(`/messages/requests/${requestItem.id}/${button.dataset.action}/`, {
-                        method: "POST",
-                        headers: {
-                            "X-CSRFToken": csrftoken,
-                        },
-                    })
-                        .then(async (response) => {
-                            const data = await response.json();
-                            return { ok: response.ok, data };
-                        })
-                        .then((data) => {
-                            if (!data.ok || !data.data.ok) {
-                                showMessagingError((data.data && data.data.error) || "We could not update this request right now.", "Request error");
-                                return;
-                            }
-                            if (data.data.conversation_id) {
-                                window.location.href = `/messages/?conversation=${data.data.conversation_id}`;
-                                return;
-                            }
-                            window.location.reload();
-                        })
-                        .catch(() => {
-                            showMessagingError("We could not update this request right now.", "Request error");
-                        });
-                });
-            });
-
-            requestsList.appendChild(element);
-        });
     }
 
     function renderLists() {
@@ -614,10 +534,8 @@
 
         directList.classList.toggle("is-hidden", activeTab !== "direct");
         groupsList.classList.toggle("is-hidden", activeTab !== "groups");
-        requestsList.classList.toggle("is-hidden", activeTab !== "requests");
         directTabBtn.classList.toggle("is-active", activeTab === "direct");
         groupsTabBtn.classList.toggle("is-active", activeTab === "groups");
-        if (requestsTabBtn) requestsTabBtn.classList.toggle("is-active", activeTab === "requests");
     }
 
     function renderSharedFiles(conversation) {
@@ -767,7 +685,7 @@
 
         if (!conversation) {
             chatName.textContent = "Messages";
-            chatStatus.textContent = "Choose a conversation to start chatting";
+            chatStatus.textContent = "";
             setAvatarElement(chatAvatar, "C", "", "CoVise");
             if (chatNameLink) chatNameLink.setAttribute("href", "#");
             if (chatMatchPill) chatMatchPill.textContent = "Private conversation";
@@ -862,7 +780,6 @@
 
     function renderAll() {
         ensureActiveConversation();
-        renderRequests();
         renderLists();
         renderChat();
     }
@@ -1108,12 +1025,6 @@
         activeTab = "groups";
         renderAll();
     });
-    if (requestsTabBtn) {
-        requestsTabBtn.addEventListener("click", () => {
-            activeTab = "requests";
-            renderAll();
-        });
-    }
     searchInput.addEventListener("input", renderAll);
 
     document.getElementById("toggleDetailsBtn").addEventListener("click", () => app.classList.toggle("details-open"));
