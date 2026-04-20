@@ -3994,21 +3994,21 @@ def create_post(request):
     _send_post_alert_email(post)
     return redirect("Post Detail", post_id=post.id)
 
-@login_required
-def messages(request):
+def _load_messages_page_state(user):
     try:
-        _normalize_visible_private_conversations(request.user)
-        _normalize_friend_contacts(request.user)
+        _normalize_visible_private_conversations(user)
+        _normalize_friend_contacts(user)
     except Exception as exc:
-        logger.exception("Messages page normalization failed for user=%s", request.user.id)
+        logger.exception("Messages page normalization failed for user=%s", user.id)
         send_messaging_failure_alert(
             action="load_messages_page",
             reason="normalization_failed",
-            actor=request.user,
+            actor=user,
             details={"exception": str(exc)},
         )
+
     conversations = list(
-        Conversation.objects.filter(participants=request.user)
+        Conversation.objects.filter(participants=user)
         .prefetch_related("participants__profile", "messages__sender", "messages__reactions", "messages__receipts", "user_states")
         .order_by("-last_message_at", "-updated_at")
         .distinct()
@@ -4016,21 +4016,15 @@ def messages(request):
     serialized_conversations = []
     for conversation in conversations:
         try:
-            serialized_conversations.append(_serialize_conversation(conversation, request.user))
+            serialized_conversations.append(_serialize_conversation(conversation, user))
         except Exception as exc:
             send_messaging_failure_alert(
                 action="load_conversation",
                 reason="serialization_failed",
-                actor=request.user,
+                actor=user,
                 conversation=conversation,
                 details={"exception": str(exc)},
             )
-    requested_conversation_id = request.GET.get("conversation", "").strip()
-    active_conversation_id = ""
-    if requested_conversation_id and any(item["id"] == requested_conversation_id for item in serialized_conversations):
-        active_conversation_id = requested_conversation_id
-    elif serialized_conversations:
-        active_conversation_id = serialized_conversations[0]["id"]
 
     try:
         friend_options = [
@@ -4040,34 +4034,76 @@ def messages(request):
                 "avatar_initials": friend.avatar_initials,
                 "avatar_url": _user_avatar_url(friend),
             }
-            for friend in _friend_queryset(request.user)
-            if not _has_user_blocked(request.user, friend)
+            for friend in _friend_queryset(user)
+            if not _has_user_blocked(user, friend)
         ]
     except Exception as exc:
-        logger.exception("Messages page friend options failed for user=%s", request.user.id)
+        logger.exception("Messages page friend options failed for user=%s", user.id)
         send_messaging_failure_alert(
             action="load_messages_page",
             reason="friend_options_failed",
-            actor=request.user,
+            actor=user,
             details={"exception": str(exc)},
         )
         friend_options = []
 
-    message_error_code = request.GET.get("error", "").strip()
-    if message_error_code == "conversation_unavailable":
-        message_error = "We couldn't open this conversation right now. Please try again."
-    else:
-        message_error = message_error_code
+    return {
+        "conversation_data": serialized_conversations,
+        "friend_options": friend_options,
+    }
+
+
+def _resolve_messages_active_conversation_id(requested_conversation_id, serialized_conversations):
+    if requested_conversation_id and any(item["id"] == requested_conversation_id for item in serialized_conversations):
+        return requested_conversation_id
+    if serialized_conversations:
+        return serialized_conversations[0]["id"]
+    return ""
+
+
+def _messages_error_message(error_code):
+    if error_code == "conversation_unavailable":
+        return "We couldn't open this conversation right now. Please try again."
+    return error_code
+
+
+@login_required
+def messages(request):
+    state = _load_messages_page_state(request.user)
+    requested_conversation_id = request.GET.get("conversation", "").strip()
+    active_conversation_id = _resolve_messages_active_conversation_id(
+        requested_conversation_id,
+        state["conversation_data"],
+    )
+    message_error = _messages_error_message(request.GET.get("error", "").strip())
 
     return render(
         request,
         'messages.html',
         {
-            "conversation_data": serialized_conversations,
-            "friend_options": friend_options,
+            "conversation_data": state["conversation_data"],
+            "friend_options": state["friend_options"],
             "active_conversation_id": active_conversation_id,
             "message_error": message_error,
         },
+    )
+
+
+@login_required
+def messages_state(request):
+    state = _load_messages_page_state(request.user)
+    requested_conversation_id = request.GET.get("conversation", "").strip()
+    active_conversation_id = _resolve_messages_active_conversation_id(
+        requested_conversation_id,
+        state["conversation_data"],
+    )
+    return JsonResponse(
+        {
+            "ok": True,
+            "conversation_data": state["conversation_data"],
+            "friend_options": state["friend_options"],
+            "active_conversation_id": active_conversation_id,
+        }
     )
 
 

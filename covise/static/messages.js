@@ -1,8 +1,8 @@
 (function () {
-    const conversations = JSON.parse(
+    let conversations = JSON.parse(
         document.getElementById("conversation-data").textContent
     );
-    const friendOptions = JSON.parse(
+    let friendOptions = JSON.parse(
         document.getElementById("friend-options").textContent
     );
     const activeConversationValue = JSON.parse(
@@ -75,6 +75,9 @@
     let mediaRecorder = null;
     let mediaRecorderStream = null;
     let mediaChunks = [];
+    let messagesSyncTimer = null;
+    let messagesSyncInFlight = false;
+    const MESSAGES_SYNC_INTERVAL_MS = 4000;
     const emojiSets = {
         faces: ["😀", "😂", "😊", "😍", "🤔", "😭", "😎", "🥳", "😴", "😅", "🤯", "🥹", "😇", "🤝"],
         hands: ["👍", "👎", "👏", "🙌", "🙏", "👌", "🤌", "✌️", "🤞", "💪", "👋", "🤙", "🫶", "✍️"],
@@ -190,6 +193,84 @@
 
     function activeConversation() {
         return conversations.find((conversation) => conversation.id === activeConversationId) || null;
+    }
+
+    function replaceItems(nextConversations, nextFriendOptions) {
+        conversations = Array.isArray(nextConversations) ? nextConversations : [];
+        friendOptions = Array.isArray(nextFriendOptions) ? nextFriendOptions : [];
+    }
+
+    function applyMessagesState(statePayload, options) {
+        replaceItems(statePayload.conversation_data, statePayload.friend_options);
+
+        if (activeConversationId && conversations.some((conversation) => conversation.id === activeConversationId)) {
+            renderAll(options);
+            connectSocket();
+            if (activeConversation() && activeConversation().unread) {
+                markActiveConversationSeen();
+            }
+            return;
+        }
+
+        activeConversationId = statePayload.active_conversation_id || (conversations[0] ? conversations[0].id : "");
+        renderAll(
+            options && typeof options === "object"
+                ? { ...options, stickToBottom: true }
+                : { stickToBottom: true }
+        );
+        connectSocket();
+        if (activeConversation() && activeConversation().unread) {
+            markActiveConversationSeen();
+        }
+    }
+
+    function syncMessagesState(options) {
+        if (messagesSyncInFlight) {
+            return Promise.resolve();
+        }
+
+        messagesSyncInFlight = true;
+        const syncUrl = new URL("/messages/state/", window.location.origin);
+        if (activeConversationId) {
+            syncUrl.searchParams.set("conversation", activeConversationId);
+        }
+
+        return fetch(syncUrl.toString(), {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        })
+            .then(async (response) => {
+                const data = await response.json();
+                return { ok: response.ok, data };
+            })
+            .then((result) => {
+                if (!result.ok || !result.data || !result.data.ok) {
+                    return;
+                }
+                applyMessagesState(result.data, options);
+            })
+            .catch(() => {})
+            .finally(() => {
+                messagesSyncInFlight = false;
+            });
+    }
+
+    function scheduleMessagesSync() {
+        if (messagesSyncTimer) {
+            window.clearTimeout(messagesSyncTimer);
+        }
+        messagesSyncTimer = window.setTimeout(() => {
+            messagesSyncTimer = null;
+            if (document.hidden) {
+                scheduleMessagesSync();
+                return;
+            }
+            syncMessagesState()
+                .finally(() => {
+                    scheduleMessagesSync();
+                });
+        }, MESSAGES_SYNC_INTERVAL_MS);
     }
 
     function conversationSortTimestamp(conversation) {
@@ -412,6 +493,7 @@
             if (socket._manualClose || chatSocket !== socket || !activeConversationId) {
                 return;
             }
+            syncMessagesState();
             if (reconnectTimer) {
                 window.clearTimeout(reconnectTimer);
             }
@@ -490,7 +572,7 @@
                     conversation.unread = 0;
                     activeTab = "direct";
                     connectSocket();
-                    renderAll();
+                    renderAll({ stickToBottom: true });
                     app.classList.add("mobile-chat-open");
                 });
                 directList.appendChild(element);
@@ -522,7 +604,7 @@
                 group.unread = 0;
                 activeTab = "groups";
                 connectSocket();
-                renderAll();
+                renderAll({ stickToBottom: true });
                 app.classList.add("mobile-chat-open");
             });
             groupsList.appendChild(element);
@@ -678,9 +760,15 @@
         return `<div class="msg-sender">${escapeHtml(message.sender_name || "CoVise member")}</div>`;
     }
 
-    function renderChat() {
+    function renderChat(options) {
         const conversation = activeConversation();
         const query = searchInput.value.trim().toLowerCase();
+        const stickToBottom = options && Object.prototype.hasOwnProperty.call(options, "stickToBottom")
+            ? !!options.stickToBottom
+            : (
+                !messagesStream
+                || (messagesStream.scrollHeight - messagesStream.scrollTop - messagesStream.clientHeight) < 96
+            );
         messagesStream.innerHTML = "";
 
         if (!conversation) {
@@ -775,13 +863,15 @@
             row.innerHTML = `${renderGroupSenderLabel(message, conversation, isMine)}${renderMessageShell(message, isMine)}<div class="msg-meta"><span>${formatMessageTime(message.created_at)}</span>${isMine ? receiptHTML(message.receipt || "sent") : ""}</div>`;
             messagesStream.appendChild(row);
         });
-        messagesStream.scrollTop = messagesStream.scrollHeight;
+        if (stickToBottom) {
+            messagesStream.scrollTop = messagesStream.scrollHeight;
+        }
     }
 
-    function renderAll() {
+    function renderAll(options) {
         ensureActiveConversation();
         renderLists();
-        renderChat();
+        renderChat(options);
     }
 
     function openModal(title, body, footer) {
@@ -874,6 +964,7 @@
                 if (chatFileInput) {
                     chatFileInput.value = "";
                 }
+                syncMessagesState({ stickToBottom: true });
             })
             .catch(() => {
                 showMessagingError("We could not send that attachment right now.");
@@ -892,48 +983,34 @@
             return;
         }
         closeEmojiPicker();
-
-        function sendViaHttpFallback() {
-            fetch(`/messages/${conversation.id}/send/`, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrftoken,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ message: text }),
+        sendBtn.disabled = true;
+        fetch(`/messages/${conversation.id}/send/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrftoken,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message: text }),
+        })
+            .then(async (response) => {
+                const data = await response.json();
+                return { ok: response.ok, data };
             })
-                .then(async (response) => {
-                    const data = await response.json();
-                    return { ok: response.ok, data };
-                })
-                .then((result) => {
-                    if (!result.ok || !result.data.ok) {
-                        showMessagingError((result.data && result.data.error) || "We could not send your message right now.");
-                        return;
-                    }
-                    applySentMessage(result);
-                    chatInput.value = "";
-                    sendBtn.disabled = true;
-                })
-                .catch(() => {
-                    showMessagingError("We could not send your message right now.");
-                });
-        }
-
-        if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
-            sendViaHttpFallback();
-            return;
-        }
-
-        try {
-            chatSocket.send(JSON.stringify({
-                message: text,
-            }));
-            chatInput.value = "";
-            sendBtn.disabled = true;
-        } catch (error) {
-            sendViaHttpFallback();
-        }
+            .then((result) => {
+                if (!result.ok || !result.data.ok) {
+                    sendBtn.disabled = chatInput.value.trim().length === 0;
+                    showMessagingError((result.data && result.data.error) || "We could not send your message right now.");
+                    return;
+                }
+                applySentMessage(result);
+                chatInput.value = "";
+                sendBtn.disabled = true;
+                syncMessagesState({ stickToBottom: true });
+            })
+            .catch(() => {
+                sendBtn.disabled = chatInput.value.trim().length === 0;
+                showMessagingError("We could not send your message right now.");
+            });
     }
 
     function openComingSoonModal(title, body) {
@@ -1657,9 +1734,16 @@
         });
     }
 
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            syncMessagesState();
+        }
+    });
+
     connectSocket();
     renderEmojiPicker();
-    renderAll();
+    renderAll({ stickToBottom: true });
+    scheduleMessagesSync();
     if (initialMessageError) {
         openModal("Messaging blocked", `<p>${initialMessageError}</p>`);
     }

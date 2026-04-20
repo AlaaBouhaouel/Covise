@@ -36,6 +36,7 @@ urlpatterns = [
     path('projects/', views.projects, name='Projects'),
     path('projects/<slug:project_slug>/', views.project_detail, name='Project Detail'),
     path('messages/', views.messages, name='Messages'),
+    path('messages/state/', views.messages_state, name='Messages State'),
     path('requests/', views.requests_page, name='Requests'),
     path('messages/groups/create/', views.create_group_conversation, name='Create Group Conversation'),
     path('messages/<uuid:conversation_id>/send/', views.send_message, name='Send Message'),

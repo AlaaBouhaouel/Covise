@@ -1,3 +1,4 @@
+import json
 import shutil
 from unittest.mock import patch
 from tempfile import mkdtemp
@@ -1726,6 +1727,31 @@ class MessagingConversationNormalizationTests(TestCase):
             response.context["message_error"],
             "We couldn't open this conversation right now. Please try again.",
         )
+
+    def test_messages_state_endpoint_returns_latest_saved_message_snapshot(self):
+        conversation = self._create_private_conversation(created_by=self.user)
+
+        send_response = self.client.post(
+            reverse("Send Message", args=[conversation.id]),
+            data=json.dumps({"message": "Fresh sync message"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(send_response.status_code, 200)
+        self.assertTrue(send_response.json()["ok"])
+
+        state_response = self.client.get(
+            reverse("Messages State"),
+            {"conversation": str(conversation.id)},
+        )
+
+        self.assertEqual(state_response.status_code, 200)
+        payload = state_response.json()
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["active_conversation_id"], str(conversation.id))
+        self.assertEqual(len(payload["conversation_data"]), 1)
+        self.assertEqual(payload["conversation_data"][0]["preview"], "Fresh sync message")
+        self.assertEqual(payload["conversation_data"][0]["messages"][-1]["text"], "Fresh sync message")
 
     def test_accept_request_succeeds_with_duplicate_private_threads_present(self):
         incoming_request = ConversationRequest.objects.create(
