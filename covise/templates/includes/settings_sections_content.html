@@ -2,35 +2,60 @@
 <form method="post" action="{{ settings_form_action }}" enctype="multipart/form-data" data-settings-form>
     {% csrf_token %}
     <input type="hidden" name="save_section" value="personal_data">
-        <section class="panel settings-section settings-detail-panel notifications-section" data-settings-searchable>
-            <div class="section-top"><h2>ACCOUNT</h2></div>
-            <div class="settings-stack">
-                <div class="settings-row settings-photo-row">
-                    <div class="row-copy settings-photo-row__copy">
-                        <strong>Profile Photo</strong>
-                        <span>Use a clear square image so your messages and profile feel recognizable.</span>
-                    </div>
-                    <div class="row-control settings-photo-row__control">
-                        <div class="settings-photo-row__preview">
+        <section class="panel profile-section-panel settings-section settings-detail-panel notifications-section" data-settings-searchable>
+            <div class="section-top profile-section-head"><h2>ACCOUNT</h2></div>
+            <div class="settings-stack profile-section-stack">
+                <div class="settings-row profile-photo-row">
+                    <div class="first-col">
+                        <div class="row-copy profile-photo-row__copy">
+                            <strong>Profile Photo</strong>
+                            <span>Use a clear square image so your messages and profile feel recognizable.</span>
+                        </div>
+                        <div class="profile-photo-row__preview">
                             {% if ui_user.avatar_url %}
                             <img class="avatar-image small-avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
                             {% else %}
                             <span class="avatar small-avatar" data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}">{{ ui_user.avatar_initials }}</span>
                             {% endif %}
                         </div>
-                        <div class="settings-photo-row__actions">
-                            <input class="settings-photo-input" id="settingsAccountPhotoInput" name="profile_image" type="file" accept="image/*">
-                            <label class="outline-btn compact-btn" for="settingsAccountPhotoInput">Change</label>
-                            <button class="text-link compact-btn settings-photo-remove-btn" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button>
-                        </div>
+                    </div>
+                    <div class="row-control profile-photo-row__controls">
+                        <input class="settings-photo-input profile-photo-input" id="settingsAccountPhotoInput" name="profile_image" type="file" accept="image/*">
+                        <label class="primary-btn save-btn save-btn" for="settingsAccountPhotoInput">Change</label>
+                        <button class="text-link danger-link cancel-btn settings-photo-remove-btn" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button>
                     </div>
                 </div>
-                <div class="settings-row"><div class="row-copy"><strong>Full Name</strong></div><div class="row-control input-action"><input type="text" name="full_name" value="{{ settings_page.display_name }}"></div></div>
-            <div class="settings-row"><div class="row-copy"><strong>Email</strong><span>Changing your email requires verification.</span></div><div class="row-control input-action"><input type="text" name="email" value="{{ settings_page.email }}"></div></div>
-            <div class="settings-row"><div class="row-copy"><strong>Phone Number</strong></div><div class="row-control input-action"><input type="text" name="phone_number" value="{{ settings_page.phone_number }}"></div></div>
-            <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Security</strong><span>Password, sign-ins, and two-factor authentication.</span></div></div><a class="outline-btn" href="{% url 'Account Security' %}">Security</a></div>
-            <div class="settings-row"><div class="row-copy"><strong>Guidelines</strong><span>{% if settings_page.platform_agreement_accepted %}Accepted on {{ settings_page.platform_agreement_accepted_at|date:"M j, Y" }}{% else %}Review the community standards for posting, outreach, and collaboration.{% endif %}</span></div><div class="row-control input-action"><a class="outline-btn guidelines-btn" href="{% url 'Agreement' %}">{% if settings_page.platform_agreement_accepted %}View Guidelines{% else %}Read Guidelines{% endif %}</a></div></div>
-            <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="personal_data">Save Changes</button></div>
+                <label class="profile-field">
+                    <span>Full Name</span>
+                    <input type="text" name="full_name" value="{{ settings_page.display_name }}">
+                </label>
+                <label class="profile-field">
+                    <span>Email</span>
+                    <input type="text" name="email" value="{{ settings_page.email }}">
+                </label>
+                <label class="profile-field">
+                    <span>Phone Number</span>
+                    <input type="text" name="phone_number" value="{{ settings_page.phone_number }}">
+                </label>
+                <div class="settings-row profile-section-entry">
+                    <div class="row-copy profile-section-entry__copy">
+                        <strong>Security <br></strong>
+                        <span>Password, sign-ins, and two-factor authentication.</span>
+                    </div>
+                    <div class="row-control input-action">
+                        <a class="compact-btn primary-btn" href="{% url 'Account Security' %}">Security</a>
+                    </div>
+                </div>
+                <div class="settings-row profile-section-entry">
+                    <div class="row-copy profile-section-entry__copy">
+                        <strong>Guidelines</strong>
+                        <span>{% if settings_page.platform_agreement_accepted %}Accepted on {{ settings_page.platform_agreement_accepted_at|date:"M j, Y" }}{% else %}Review the community standards for posting, outreach, and collaboration.{% endif %}</span>
+                    </div>
+                    <div class="row-control input-action">
+                        <a class="compact-btn primary-btn" href="{% url 'Agreement' %}">{% if settings_page.platform_agreement_accepted %}View Guidelines{% else %}Read Guidelines{% endif %}</a>
+                    </div>
+                </div>
+            <div class="profile-section-actions"><button class="primary-btn save-btn" data-default-label="Save Changes" type="submit" name="save_section" value="personal_data">Save Changes</button></div>
         </div>
     </section>
 </form>
@@ -39,21 +64,36 @@
 {% if settings_active_section == "profile-details" %}
 <form method="post" action="{{ settings_form_action }}" data-settings-form>
     {% csrf_token %}
-    <section class="panel settings-section settings-detail-panel" data-settings-searchable>
-        <div class="section-top"><h2>PROFILE DETAILS</h2></div>
-        <div class="settings-stack">
-            <div class="settings-row"><div class="row-copy"><strong>LinkedIn</strong><span>Imported from your waitlist or onboarding profile.</span></div><div class="row-control input-action"><input type="url" name="linkedin" value="{{ settings_page.linkedin_url }}"></div></div>
-            <div class="settings-row"><div class="row-copy"><strong>GitHub</strong><span>Add your GitHub if you are a developer.</span></div><div class="row-control input-action"><input type="url" name="github" value="{{ settings_page.github_url }}"></div></div>
-            <div class="settings-row"><div class="row-copy"><strong>Proof of Work</strong><span>Portfolio, demos, or anything that proves how you build.</span></div><div class="row-control input-action"><input type="url" name="proof_of_work_url" value="{{ settings_page.proof_of_work_url }}"></div></div>
-            <div class="settings-row"><div class="row-copy"><strong>Location</strong><span>Used across your profile and matching context.</span></div><div class="row-control input-action"><input type="text" name="location" value="{{ settings_page.location }}"></div></div>
-            <div class="settings-row"><div class="row-copy"><strong>Nationality</strong><span>Useful for cross-border founder and operator matching.</span></div><div class="row-control input-action"><input type="text" name="nationality" value="{{ settings_page.nationality }}"></div></div>
-            <div class="settings-row"><div class="row-copy"><strong>Bio</strong><span>Your top-line founder summary.</span></div><div class="row-control input-action"><input type="text" name="bio" value="{{ settings_page.bio }}"></div></div>
-            <div class="settings-row settings-row-block">
-                <div class="row-copy">
-                    <strong>Top Skills</strong>
-                    <span>Choose from the same canonical onboarding skills used for tagging across your posts.</span>
-                </div>
-                <div class="row-control skills-control">
+    <section class="panel profile-section-panel settings-section settings-detail-panel" data-settings-searchable>
+        <div class="section-top profile-section-head"><h2>PROFILE DETAILS</h2></div>
+        <div class="settings-stack profile-section-stack">
+            <label class="profile-field">
+                <span>LinkedIn</span>
+                <input type="url" name="linkedin" value="{{ settings_page.linkedin_url }}">
+            </label>
+            <label class="profile-field">
+                <span>GitHub</span>
+                <input type="url" name="github" value="{{ settings_page.github_url }}">
+            </label>
+            <label class="profile-field">
+                <span>Proof of Work</span>
+                <input type="url" name="proof_of_work_url" value="{{ settings_page.proof_of_work_url }}">
+            </label>
+            <label class="profile-field">
+                <span>Location</span>
+                <input type="text" name="location" value="{{ settings_page.location }}">
+            </label>
+            <label class="profile-field">
+                <span>Nationality</span>
+                <input type="text" name="nationality" value="{{ settings_page.nationality }}">
+            </label>
+            <label class="profile-field">
+                <span>Bio</span>
+                <input type="text" name="bio" value="{{ settings_page.bio }}">
+            </label>
+            <div class="profile-field">
+                <span>Top Skills</span>
+                <div class="skills-control">
                     <input type="hidden" name="skills" value="{{ settings_page.skills_selected|join:'|' }}">
                     <div class="skills-picker" id="settingsSkillsPicker" data-max-selected="{{ settings_page.skills_max_selected }}">
                         <button class="skills-picker-toggle" type="button" aria-expanded="false">
@@ -85,35 +125,37 @@
                     </div>
                 </div>
             </div>
-            <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="professional_data">Save Changes</button></div>
+            <div class="profile-section-actions"><button class="primary-btn save-btn" data-default-label="Save Changes" type="submit" name="save_section" value="professional_data">Save Changes</button></div>
         </div>
     </section>
 </form>
 {% endif %}
 
 {% if settings_active_section == "saved-posts" %}
-<section class="panel settings-section settings-detail-panel" data-settings-searchable>
-    <div class="section-top">
+<section class="panel profile-section-panel settings-section settings-detail-panel" data-settings-searchable>
+    <div class="section-top profile-section-head">
         <h2>SAVED POSTS</h2>
         <div class="row-inline-actions">
             <span class="section-note">Posts you bookmarked to revisit later.</span>
             {% if settings_page.saved_posts_has_more %}
-            <button class="outline-btn" id="savedPostsToggle" type="button" aria-expanded="false">View all</button>
+            <button class="primary-btn save-btn" id="savedPostsToggle" type="button" aria-expanded="false">View all</button>
             {% endif %}
         </div>
     </div>
-    <div class="settings-stack">
+    <div class="settings-stack profile-section-stack">
         {% for saved_post in settings_page.saved_posts_preview %}
-        <div class="settings-row">
-            <div class="row-copy">
+        <div class="settings-row saved-post-item profile-saved-post-row">
+            <div class="row-copy saved-post-copy">
                 <strong>{{ saved_post.title }}</strong>
                 <span>{{ saved_post.author }} · Saved {{ saved_post.saved_at }}</span>
             </div>
-            <a class="outline-btn" href="{% url 'Post Detail' saved_post.id %}">Open</a>
+            <div class="profile-saved-post-row__actions">
+                <a class="primary-btn save-btn saved-post-link" href="{% url 'Post Detail' saved_post.id %}">Open</a>
+            </div>
         </div>
         {% empty %}
-        <div class="settings-row">
-            <div class="row-copy">
+        <div class="settings-row saved-post-item">
+            <div class="row-copy saved-post-copy">
                 <strong>No saved posts yet</strong>
                 <span>Bookmark posts from the feed or post page and they will show up here.</span>
             </div>
@@ -121,14 +163,16 @@
         {% endfor %}
     </div>
     {% if settings_page.saved_posts_has_more %}
-    <div class="settings-stack" id="savedPostsAll" hidden>
+    <div class="settings-stack profile-section-stack" id="savedPostsAll" hidden>
         {% for saved_post in settings_page.saved_posts|slice:"2:" %}
-        <div class="settings-row">
-            <div class="row-copy">
+        <div class="settings-row saved-post-item profile-saved-post-row">
+            <div class="row-copy saved-post-copy">
                 <strong>{{ saved_post.title }}</strong>
                 <span>{{ saved_post.author }} · Saved {{ saved_post.saved_at }}</span>
             </div>
-            <a class="outline-btn" href="{% url 'Post Detail' saved_post.id %}">Open</a>
+            <div class="profile-saved-post-row__actions">
+                <a class="primary-btn save-btn saved-post-link" href="{% url 'Post Detail' saved_post.id %}">Open</a>
+            </div>
         </div>
         {% endfor %}
     </div>
@@ -137,50 +181,50 @@
 {% endif %}
 
 {% if settings_active_section == "blocked-users" %}
-<section class="panel settings-section settings-detail-panel" data-settings-searchable>
-    <div class="section-top">
+<section class="panel profile-section-panel settings-section settings-detail-panel" data-settings-searchable>
+    <div class="section-top profile-section-head">
         <h2>BLOCKED USERS</h2>
         <div class="row-inline-actions">
             <span class="section-note">People you block cannot message you, and their posts stay hidden from your feed.</span>
             {% if settings_page.blocked_users|length > 2 %}
-            <button class="outline-btn" id="blockedUsersToggle" type="button" aria-expanded="false">View all</button>
+            <button class="primary-btn save-btn" id="blockedUsersToggle" type="button" aria-expanded="false">View all</button>
             {% endif %}
         </div>
     </div>
-    <div class="settings-stack">
+    <div class="settings-stack profile-section-stack">
         {% for blocked_user in settings_page.blocked_users|slice:":2" %}
-        <div class="settings-row">
-            <div class="row-copy">
+        <div class="settings-row profile-section-entry">
+            <div class="row-copy profile-section-entry__copy">
                 <strong>{{ blocked_user.display_name }}</strong>
-                <span>Blocked {{ blocked_user.blocked_at }}</span>
+                <p class="profile-panel-subcopy">Blocked {{ blocked_user.blocked_at }}</p>
             </div>
             <form method="post" action="{% url 'Toggle Block User' blocked_user.id %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ settings_return_url }}">
-                <button class="outline-btn" type="submit">Unblock</button>
+                <button class="primary-btn save-btn" type="submit">Unblock</button>
             </form>
         </div>
         {% empty %}
-        <div class="settings-row">
-            <div class="row-copy">
+        <div class="settings-row profile-section-entry">
+            <div class="row-copy profile-section-entry__copy">
                 <strong>No blocked users</strong>
-                <span>Block someone from their profile or from the Messages page and they will appear here.</span>
+                <p class="profile-panel-subcopy">Block someone from their profile or from the Messages page and they will appear here.</p>
             </div>
         </div>
         {% endfor %}
     </div>
     {% if settings_page.blocked_users|length > 2 %}
-    <div class="settings-stack" id="blockedUsersAll" hidden>
+    <div class="settings-stack profile-section-stack" id="blockedUsersAll" hidden>
         {% for blocked_user in settings_page.blocked_users|slice:"2:" %}
-        <div class="settings-row">
-            <div class="row-copy">
+        <div class="settings-row profile-section-entry">
+            <div class="row-copy profile-section-entry__copy">
                 <strong>{{ blocked_user.display_name }}</strong>
-                <span>Blocked {{ blocked_user.blocked_at }}</span>
+                <p class="profile-panel-subcopy">Blocked {{ blocked_user.blocked_at }}</p>
             </div>
             <form method="post" action="{% url 'Toggle Block User' blocked_user.id %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ settings_return_url }}">
-                <button class="outline-btn" type="submit">Unblock</button>
+                <button class="primary-btn save-btn" type="submit">Unblock</button>
             </form>
         </div>
         {% endfor %}
@@ -190,42 +234,42 @@
 {% endif %}
 
 {% if settings_active_section == "experience-projects" %}
-<section class="panel settings-section settings-detail-panel" data-settings-searchable>
-    <div class="section-top">
+<section class="panel profile-section-panel settings-section settings-detail-panel" data-settings-searchable>
+    <div class="section-top profile-section-head">
         <h2>Experiences and Projects</h2>
         <span class="section-note">Add the work and ventures you want people to notice first.</span>
     </div>
-    <div class="entry-builder">
+    <div class="entry-builder profile-section-grid">
         <form method="post" action="{{ settings_form_action }}" class="entry-form" data-settings-form>
             {% csrf_token %}
-            <article class="entry-column">
+            <article class="entry-column profile-editor-card">
                 <div class="entry-column-head">
                     <div>
                         <h3>Experience</h3>
                         <p>Add roles, dates, and the impact behind them.</p>
                     </div>
-                    <button class="outline-btn" type="button" data-toggle-panel="experience-panel">Add Experience</button>
+                    <button class="primary-btn save-btn" type="button" data-toggle-panel="experience-panel">Add Experience</button>
                 </div>
-                <div class="entry-card" id="experience-panel" hidden>
-                    <div class="entry-grid">
-                        <label class="entry-field">
+                <div class="entry-card profile-editor-card profile-editor-card--new" id="experience-panel" hidden>
+                    <div class="entry-grid profile-section-grid">
+                        <label class="entry-field profile-field">
                             <span>Title or Role</span>
                             <input class="entry-input" type="text" name="title" placeholder="Founding Product Designer">
                         </label>
-                        <label class="entry-field">
+                        <label class="entry-field profile-field">
                             <span>Date or Period</span>
-                            <input class="entry-input" type="date" name="date">
+                            <input class="entry-input" type="text" name="date" placeholder="e.g. 2022 – 2024 or Jan 2023 – Present">
                         </label>
                     </div>
-                    <label class="entry-field">
+                    <label class="entry-field profile-field profile-field--full">
                         <span>Description</span>
                         <textarea class="entry-textarea" name="desc" rows="4" placeholder="Summarize what you built, owned, or improved."></textarea>
                     </label>
-                    <div class="entry-actions">
+                    <div class="entry-actions profile-editor-actions">
                         <span class="mini-chip">Visible on profile</span>
                         <div class="entry-action-buttons">
-                            <button class="text-link" type="button" data-hide-panel="experience-panel">Cancel</button>
-                            <button class="primary-btn" data-default-label="Save Experience" type="submit" name="save_section" value="experiences">Save Experience</button>
+                            <button class="primary-btn cancel-btn" type="button" data-hide-panel="experience-panel">Cancel</button>
+                            <button class="primary-btn save-btn" data-default-label="Save Experience" type="submit" name="save_section" value="experiences">Save Experience</button>
                         </div>
                     </div>
                 </div>
@@ -234,34 +278,34 @@
 
         <form method="post" action="{{ settings_form_action }}" class="entry-form" data-settings-form>
             {% csrf_token %}
-            <article class="entry-column">
+            <article class="entry-column profile-editor-card">
                 <div class="entry-column-head">
                     <div>
                         <h3>Active Projects</h3>
                         <p>Show what you are building now and why it matters.</p>
                     </div>
-                    <button class="outline-btn" type="button" data-toggle-panel="project-panel">Add Project</button>
+                    <button class="primary-btn save-btn" type="button" data-toggle-panel="project-panel">Add Project</button>
                 </div>
-                <div class="entry-card" id="project-panel" hidden>
-                    <div class="entry-grid">
-                        <label class="entry-field">
+                <div class="entry-card profile-editor-card profile-editor-card--new" id="project-panel" hidden>
+                    <div class="entry-grid profile-section-grid">
+                        <label class="entry-field profile-field">
                             <span>Project Name</span>
                             <input class="entry-input" type="text" name="name" placeholder="B2B marketplace for regional suppliers">
                         </label>
-                        <label class="entry-field">
+                        <label class="entry-field profile-field">
                             <span>Status</span>
                             <input class="entry-input" type="text" name="status" placeholder="MVP in progress">
                         </label>
                     </div>
-                    <label class="entry-field">
+                    <label class="entry-field profile-field profile-field--full">
                         <span>Description</span>
                         <textarea class="entry-textarea" name="desc" rows="4" placeholder="Share the problem, current traction, or what support you need."></textarea>
                     </label>
-                    <div class="entry-actions">
+                    <div class="entry-actions profile-editor-actions">
                         <span class="mini-chip">Shown as active</span>
                         <div class="entry-action-buttons">
-                            <button class="text-link" type="button" data-hide-panel="project-panel">Cancel</button>
-                            <button class="primary-btn" data-default-label="Save Project" type="submit" name="save_section" value="projects">Save Project</button>
+                            <button class="primary-btn cancel-btn" type="button" data-hide-panel="project-panel">Cancel</button>
+                            <button class="primary-btn save-btn" data-default-label="Save Project" type="submit" name="save_section" value="projects">Save Project</button>
                         </div>
                     </div>
                 </div>
@@ -281,18 +325,18 @@
     {% if settings_page.cofounder_badge_available %}
     <input type="hidden" name="show_cofounder_badge" value="{% if settings_page.show_cofounder_badge %}true{% else %}false{% endif %}">
     {% endif %}
-    <section class="panel settings-section settings-detail-panel" data-settings-searchable>
-        <div class="section-top"><h2>PROFILE VISIBILITY</h2></div>
-        <div class="settings-stack">
+    <section class="panel profile-section-panel settings-section settings-detail-panel" data-settings-searchable>
+        <div class="section-top profile-section-head"><h2>PROFILE VISIBILITY</h2></div>
+        <div class="settings-stack profile-section-stack">
             <div class="settings-row settings-row-block"><div class="row-copy"><strong>Who can see your profile</strong></div><div class="row-control"><div class="selector-group single-select" data-group="profile_visibility"><button class="selector-pill{% if settings_page.preferences.profile_visibility == 'everyone' %} is-active{% endif %}" data-value="everyone" type="button">Everyone</button><button class="selector-pill{% if settings_page.preferences.profile_visibility == 'matched_only' %} is-active{% endif %}" data-value="matched_only" type="button">Matched users only</button><button class="selector-pill{% if settings_page.preferences.profile_visibility == 'nobody' %} is-active{% endif %}" data-value="nobody" type="button">Nobody</button></div></div></div>
-            <div class="settings-row"><div class="row-copy"><strong>Show LinkedIn to matches</strong><span>Your LinkedIn profile link will be shown to your matches.</span></div><button class="toggle-switch{% if settings_page.preferences.show_linkedin_to_matches %} active{% endif %}" data-field="show_linkedin_to_matches" type="button" aria-pressed="{% if settings_page.preferences.show_linkedin_to_matches %}true{% else %}false{% endif %}"></button></div>
-            <div class="settings-row"><div class="row-copy"><strong>Appear in search results</strong><span>Turn this off to become invisible in platform search.</span></div><button class="toggle-switch{% if settings_page.preferences.appear_in_search %} active{% endif %}" data-field="appear_in_search" type="button" aria-pressed="{% if settings_page.preferences.appear_in_search %}true{% else %}false{% endif %}"></button></div>
-            <div class="settings-row settings-row-block"><div class="row-copy"><strong>Pause matching</strong><span>Temporarily stop appearing in other users' match lists. Your existing matches are unaffected.</span></div><button class="toggle-switch{% if settings_page.preferences.pause_matching %} active{% endif %}" data-field="pause_matching" id="pauseMatchingToggle" type="button" aria-pressed="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}"></button></div>
+            <div class="settings-row"><div class="row-copy"><strong>Show LinkedIn to matches</strong><span>Your LinkedIn profile link will be shown to your matches.</span></div><button class="toggle-switch selector-pill{% if settings_page.preferences.show_linkedin_to_matches %} active is-active{% endif %}" data-field="show_linkedin_to_matches" type="button" aria-pressed="{% if settings_page.preferences.show_linkedin_to_matches %}true{% else %}false{% endif %}">Toggle</button></div>
+            <div class="settings-row"><div class="row-copy"><strong>Appear in search results</strong><span>Turn this off to become invisible in platform search.</span></div><button class="toggle-switch selector-pill{% if settings_page.preferences.appear_in_search %} active is-active{% endif %}" data-field="appear_in_search" type="button" aria-pressed="{% if settings_page.preferences.appear_in_search %}true{% else %}false{% endif %}">Toggle</button></div>
+            <div class="settings-row settings-row-block"><div class="row-copy"><strong>Pause matching</strong><span>Temporarily stop appearing in other users' match lists. Your existing matches are unaffected.</span></div><button class="toggle-switch selector-pill{% if settings_page.preferences.pause_matching %} active is-active{% endif %}" data-field="pause_matching" id="pauseMatchingToggle" type="button" aria-pressed="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}">Toggle</button></div>
             {% if settings_page.cofounder_badge_available %}
-            <div class="settings-row"><div class="row-copy"><strong>Show "Looking for Cofounder" badge</strong><span>Display a cofounder badge beside your name on your posts and post details.</span></div><button class="toggle-switch{% if settings_page.show_cofounder_badge %} active{% endif %}" data-field="show_cofounder_badge" type="button" aria-pressed="{% if settings_page.show_cofounder_badge %}true{% else %}false{% endif %}"></button></div>
+            <div class="settings-row"><div class="row-copy"><strong>Show "Looking for Cofounder" badge</strong><span>Display a cofounder badge beside your name on your posts and post details.</span></div><button class="toggle-switch selector-pill{% if settings_page.show_cofounder_badge %} active is-active{% endif %}" data-field="show_cofounder_badge" type="button" aria-pressed="{% if settings_page.show_cofounder_badge %}true{% else %}false{% endif %}">Toggle</button></div>
             {% endif %}
-            <div class="warning-banner" id="pauseMatchingBanner" hidden>You are currently paused. You will not appear in new match results.</div>
-            <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="profile_preferences">Save Changes</button></div>
+            <div class="warning-banner profile-inline-feedback profile-inline-feedback--error" id="pauseMatchingBanner" hidden>You are currently paused. You will not appear in new match results.</div>
+            <div class="profile-section-actions"><button class="primary-btn save-btn" data-default-label="Save Changes" type="submit" name="save_section" value="profile_preferences">Save Changes</button></div>
         </div>
     </section>
 </form>
@@ -309,31 +353,31 @@
     <input type="hidden" name="ai_send_messages" value="{% if settings_page.preferences.ai_send_messages %}true{% else %}false{% endif %}">
     <input type="hidden" name="ai_edit_workspace" value="{% if settings_page.preferences.ai_edit_workspace %}true{% else %}false{% endif %}">
     <input type="hidden" name="ai_manage_milestones" value="{% if settings_page.preferences.ai_manage_milestones %}true{% else %}false{% endif %}">
-    <section class="panel settings-section settings-detail-panel" data-settings-searchable>
-        <div class="section-top"><h2>COVISE AI AGENT</h2></div>
-        <div class="info-banner">CoVise AI Agent is not available yet. This section is a preview of the controls that will launch soon.</div>
-        <div class="warning-note">AI permissions, approvals, and activity controls are still being built and cannot be used yet.</div>
-        <div class="settings-stack">
-            <div class="settings-row"><div class="row-copy"><strong>Enable CoVise AI Agent</strong><span>This master control will activate once the AI agent is ready.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_enabled %} active{% endif %}" data-field="ai_enabled" id="aiMasterToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_enabled %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
+    <section class="panel profile-section-panel settings-section settings-detail-panel" data-settings-searchable>
+        <div class="section-top profile-section-head"><h2>COVISE AI AGENT</h2></div>
+        <div class="info-banner profile-inline-feedback profile-inline-feedback--success">CoVise AI Agent is not available yet. This section is a preview of the controls that will launch soon.</div>
+        <div class="warning-note profile-panel-subcopy">AI permissions, approvals, and activity controls are still being built and cannot be used yet.</div>
+        <div class="settings-stack profile-section-stack">
+            <div class="settings-row"><div class="row-copy"><strong>Enable CoVise AI Agent</strong><span>This master control will activate once the AI agent is ready.</span></div><button class="toggle-switch selector-pill locked{% if settings_page.preferences.ai_enabled %} active is-active{% endif %}" data-field="ai_enabled" id="aiMasterToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_enabled %}true{% else %}false{% endif %}" aria-disabled="true" disabled>Locked</button></div>
         </div>
-        <div class="permission-shell permissions-disabled" id="aiPermissionShell" data-unavailable="true" aria-disabled="true">
+        <div class="permission-shell permissions-disabled profile-editor-card" id="aiPermissionShell" data-unavailable="true" aria-disabled="true">
             <div class="permission-group-head"><span>READ ONLY PERMISSIONS</span></div>
-            <div class="settings-stack">
-                <div class="settings-row"><div class="row-copy"><strong>Read my profile and venture data</strong><span>Will be used to personalize AI recommendations once the agent launches.</span></div><button class="toggle-switch locked{% if settings_page.preferences.read_profile_data %} active{% endif %}" data-field="read_profile_data" type="button" aria-pressed="{% if settings_page.preferences.read_profile_data %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
-                <div class="settings-row"><div class="row-copy"><strong>Read my messages (summaries only)</strong><span>This summary access is planned but is not available yet.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_read_messages %} active{% endif %}" data-field="ai_read_messages" type="button" aria-pressed="{% if settings_page.preferences.ai_read_messages %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
-                <div class="settings-row"><div class="row-copy"><strong>Read workspace content</strong><span>This workspace review flow is still under development.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_read_workspace %} active{% endif %}" data-field="ai_read_workspace" type="button" aria-pressed="{% if settings_page.preferences.ai_read_workspace %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
+            <div class="settings-stack profile-section-stack">
+                <div class="settings-row"><div class="row-copy"><strong>Read my profile and venture data</strong><span>Will be used to personalize AI recommendations once the agent launches.</span></div><button class="toggle-switch selector-pill locked{% if settings_page.preferences.read_profile_data %} active is-active{% endif %}" data-field="read_profile_data" type="button" aria-pressed="{% if settings_page.preferences.read_profile_data %}true{% else %}false{% endif %}" aria-disabled="true" disabled>Locked</button></div>
+                <div class="settings-row"><div class="row-copy"><strong>Read my messages (summaries only)</strong><span>This summary access is planned but is not available yet.</span></div><button class="toggle-switch selector-pill locked{% if settings_page.preferences.ai_read_messages %} active is-active{% endif %}" data-field="ai_read_messages" type="button" aria-pressed="{% if settings_page.preferences.ai_read_messages %}true{% else %}false{% endif %}" aria-disabled="true" disabled>Locked</button></div>
+                <div class="settings-row"><div class="row-copy"><strong>Read workspace content</strong><span>This workspace review flow is still under development.</span></div><button class="toggle-switch selector-pill locked{% if settings_page.preferences.ai_read_workspace %} active is-active{% endif %}" data-field="ai_read_workspace" type="button" aria-pressed="{% if settings_page.preferences.ai_read_workspace %}true{% else %}false{% endif %}" aria-disabled="true" disabled>Locked</button></div>
             </div>
             <div class="permission-group-head"><span>ACTION PERMISSIONS</span><small>These actions will unlock later after the AI agent is fully available.</small></div>
-            <div class="settings-stack">
-                <div class="settings-row settings-row-block"><div class="row-copy"><strong>Post updates on my behalf</strong><span>This approval-based posting flow is not available yet.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_post_updates %} active{% endif %}" data-field="ai_post_updates" id="aiPostToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_post_updates %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
-                <div class="warning-banner" id="aiPostBanner" hidden>The AI will draft posts for your approval before publishing. You can review in AI Activity Log.</div>
-                <div class="settings-row settings-row-block"><div class="row-copy"><strong>Send messages to matches</strong><span>This assisted outreach flow is not available yet.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_send_messages %} active{% endif %}" data-field="ai_send_messages" id="aiMessageToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_send_messages %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
-                <div class="warning-banner" id="aiMessageBanner" hidden>Messages will be drafted for your review before sending.</div>
-                <div class="settings-row"><div class="row-copy"><strong>Edit workspace content</strong><span>Workspace editing by AI is still under development.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_edit_workspace %} active{% endif %}" data-field="ai_edit_workspace" type="button" aria-pressed="{% if settings_page.preferences.ai_edit_workspace %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
-                <div class="settings-row"><div class="row-copy"><strong>Schedule and manage milestones</strong><span>Milestone planning assistance is not available yet.</span></div><button class="toggle-switch locked{% if settings_page.preferences.ai_manage_milestones %} active{% endif %}" data-field="ai_manage_milestones" type="button" aria-pressed="{% if settings_page.preferences.ai_manage_milestones %}true{% else %}false{% endif %}" aria-disabled="true" disabled></button></div>
+            <div class="settings-stack profile-section-stack">
+                <div class="settings-row settings-row-block"><div class="row-copy"><strong>Post updates on my behalf</strong><span>This approval-based posting flow is not available yet.</span></div><button class="toggle-switch selector-pill locked{% if settings_page.preferences.ai_post_updates %} active is-active{% endif %}" data-field="ai_post_updates" id="aiPostToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_post_updates %}true{% else %}false{% endif %}" aria-disabled="true" disabled>Locked</button></div>
+                <div class="warning-banner profile-inline-feedback profile-inline-feedback--error" id="aiPostBanner" hidden>The AI will draft posts for your approval before publishing. You can review in AI Activity Log.</div>
+                <div class="settings-row settings-row-block"><div class="row-copy"><strong>Send messages to matches</strong><span>This assisted outreach flow is not available yet.</span></div><button class="toggle-switch selector-pill locked{% if settings_page.preferences.ai_send_messages %} active is-active{% endif %}" data-field="ai_send_messages" id="aiMessageToggle" type="button" aria-pressed="{% if settings_page.preferences.ai_send_messages %}true{% else %}false{% endif %}" aria-disabled="true" disabled>Locked</button></div>
+                <div class="warning-banner profile-inline-feedback profile-inline-feedback--error" id="aiMessageBanner" hidden>Messages will be drafted for your review before sending.</div>
+                <div class="settings-row"><div class="row-copy"><strong>Edit workspace content</strong><span>Workspace editing by AI is still under development.</span></div><button class="toggle-switch selector-pill locked{% if settings_page.preferences.ai_edit_workspace %} active is-active{% endif %}" data-field="ai_edit_workspace" type="button" aria-pressed="{% if settings_page.preferences.ai_edit_workspace %}true{% else %}false{% endif %}" aria-disabled="true" disabled>Locked</button></div>
+                <div class="settings-row"><div class="row-copy"><strong>Schedule and manage milestones</strong><span>Milestone planning assistance is not available yet.</span></div><button class="toggle-switch selector-pill locked{% if settings_page.preferences.ai_manage_milestones %} active is-active{% endif %}" data-field="ai_manage_milestones" type="button" aria-pressed="{% if settings_page.preferences.ai_manage_milestones %}true{% else %}false{% endif %}" aria-disabled="true" disabled>Locked</button></div>
             </div>
         </div>
-        <div class="section-footer full-width"><button class="primary-btn wide-btn locked-link" data-default-label="Not Available Yet" type="button" aria-disabled="true" disabled>Not Available Yet</button></div>
+        <div class="profile-section-actions"><button class="primary-btn save-btn locked-link" data-default-label="Not Available Yet" type="button" aria-disabled="true" disabled>Not Available Yet</button></div>
     </section>
 </form>
 {% endif %}
@@ -359,39 +403,39 @@
     <input type="hidden" name="in_app_platform_updates" value="{% if settings_page.preferences.in_app_platform_updates %}true{% else %}false{% endif %}">
     <input type="hidden" name="in_app_marketing" value="{% if settings_page.preferences.in_app_marketing %}true{% else %}false{% endif %}">
     <input type="hidden" name="email_frequency" value="{{ settings_page.preferences.email_frequency }}">
-    <section class="panel settings-section settings-detail-panel" data-settings-searchable>
-        <div class="section-top"><h2>NOTIFICATIONS</h2></div>
-        <div class="two-panel-grid">
-            <div class="inner-panel">
+    <section class="panel profile-section-panel settings-section settings-detail-panel" data-settings-searchable>
+        <div class="section-top profile-section-head"><h2>NOTIFICATIONS</h2></div>
+        <div class="two-panel-grid profile-section-grid">
+            <div class="inner-panel profile-editor-card">
                 <h3>Email Notifications</h3>
-                <div class="settings-stack compact-stack">
-                    <div class="settings-row"><div class="row-copy"><strong>Allow email notifications</strong><span>Master switch for all CoVise notification emails.</span></div><button class="toggle-switch{% if settings_page.receive_email_notifications %} active{% endif %}" data-field="receive_email_notifications" type="button" aria-pressed="{% if settings_page.receive_email_notifications %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch{% if settings_page.preferences.email_new_match %} active{% endif %}" data-field="email_new_match" type="button" aria-pressed="{% if settings_page.preferences.email_new_match %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch{% if settings_page.preferences.email_new_message %} active{% endif %}" data-field="email_new_message" type="button" aria-pressed="{% if settings_page.preferences.email_new_message %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch{% if settings_page.preferences.email_connection_request %} active{% endif %}" data-field="email_connection_request" type="button" aria-pressed="{% if settings_page.preferences.email_connection_request %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch{% if settings_page.preferences.email_request_accepted %} active{% endif %}" data-field="email_request_accepted" type="button" aria-pressed="{% if settings_page.preferences.email_request_accepted %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch{% if settings_page.preferences.email_milestone_reminder %} active{% endif %}" data-field="email_milestone_reminder" type="button" aria-pressed="{% if settings_page.preferences.email_milestone_reminder %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch{% if settings_page.preferences.email_workspace_activity %} active{% endif %}" data-field="email_workspace_activity" type="button" aria-pressed="{% if settings_page.preferences.email_workspace_activity %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch{% if settings_page.preferences.email_platform_updates %} active{% endif %}" data-field="email_platform_updates" type="button" aria-pressed="{% if settings_page.preferences.email_platform_updates %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch{% if settings_page.preferences.email_marketing %} active{% endif %}" data-field="email_marketing" type="button" aria-pressed="{% if settings_page.preferences.email_marketing %}true{% else %}false{% endif %}"></button></div>
+                <div class="settings-stack profile-section-stack compact-stack">
+                    <div class="settings-row"><div class="row-copy"><strong>Allow email notifications</strong><span>Master switch for all CoVise notification emails.</span></div><button class="toggle-switch selector-pill{% if settings_page.receive_email_notifications %} active is-active{% endif %}" data-field="receive_email_notifications" type="button" aria-pressed="{% if settings_page.receive_email_notifications %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.email_new_match %} active is-active{% endif %}" data-field="email_new_match" type="button" aria-pressed="{% if settings_page.preferences.email_new_match %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.email_new_message %} active is-active{% endif %}" data-field="email_new_message" type="button" aria-pressed="{% if settings_page.preferences.email_new_message %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.email_connection_request %} active is-active{% endif %}" data-field="email_connection_request" type="button" aria-pressed="{% if settings_page.preferences.email_connection_request %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.email_request_accepted %} active is-active{% endif %}" data-field="email_request_accepted" type="button" aria-pressed="{% if settings_page.preferences.email_request_accepted %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.email_milestone_reminder %} active is-active{% endif %}" data-field="email_milestone_reminder" type="button" aria-pressed="{% if settings_page.preferences.email_milestone_reminder %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.email_workspace_activity %} active is-active{% endif %}" data-field="email_workspace_activity" type="button" aria-pressed="{% if settings_page.preferences.email_workspace_activity %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.email_platform_updates %} active is-active{% endif %}" data-field="email_platform_updates" type="button" aria-pressed="{% if settings_page.preferences.email_platform_updates %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.email_marketing %} active is-active{% endif %}" data-field="email_marketing" type="button" aria-pressed="{% if settings_page.preferences.email_marketing %}true{% else %}false{% endif %}">Toggle</button></div>
                 </div>
             </div>
-            <div class="inner-panel">
+            <div class="inner-panel profile-editor-card">
                 <h3>In-App Notifications</h3>
-                <div class="settings-stack compact-stack">
-                    <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_new_match %} active{% endif %}" data-field="in_app_new_match" type="button" aria-pressed="{% if settings_page.preferences.in_app_new_match %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_new_message %} active{% endif %}" data-field="in_app_new_message" type="button" aria-pressed="{% if settings_page.preferences.in_app_new_message %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_connection_request %} active{% endif %}" data-field="in_app_connection_request" type="button" aria-pressed="{% if settings_page.preferences.in_app_connection_request %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_request_accepted %} active{% endif %}" data-field="in_app_request_accepted" type="button" aria-pressed="{% if settings_page.preferences.in_app_request_accepted %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_milestone_reminder %} active{% endif %}" data-field="in_app_milestone_reminder" type="button" aria-pressed="{% if settings_page.preferences.in_app_milestone_reminder %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_workspace_activity %} active{% endif %}" data-field="in_app_workspace_activity" type="button" aria-pressed="{% if settings_page.preferences.in_app_workspace_activity %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_platform_updates %} active{% endif %}" data-field="in_app_platform_updates" type="button" aria-pressed="{% if settings_page.preferences.in_app_platform_updates %}true{% else %}false{% endif %}"></button></div>
-                    <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch{% if settings_page.preferences.in_app_marketing %} active{% endif %}" data-field="in_app_marketing" type="button" aria-pressed="{% if settings_page.preferences.in_app_marketing %}true{% else %}false{% endif %}"></button></div>
+                <div class="settings-stack profile-section-stack compact-stack">
+                    <div class="settings-row"><div class="row-copy"><strong>New match found</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.in_app_new_match %} active is-active{% endif %}" data-field="in_app_new_match" type="button" aria-pressed="{% if settings_page.preferences.in_app_new_match %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>New message received</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.in_app_new_message %} active is-active{% endif %}" data-field="in_app_new_message" type="button" aria-pressed="{% if settings_page.preferences.in_app_new_message %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Connection request</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.in_app_connection_request %} active is-active{% endif %}" data-field="in_app_connection_request" type="button" aria-pressed="{% if settings_page.preferences.in_app_connection_request %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Request accepted</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.in_app_request_accepted %} active is-active{% endif %}" data-field="in_app_request_accepted" type="button" aria-pressed="{% if settings_page.preferences.in_app_request_accepted %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Milestone due reminder</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.in_app_milestone_reminder %} active is-active{% endif %}" data-field="in_app_milestone_reminder" type="button" aria-pressed="{% if settings_page.preferences.in_app_milestone_reminder %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Workspace activity</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.in_app_workspace_activity %} active is-active{% endif %}" data-field="in_app_workspace_activity" type="button" aria-pressed="{% if settings_page.preferences.in_app_workspace_activity %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row"><div class="row-copy"><strong>Platform updates and news</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.in_app_platform_updates %} active is-active{% endif %}" data-field="in_app_platform_updates" type="button" aria-pressed="{% if settings_page.preferences.in_app_platform_updates %}true{% else %}false{% endif %}">Toggle</button></div>
+                    <div class="settings-row settings-row-unavailable"><div class="row-copy"><strong>Marketing and promotions</strong></div><button class="toggle-switch selector-pill{% if settings_page.preferences.in_app_marketing %} active is-active{% endif %}" data-field="in_app_marketing" type="button" aria-pressed="{% if settings_page.preferences.in_app_marketing %}true{% else %}false{% endif %}">Toggle</button></div>
                 </div>
             </div>
         </div>
-        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Notification frequency</strong><span>Applies to email notifications only.</span></div><div class="row-control"><div class="selector-group single-select" data-group="email_frequency"><button class="selector-pill{% if settings_page.preferences.email_frequency == 'instant' %} is-active{% endif %}" data-value="instant" type="button">Instant</button><button class="selector-pill{% if settings_page.preferences.email_frequency == 'daily' %} is-active{% endif %}" data-value="daily" type="button">Daily Digest</button><button class="selector-pill{% if settings_page.preferences.email_frequency == 'weekly' %} is-active{% endif %}" data-value="weekly" type="button">Weekly Digest</button></div></div></div>
-        <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="notifications">Save Changes</button></div>
+        <div class="settings-row settings-row-block"><div class="row-copy"><strong>Notification frequency</strong><span>Applies to email notifications only.</span></div><div class="row-control"><div class="selector-group single-select skills-options-grid" data-group="email_frequency"><button class="selector-pill{% if settings_page.preferences.email_frequency == 'instant' %} is-active{% endif %}" data-value="instant" type="button">Instant</button><button class="selector-pill{% if settings_page.preferences.email_frequency == 'daily' %} is-active{% endif %}" data-value="daily" type="button">Daily Digest</button><button class="selector-pill{% if settings_page.preferences.email_frequency == 'weekly' %} is-active{% endif %}" data-value="weekly" type="button">Weekly Digest</button></div></div></div>
+        <div class="profile-section-actions"><button class="primary-btn save-btn" data-default-label="Save Changes" type="submit" name="save_section" value="notifications">Save Changes</button></div>
     </section>
 </form>
 {% endif %}
@@ -405,27 +449,27 @@
     <input type="hidden" name="preferred_gcc_markets" value="{{ settings_page.preferences.preferred_gcc_markets|join:'|' }}">
     <input type="hidden" name="minimum_commitment" value="{{ settings_page.preferences.minimum_commitment }}">
     <input type="hidden" name="open_to_foreign_founders" value="{% if settings_page.preferences.open_to_foreign_founders %}true{% else %}false{% endif %}">
-    <section class="panel settings-section settings-detail-panel matching-preferences-unavailable" data-settings-searchable>
-        <div class="section-top"><h2>MATCHING PREFERENCES</h2></div>
-        <div class="settings-stack">
-            <div class="settings-row"><div class="row-copy"><strong>Pause Matching</strong><span>Temporarily pause matching.</span></div><button class="toggle-switch{% if settings_page.preferences.pause_matching %} active{% endif %}" data-field="pause_matching" type="button" aria-pressed="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}"></button></div>
-            <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred co-founder type</strong></div><div class="pill-grid multi-select" data-group="preferred_cofounder_types"><button class="selector-pill{% if 'Technical' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Technical</button><button class="selector-pill{% if 'Business' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Business</button><button class="selector-pill{% if 'Operations' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Operations</button><button class="selector-pill{% if 'Sales' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Sales</button><button class="selector-pill{% if 'Marketing' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Marketing</button><button class="selector-pill{% if 'Finance' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Finance</button><button class="selector-pill{% if 'Legal' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Legal</button><button class="selector-pill{% if 'Design' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Design</button></div></div>
-            <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred industries</strong></div><div class="pill-grid multi-select" data-group="preferred_industries"><button class="selector-pill{% if 'Fintech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Fintech</button><button class="selector-pill{% if 'Healthtech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Healthtech</button><button class="selector-pill{% if 'Logistics' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Logistics</button><button class="selector-pill{% if 'E-commerce' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">E-commerce</button><button class="selector-pill{% if 'EdTech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">EdTech</button><button class="selector-pill{% if 'PropTech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">PropTech</button><button class="selector-pill{% if 'FoodTech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">FoodTech</button><button class="selector-pill{% if 'Energy' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Energy</button><button class="selector-pill{% if 'Retail' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Retail</button><button class="selector-pill{% if 'SaaS' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">SaaS</button></div></div>
-            <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred GCC markets</strong></div><div class="pill-grid multi-select" data-group="preferred_gcc_markets"><button class="selector-pill{% if 'Saudi Arabia' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Saudi Arabia</button><button class="selector-pill{% if 'UAE' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">UAE</button><button class="selector-pill{% if 'Kuwait' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Kuwait</button><button class="selector-pill{% if 'Qatar' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Qatar</button><button class="selector-pill{% if 'Bahrain' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Bahrain</button><button class="selector-pill{% if 'Oman' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Oman</button></div></div>
-            <div class="settings-row settings-row-block"><div class="row-copy"><strong>Minimum commitment level</strong></div><div class="selector-group single-select" data-group="minimum_commitment"><button class="selector-pill{% if settings_page.preferences.minimum_commitment == 'Part-time' %} is-active{% endif %}" data-value="Part-time" type="button">Part-time</button><button class="selector-pill{% if settings_page.preferences.minimum_commitment == 'Full-time' %} is-active{% endif %}" data-value="Full-time" type="button">Full-time</button><button class="selector-pill{% if settings_page.preferences.minimum_commitment == 'Either' %} is-active{% endif %}" data-value="Either" type="button">Either</button></div></div>
-            <div class="settings-row"><div class="row-copy"><strong>Open to foreign founders</strong><span>Include founders from outside the GCC in your matches.</span></div><button class="toggle-switch{% if settings_page.preferences.open_to_foreign_founders %} active{% endif %}" data-field="open_to_foreign_founders" type="button" aria-pressed="{% if settings_page.preferences.open_to_foreign_founders %}true{% else %}false{% endif %}"></button></div>
+    <section class="panel profile-section-panel settings-section settings-detail-panel matching-preferences-unavailable" data-settings-searchable>
+        <div class="section-top profile-section-head"><h2>MATCHING PREFERENCES</h2></div>
+        <div class="settings-stack profile-section-stack">
+            <div class="settings-row"><div class="row-copy"><strong>Pause Matching</strong><span>Temporarily pause matching.</span></div><button class="toggle-switch selector-pill{% if settings_page.preferences.pause_matching %} active is-active{% endif %}" data-field="pause_matching" type="button" aria-pressed="{% if settings_page.preferences.pause_matching %}true{% else %}false{% endif %}">Toggle</button></div>
+            <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred co-founder type</strong></div><div class="pill-grid multi-select skills-options-grid" data-group="preferred_cofounder_types"><button class="selector-pill{% if 'Technical' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Technical</button><button class="selector-pill{% if 'Business' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Business</button><button class="selector-pill{% if 'Operations' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Operations</button><button class="selector-pill{% if 'Sales' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Sales</button><button class="selector-pill{% if 'Marketing' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Marketing</button><button class="selector-pill{% if 'Finance' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Finance</button><button class="selector-pill{% if 'Legal' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Legal</button><button class="selector-pill{% if 'Design' in settings_page.preferences.preferred_cofounder_types %} is-active{% endif %}" type="button">Design</button></div></div>
+            <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred industries</strong></div><div class="pill-grid multi-select skills-options-grid" data-group="preferred_industries"><button class="selector-pill{% if 'Fintech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Fintech</button><button class="selector-pill{% if 'Healthtech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Healthtech</button><button class="selector-pill{% if 'Logistics' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Logistics</button><button class="selector-pill{% if 'E-commerce' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">E-commerce</button><button class="selector-pill{% if 'EdTech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">EdTech</button><button class="selector-pill{% if 'PropTech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">PropTech</button><button class="selector-pill{% if 'FoodTech' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">FoodTech</button><button class="selector-pill{% if 'Energy' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Energy</button><button class="selector-pill{% if 'Retail' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">Retail</button><button class="selector-pill{% if 'SaaS' in settings_page.preferences.preferred_industries %} is-active{% endif %}" type="button">SaaS</button></div></div>
+            <div class="settings-row settings-row-block"><div class="row-copy"><strong>Preferred GCC markets</strong></div><div class="pill-grid multi-select skills-options-grid" data-group="preferred_gcc_markets"><button class="selector-pill{% if 'Saudi Arabia' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Saudi Arabia</button><button class="selector-pill{% if 'UAE' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">UAE</button><button class="selector-pill{% if 'Kuwait' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Kuwait</button><button class="selector-pill{% if 'Qatar' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Qatar</button><button class="selector-pill{% if 'Bahrain' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Bahrain</button><button class="selector-pill{% if 'Oman' in settings_page.preferences.preferred_gcc_markets %} is-active{% endif %}" type="button">Oman</button></div></div>
+            <div class="settings-row settings-row-block"><div class="row-copy"><strong>Minimum commitment level</strong></div><div class="selector-group single-select skills-options-grid" data-group="minimum_commitment"><button class="selector-pill{% if settings_page.preferences.minimum_commitment == 'Part-time' %} is-active{% endif %}" data-value="Part-time" type="button">Part-time</button><button class="selector-pill{% if settings_page.preferences.minimum_commitment == 'Full-time' %} is-active{% endif %}" data-value="Full-time" type="button">Full-time</button><button class="selector-pill{% if settings_page.preferences.minimum_commitment == 'Either' %} is-active{% endif %}" data-value="Either" type="button">Either</button></div></div>
+            <div class="settings-row"><div class="row-copy"><strong>Open to foreign founders</strong><span>Include founders from outside the GCC in your matches.</span></div><button class="toggle-switch selector-pill{% if settings_page.preferences.open_to_foreign_founders %} active is-active{% endif %}" data-field="open_to_foreign_founders" type="button" aria-pressed="{% if settings_page.preferences.open_to_foreign_founders %}true{% else %}false{% endif %}">Toggle</button></div>
         </div>
-        <div class="section-footer full-width"><button class="primary-btn wide-btn" data-default-label="Save Changes" type="submit" name="save_section" value="matching_preferences">Save Changes</button></div>
+        <div class="profile-section-actions"><button class="primary-btn save-btn" data-default-label="Save Changes" type="submit" name="save_section" value="matching_preferences">Save Changes</button></div>
     </section>
 </form>
 {% endif %}
 
 {% if settings_active_section == "legal-compliance" %}
-<section class="panel settings-section settings-detail-panel" data-settings-searchable>
-    <div class="section-top"><h2>LEGAL &amp; COMPLIANCE</h2></div>
-    <div class="settings-stack">
-        <div class="settings-row">
-            <div class="row-copy with-icon">
+<section class="panel profile-section-panel settings-section settings-detail-panel" data-settings-searchable>
+    <div class="section-top profile-section-head"><h2>LEGAL &amp; COMPLIANCE</h2></div>
+    <div class="settings-stack profile-section-stack">
+        <div class="settings-row profile-section-entry">
+            <div class="row-copy with-icon profile-section-entry__copy">
                 <i class="fa-solid fa-handshake" aria-hidden="true"></i>
                 <div>
                     <strong>Platform Agreement</strong>
@@ -438,12 +482,12 @@
                     </span>
                 </div>
             </div>
-            <a class="outline-btn" href="{% url 'Agreement' %}">Read</a>
+            <a class="primary-btn save-btn" href="{% url 'Agreement' %}">Read</a>
         </div>
-        <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Terms of Service</strong><span>Last updated March 2026</span></div></div><a class="outline-btn" href="{% url 'Terms' %}">View</a></div>
-        <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Privacy Policy</strong><span>How we collect and use your data</span></div></div><a class="outline-btn" href="{% url 'Privacy' %}">View</a></div>
-        <div class="settings-row">
-            <div class="row-copy with-icon">
+        <div class="settings-row profile-section-entry"><div class="row-copy with-icon profile-section-entry__copy"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Terms of Service</strong><span>Last updated March 2026</span></div></div><a class="primary-btn save-btn" href="{% url 'Terms' %}">View</a></div>
+        <div class="settings-row profile-section-entry"><div class="row-copy with-icon profile-section-entry__copy"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Privacy Policy</strong><span>How we collect and use your data</span></div></div><a class="primary-btn save-btn" href="{% url 'Privacy' %}">View</a></div>
+        <div class="settings-row profile-section-entry">
+            <div class="row-copy with-icon profile-section-entry__copy">
                 <i class="fa-solid fa-download" aria-hidden="true"></i>
                 <div>
                     <strong>Download My Data</strong>
@@ -459,11 +503,11 @@
             <form method="post" action="{% url 'Request Data Export' %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ settings_return_url }}">
-                <button class="outline-btn" type="submit">Request Export</button>
+                <button class="primary-btn save-btn" type="submit">Request Export</button>
             </form>
         </div>
-        <div class="settings-row">
-            <div class="row-copy with-icon">
+        <div class="settings-row profile-section-entry">
+            <div class="row-copy with-icon profile-section-entry__copy">
                 <i class="fa-solid fa-trash" aria-hidden="true"></i>
                 <div>
                     <strong>Request Data Deletion</strong>
@@ -476,7 +520,7 @@
                     </span>
                 </div>
             </div>
-            <button class="danger-outline-btn" data-open-modal="dataDeletionModal" type="button">
+            <button class="danger-outline-btn text-link danger-link" data-open-modal="dataDeletionModal" type="button">
                 {% if settings_page.data_deletion_request.has_request %}Delete Data Again{% else %}Request Deletion{% endif %}
             </button>
         </div>
@@ -485,11 +529,11 @@
 {% endif %}
 
 {% if settings_active_section == "danger-zone" %}
-<section class="panel settings-section settings-detail-panel danger-zone" id="danger-zone" data-settings-searchable>
-    <div class="section-top"><h2>DANGER ZONE</h2></div>
-    <div class="settings-stack">
-        <div class="settings-row">
-            <div class="row-copy">
+<section class="panel profile-section-panel settings-section settings-detail-panel danger-zone" id="danger-zone" data-settings-searchable>
+    <div class="section-top profile-section-head"><h2>DANGER ZONE</h2></div>
+    <div class="settings-stack profile-section-stack">
+        <div class="settings-row profile-section-entry">
+            <div class="row-copy profile-section-entry__copy">
                 <strong>Pause My Account</strong>
                 <span>
                     {% if settings_page.account_pause.is_paused %}
@@ -503,10 +547,10 @@
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ settings_return_url }}">
                 <input type="hidden" name="action" value="{% if settings_page.account_pause.is_paused %}reactivate{% else %}pause{% endif %}">
-                <button class="warning-outline-btn" type="submit">{% if settings_page.account_pause.is_paused %}Reactivate Account{% else %}Pause Account{% endif %}</button>
+                <button class="warning-outline-btn primary-btn save-btn" type="submit">{% if settings_page.account_pause.is_paused %}Reactivate Account{% else %}Pause Account{% endif %}</button>
             </form>
         </div>
-        <div class="settings-row"><div class="row-copy"><strong>Delete My Account</strong><span>Permanently delete your account and all associated data. This cannot be undone.</span></div><button class="danger-fill-btn" data-open-modal="dangerDeleteModal" type="button">Delete Account</button></div>
+        <div class="settings-row profile-section-entry"><div class="row-copy profile-section-entry__copy"><strong>Delete My Account</strong><span>Permanently delete your account and all associated data. This cannot be undone.</span></div><button class="danger-fill-btn text-link danger-link" data-open-modal="dangerDeleteModal" type="button">Delete Account</button></div>
     </div>
 </section>
 {% endif %}

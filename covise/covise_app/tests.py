@@ -1001,6 +1001,15 @@ class PreviewPageTests(TestCase):
             status=WaitlistEntry.Status.ACTIVATED,
             my_referral_code="CV-ACT001",
         )
+        older_activated_entry = WaitlistEntry.objects.create(
+            full_name="Older Activated Founder",
+            phone_number="+966500000004",
+            email="older-activated@example.com",
+            country="Bahrain",
+            linkedin="https://www.linkedin.com/in/older-activated-founder/",
+            status=WaitlistEntry.Status.ACTIVATED,
+            my_referral_code="CV-ACT002",
+        )
         WaitlistEmailVerification.objects.create(email="verification-one@example.com")
         WaitlistEmailVerification.objects.create(email="verification-two@example.com")
         WaitlistEmailVerification.objects.create(email="verification-three@example.com")
@@ -1016,15 +1025,40 @@ class PreviewPageTests(TestCase):
             post_type=Post.PostType.UPDATE,
             content="Community pulse test post two.",
         )
+        activated_user = User.objects.create_user(
+            email="activated@example.com",
+            full_name="Activated Founder",
+            password="password123",
+        )
+        Profile.objects.create(
+            user=activated_user,
+            full_name="Activated Founder",
+            source_waitlist_entry=WaitlistEntry.objects.get(email="activated@example.com"),
+            has_accepted_platform_agreement=True,
+        )
+        older_activated_user = User.objects.create_user(
+            email="older-activated@example.com",
+            full_name="Older Activated Founder",
+            password="password123",
+        )
+        Profile.objects.create(
+            user=older_activated_user,
+            full_name="Older Activated Founder",
+            source_waitlist_entry=older_activated_entry,
+            has_accepted_platform_agreement=True,
+        )
+        User.objects.filter(id=older_activated_user.id).update(
+            date_joined=timezone.now() - timezone.timedelta(days=10)
+        )
 
         metrics = _home_sidebar_metrics(self.user)
-        self.assertEqual(metrics["verified_founders_count"], 3)
+        self.assertEqual(metrics["verified_founders_count"], 4)
         self.assertEqual(metrics["waitlist_count"], 3)
-        self.assertEqual(metrics["countries_involved_count"], 3)
+        self.assertEqual(metrics["countries_involved_count"], 4)
         self.assertEqual(metrics["posts_count"], 2)
-        self.assertEqual(metrics["verified_founders_delta"], "3+ today")
+        self.assertEqual(metrics["verified_founders_delta"], "1+ Joined this week")
         self.assertEqual(metrics["waitlist_delta"], "3+ today")
-        self.assertEqual(metrics["countries_involved_delta"], "3+ today")
+        self.assertEqual(metrics["countries_involved_delta"], "UAE, Saudi Arabia, ...")
         self.assertEqual(metrics["posts_delta"], "2+ today")
 
 
@@ -1095,6 +1129,7 @@ class OnboardingPrefillTests(TestCase):
         self.assertEqual(response.context["onboarding_start_step_id"], "S3_specialist")
 
 
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
 class ProfilePageTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -1124,9 +1159,18 @@ class ProfilePageTests(TestCase):
             looking_for_skills=["Engineering"],
             skills=["Product Management"],
             onboarding_answers={"show_cofounder_badge": True},
+            has_accepted_platform_agreement=True,
         )
-        Profile.objects.create(user=self.viewer, full_name="Viewer User")
-        Profile.objects.create(user=self.author, full_name="Author User")
+        Profile.objects.create(
+            user=self.viewer,
+            full_name="Viewer User",
+            has_accepted_platform_agreement=True,
+        )
+        Profile.objects.create(
+            user=self.author,
+            full_name="Author User",
+            has_accepted_platform_agreement=True,
+        )
 
         self.own_post = Post.objects.create(
             user=self.user,
@@ -1159,6 +1203,20 @@ class ProfilePageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Saved Posts")
         self.assertNotContains(response, self.saved_post.title)
+
+    def test_public_profile_request_button_shows_cancel_for_outgoing_pending_request(self):
+        ConversationRequest.objects.create(
+            requester=self.viewer,
+            recipient=self.user,
+            status=ConversationRequest.Status.PENDING,
+        )
+        self.client.force_login(self.viewer)
+
+        response = self.client.get(reverse("Public Profile", args=[self.user.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["has_pending_outgoing_request"])
+        self.assertContains(response, "Cancel Request")
 
     def test_profile_post_metadata_omits_post_type_label(self):
         self.client.force_login(self.user)
@@ -2136,10 +2194,34 @@ class MessagingConversationNormalizationTests(TestCase):
         )
 
     @patch("covise_app.views._merge_private_conversations")
-    def test_start_private_conversation_short_circuits_pending_request_before_merge(self, merge_mock):
+    def test_start_private_conversation_cancels_outgoing_pending_request_before_merge(self, merge_mock):
         ConversationRequest.objects.create(
             requester=self.user,
             recipient=self.other_user,
+            status=ConversationRequest.Status.PENDING,
+        )
+
+        response = self.client.post(
+            reverse("Start Private Conversation", args=[self.other_user.id]),
+            {"next": reverse("Public Profile", args=[self.other_user.id])},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Public Profile", args=[self.other_user.id]))
+        self.assertEqual(
+            ConversationRequest.objects.filter(
+                requester=self.user,
+                recipient=self.other_user,
+            ).count(),
+            0,
+        )
+        merge_mock.assert_not_called()
+
+    @patch("covise_app.views._merge_private_conversations")
+    def test_start_private_conversation_keeps_incoming_pending_request_redirect_to_requests(self, merge_mock):
+        ConversationRequest.objects.create(
+            requester=self.other_user,
+            recipient=self.user,
             status=ConversationRequest.Status.PENDING,
         )
 
@@ -2149,8 +2231,8 @@ class MessagingConversationNormalizationTests(TestCase):
         self.assertEqual(response.url, reverse("Requests"))
         self.assertEqual(
             ConversationRequest.objects.filter(
-                requester=self.user,
-                recipient=self.other_user,
+                requester=self.other_user,
+                recipient=self.user,
                 status=ConversationRequest.Status.PENDING,
             ).count(),
             1,

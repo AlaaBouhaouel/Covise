@@ -1127,7 +1127,19 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
 
 @media (max-width: 1200px) {
     .messages-app, .messages-app.details-open { grid-template-columns: 340px minmax(0, 1fr); }
-    .sidebar, .details-panel { display: none; }
+    .sidebar { display: none; }
+    .details-panel {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        z-index: 500;
+        transform: translateX(100%);
+        display: flex;
+        flex-direction: column;
+    }
+    .messages-app.details-open .details-panel {
+        transform: translateX(0);
+    }
 }
 
 @media (max-width: 760px) {

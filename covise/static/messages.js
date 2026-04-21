@@ -45,7 +45,6 @@
     const convictionFill = document.getElementById("convictionFill");
     const convictionValue = document.getElementById("convictionValue");
     const viewFullProfileBtn = document.getElementById("viewFullProfileBtn");
-    const moreMenu = document.getElementById("moreMenu");
     const modalBackdrop = document.getElementById("modalBackdrop");
     const modalTitle = document.getElementById("modalTitle");
     const modalBody = document.getElementById("modalBody");
@@ -839,8 +838,8 @@
             detailsIndustry.textContent = "";
             detailsStage.textContent = "";
             detailsMutual.textContent = "0";
-            convictionFill.style.width = "0%";
-            convictionValue.textContent = "0/100";
+            if (convictionFill) convictionFill.style.width = "0%";
+            if (convictionValue) convictionValue.textContent = "0/100";
             if (muteNotificationsToggle) muteNotificationsToggle.checked = false;
             if (recordingModeToggle) recordingModeToggle.checked = true;
             renderSharedFiles(null);
@@ -872,8 +871,8 @@
             ? (conversation.group_members || []).map((member) => member.display_name).join(", ")
             : conversation.stage;
         detailsMutual.textContent = conversation.mutual;
-        convictionFill.style.width = "0%";
-        convictionValue.textContent = "N/A";
+        if (convictionFill) convictionFill.style.width = "0%";
+        if (convictionValue) convictionValue.textContent = "N/A";
         const blockButton = document.getElementById("blockUserBtn");
         if (blockButton) {
             blockButton.textContent = conversation.blocked_by_current_user ? "Unblock User" : "Block User";
@@ -1150,7 +1149,7 @@
     });
     searchInput.addEventListener("input", renderAll);
 
-    document.getElementById("toggleDetailsBtn").addEventListener("click", () => app.classList.toggle("details-open"));
+    document.getElementById("toggleDetailsBtn").addEventListener("click", (event) => { event.stopPropagation(); app.classList.toggle("details-open"); });
     document.getElementById("closeDetailsBtn").addEventListener("click", () => app.classList.remove("details-open"));
     document.getElementById("mobileBackBtn").addEventListener("click", () => app.classList.remove("mobile-chat-open"));
     document.getElementById("mobileCloseChat").addEventListener("click", () => app.classList.remove("mobile-chat-open"));
@@ -1165,10 +1164,6 @@
         });
     });
 
-    document.getElementById("toggleDetailsBtn").addEventListener("click", (event) => {
-        event.stopPropagation();
-        moreMenu.classList.toggle("is-open");
-    });
     if (panelMoreMenuBtn && panelMoreMenu) {
         panelMoreMenuBtn.addEventListener("click", (event) => {
             event.stopPropagation();
@@ -1176,9 +1171,8 @@
         });
     }
     document.addEventListener("click", (event) => {
-        if (!event.target.closest(".menu-wrap")) {
-            moreMenu.classList.remove("is-open");
-            if (panelMoreMenu) panelMoreMenu.classList.remove("is-open");
+        if (panelMoreMenu && !event.target.closest(".panel-menu-wrap")) {
+            panelMoreMenu.classList.remove("is-open");
         }
         if (!event.target.closest(".msg-menu-wrap")) {
             closeMessageMenus();
@@ -1192,20 +1186,6 @@
             closeEmojiPicker();
         }
     });
-    moreMenu.addEventListener("click", (event) => {
-        event.stopPropagation();
-        const button = event.target.closest("button");
-        if (!button) return;
-        moreMenu.classList.remove("is-open");
-        if (button.dataset.action === "details") {
-            app.classList.toggle("details-open");
-        } else if (button.dataset.action === "contract") {
-            openModal("Contract Maker", "<p>Contract Maker is still coming soon for private chats.</p>");
-        } else {
-            openModal("AI Summary", "<p>AI summaries will be enabled after message history is connected more deeply.</p>");
-        }
-    });
-
     if (searchInChatBtn) {
         searchInChatBtn.addEventListener("click", () => {
             openComingSoonModal("Search In Chat", "In-chat search is not wired yet, but the button is now active and ready for the real search flow.");

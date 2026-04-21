@@ -1356,6 +1356,26 @@ body {
 
 .empty-state { display: none;}
 .mobile-close-chat {text-decoration: none; display: inline-flex!important;}
+.notif-primary-data{
+    display: flex;
+    gap: calc(var(--spacing) * 2);
+    align-items: center;
+}
+.req-name{
+    color: var(--text);
+    text-decoration: none;
+    font-size: 1.3rem;
+    text-transform: capitalize;
+    font-weight: 400;
+
+}
+.match-name span{
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    text-transform: capitalize;
+    font-weight: 400;
+}
 @media (max-width: 1100px) {
     .main {
         padding: calc(var(--spacing) * 4) calc(var(--spacing) * 4) calc(var(--spacing) * 12);
@@ -1506,7 +1526,6 @@ body {
         font-size: 0.72rem;
     }
     .head-notif{
-        display: flex;
         gap: calc(var(--spacing)*2);
     }
     .dashboard-card {

@@ -120,8 +120,8 @@
                             </div>
                             <div class="profile-photo-row__controls">
                                 <input class="profile-photo-input" id="profileSectionPhotoInput" name="profile_image" type="file" accept="image/*">
-                                <label class="primary-btn" for="profileSectionPhotoInput">Change</label>
-                                <button class="text-link danger-link" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button>
+                                <label class="primary-action save-btn" for="profileSectionPhotoInput">Change</label>
+                                <button class="text-link danger-link" type="submit" name="profile_photo_action cancel-btn" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button>
                             </div>
                         </div>
                         <label class="profile-field">
@@ -192,7 +192,8 @@
                         </div>
                     </div>
                     <div class="profile-section-actions">
-                        <button class="primary-btn" type="submit">Save Changes</button>
+                        <button class="primary-action save-btn" type="submit">Save Changes</button>
+                        <a class="primary-action cancel-btn" href="../">Cancel</a>
                     </div>
                 </form>
                 {% elif profile_section_key == "experience" %}
@@ -210,7 +211,7 @@
                             </label>
                             <label class="profile-field">
                                 <span>Date or Period</span>
-                                <input type="date" name="date" value="{{ experience.date|date:'Y-m-d' }}">
+                                <input type="text" name="date" value="{{ experience.date }}" placeholder="e.g. 2022 – 2024 or Jan 2023 – Present">
                             </label>
                             <label class="profile-field profile-field--full">
                                 <span>Description</span>
@@ -218,7 +219,7 @@
                             </label>
                         </div>
                         <div class="profile-editor-actions">
-                            <button class="primary-btn" type="submit">Save Experience</button>
+                            <button class="primary-action save-btn" type="submit">Save Experience</button>
                             <button class="text-link danger-link" type="submit" name="action" value="delete">Delete</button>
                         </div>
                     </form>
@@ -226,7 +227,7 @@
                     <article class="profile-editor-card profile-viewer-card">
                         <div class="profile-editor-card__head">
                             <h3>{{ experience.title }}</h3>
-                            <p>{{ experience.date|date:"M j, Y" }}</p>
+                            <p>{{ experience.date }}</p>
                         </div>
                         <p>{{ experience.desc }}</p>
                     </article>
@@ -252,7 +253,7 @@
                             </label>
                             <label class="profile-field">
                                 <span>Date or Period</span>
-                                <input type="date" name="date">
+                                <input type="text" name="date" placeholder="e.g. 2022 – 2024 or Jan 2023 – Present">
                             </label>
                             <label class="profile-field profile-field--full">
                                 <span>Description</span>
@@ -260,7 +261,7 @@
                             </label>
                         </div>
                         <div class="profile-editor-actions">
-                            <button class="primary-btn" type="submit">Add Experience</button>
+                            <button class="primary-action save-btn" type="submit">Add Experience</button>
                         </div>
                     </form>
                     {% endif %}
@@ -288,7 +289,7 @@
                             </label>
                         </div>
                         <div class="profile-editor-actions">
-                            <button class="primary-btn" type="submit">Save Project</button>
+                            <button class="primary-action save-btn" type="submit">Save Project</button>
                             <button class="text-link danger-link" type="submit" name="action" value="delete">Delete</button>
                         </div>
                     </form>
@@ -330,7 +331,7 @@
                             </label>
                         </div>
                         <div class="profile-editor-actions">
-                            <button class="primary-btn" type="submit">Add Project</button>
+                            <button class="primary-action save-btn" type="submit">Add Project</button>
                         </div>
                     </form>
                     {% endif %}
@@ -348,7 +349,7 @@
                             <form method="post">
                                 {% csrf_token %}
                                 <input type="hidden" name="post_id" value="{{ saved_post.id }}">
-                                <button class="text-link danger-link" type="submit">Remove</button>
+                                <button class="text-link danger-link cancel-btn" type="submit">Remove</button>
                             </form>
                         </div>
                     </div>

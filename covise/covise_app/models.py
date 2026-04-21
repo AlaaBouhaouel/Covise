@@ -867,7 +867,7 @@ class BlockedUser(models.Model):
 class Experiences(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE, related_name="experiences")
     title=models.CharField(max_length=100, blank=False)
-    date=models.DateTimeField(blank=False)
+    date=models.CharField(max_length=60, blank=True)
     desc=models.TextField()
 
 class Active_projects(models.Model):

@@ -6,10 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CoVise | {{ settings_section_title }}</title>
     <link rel="icon" href="{% static 'images/index/noBgLogo.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'settings.css' %}?v=20260420b">
+    <link rel="stylesheet" href="{% static 'profile.css' %}?v=20260420d">
     <link rel="stylesheet" href="{% static 'app_mobile_nav.css' %}?v=20260419i">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        .save-btn::after,
+        .cancel-btn::after {
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            line-height: 1;
+        }
+    </style>
     <script>
         (function() {
             var theme = localStorage.getItem('covise-theme');
@@ -43,20 +51,35 @@
             </a>
         </aside>
 
-        <main class="main app-shell-main settings-subpage-main">
-            <section class="panel settings-page-head">
+        <main class="main app-shell-main profile-section-main settings-subpage-main">
+            <section class="panel profile-section-page-head">
                 <h1>{{ settings_section_title }}</h1>
-                <a class="settings-page-back" href="{% url 'Settings' %}" aria-label="Back to settings">
+                <a class="settings-page-back profile-section-back" href="{% url 'Settings' %}" aria-label="Back to settings">
                     <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
                 </a>
             </section>
 
             {% if success_message %}
-            <div class="submit-banner submit-banner-success">{{ success_message }}</div>
+            <div class="profile-inline-feedback profile-inline-feedback--success">
+                <div class="profile-inline-feedback__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 12.5L10 16.5L18 8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="profile-inline-feedback__content">
+                    <strong>Updated</strong>
+                    <span>{{ success_message }}</span>
+                </div>
+            </div>
             {% endif %}
 
             {% if error_message %}
-            <div class="submit-banner submit-banner-error">{{ error_message }}</div>
+            <div class="profile-inline-feedback profile-inline-feedback--error">
+                <div class="profile-inline-feedback__content">
+                    <strong>Could not save changes</strong>
+                    <span>{{ error_message }}</span>
+                </div>
+            </div>
             {% endif %}
 
             {% include "includes/settings_sections_content.html" %}
@@ -65,8 +88,22 @@
         </main>
     </div>
 
-    {% include "includes/settings_shared_modals.html" %}
+    {% include "includes/settings_section_profile_modals.html" %}
     {% include "includes/app_mobile_nav.html" with active_page='settings' show_mobile_back=False %}
     {% include "includes/settings_page_scripts.html" %}
+    <script>
+        (function () {
+            Array.prototype.slice.call(document.querySelectorAll('.toggle-switch')).forEach(function (toggle) {
+                function syncTogglePill() {
+                    toggle.classList.toggle('is-active', toggle.classList.contains('active'));
+                }
+
+                syncTogglePill();
+                toggle.addEventListener('click', function () {
+                    window.requestAnimationFrame(syncTogglePill);
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

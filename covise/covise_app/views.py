@@ -247,7 +247,7 @@ def _build_data_export_payload(user):
         .order_by("-updated_at")
         .distinct()
     )
-    experiences = list(Experiences.objects.filter(user=user).order_by("-date", "-id"))
+    experiences = list(Experiences.objects.filter(user=user).order_by("-id"))
     active_projects = list(Active_projects.objects.filter(user=user).order_by("-id"))
     projects = list(Project.objects.filter(user=user).order_by("-updated_at"))
 
@@ -1902,16 +1902,10 @@ def _handle_settings_post(request, *, template_name, redirect_url, section_slug=
             title = request.POST.get("title", "").strip()
             date = request.POST.get("date", "").strip()
             desc = request.POST.get("desc", "").strip()
-            experience_date = _experience_datetime_from_input(date)
-            if title and date and desc and experience_date is None:
-                context = _build_settings_view_context(request, section_slug=section_slug)
-                context["error_message"] = "Please enter a valid experience date."
-                context["save_success"] = False
-                return render(request, "settings_section.html", context, status=400)
             Experiences.objects.create(
                 user=request.user,
                 title=title,
-                date=experience_date or date,
+                date=date,
                 desc=desc,
             )
 
@@ -2574,6 +2568,11 @@ def _home_sidebar_metrics(user):
         timezone.datetime.combine(timezone.localdate(), timezone.datetime.min.time()),
         timezone.get_current_timezone(),
     )
+    start_of_week_date = timezone.localdate() - timezone.timedelta(days=timezone.localdate().weekday())
+    start_of_week = timezone.make_aware(
+        timezone.datetime.combine(start_of_week_date, timezone.datetime.min.time()),
+        timezone.get_current_timezone(),
+    )
     verified_waitlist_entries = WaitlistEntry.objects.filter(
         status__in=[
             WaitlistEntry.Status.APPROVED,
@@ -2581,9 +2580,12 @@ def _home_sidebar_metrics(user):
         ]
     )
     verified_founders_count = verified_waitlist_entries.count()
+    activated_accounts_this_week = User.objects.filter(
+        date_joined__gte=start_of_week,
+        profile__source_waitlist_entry__status=WaitlistEntry.Status.ACTIVATED,
+    ).distinct().count()
     waitlist_count = WaitlistEmailVerification.objects.count()
     posts_count = Post.objects.filter(user=user).count()
-    verified_founders_today = verified_waitlist_entries.filter(created_at__gte=start_of_day).count()
     waitlist_today = WaitlistEmailVerification.objects.filter(created_at__gte=start_of_day).count()
     posts_today = Post.objects.filter(user=user, created_at__gte=start_of_day).count()
 
@@ -2593,19 +2595,13 @@ def _home_sidebar_metrics(user):
         if normalized_country:
             approved_country_keys.add(normalized_country.casefold())
 
-    countries_involved_today = set()
-    for country, custom_country in verified_waitlist_entries.filter(created_at__gte=start_of_day).values_list("country", "custom_country"):
-        normalized_country = (custom_country or country or "").strip()
-        if normalized_country:
-            countries_involved_today.add(normalized_country.casefold())
-
     return {
         "verified_founders_count": verified_founders_count,
-        "verified_founders_delta": f"{verified_founders_today}+ today",
+        "verified_founders_delta": f"{activated_accounts_this_week}+ Joined this week",
         "waitlist_count": waitlist_count,
         "waitlist_delta": f"{waitlist_today}+ today",
         "countries_involved_count": len(approved_country_keys),
-        "countries_involved_delta": f"{len(countries_involved_today)}+ today",
+        "countries_involved_delta": "UAE, Saudi Arabia, ...",
         "posts_count": posts_count,
         "posts_delta": f"{posts_today}+ today",
     }
@@ -3394,13 +3390,19 @@ def _serialize_conversation_request(request_item, current_user):
     other_user = request_item.requester if is_incoming else request_item.recipient
     other_profile = getattr(other_user, "profile", None)
     description = _display_value(getattr(other_profile, "one_liner", None), "Wants to start a private conversation.")
+    country = _display_value(
+        getattr(other_profile, "custom_country", None) or getattr(other_profile, "country", None),
+        "",
+    )
     if not description:
         description = "Wants to start a private conversation."
     return {
         "id": str(request_item.id),
         "name": _display_name(other_user),
+        "country": country,
         "avatar": other_user.avatar_initials,
         "avatar_url": _user_avatar_url(other_user),
+        "profile_url": reverse("Public Profile", args=[other_user.id]) if other_user else "",
         "description": description,
         "is_incoming": is_incoming,
         "status": request_item.status,
@@ -4521,6 +4523,20 @@ def start_private_conversation(request, user_id):
     if not _can_view_profile(request.user, target_user):
         raise Http404("Profile not available")
 
+    redirect_url = _safe_redirect_url(request, reverse("Public Profile", args=[target_user.id]))
+    outgoing_pending_request = (
+        ConversationRequest.objects.filter(
+            requester=request.user,
+            recipient=target_user,
+            status=ConversationRequest.Status.PENDING,
+        )
+        .order_by("-created_at")
+        .first()
+    )
+    if outgoing_pending_request:
+        outgoing_pending_request.delete()
+        return redirect(redirect_url)
+
     existing_request = (
         ConversationRequest.objects.filter(
             Q(requester=request.user, recipient=target_user) | Q(requester=target_user, recipient=request.user),
@@ -5525,6 +5541,14 @@ def _build_profile_display_context(request, target_user, is_own_profile):
     is_blocked_user = target_user.id in viewer_blocked_ids and not is_own_profile
     messaging_blocked = _is_blocked_pair(request.user, target_user) and not is_own_profile
     is_friend = _are_friends(request.user, target_user) and not is_own_profile
+    has_pending_outgoing_request = (
+        ConversationRequest.objects.filter(
+            requester=request.user,
+            recipient=target_user,
+            status=ConversationRequest.Status.PENDING,
+        ).exists()
+        and not is_own_profile
+    )
     founders_can_delete_account = _is_founders_admin(request.user) and not is_own_profile
     report_error_code = request.GET.get("report_error", "").strip()
     report_error_message = ""
@@ -5536,7 +5560,7 @@ def _build_profile_display_context(request, target_user, is_own_profile):
         report_error_message = "You cannot report your own profile."
 
     experiences = list(
-        target_user.experiences.order_by("-date", "-id")
+        target_user.experiences.order_by("-id")
     ) if can_view_profile_data else []
     active_projects = list(
         target_user.active_projects.order_by("-id")
@@ -5602,6 +5626,7 @@ def _build_profile_display_context(request, target_user, is_own_profile):
         "is_blocked_user": is_blocked_user,
         "messaging_blocked": messaging_blocked,
         "is_friend": is_friend,
+        "has_pending_outgoing_request": has_pending_outgoing_request,
         "founders_can_delete_account": founders_can_delete_account,
         "is_onboarded": is_onboarded,
         "extended_onboarding_complete": extended_onboarding_complete,
@@ -5777,20 +5802,15 @@ def profile_experience(request):
             context["profile_section_error_message"] = "Title, date, and description are required."
             return render(request, "profile_section.html", context, status=400)
 
-        experience_date = _experience_datetime_from_input(date)
-        if experience_date is None:
-            context["profile_section_error_message"] = "Please enter a valid experience date."
-            return render(request, "profile_section.html", context, status=400)
-
         if action == "update":
             experience = get_object_or_404(Experiences, id=experience_id, user=request.user)
             experience.title = title
-            experience.date = experience_date
+            experience.date = date
             experience.desc = desc
             experience.save(update_fields=["title", "date", "desc"])
             return redirect(f"{reverse('Profile Experience')}?status=updated")
 
-        Experiences.objects.create(user=request.user, title=title, date=experience_date, desc=desc)
+        Experiences.objects.create(user=request.user, title=title, date=date, desc=desc)
         return redirect(f"{reverse('Profile Experience')}?status=created")
 
     return render(request, "profile_section.html", context)

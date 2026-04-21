@@ -599,9 +599,14 @@ p {
 
 .headline {
     font-size: 0.78rem;
+    line-height: 1.4;
     margin-top: 2px;
     color: rgba(214, 224, 244, 0.82);
     max-width: 52ch;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
 }
 
 .meta {
@@ -3559,15 +3564,14 @@ p {
     margin-top: 24px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
+    justify-content: space-between;
     padding: calc(var(--spacing) * 2.2);
     position: relative;
 }
 
 .profile-section-page-head h1 {
     margin: 0;
-    font-size: clamp(1.65rem, 2.8vw, 2.3rem);
+    font-size: clamp(1.65rem, 2vw, 2.3rem);
     line-height: 1.02;
     letter-spacing: -0.04em;
     text-align: left;
@@ -3586,6 +3590,11 @@ p {
 
 .profile-section-main .profile-section-panel {
     margin-top: 0;
+}
+.profile-section-main{
+    display: grid;
+    align-content: start;
+    gap: calc(var(--spacing)*3);
 }
 
 .profile-section-page-head__action {
@@ -4215,6 +4224,9 @@ p {
 }
 
 @media (max-width: 640px) {
+    .profile-section-form{
+        gap: calc(var(--spacing)*2.4);
+    }
     .profile-panel-head,
     .profile-section-head,
     .profile-photo-row {
@@ -4232,7 +4244,9 @@ p {
     }
     .profile-photo-row__controls{
         display: flex;
-        gap: 10px;
+        justify-content: center;
+
+        gap: 15px;
         flex-wrap: nowrap;
     }
     .text-link.danger-link {
@@ -4325,6 +4339,47 @@ p {
         justify-content: center;
         margin: calc(var(--spacing)*1.5) auto;
     }
+}
+
+.save-btn{
+    color: var(--light-success-text);
+    border: 1px solid rgb(104, 214, 161);
+    background: rgba(104, 214, 161, 0.3);
+    justify-self: center;
+    gap: calc(var(--spacing));
+}
+.cancel-btn{
+    gap: calc(var(--spacing));
+
+}
+
+.save-btn::after {
+    content: "\f00c"!important; /* check */
+}
+
+.cancel-btn::after {
+    content: "\f00d" !important; /* xmark */
+}
+
+.profile-section-actions, .profile-editor-actions{
+    margin: calc(var(--spacing)*1.2) auto;
+    display: flex;
+    justify-content: center;
+    gap: calc(var(--spacing)*3);
+}
+.first-col{
+    flex-direction: row-reverse;
+    gap: calc(var(--spacing)*3);
+    justify-content: space-around;
+
+}
+.compact-btn{
+    background: transparent;
+}
+.profile-section-entry__copy span{
+    font-size: 0.9em;
+    font-weight: 400;
+    color: var(--muted);
 }
 
 @media (max-width: 480px) {

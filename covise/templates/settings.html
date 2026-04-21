@@ -118,7 +118,21 @@
 
             <section class="settings-hub-list">
                 {% for section in settings_sections %}
-                <article class="panel settings-hub-card {% if section.slug == 'danger-zone' %}settings-hub-card--danger{% endif %}" data-settings-searchable>
+                <article class="panel settings-hub-card {% if section.slug == 'danger-zone' %}settings-hub-card--danger{% endif %}{% if section.slug == 'ai-preferences' %} settings-hub-card--disabled{% endif %}" data-settings-searchable>
+                    {% if section.slug == 'ai-preferences' %}
+                    <div class="settings-hub-link settings-hub-link--disabled" aria-disabled="true">
+                        {% if section.icon %}
+                        <span class="settings-hub-icon" aria-hidden="true">
+                            <i class="{{ section.icon }}"></i>
+                        </span>
+                        {% endif %}
+                        <div class="settings-hub-copy">
+                            <strong class="settings-hub-title">{{ section.title }}</strong>
+                            <span class="settings-hub-summary">{{ section.summary }}</span>
+                        </div>
+                        <span class="settings-hub-wip" aria-hidden="true">Working on it...</span>
+                    </div>
+                    {% else %}
                     <a class="settings-hub-link" href="{{ section.url }}">
                         {% if section.icon %}
                         <span class="settings-hub-icon" aria-hidden="true">
@@ -133,6 +147,7 @@
                             <i class="fa-solid fa-arrow-right"></i>
                         </span>
                     </a>
+                    {% endif %}
                 </article>
                 {% endfor %}
             </section>
