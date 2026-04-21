@@ -2,10 +2,30 @@
 <form method="post" action="{{ settings_form_action }}" enctype="multipart/form-data" data-settings-form>
     {% csrf_token %}
     <input type="hidden" name="save_section" value="personal_data">
-    <section class="panel settings-section settings-detail-panel notifications-section" data-settings-searchable>
-        <div class="section-top"><h2>ACCOUNT</h2></div>
-        <div class="settings-stack">
-            <div class="settings-row"><div class="row-copy"><strong>Full Name</strong></div><div class="row-control input-action"><input type="text" name="full_name" value="{{ settings_page.display_name }}"></div></div>
+        <section class="panel settings-section settings-detail-panel notifications-section" data-settings-searchable>
+            <div class="section-top"><h2>ACCOUNT</h2></div>
+            <div class="settings-stack">
+                <div class="settings-row settings-photo-row">
+                    <div class="row-copy settings-photo-row__copy">
+                        <strong>Profile Photo</strong>
+                        <span>Use a clear square image so your messages and profile feel recognizable.</span>
+                    </div>
+                    <div class="row-control settings-photo-row__control">
+                        <div class="settings-photo-row__preview">
+                            {% if ui_user.avatar_url %}
+                            <img class="avatar-image small-avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
+                            {% else %}
+                            <span class="avatar small-avatar" data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}">{{ ui_user.avatar_initials }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="settings-photo-row__actions">
+                            <input class="settings-photo-input" id="settingsAccountPhotoInput" name="profile_image" type="file" accept="image/*">
+                            <label class="outline-btn compact-btn" for="settingsAccountPhotoInput">Change</label>
+                            <button class="text-link compact-btn settings-photo-remove-btn" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-row"><div class="row-copy"><strong>Full Name</strong></div><div class="row-control input-action"><input type="text" name="full_name" value="{{ settings_page.display_name }}"></div></div>
             <div class="settings-row"><div class="row-copy"><strong>Email</strong><span>Changing your email requires verification.</span></div><div class="row-control input-action"><input type="text" name="email" value="{{ settings_page.email }}"></div></div>
             <div class="settings-row"><div class="row-copy"><strong>Phone Number</strong></div><div class="row-control input-action"><input type="text" name="phone_number" value="{{ settings_page.phone_number }}"></div></div>
             <div class="settings-row"><div class="row-copy with-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Security</strong><span>Password, sign-ins, and two-factor authentication.</span></div></div><a class="outline-btn" href="{% url 'Account Security' %}">Security</a></div>

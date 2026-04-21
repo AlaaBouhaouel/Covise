@@ -456,11 +456,13 @@ class ProfileSectionPageTests(TestCase):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
 
-    def test_personal_data_page_includes_explicit_apply_photo_action(self):
+    def test_personal_data_page_shows_change_and_remove_photo_actions(self):
         response = self.client.get(reverse("Profile Personal Data"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Apply Photo")
+        self.assertContains(response, "Change")
+        self.assertContains(response, "Remove")
+        self.assertNotContains(response, "Apply Photo")
 
     @override_settings(
         DEBUG=True,
@@ -697,6 +699,14 @@ class AccountRequestActionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "CoVise AI Agent is not available yet.")
         self.assertContains(response, 'data-unavailable="true"', html=False)
+
+    def test_account_settings_section_shows_compact_photo_actions(self):
+        response = self.client.get(reverse("Settings Section", args=["account"]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Profile Photo")
+        self.assertContains(response, "Change")
+        self.assertContains(response, "Remove")
 
     def test_delete_account_creates_audit_request_before_deleting_user(self):
         with patch("covise_app.views.EmailMessage.send", return_value=1):

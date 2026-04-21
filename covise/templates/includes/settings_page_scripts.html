@@ -305,6 +305,16 @@
             });
         });
 
+        Array.prototype.slice.call(document.querySelectorAll('.settings-photo-input')).forEach(function (input) {
+            if (!input.form) return;
+
+            input.addEventListener('change', function () {
+                if (input.files && input.files.length) {
+                    input.form.requestSubmit();
+                }
+            });
+        });
+
         if (document.body.dataset.saveSuccess === 'true') {
             flashSaveButtons();
         }

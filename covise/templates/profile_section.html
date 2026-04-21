@@ -106,8 +106,10 @@
                     <div class="profile-section-grid">
                         <div class="profile-photo-row">
                             <div class="first-col">
-                                <label class="outline-btn" for="profileSectionPhotoInput">{% if ui_user.avatar_url %}Change Photo{% else %}Upload Photo{% endif %}</label>
-
+                                <div class="profile-photo-row__copy">
+                                    <strong>Profile Photo</strong>
+                                    <span>Use a clear square image so your messages and profile feel recognizable.</span>
+                                </div>
                                 <div class="profile-photo-row__preview">
                                     {% if ui_user.avatar_url %}
                                     <img class="avatar-image small-avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }} profile photo">
@@ -118,12 +120,8 @@
                             </div>
                             <div class="profile-photo-row__controls">
                                 <input class="profile-photo-input" id="profileSectionPhotoInput" name="profile_image" type="file" accept="image/*">
-                                {% if ui_user.avatar_url %}
-                                <label class="outline-btn" for="profileSectionPhotoInput">Upload Another Picture</label>
-                                {% endif %}
-                                <button class="primary-btn" id="profileSectionPhotoApply" type="submit" disabled aria-disabled="true">Apply Photo</button>
+                                <label class="primary-btn" for="profileSectionPhotoInput">Change</label>
                                 <button class="text-link danger-link" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button>
-                                <span id="profileSectionPhotoStatus">Max {{ profile_photo_max_size_mb }} MB. Choose a file, then click Apply Photo.</span>
                             </div>
                         </div>
                         <label class="profile-field">
@@ -526,23 +524,13 @@
     <script>
         (function () {
             var input = document.getElementById('profileSectionPhotoInput');
-            var applyButton = document.getElementById('profileSectionPhotoApply');
-            var status = document.getElementById('profileSectionPhotoStatus');
-            if (!input || !applyButton || !status) return;
+            if (!input || !input.form) return;
 
-            var defaultStatus = 'Max {{ profile_photo_max_size_mb }} MB. Choose a file, then click Apply Photo.';
-
-            function syncPhotoState() {
-                var hasFile = !!(input.files && input.files.length);
-                applyButton.disabled = !hasFile;
-                applyButton.setAttribute('aria-disabled', hasFile ? 'false' : 'true');
-                status.textContent = hasFile
-                    ? input.files[0].name + ' selected. Click Apply Photo to save it.'
-                    : defaultStatus;
-            }
-
-            input.addEventListener('change', syncPhotoState);
-            syncPhotoState();
+            input.addEventListener('change', function () {
+                if (input.files && input.files.length) {
+                    input.form.requestSubmit();
+                }
+            });
         })();
     </script>
     <script>
