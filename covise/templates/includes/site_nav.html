@@ -1,5 +1,5 @@
 {% load static %}
-<nav class="nav{% if nav_classes %} {{ nav_classes }}{% endif %}{% if nav_join_href and nav_join_label %} nav--split-cta{% endif %}">
+<nav class="nav{% if nav_classes %} {{ nav_classes }}{% endif %}{% if nav_join_href and nav_join_label %} nav--split-cta{% elif login_url %} nav--split-link{% endif %}">
     <a href="/" class="logo">
         <img class="logo-dark" src="{% static 'images/index/noBgLogo.png' %}" alt="Covise logo"><img class="logo-light" src="{% static 'images/index/covise_light.png' %}" alt="Covise logo">
         <span>CoVise</span>
@@ -24,7 +24,7 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
     </button>
-    <div class="nav-links{% if nav_join_href and nav_join_label %} nav-links--center{% endif %}">
+    <div class="nav-links{% if nav_join_href and nav_join_label or login_url %} nav-links--center{% endif %}">
         <div class="nav-link-group">
             {% if show_home %}
             <a href="/" class="nav-link{% if active_page == 'home' %} nav-link-active{% endif %}">HOME</a>
@@ -35,9 +35,6 @@
             <a href="{{ nav_cta_href }}" class="nav-link{% if not login_url %} nav-link-demo{% endif %}{% if active_page == 'cta' and not login_url %} nav-link-active{% endif %}">{{ nav_cta_label }}</a>
             {% elif not login_url %}
             <a href="mailto:info@covise.com" class="nav-link nav-link-demo{% if active_page == 'cta' %} nav-link-active{% endif %}">CONTACT</a>
-            {% endif %}
-            {% if login_url %}
-            <a href="/login/" class="nav-link nav-link-demo{% if active_page == 'cta' %} nav-link-active{% endif %}">LOGIN</a>
             {% endif %}
         </div>
     </div>
@@ -64,6 +61,10 @@
                 </svg>
             </span>
         </a>
+    </div>
+    {% elif login_url %}
+    <div class="nav-header-link-wrap">
+        <a href="/login/" class="nav-link nav-link-demo{% if active_page == 'cta' %} nav-link-active{% endif %}">LOGIN</a>
     </div>
     {% endif %}
     <div class="mobile-nav-menu" id="mobileNavMenu" hidden>
