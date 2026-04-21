@@ -124,13 +124,42 @@
         return escapeHtml(initials || "CV");
     }
 
+    function avatarIdentity(avatarUrl) {
+        const value = String(avatarUrl || "").trim();
+        if (!value) {
+            return "";
+        }
+        try {
+            const parsed = new URL(value, window.location.origin);
+            return `${parsed.origin}${parsed.pathname}`;
+        } catch (_error) {
+            return value.split("#")[0].split("?")[0];
+        }
+    }
+
+    function preserveAvatarUrl(previousUrl, nextUrl) {
+        const previousIdentity = avatarIdentity(previousUrl);
+        const nextIdentity = avatarIdentity(nextUrl);
+        if (previousIdentity && nextIdentity && previousIdentity === nextIdentity) {
+            return previousUrl;
+        }
+        return nextUrl || previousUrl || "";
+    }
+
     function setAvatarElement(element, initials, avatarUrl, name) {
         if (!element) {
             return;
         }
         if (avatarUrl) {
+            const nextIdentity = avatarIdentity(avatarUrl);
+            const existingImage = element.querySelector(".avatar-image");
+            if (existingImage && element.dataset.avatarIdentity === nextIdentity) {
+                return;
+            }
+            element.dataset.avatarIdentity = nextIdentity;
             element.innerHTML = avatarInnerMarkup(initials, avatarUrl, name);
         } else {
+            delete element.dataset.avatarIdentity;
             element.textContent = initials || "CV";
         }
     }
@@ -196,8 +225,25 @@
     }
 
     function replaceItems(nextConversations, nextFriendOptions) {
-        conversations = Array.isArray(nextConversations) ? nextConversations : [];
-        friendOptions = Array.isArray(nextFriendOptions) ? nextFriendOptions : [];
+        const previousConversationsById = new Map(
+            (Array.isArray(conversations) ? conversations : []).map((conversation) => [conversation.id, conversation])
+        );
+        const previousFriendsById = new Map(
+            (Array.isArray(friendOptions) ? friendOptions : []).map((friend) => [friend.id, friend])
+        );
+
+        conversations = (Array.isArray(nextConversations) ? nextConversations : []).map((conversation) => {
+            const previousConversation = previousConversationsById.get(conversation.id);
+            return previousConversation
+                ? { ...conversation, avatar_url: preserveAvatarUrl(previousConversation.avatar_url, conversation.avatar_url) }
+                : conversation;
+        });
+        friendOptions = (Array.isArray(nextFriendOptions) ? nextFriendOptions : []).map((friend) => {
+            const previousFriend = previousFriendsById.get(friend.id);
+            return previousFriend
+                ? { ...friend, avatar_url: preserveAvatarUrl(previousFriend.avatar_url, friend.avatar_url) }
+                : friend;
+        });
     }
 
     function applyMessagesState(statePayload, options) {

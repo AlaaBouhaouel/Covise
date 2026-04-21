@@ -117,12 +117,13 @@
                                 </div>
                             </div>
                             <div class="profile-photo-row__controls">
-                                <input id="profileSectionPhotoInput" name="profile_image" type="file" accept="image/*" hidden>
+                                <input class="profile-photo-input" id="profileSectionPhotoInput" name="profile_image" type="file" accept="image/*">
                                 {% if ui_user.avatar_url %}
                                 <label class="outline-btn" for="profileSectionPhotoInput">Upload Another Picture</label>
                                 {% endif %}
+                                <button class="primary-btn" id="profileSectionPhotoApply" type="submit" disabled aria-disabled="true">Apply Photo</button>
                                 <button class="text-link danger-link" type="submit" name="profile_photo_action" value="remove"{% if not ui_user.avatar_url %} disabled aria-disabled="true"{% endif %}>Remove</button>
-                                <span>Max {{ profile_photo_max_size_mb }} MB.</span>
+                                <span id="profileSectionPhotoStatus">Max {{ profile_photo_max_size_mb }} MB. Choose a file, then click Apply Photo.</span>
                             </div>
                         </div>
                         <label class="profile-field">
@@ -520,6 +521,28 @@
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape' && !modal.hidden) closeModal();
             });
+        })();
+    </script>
+    <script>
+        (function () {
+            var input = document.getElementById('profileSectionPhotoInput');
+            var applyButton = document.getElementById('profileSectionPhotoApply');
+            var status = document.getElementById('profileSectionPhotoStatus');
+            if (!input || !applyButton || !status) return;
+
+            var defaultStatus = 'Max {{ profile_photo_max_size_mb }} MB. Choose a file, then click Apply Photo.';
+
+            function syncPhotoState() {
+                var hasFile = !!(input.files && input.files.length);
+                applyButton.disabled = !hasFile;
+                applyButton.setAttribute('aria-disabled', hasFile ? 'false' : 'true');
+                status.textContent = hasFile
+                    ? input.files[0].name + ' selected. Click Apply Photo to save it.'
+                    : defaultStatus;
+            }
+
+            input.addEventListener('change', syncPhotoState);
+            syncPhotoState();
         })();
     </script>
     <script>

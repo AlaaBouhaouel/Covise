@@ -456,6 +456,44 @@ class ProfileSectionPageTests(TestCase):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
 
+    def test_personal_data_page_includes_explicit_apply_photo_action(self):
+        response = self.client.get(reverse("Profile Personal Data"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Apply Photo")
+
+    @override_settings(
+        DEBUG=True,
+        SECURE_SSL_REDIRECT=False,
+        ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"],
+    )
+    def test_profile_personal_data_uploads_profile_photo(self):
+        response = self.client.post(
+            reverse("Profile Personal Data"),
+            {
+                "email": self.user.email,
+                "phone_number": "",
+                "linkedin": "",
+                "github": "",
+                "proof_of_work_url": "",
+                "location": "",
+                "nationality": "",
+                "bio": "",
+                "skills": "",
+                "profile_image": SimpleUploadedFile(
+                    "avatar.png",
+                    b"fake-image-bytes",
+                    content_type="image/png",
+                ),
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        profile = Profile.objects.get(user=self.user)
+        self.assertTrue(bool(profile.profile_image))
+        self.assertIn("profile_images/", profile.profile_image.name)
+        profile.profile_image.delete(save=False)
+
     def test_profile_experience_saves_timezone_aware_datetime_from_date_input(self):
         response = self.client.post(
             reverse("Profile Experience"),
