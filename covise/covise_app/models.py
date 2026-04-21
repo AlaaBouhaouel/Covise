@@ -219,6 +219,7 @@ class Profile(models.Model):
     has_accepted_platform_agreement = models.BooleanField(default=False)
     platform_agreement_accepted_at = models.DateTimeField(null=True, blank=True)
     platform_agreement_version = models.CharField(max_length=20, default="2026.04")
+    requires_intro_post = models.BooleanField(default=False)
     is_account_paused = models.BooleanField(default=False)
     account_paused_at = models.DateTimeField(null=True, blank=True)
     waitlist_snapshot = models.JSONField(default=dict, blank=True)

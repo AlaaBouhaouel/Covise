@@ -694,6 +694,10 @@ def _post_auth_redirect_url(user, next_url=""):
     return sanitized_next or reverse("Home")
 
 
+def _requires_intro_post(profile):
+    return bool(profile and getattr(profile, "requires_intro_post", False))
+
+
 def _clean_onboarding_answers(answers):
     if not isinstance(answers, dict):
         return {}
@@ -3541,6 +3545,7 @@ def home(request):
         "home_welcome_subtitle": _home_welcome_subtitle(sidebar_metrics),
         "home_filter_countries": sorted({post.feed_country for post in posts if getattr(post, "feed_country", "")}),
         "searchable_users": _searchable_users_for_home(request.user),
+        "show_intro_post_notice": _requires_intro_post(profile),
     })
     response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     return response
@@ -4355,6 +4360,10 @@ def _save_post_from_editor(request, *, post=None):
                 handle_text=raw_handle,
             )
     _attach_post_feed_metadata([post], current_user=request.user)
+    profile = getattr(request.user, "profile", None)
+    if profile and getattr(profile, "requires_intro_post", False):
+        profile.requires_intro_post = False
+        profile.save(update_fields=["requires_intro_post"])
     if context["is_editing"]:
         return redirect("Post Detail", post_id=post.id)
     _create_post_notifications(post)
@@ -5994,17 +6003,22 @@ def agreement(request):
         profile.has_accepted_platform_agreement = True
         profile.platform_agreement_accepted_at = timezone.now()
         profile.platform_agreement_version = "2026.04"
+        if not Post.objects.filter(user=request.user).exists():
+            profile.requires_intro_post = True
         profile.save(
             update_fields=[
                 "has_accepted_platform_agreement",
                 "platform_agreement_accepted_at",
                 "platform_agreement_version",
+                "requires_intro_post",
             ]
         )
         try:
             _send_platform_welcome_email(request.user)
         except Exception:
             logger.exception("Failed to send platform welcome email for user=%s", request.user.id)
+        if profile.requires_intro_post:
+            return redirect(reverse("Home"))
         return redirect(next_url)
 
     return render(

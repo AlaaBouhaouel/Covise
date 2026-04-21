@@ -390,6 +390,10 @@ class AgreementWelcomeEmailTests(TestCase):
             user=self.user,
             full_name="Agreement User",
             has_accepted_platform_agreement=False,
+            onboarding_answers={
+                "one_liner": "Building founder tools.",
+                "looking_for_type": ["Technical co-founder"],
+            },
         )
         UserPreference.objects.create(user=self.user)
         self.client.force_login(self.user)
@@ -406,6 +410,7 @@ class AgreementWelcomeEmailTests(TestCase):
         self.assertEqual(response.url, reverse("Home"))
         self.profile.refresh_from_db()
         self.assertTrue(self.profile.has_accepted_platform_agreement)
+        self.assertTrue(self.profile.requires_intro_post)
         self.assertEqual(self.profile.platform_agreement_version, "2026.04")
         mock_resend.Emails.send.assert_called_once()
         payload = mock_resend.Emails.send.call_args.args[0]
@@ -424,6 +429,27 @@ class AgreementWelcomeEmailTests(TestCase):
         self.assertEqual(response.url, reverse("Home"))
         self.profile.refresh_from_db()
         self.assertTrue(self.profile.has_accepted_platform_agreement)
+        self.assertTrue(self.profile.requires_intro_post)
+
+    def test_home_shows_intro_post_notice_when_first_post_is_required(self):
+        self.profile.has_accepted_platform_agreement = True
+        self.profile.requires_intro_post = True
+        self.profile.save(update_fields=["has_accepted_platform_agreement", "requires_intro_post"])
+
+        response = self.client.get(reverse("Home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["show_intro_post_notice"])
+
+    def test_intro_post_requirement_redirects_other_pages_to_create_post(self):
+        self.profile.has_accepted_platform_agreement = True
+        self.profile.requires_intro_post = True
+        self.profile.save(update_fields=["has_accepted_platform_agreement", "requires_intro_post"])
+
+        response = self.client.get(reverse("Profile"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("Create Post"))
 
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
@@ -1385,6 +1411,27 @@ class CreatePostTemplatePrefillTests(TestCase):
         self.assertEqual(response.context["form_data"]["title"], "")
         self.assertEqual(response.context["form_data"]["content"], "")
         self.assertEqual(response.context["form_data"]["post_type"], Post.PostType.UPDATE)
+
+    @patch("covise_app.views._send_post_alert_email")
+    @patch("covise_app.views._create_post_mention_notifications")
+    @patch("covise_app.views._create_post_notifications")
+    def test_first_successful_post_clears_intro_post_requirement(self, _mock_notifications, _mock_mentions, _mock_email):
+        self.profile.requires_intro_post = True
+        self.profile.save(update_fields=["requires_intro_post"])
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("Create Post"),
+            {
+                "title": "My introduction",
+                "post_type": Post.PostType.UPDATE,
+                "content": "Hello everyone, excited to build with this network.",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.profile.refresh_from_db()
+        self.assertFalse(self.profile.requires_intro_post)
 
     def test_first_update_post_displays_as_introduction(self):
         self.client.force_login(self.user)

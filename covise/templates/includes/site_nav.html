@@ -32,11 +32,12 @@
             <a href="/about/" class="nav-link{% if active_page == 'about' %} nav-link-active{% endif %}">ABOUT</a>
             <a href="/features/" class="nav-link{% if active_page == 'features' %} nav-link-active{% endif %}">FEATURES</a>
             {% if nav_cta_href and nav_cta_label %}
-            <a href="{{ nav_cta_href }}" class="nav-link nav-link-demo{% if active_page == 'cta' %} nav-link-active{% endif %}">{{ nav_cta_label }}</a>
-            {% elif login_url %}
-            <a href="/login/" class="nav-link nav-link-demo{% if active_page == 'cta' %} nav-link-active{% endif %}">LOGIN</a>
-            {% else %}
+            <a href="{{ nav_cta_href }}" class="nav-link{% if not login_url %} nav-link-demo{% endif %}{% if active_page == 'cta' and not login_url %} nav-link-active{% endif %}">{{ nav_cta_label }}</a>
+            {% elif not login_url %}
             <a href="mailto:info@covise.com" class="nav-link nav-link-demo{% if active_page == 'cta' %} nav-link-active{% endif %}">CONTACT</a>
+            {% endif %}
+            {% if login_url %}
+            <a href="/login/" class="nav-link nav-link-demo{% if active_page == 'cta' %} nav-link-active{% endif %}">LOGIN</a>
             {% endif %}
         </div>
     </div>
@@ -92,7 +93,7 @@
             <span>FEATURES</span>
         </a>
         {% if nav_cta_href and nav_cta_label %}
-        <a href="{{ nav_cta_href }}" class="mobile-nav-link mobile-nav-link-demo{% if active_page == 'cta' %} mobile-nav-link-active{% endif %}">
+        <a href="{{ nav_cta_href }}" class="mobile-nav-link{% if not login_url %} mobile-nav-link-demo{% endif %}{% if active_page == 'cta' and not login_url %} mobile-nav-link-active{% endif %}">
             <svg class="mobile-nav-link-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M10 17l5-5-5-5"></path>
                 <path d="M15 12H4"></path>
@@ -100,16 +101,7 @@
             </svg>
             <span>{{ nav_cta_label }}</span>
         </a>
-        {% elif login_url %}
-        <a href="/login/" class="mobile-nav-link mobile-nav-link-demo{% if active_page == 'cta' %} mobile-nav-link-active{% endif %}">
-            <svg class="mobile-nav-link-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M10 17l5-5-5-5"></path>
-                <path d="M15 12H4"></path>
-                <path d="M20 4v16"></path>
-            </svg>
-            <span>LOGIN</span>
-        </a>
-        {% else %}
+        {% elif not login_url %}
         <a href="mailto:info@covise.com" class="mobile-nav-link mobile-nav-link-demo{% if active_page == 'cta' %} mobile-nav-link-active{% endif %}">
             <svg class="mobile-nav-link-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M10 17l5-5-5-5"></path>
@@ -117,6 +109,16 @@
                 <path d="M20 4v16"></path>
             </svg>
             <span>CONTACT</span>
+        </a>
+        {% endif %}
+        {% if login_url %}
+        <a href="/login/" class="mobile-nav-link mobile-nav-link-demo{% if active_page == 'cta' %} mobile-nav-link-active{% endif %}">
+            <svg class="mobile-nav-link-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 17l5-5-5-5"></path>
+                <path d="M15 12H4"></path>
+                <path d="M20 4v16"></path>
+            </svg>
+            <span>LOGIN</span>
         </a>
         {% endif %}
 
