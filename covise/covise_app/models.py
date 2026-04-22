@@ -776,7 +776,7 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name="replies",
     )
-    content=models.CharField(max_length=200)
+    content=models.CharField(max_length=1000)
     up=models.IntegerField(default=0)
     down=models.IntegerField(default=0)
     is_pinned = models.BooleanField(default=False)
