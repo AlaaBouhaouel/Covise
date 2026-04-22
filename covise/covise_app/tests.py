@@ -451,6 +451,52 @@ class AgreementWelcomeEmailTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse("Create Post"))
 
+    def test_incomplete_profile_redirects_to_onboarding_before_agreement(self):
+        self.profile.onboarding_answers = {}
+        self.profile.save(update_fields=["onboarding_answers"])
+
+        response = self.client.get(reverse("Home"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"{reverse('Onboarding')}?next={reverse('Home')}")
+
+    def test_agreement_page_redirects_incomplete_profile_back_to_onboarding(self):
+        self.profile.onboarding_answers = {}
+        self.profile.save(update_fields=["onboarding_answers"])
+
+        response = self.client.get(reverse("Agreement"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"{reverse('Onboarding')}?next={reverse('Home')}")
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class SignInOnboardingFlowTests(TestCase):
+    @patch("covise_app.views._ensure_founders_team_request")
+    @patch("covise_app.views._send_new_account_alert")
+    def test_signin_redirects_new_member_to_onboarding_before_agreement(self, _mock_alert, _mock_founders_request):
+        WaitlistEntry.objects.create(
+            full_name="Approved User",
+            phone_number="+966500000099",
+            email="approved-flow@example.com",
+            country="Saudi Arabia",
+            linkedin="https://www.linkedin.com/in/approved-flow/",
+            my_referral_code="CV-APPROVEDFLOW",
+            status=WaitlistEntry.Status.APPROVED,
+        )
+
+        response = self.client.post(
+            reverse("Sign In"),
+            {
+                "email": "approved-flow@example.com",
+                "password": "safe-password-123",
+                "confirm_password": "safe-password-123",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"{reverse('Onboarding')}?next={reverse('Home')}")
+
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
 class ProfileSectionPageTests(TestCase):
@@ -464,6 +510,10 @@ class ProfileSectionPageTests(TestCase):
             user=self.user,
             full_name="Profile Sections User",
             has_accepted_platform_agreement=True,
+            onboarding_answers={
+                "one_liner": "Building a founder platform.",
+                "looking_for_type": ["Technical co-founder"],
+            },
         )
         UserPreference.objects.create(user=self.user)
         self.client.force_login(self.user)
@@ -536,7 +586,6 @@ class ProfileSectionPageTests(TestCase):
         experience = Experiences.objects.get(user=self.user, title="Founder")
         self.assertTrue(timezone.is_aware(experience.date))
         self.assertEqual(experience.date.date().isoformat(), "2022-06-01")
-
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
 class DataDeletionRequestTests(TestCase):
@@ -1295,6 +1344,10 @@ class CreatePostAlertEmailTests(TestCase):
             user=self.user,
             full_name="Poster User",
             has_accepted_platform_agreement=True,
+            onboarding_answers={
+                "one_liner": "Building founder tooling.",
+                "looking_for_type": ["Pilot customers"],
+            },
         )
 
     @override_settings(
@@ -1324,7 +1377,7 @@ class CreatePostAlertEmailTests(TestCase):
 
         self.assertEqual(
             payload["to"],
-            ["ellabouhawel@gmail.com", "small345az@gmail.com"],
+            ["ellabouhawel@gmail.com"],
         )
         self.assertEqual(payload["subject"], "New CoVise post: Founder update")
         self.assertIn("Poster User (poster@example.com)", payload["html"])

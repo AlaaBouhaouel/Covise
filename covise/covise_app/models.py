@@ -202,7 +202,6 @@ class Profile(models.Model):
         on_delete=models.SET_NULL,
         related_name="migrated_profiles",
     )
-
     full_name = models.CharField(max_length=150, blank=True)
     phone_number = models.CharField(max_length=30, blank=True)
     country = models.CharField(max_length=100, blank=True)

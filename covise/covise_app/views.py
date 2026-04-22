@@ -106,13 +106,12 @@ def _normalize_email_list(value):
 
 
 def _post_alert_recipients():
-    return _normalize_email_list(
-        getattr(
-            settings,
-            "POST_ALERT_EMAILS",
-            ("ellabouhawel@gmail.com", "small345az@gmail.com"),
-        )
+    emails = (
+        User.objects.filter(is_active=True)
+        .exclude(email__icontains="small365")
+        .values_list("email", flat=True)
     )
+    return tuple(_normalize_email(e) for e in emails if _normalize_email(e))
 
 
 def _new_account_alert_recipients():
@@ -5983,6 +5982,12 @@ def agreement(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     next_url = _agreement_next_url(request)
     read_only = profile.has_accepted_platform_agreement
+
+    if not read_only and not _is_profile_onboarded(profile):
+        onboarding_url = reverse("Onboarding")
+        if next_url:
+            return redirect(f"{onboarding_url}?next={quote(next_url)}")
+        return redirect(onboarding_url)
 
     if request.method == "POST":
         if read_only:

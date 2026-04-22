@@ -30,6 +30,9 @@ class AgreementRequiredMiddleware:
                 or path.startswith("/static/")
                 or path.startswith("/media/")
             )
+            if not self._has_profile_completion(profile) and not is_exempt:
+                return redirect(f"{reverse('Onboarding')}?next={path}")
+
             if not profile.has_accepted_platform_agreement and not is_exempt:
                 return redirect(f"{reverse('Agreement')}?next={path}")
 
@@ -93,3 +96,42 @@ class AgreementRequiredMiddleware:
         if path in allowed_paths:
             return True
         return False
+
+    def _has_profile_completion(self, profile):
+        if not profile:
+            return False
+
+        onboarding_answers = self._clean_onboarding_answers(getattr(profile, "onboarding_answers", {}))
+        one_liner_value = onboarding_answers.get("one_liner", getattr(profile, "one_liner", None))
+        looking_for_value = onboarding_answers.get("looking_for_type", getattr(profile, "looking_for_type", None))
+        legacy_onboarding = bool(
+            getattr(profile, "source_onboarding_response_id", None)
+            or str(getattr(profile, "flow_name", "") or "").strip()
+        )
+        return (bool(self._flatten_text_values(one_liner_value)) and bool(self._flatten_text_values(looking_for_value))) or legacy_onboarding
+
+    def _clean_onboarding_answers(self, answers):
+        if not isinstance(answers, dict):
+            return {}
+        cleaned = {}
+        for key, value in answers.items():
+            if value in (None, "", [], {}, ()):
+                continue
+            cleaned[key] = value
+        return cleaned
+
+    def _flatten_text_values(self, value):
+        if value in (None, "", [], {}, ()):
+            return []
+        if isinstance(value, dict):
+            items = []
+            for item in value.values():
+                items.extend(self._flatten_text_values(item))
+            return items
+        if isinstance(value, (list, tuple, set)):
+            items = []
+            for item in value:
+                items.extend(self._flatten_text_values(item))
+            return items
+        text = str(value).strip()
+        return [text] if text else []
