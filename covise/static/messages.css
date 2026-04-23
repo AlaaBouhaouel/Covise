@@ -1397,6 +1397,17 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
     }
 }
 
+@media (max-width: 600px) {
+    .conv-item.is-active {
+        border: none !important;
+        border-bottom: 1px solid rgba(120, 150, 255, 0.12) !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        padding: 10px 6px !important;
+        box-shadow: none !important;
+    }
+}
+
 @media (max-width: 420px) {
     .tab-btn { padding: 8px 10px; font-size: 0.68rem; gap: 8px; }
     .tab-btn__icon { width: 18px; height: 18px; }
