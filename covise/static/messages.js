@@ -119,8 +119,25 @@
             .replaceAll("'", "&#39;");
     }
 
+    function normalizeMessagingUrl(value) {
+        const raw = String(value || "").trim();
+        if (!raw) {
+            return "";
+        }
+        if (/^(?:https?:|data:|blob:)/i.test(raw)) {
+            return raw;
+        }
+        if (raw.startsWith("//users/") || raw.startsWith("//messages/")) {
+            return raw.slice(1);
+        }
+        if (raw.startsWith("users/") || raw.startsWith("messages/")) {
+            return `/${raw}`;
+        }
+        return raw;
+    }
+
     function avatarIdentity(avatarUrl) {
-        const value = String(avatarUrl || "").trim();
+        const value = normalizeMessagingUrl(avatarUrl);
         if (!value) {
             return "";
         }
@@ -136,14 +153,15 @@
         const previousIdentity = avatarIdentity(previousUrl);
         const nextIdentity = avatarIdentity(nextUrl);
         if (previousIdentity && nextIdentity && previousIdentity === nextIdentity) {
-            return previousUrl;
+            return normalizeMessagingUrl(previousUrl);
         }
-        return nextUrl || previousUrl || "";
+        return normalizeMessagingUrl(nextUrl || previousUrl || "");
     }
 
     function avatarInnerMarkup(initials, avatarUrl, name) {
-        if (avatarUrl) {
-            return `<img class="avatar-image" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(name || "CoVise member")} avatar" loading="lazy" decoding="async">`;
+        const normalizedAvatarUrl = normalizeMessagingUrl(avatarUrl);
+        if (normalizedAvatarUrl) {
+            return `<img class="avatar-image" src="${escapeHtml(normalizedAvatarUrl)}" alt="${escapeHtml(name || "CoVise member")} avatar" loading="lazy" decoding="async">`;
         }
         return escapeHtml(initials || "CV");
     }
@@ -152,8 +170,9 @@
         if (!element) {
             return;
         }
-        if (avatarUrl) {
-            const nextIdentity = avatarIdentity(avatarUrl);
+        const normalizedAvatarUrl = normalizeMessagingUrl(avatarUrl);
+        if (normalizedAvatarUrl) {
+            const nextIdentity = avatarIdentity(normalizedAvatarUrl);
             const existingImage = element.querySelector(".avatar-image");
             if (existingImage && element.dataset.avatarIdentity === nextIdentity) {
                 if (existingImage.alt !== `${name || "CoVise member"} avatar`) {
@@ -162,7 +181,7 @@
                 return;
             }
             element.dataset.avatarIdentity = nextIdentity;
-            element.innerHTML = avatarInnerMarkup(initials, avatarUrl, name);
+            element.innerHTML = avatarInnerMarkup(initials, normalizedAvatarUrl, name);
             return;
         }
         delete element.dataset.avatarIdentity;
@@ -378,16 +397,24 @@
         const previousFriendsById = new Map(friendOptions.map((friend) => [friend.id, friend]));
 
         conversationSummaries = (Array.isArray(nextConversationSummaries) ? nextConversationSummaries : []).map((conversation) => {
+            const normalizedConversation = {
+                ...conversation,
+                avatar_url: normalizeMessagingUrl(conversation.avatar_url),
+            };
             const previous = previousConversationsById.get(conversation.id);
             return previous
-                ? { ...conversation, avatar_url: preserveAvatarUrl(previous.avatar_url, conversation.avatar_url) }
-                : conversation;
+                ? { ...normalizedConversation, avatar_url: preserveAvatarUrl(previous.avatar_url, normalizedConversation.avatar_url) }
+                : normalizedConversation;
         });
         friendOptions = (Array.isArray(nextFriendOptions) ? nextFriendOptions : []).map((friend) => {
+            const normalizedFriend = {
+                ...friend,
+                avatar_url: normalizeMessagingUrl(friend.avatar_url),
+            };
             const previous = previousFriendsById.get(friend.id);
             return previous
-                ? { ...friend, avatar_url: preserveAvatarUrl(previous.avatar_url, friend.avatar_url) }
-                : friend;
+                ? { ...normalizedFriend, avatar_url: preserveAvatarUrl(previous.avatar_url, normalizedFriend.avatar_url) }
+                : normalizedFriend;
         });
     }
 
@@ -429,8 +456,18 @@
         const previousConversation = activeConversationData && activeConversationData.id === nextConversation.id
             ? activeConversationData
             : null;
-        const nextMessages = Array.isArray(nextConversation.messages) ? nextConversation.messages.slice() : [];
-        const nextSharedFiles = Array.isArray(nextConversation.shared_files) ? nextConversation.shared_files.slice() : [];
+        const nextMessages = Array.isArray(nextConversation.messages)
+            ? nextConversation.messages.map((message) => ({
+                ...message,
+                attachment_url: normalizeMessagingUrl(message.attachment_url),
+            }))
+            : [];
+        const nextSharedFiles = Array.isArray(nextConversation.shared_files)
+            ? nextConversation.shared_files.map((item) => ({
+                ...item,
+                url: normalizeMessagingUrl(item.url),
+            }))
+            : [];
         activeConversationData = {
             ...(previousConversation || {}),
             ...nextConversation,
@@ -875,7 +912,7 @@
 
     function syncMediaBubbleBody(container, message) {
         const messageType = message.message_type || "text";
-        const attachmentUrl = message.attachment_url || "";
+        const attachmentUrl = normalizeMessagingUrl(message.attachment_url);
         const text = message.text || "";
         const attachmentName = message.attachment_name || "Attachment";
 
@@ -1286,7 +1323,7 @@
             id: message.id,
             message_type: message.message_type || "file",
             name: message.attachment_name || "Attachment",
-            url: message.attachment_url || "",
+            url: normalizeMessagingUrl(message.attachment_url),
             created_at: message.created_at,
             sender_name: message.sender_name || "CoVise member",
             attachment_size: message.attachment_size || null,
@@ -1310,7 +1347,7 @@
             created_at: data.created_at,
             receipt: data.receipt || "sent",
             message_type: data.message_type || "text",
-            attachment_url: data.attachment_url || "",
+            attachment_url: normalizeMessagingUrl(data.attachment_url),
             attachment_name: data.attachment_name || "",
             attachment_content_type: data.attachment_content_type || "",
             attachment_size: data.attachment_size || null,
