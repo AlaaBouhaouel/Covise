@@ -15,7 +15,7 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from .messaging import deliver_media_message
+from .messaging import deliver_media_message, ensure_private_conversation_integrity
 from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Experiences, Message, MessageReceipt, Notification, OnboardingResponse, Post, PostImage, PostReaction, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
 from .context_processors import user_ui_context
 from .user_context import build_profile_context, build_ui_user_context, get_onboarding_skill_config
@@ -2265,6 +2265,29 @@ class MessagingConversationNormalizationTests(TestCase):
                 body="Recovered thread message",
             ).exists()
         )
+
+    def test_private_conversation_integrity_repair_handles_extra_participants(self):
+        extra_user = User.objects.create_user(
+            email="messages-extra@example.com",
+            password="safe-password-123",
+            full_name="Messages Extra",
+        )
+        Profile.objects.create(
+            user=extra_user,
+            full_name="Messages Extra",
+            has_accepted_platform_agreement=True,
+        )
+        invalid_conversation = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            created_by=self.other_user,
+        )
+        invalid_conversation.participants.add(self.user, self.other_user, extra_user)
+
+        repaired = ensure_private_conversation_integrity(invalid_conversation, current_user=self.user)
+
+        self.assertIsNotNone(repaired)
+        participant_ids = set(repaired.participants.values_list("id", flat=True))
+        self.assertEqual(participant_ids, {self.user.id, self.other_user.id})
 
     def test_start_private_conversation_redirects_to_canonical_merged_thread(self):
         accepted_request = ConversationRequest.objects.create(

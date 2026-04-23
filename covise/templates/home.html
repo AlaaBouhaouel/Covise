@@ -557,11 +557,16 @@
                         </select>
                         <select id="postTypeFilter" aria-label="Filter posts by type">
                             <option value="">All types</option>
-                            <option value="idea">Idea</option>
+                            <option value="introduction">Introduction</option>
                             <option value="update">Update</option>
+                            <option value="idea">Idea</option>
                             <option value="ask">Ask</option>
                             <option value="win">Win</option>
-                            <option value="ask_me_anything">Ask Me Anything</option>
+                            <option value="ask me anything">Ask Me Anything</option>
+                        </select>
+                        <select id="postCofoundFilter" aria-label="Filter by cofounder search">
+                            <option value="">All posts</option>
+                            <option value="true">Looking for cofounder</option>
                         </select>
                         <select id="postCountryFilter" aria-label="Filter posts by country">
                             <option value="">All countries</option>
@@ -596,7 +601,7 @@
                     <section class="feed-shell" data-demo="The feed keeps you close to founder momentum, product progress, and community updates in one wide stream." style="width: 100%; padding: 0 0 24px;">
                  <div class="structured-feed">
                     {% for post in posts %}
-                    <article class="structured-post {{ post.theme_class }}{% if post.is_founders_spotlight %} structured-post--founders-spotlight{% endif %}" data-post-id="{{ post.id }}" data-post-url="{% url 'Post Detail' post.id %}" data-post-type="{{ post.post_type }}" data-post-owner="{{ post.owner_display_name|lower }}" data-post-country="{{ post.feed_country_display|default:post.feed_country|lower }}">
+                    <article class="structured-post {{ post.theme_class }}{% if post.is_founders_spotlight %} structured-post--founders-spotlight{% endif %}" data-post-id="{{ post.id }}" data-post-url="{% url 'Post Detail' post.id %}" data-post-type="{{ post.post_type }}" data-post-feed-type="{{ post.feed_post_type_label|lower }}" data-post-cofounder="{% if post.show_cofounder_badge %}true{% endif %}" data-post-owner="{{ post.owner_display_name|lower }}" data-post-country="{{ post.feed_country_display|default:post.feed_country|lower }}">
                         <div class="structured-post-head">
                             <div class="structured-post-head-main">
                                 <div class="structured-post-meta">
@@ -1559,6 +1564,7 @@
         var mobileSearchInput = document.getElementById('homeMobileSearch');
         var sortFilter = document.getElementById('postSortFilter');
         var typeFilter = document.getElementById('postTypeFilter');
+        var cofoundFilter = document.getElementById('postCofoundFilter');
         var countryFilter = document.getElementById('postCountryFilter');
         var scopeFilter = document.getElementById('postScopeFilter');
         var mobileSearchToggle = document.getElementById('mobileSearchToggle');
@@ -1885,7 +1891,7 @@
             wrapper.appendChild(menu);
         }
 
-        [sortFilter, typeFilter, countryFilter, scopeFilter].forEach(enhanceFilterSelect);
+        [sortFilter, typeFilter, cofoundFilter, countryFilter, scopeFilter].forEach(enhanceFilterSelect);
 
         function resetMobileFilterSwipe() {
             mobileFilterTouchStartY = null;
@@ -2061,6 +2067,7 @@
             var query = normalizeSearchText(currentSearchQuery);
             var selectedSort = sortFilter ? sortFilter.value.trim().toLowerCase() : 'date';
             var selectedType = typeFilter ? typeFilter.value.trim().toLowerCase() : '';
+            var selectedCofounder = cofoundFilter ? cofoundFilter.value.trim().toLowerCase() : '';
             var selectedCountry = countryFilter ? countryFilter.value.trim().toLowerCase() : '';
             var selectedScope = scopeFilter ? scopeFilter.value.trim().toLowerCase() : 'all';
             sortPosts(selectedSort);
@@ -2068,10 +2075,11 @@
             var matches = 0;
             posts.forEach(function(post) {
                 var matchesText = !query || post.textContent.toLowerCase().indexOf(query) !== -1;
-                var matchesType = !selectedType || (post.dataset.postType || '').toLowerCase() === selectedType;
+                var matchesType = !selectedType || (post.dataset.postFeedType || '').toLowerCase() === selectedType;
+                var matchesCofounder = !selectedCofounder || (post.dataset.postCofounder || '') === selectedCofounder;
                 var matchesCountry = !selectedCountry || (post.dataset.postCountry || '').toLowerCase() === selectedCountry;
                 var matchesScope = selectedScope !== 'contacts';
-                var visible = matchesText && matchesType && matchesCountry && matchesScope;
+                var visible = matchesText && matchesType && matchesCofounder && matchesCountry && matchesScope;
                 post.hidden = !visible;
                 if (visible) matches += 1;
             });
@@ -2082,7 +2090,7 @@
                     mobileSearchFeedHint.textContent = '"' + currentSearchQuery.trim() + '" is filtering ' + matches + ' feed post' + (matches === 1 ? '' : 's') + ' while showing matching people.';
                 }
             }
-            emptyState.hidden = (!query && !selectedType && !selectedCountry && selectedScope === 'all' && selectedSort === 'date') || matches > 0;
+            emptyState.hidden = (!query && !selectedType && !selectedCofounder && !selectedCountry && selectedScope === 'all' && selectedSort === 'date') || matches > 0;
         }
 
         function handleSearchInput(event) {
@@ -2133,6 +2141,7 @@
         });
         if (sortFilter) sortFilter.addEventListener('change', applyPostFilters);
         if (typeFilter) typeFilter.addEventListener('change', applyPostFilters);
+        if (cofoundFilter) cofoundFilter.addEventListener('change', applyPostFilters);
         if (countryFilter) countryFilter.addEventListener('change', applyPostFilters);
         if (scopeFilter) scopeFilter.addEventListener('change', applyPostFilters);
         setSearchQuery(currentSearchQuery, input);

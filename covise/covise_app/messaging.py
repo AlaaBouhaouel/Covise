@@ -145,9 +145,7 @@ def ensure_private_conversation_integrity(conversation, *, current_user):
             .filter(
                 id=conversation.id,
                 conversation_type=Conversation.ConversationType.PRIVATE,
-                participants=current_user,
             )
-            .distinct()
             .first()
         )
         if not locked:
