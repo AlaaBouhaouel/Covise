@@ -2223,6 +2223,12 @@ def _profile_is_looking_for_cofounder(profile):
         return False
 
     onboarding_answers = getattr(profile, "onboarding_answers", {}) or {}
+    explicit_status = onboarding_answers.get("looking_for_cofounder_status")
+    if explicit_status is not None:
+        if isinstance(explicit_status, str):
+            return explicit_status.strip().lower() in {"1", "true", "yes", "on"}
+        return bool(explicit_status)
+
     cofounder_count_values = (
         _normalized_choice_values(getattr(profile, "cofounders_needed", None))
         + _normalized_choice_values(onboarding_answers.get("cofounders_needed"))
@@ -3455,6 +3461,7 @@ def _serialize_group_members(conversation):
 def _conversation_payload_base(conversation, current_user):
     is_group = conversation.conversation_type == Conversation.ConversationType.GROUP
     partner = _conversation_partner(conversation, current_user)
+    participants = list(conversation.participants.all())
     block_state = (
         _conversation_block_state(current_user, partner)
         if not is_group and partner
@@ -3466,7 +3473,19 @@ def _conversation_payload_base(conversation, current_user):
         }
     )
     partner_profile = getattr(partner, "profile", None) if not is_group else None
-    group_participants = _serialize_group_members(conversation)
+    group_participants = (
+        [
+            {
+                "id": str(participant.id),
+                "display_name": _display_name(participant),
+                "avatar_initials": participant.avatar_initials,
+                "avatar_url": _messaging_avatar_url(participant),
+            }
+            for participant in participants
+        ]
+        if is_group
+        else []
+    )
     muted_state = _conversation_muted_state(conversation, current_user)
     status = (
         f"{len(group_participants)} members"
@@ -3490,6 +3509,21 @@ def _conversation_payload_base(conversation, current_user):
         getattr(conversation, "last_message_body", ""),
         getattr(conversation, "last_message_attachment_name", ""),
     )
+    last_message_sender_id = getattr(conversation, "last_message_sender_id", None)
+    preview_sender_id = str(last_message_sender_id) if last_message_sender_id else ""
+    preview_sender_name = ""
+    if preview_sender_id:
+        if preview_sender_id == str(current_user.id):
+            preview_sender_name = "You"
+        elif not is_group and partner and preview_sender_id == str(partner.id):
+            preview_sender_name = _display_name(partner)
+        else:
+            preview_sender = next(
+                (participant for participant in participants if str(participant.id) == preview_sender_id),
+                None,
+            )
+            if preview_sender:
+                preview_sender_name = _display_name(preview_sender)
     return {
         "id": str(conversation.id),
         "conversation_type": conversation.conversation_type,
@@ -3502,6 +3536,8 @@ def _conversation_payload_base(conversation, current_user):
         "avatar": _group_avatar_initials(conversation.group_name) if is_group else partner.avatar_initials,
         "avatar_url": "" if is_group else _messaging_avatar_url(partner),
         "preview": preview,
+        "preview_sender_id": preview_sender_id,
+        "preview_sender_name": preview_sender_name,
         "time": _relative_time_label(last_message_created_at) if last_message_created_at else "New",
         "last_message_at": last_message_created_at.isoformat() if last_message_created_at else "",
         "unread": int(getattr(conversation, "unread_count", 0) or 0),
@@ -4621,6 +4657,10 @@ def _messages_conversation_queryset(user):
             last_message_attachment_name=Subquery(
                 last_message_queryset.values("attachment_name")[:1],
                 output_field=models.CharField(),
+            ),
+            last_message_sender_id=Subquery(
+                last_message_queryset.values("sender_id")[:1],
+                output_field=models.UUIDField(),
             ),
             last_message_created_at=Subquery(
                 last_message_queryset.values("created_at")[:1],
@@ -6178,6 +6218,7 @@ def profile_personal_data(request):
         phone_number = request.POST.get("phone_number", "").strip()
         profile_photo_action = request.POST.get("profile_photo_action", "").strip()
         uploaded_profile_image = request.FILES.get("profile_image")
+        looking_for_cofounder = request.POST.get("looking_for_cofounder")
 
         if email and email != request.user.email:
             if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
@@ -6194,6 +6235,10 @@ def profile_personal_data(request):
         profile.nationality = request.POST.get("nationality", "").strip()
         profile.bio = request.POST.get("bio", "").strip()
         profile.skills = _parse_profile_skills(request.POST.get("skills", ""))
+        onboarding_answers = dict(profile.onboarding_answers or {})
+        if looking_for_cofounder is not None:
+            onboarding_answers["looking_for_cofounder_status"] = _as_bool(looking_for_cofounder)
+        profile.onboarding_answers = onboarding_answers
 
         update_fields = [
             "phone_number",
@@ -6204,6 +6249,7 @@ def profile_personal_data(request):
             "nationality",
             "bio",
             "skills",
+            "onboarding_answers",
         ]
 
         if profile_photo_action == "remove":

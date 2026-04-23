@@ -187,6 +187,9 @@ def _cofounder_badge_state(profile):
         return False, False
 
     onboarding_answers = getattr(profile, "onboarding_answers", {}) or {}
+    explicit_status = onboarding_answers.get("looking_for_cofounder_status")
+    if isinstance(explicit_status, str):
+        explicit_status = explicit_status.strip().lower() in {"1", "true", "yes", "on"}
 
     def normalized_values(value):
         if isinstance(value, dict):
@@ -207,8 +210,10 @@ def _cofounder_badge_state(profile):
         normalized_values(getattr(profile, "cofounders_needed", None))
         + normalized_values(onboarding_answers.get("cofounders_needed"))
     )
-    eligible = any(value not in {"0", "none", "no"} for value in cofounder_count_values)
-    if not eligible:
+    eligible = bool(explicit_status) if explicit_status is not None else any(
+        value not in {"0", "none", "no"} for value in cofounder_count_values
+    )
+    if explicit_status is None and not eligible:
         desired_partner_values = (
             normalized_values(getattr(profile, "looking_for_type", None))
             + normalized_values(onboarding_answers.get("looking_for_type"))

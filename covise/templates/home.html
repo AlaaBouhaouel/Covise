@@ -551,33 +551,41 @@
                                 </svg>
                             </button>
                         </div>
-                        <select id="postSortFilter" aria-label="Sort posts">
-                            <option value="date">By date</option>
-                            <option value="reactions">By reactions</option>
-                        </select>
-                        <select id="postTypeFilter" aria-label="Filter posts by type">
-                            <option value="">All types</option>
-                            <option value="introduction">Introduction</option>
-                            <option value="update">Update</option>
-                            <option value="idea">Idea</option>
-                            <option value="ask">Ask</option>
-                            <option value="win">Win</option>
-                            <option value="ask me anything">Ask Me Anything</option>
-                        </select>
-                        <select id="postCofoundFilter" aria-label="Filter by cofounder search">
-                            <option value="">All posts</option>
-                            <option value="true">Looking for cofounder</option>
-                        </select>
-                        <select id="postCountryFilter" aria-label="Filter posts by country">
-                            <option value="">All countries</option>
-                            {% for country in home_filter_countries %}
-                                <option value="{{ country|lower }}">{{ country }}</option>
-                            {% endfor %}
-                        </select>
-                        <select id="postScopeFilter" aria-label="Filter by network scope">
-                            <option value="all">All</option>
-                            <option value="contacts">Contacts only</option>
-                        </select>
+                        <label class="post-filter-field" for="postSortFilter">
+                            <span class="post-filter-label">Sort</span>
+                            <select id="postSortFilter" aria-label="Sort posts">
+                                <option value="date">Newest first</option>
+                                <option value="reactions">Most reactions</option>
+                            </select>
+                        </label>
+                        <label class="post-filter-field" for="postTypeFilter">
+                            <span class="post-filter-label">Type</span>
+                            <select id="postTypeFilter" aria-label="Filter posts by type">
+                                <option value="">All types</option>
+                                <option value="introduction">Introduction</option>
+                                <option value="update">Update</option>
+                                <option value="idea">Idea</option>
+                                <option value="ask">Ask</option>
+                                <option value="win">Win</option>
+                                <option value="ask me anything">Ask Me Anything</option>
+                            </select>
+                        </label>
+                        <label class="post-filter-field" for="postCofoundFilter">
+                            <span class="post-filter-label">Cofounder</span>
+                            <select id="postCofoundFilter" aria-label="Filter by cofounder search">
+                                <option value="">All posts</option>
+                                <option value="true">Looking for cofounder</option>
+                            </select>
+                        </label>
+                        <label class="post-filter-field" for="postCountryFilter">
+                            <span class="post-filter-label">Country</span>
+                            <select id="postCountryFilter" aria-label="Filter posts by country">
+                                <option value="">All countries</option>
+                                {% for country in home_filter_countries %}
+                                    <option value="{{ country|lower }}">{{ country }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
                     </div>
                     <section class="mobile-search-sheet" id="mobileSearchSheet" hidden aria-hidden="true" aria-label="Search CoVise">
                         <div class="mobile-search-sheet-head">
@@ -1605,7 +1613,6 @@
         var typeFilter = document.getElementById('postTypeFilter');
         var cofoundFilter = document.getElementById('postCofoundFilter');
         var countryFilter = document.getElementById('postCountryFilter');
-        var scopeFilter = document.getElementById('postScopeFilter');
         var mobileSearchToggle = document.getElementById('mobileSearchToggle');
         var mobileSearchSheet = document.getElementById('mobileSearchSheet');
         var mobileSearchClose = document.getElementById('mobileSearchClose');
@@ -1615,9 +1622,14 @@
         var mobileFilterBackdrop = document.getElementById('mobileFilterBackdrop');
         var mobileFilterClose = document.getElementById('mobileFilterClose');
         var mobileFilterQuery = window.matchMedia('(max-width: 520px)');
+        var desktopFilterEnhancements = [];
         var mobileFilterTouchStartY = null;
         var mobileFilterTouchDeltaY = 0;
         var mobileFilterSwipeActive = false;
+        var mobileFilterBackdropParent = mobileFilterBackdrop ? mobileFilterBackdrop.parentNode : null;
+        var mobileFilterBackdropNextSibling = mobileFilterBackdrop ? mobileFilterBackdrop.nextSibling : null;
+        var mobileFilterDrawerParent = mobileFilterDrawer ? mobileFilterDrawer.parentNode : null;
+        var mobileFilterDrawerNextSibling = mobileFilterDrawer ? mobileFilterDrawer.nextSibling : null;
         var searchResults = document.getElementById('homeSearchResults');
         var mobileSearchResults = document.getElementById('mobileHomeSearchResults');
         var searchUsersDataNode = document.getElementById('homeSearchableUsersData');
@@ -1859,79 +1871,6 @@
             }
         });
 
-        function enhanceFilterSelect(select) {
-            if (!select || select.dataset.enhanced === 'true') return;
-            select.dataset.enhanced = 'true';
-
-            var wrapper = document.createElement('div');
-            wrapper.className = 'filter-dropdown';
-
-            var trigger = document.createElement('button');
-            trigger.type = 'button';
-            trigger.className = 'filter-dropdown-btn';
-            trigger.setAttribute('aria-haspopup', 'listbox');
-            trigger.setAttribute('aria-expanded', 'false');
-            trigger.textContent = select.options[select.selectedIndex] ? select.options[select.selectedIndex].textContent : '';
-
-              var menu = document.createElement('div');
-              menu.className = 'filter-dropdown-menu';
-              menu.hidden = true;
-              menu.setAttribute('role', 'listbox');
-              menu.addEventListener('click', function(event) {
-                  event.stopPropagation();
-              });
-              menu.addEventListener('touchstart', function(event) {
-                  event.stopPropagation();
-              }, { passive: true });
-              menu.addEventListener('touchmove', function(event) {
-                  event.stopPropagation();
-              }, { passive: true });
-
-              Array.prototype.slice.call(select.options).forEach(function(option) {
-                var optionButton = document.createElement('button');
-                optionButton.type = 'button';
-                optionButton.className = 'filter-dropdown-option' + (option.selected ? ' is-active' : '');
-                optionButton.textContent = option.textContent;
-                optionButton.setAttribute('data-value', option.value);
-                optionButton.addEventListener('click', function() {
-                    select.value = option.value;
-                    trigger.textContent = option.textContent;
-                    menu.querySelectorAll('.filter-dropdown-option').forEach(function(item) {
-                        item.classList.toggle('is-active', item === optionButton);
-                    });
-                    menu.hidden = true;
-                    wrapper.classList.remove('is-open');
-                    trigger.setAttribute('aria-expanded', 'false');
-                    select.dispatchEvent(new Event('change', { bubbles: true }));
-                });
-                menu.appendChild(optionButton);
-            });
-
-            trigger.addEventListener('click', function(event) {
-                event.stopPropagation();
-                var isOpen = wrapper.classList.contains('is-open');
-                document.querySelectorAll('.filter-dropdown').forEach(function(item) {
-                    item.classList.remove('is-open');
-                    var itemMenu = item.querySelector('.filter-dropdown-menu');
-                    var itemTrigger = item.querySelector('.filter-dropdown-btn');
-                    if (itemMenu) itemMenu.hidden = true;
-                    if (itemTrigger) itemTrigger.setAttribute('aria-expanded', 'false');
-                });
-                if (!isOpen) {
-                    wrapper.classList.add('is-open');
-                    menu.hidden = false;
-                    trigger.setAttribute('aria-expanded', 'true');
-                }
-            });
-
-            select.parentNode.insertBefore(wrapper, select);
-            wrapper.appendChild(select);
-            wrapper.appendChild(trigger);
-            wrapper.appendChild(menu);
-        }
-
-        [sortFilter, typeFilter, cofoundFilter, countryFilter, scopeFilter].forEach(enhanceFilterSelect);
-
         function resetMobileFilterSwipe() {
             mobileFilterTouchStartY = null;
             mobileFilterTouchDeltaY = 0;
@@ -1941,6 +1880,147 @@
             }
         }
 
+        function closeDesktopEnhancedFilters(exceptRoot) {
+            desktopFilterEnhancements.forEach(function(enhancement) {
+                if (exceptRoot && enhancement.root === exceptRoot) return;
+                enhancement.root.classList.remove('is-open');
+                enhancement.menu.hidden = true;
+                enhancement.button.setAttribute('aria-expanded', 'false');
+            });
+        }
+
+        function syncDesktopEnhancedFilters() {
+            var isMobile = mobileFilterQuery.matches;
+            desktopFilterEnhancements.forEach(function(enhancement) {
+                enhancement.root.hidden = isMobile;
+                if (isMobile) {
+                    enhancement.root.classList.remove('is-open');
+                    enhancement.menu.hidden = true;
+                    enhancement.button.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        function buildDesktopFilterEnhancement(select) {
+            if (!select || !select.parentNode || select.dataset.desktopEnhanced === 'true') return;
+            var field = select.closest('.post-filter-field');
+            if (!field) return;
+            select.classList.add('filter-select-native');
+            var custom = document.createElement('div');
+            custom.className = 'filter-select-custom';
+            custom.hidden = mobileFilterQuery.matches;
+
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'filter-select-custom__button';
+            button.setAttribute('aria-haspopup', 'listbox');
+            button.setAttribute('aria-expanded', 'false');
+            button.innerHTML =
+                '<span class="filter-select-custom__label"></span>' +
+                '<svg class="filter-select-custom__chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+                    '<path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>' +
+                '</svg>';
+
+            var menu = document.createElement('div');
+            menu.className = 'filter-select-custom__menu';
+            menu.hidden = true;
+            menu.setAttribute('role', 'listbox');
+            menu.setAttribute('aria-label', select.getAttribute('aria-label') || '');
+
+            function syncLabel() {
+                var selectedOption = select.options[select.selectedIndex];
+                var labelNode = button.querySelector('.filter-select-custom__label');
+                if (labelNode) {
+                    labelNode.textContent = selectedOption ? selectedOption.textContent : '';
+                }
+                Array.prototype.slice.call(menu.querySelectorAll('.filter-select-custom__option')).forEach(function(optionButton) {
+                    var isSelected = optionButton.getAttribute('data-value') === select.value;
+                    optionButton.classList.toggle('is-selected', isSelected);
+                    optionButton.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                });
+            }
+
+            Array.prototype.slice.call(select.options).forEach(function(option) {
+                var optionButton = document.createElement('button');
+                optionButton.type = 'button';
+                optionButton.className = 'filter-select-custom__option';
+                optionButton.setAttribute('role', 'option');
+                optionButton.setAttribute('data-value', option.value);
+                optionButton.innerHTML =
+                    '<span>' + option.textContent + '</span>' +
+                    '<span class="filter-select-custom__option-check" aria-hidden="true">✓</span>';
+                optionButton.addEventListener('click', function() {
+                    if (select.value !== option.value) {
+                        select.value = option.value;
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    syncLabel();
+                    closeDesktopEnhancedFilters();
+                });
+                menu.appendChild(optionButton);
+            });
+
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                if (mobileFilterQuery.matches) return;
+                var willOpen = !custom.classList.contains('is-open');
+                closeDesktopEnhancedFilters(custom);
+                custom.classList.toggle('is-open', willOpen);
+                menu.hidden = !willOpen;
+                button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            });
+
+            select.addEventListener('change', syncLabel);
+
+            custom.appendChild(button);
+            custom.appendChild(menu);
+            field.appendChild(custom);
+            select.dataset.desktopEnhanced = 'true';
+
+            desktopFilterEnhancements.push({
+                root: custom,
+                button: button,
+                menu: menu
+            });
+
+            syncLabel();
+        }
+
+        function restoreNodeToParent(node, parent, nextSibling) {
+            if (!node || !parent || node.parentNode === parent) return;
+            if (nextSibling && nextSibling.parentNode === parent) {
+                parent.insertBefore(node, nextSibling);
+                return;
+            }
+            parent.appendChild(node);
+        }
+
+        function syncMobileFilterLayer() {
+            if (!mobileFilterDrawer || !mobileFilterBackdrop) return;
+            if (mobileFilterQuery.matches) {
+                if (mobileFilterBackdrop.parentNode !== document.body) {
+                    document.body.appendChild(mobileFilterBackdrop);
+                }
+                if (mobileFilterDrawer.parentNode !== document.body) {
+                    document.body.appendChild(mobileFilterDrawer);
+                }
+                return;
+            }
+
+            closeMobileFilterDrawer();
+            mobileFilterDrawer.classList.remove('is-desktop-panel');
+            mobileFilterDrawer.style.top = '';
+            mobileFilterDrawer.style.left = '';
+            mobileFilterDrawer.style.right = '';
+            mobileFilterDrawer.style.width = '';
+            restoreNodeToParent(mobileFilterBackdrop, mobileFilterBackdropParent, mobileFilterBackdropNextSibling);
+            restoreNodeToParent(mobileFilterDrawer, mobileFilterDrawerParent, mobileFilterDrawerNextSibling);
+        }
+
+        syncMobileFilterLayer();
+        [sortFilter, typeFilter, cofoundFilter, countryFilter].forEach(buildDesktopFilterEnhancement);
+        syncDesktopEnhancedFilters();
+
         function closeMobileFilterDrawer() {
             if (!mobileFilterDrawer || !mobileFilterToggle || !mobileFilterBackdrop) return;
             resetMobileFilterSwipe();
@@ -1948,6 +2028,35 @@
             mobileFilterToggle.setAttribute('aria-expanded', 'false');
             mobileFilterBackdrop.hidden = true;
             document.body.classList.remove('mobile-filter-open');
+        }
+
+        function openDesktopFilterPanel() {
+            if (!mobileFilterDrawer || !mobileFilterToggle || mobileFilterQuery.matches) return;
+            mobileFilterDrawer.classList.add('is-open');
+            mobileFilterToggle.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeDesktopFilterPanel() {
+            if (!mobileFilterDrawer || !mobileFilterToggle || mobileFilterQuery.matches) return;
+            mobileFilterDrawer.classList.remove('is-open');
+            mobileFilterToggle.setAttribute('aria-expanded', 'false');
+        }
+
+        function positionDesktopFilterPanel() {
+            if (!mobileFilterDrawer || !mobileFilterToggle || mobileFilterQuery.matches) return;
+            var rect = mobileFilterToggle.getBoundingClientRect();
+            var viewportPadding = 16;
+            var panelWidth = Math.min(250, window.innerWidth - (viewportPadding * 2));
+            var left = rect.right - panelWidth;
+            if (left < viewportPadding) left = viewportPadding;
+            if (left + panelWidth > window.innerWidth - viewportPadding) {
+                left = window.innerWidth - viewportPadding - panelWidth;
+            }
+            mobileFilterDrawer.classList.add('is-desktop-panel');
+            mobileFilterDrawer.style.width = panelWidth + 'px';
+            mobileFilterDrawer.style.left = left + 'px';
+            mobileFilterDrawer.style.top = (rect.bottom + 12) + 'px';
+            mobileFilterDrawer.style.right = 'auto';
         }
 
         function openMobileFilterDrawer() {
@@ -1993,11 +2102,20 @@
 
         if (mobileFilterToggle && mobileFilterDrawer && mobileFilterBackdrop) {
             mobileFilterToggle.addEventListener('click', function() {
-                if (!mobileFilterQuery.matches) return;
+                if (mobileFilterQuery.matches) {
+                    if (mobileFilterDrawer.classList.contains('is-open')) {
+                        closeMobileFilterDrawer();
+                    } else {
+                        openMobileFilterDrawer();
+                    }
+                    return;
+                }
+
                 if (mobileFilterDrawer.classList.contains('is-open')) {
-                    closeMobileFilterDrawer();
+                    closeDesktopFilterPanel();
                 } else {
-                    openMobileFilterDrawer();
+                    positionDesktopFilterPanel();
+                    openDesktopFilterPanel();
                 }
             });
 
@@ -2008,7 +2126,6 @@
             mobileFilterDrawer.addEventListener('touchstart', function(event) {
                 if (!mobileFilterQuery.matches || !mobileFilterDrawer.classList.contains('is-open')) return;
                 if (!event.touches || event.touches.length !== 1) return;
-                if (event.target.closest('.filter-dropdown-menu')) return;
                 mobileFilterTouchStartY = event.touches[0].clientY;
                 mobileFilterTouchDeltaY = 0;
                 mobileFilterSwipeActive = mobileFilterDrawer.scrollTop <= 0;
@@ -2033,10 +2150,26 @@
                 resetMobileFilterSwipe();
             }, { passive: true });
             window.addEventListener('keydown', function(event) {
-                if (event.key === 'Escape') closeMobileFilterDrawer();
+                if (event.key !== 'Escape') return;
+                closeMobileFilterDrawer();
+                closeDesktopFilterPanel();
+                closeDesktopEnhancedFilters();
             });
+            window.addEventListener('resize', function() {
+                if (!mobileFilterQuery.matches && mobileFilterDrawer.classList.contains('is-open')) {
+                    positionDesktopFilterPanel();
+                }
+            });
+            window.addEventListener('scroll', function() {
+                if (!mobileFilterQuery.matches && mobileFilterDrawer.classList.contains('is-open')) {
+                    positionDesktopFilterPanel();
+                }
+            }, { passive: true });
             mobileFilterQuery.addEventListener('change', function(event) {
                 if (!event.matches) closeMobileFilterDrawer();
+                if (event.matches) closeDesktopFilterPanel();
+                syncMobileFilterLayer();
+                syncDesktopEnhancedFilters();
             });
         }
 
@@ -2066,13 +2199,19 @@
         }
 
         document.addEventListener('click', function(event) {
-            document.querySelectorAll('.filter-dropdown').forEach(function(item) {
-                item.classList.remove('is-open');
-                var itemMenu = item.querySelector('.filter-dropdown-menu');
-                var itemTrigger = item.querySelector('.filter-dropdown-btn');
-                if (itemMenu) itemMenu.hidden = true;
-                if (itemTrigger) itemTrigger.setAttribute('aria-expanded', 'false');
-            });
+            if (desktopFilterEnhancements.length) {
+                var clickedInsideCustomFilter = desktopFilterEnhancements.some(function(enhancement) {
+                    return enhancement.root.contains(event.target);
+                });
+                if (!clickedInsideCustomFilter) {
+                    closeDesktopEnhancedFilters();
+                }
+            }
+            if (mobileFilterDrawer && mobileFilterToggle && !mobileFilterQuery.matches) {
+                if (!mobileFilterDrawer.contains(event.target) && !mobileFilterToggle.contains(event.target)) {
+                    closeDesktopFilterPanel();
+                }
+            }
             if (searchResults && !searchResults.hidden && !input.closest('.home-header-search').contains(event.target)) {
                 if (!mobileSearchIsOpen()) closeSearchResults();
             }
@@ -2108,7 +2247,6 @@
             var selectedType = typeFilter ? typeFilter.value.trim().toLowerCase() : '';
             var selectedCofounder = cofoundFilter ? cofoundFilter.value.trim().toLowerCase() : '';
             var selectedCountry = countryFilter ? countryFilter.value.trim().toLowerCase() : '';
-            var selectedScope = scopeFilter ? scopeFilter.value.trim().toLowerCase() : 'all';
             sortPosts(selectedSort);
             renderSearchResults(rankedUserMatches(query), query);
             var matches = 0;
@@ -2117,8 +2255,7 @@
                 var matchesType = !selectedType || (post.dataset.postFeedType || '').toLowerCase() === selectedType;
                 var matchesCofounder = !selectedCofounder || (post.dataset.postCofounder || '') === selectedCofounder;
                 var matchesCountry = !selectedCountry || (post.dataset.postCountry || '').toLowerCase() === selectedCountry;
-                var matchesScope = selectedScope !== 'contacts';
-                var visible = matchesText && matchesType && matchesCofounder && matchesCountry && matchesScope;
+                var visible = matchesText && matchesType && matchesCofounder && matchesCountry;
                 post.hidden = !visible;
                 if (visible) matches += 1;
             });
@@ -2129,7 +2266,7 @@
                     mobileSearchFeedHint.textContent = '"' + currentSearchQuery.trim() + '" is filtering ' + matches + ' feed post' + (matches === 1 ? '' : 's') + ' while showing matching people.';
                 }
             }
-            emptyState.hidden = (!query && !selectedType && !selectedCofounder && !selectedCountry && selectedScope === 'all' && selectedSort === 'date') || matches > 0;
+            emptyState.hidden = (!query && !selectedType && !selectedCofounder && !selectedCountry && selectedSort === 'date') || matches > 0;
         }
 
         function handleSearchInput(event) {
@@ -2182,7 +2319,6 @@
         if (typeFilter) typeFilter.addEventListener('change', applyPostFilters);
         if (cofoundFilter) cofoundFilter.addEventListener('change', applyPostFilters);
         if (countryFilter) countryFilter.addEventListener('change', applyPostFilters);
-        if (scopeFilter) scopeFilter.addEventListener('change', applyPostFilters);
         setSearchQuery(currentSearchQuery, input);
         applyPostFilters();
     })();

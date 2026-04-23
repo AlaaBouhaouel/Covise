@@ -157,6 +157,15 @@
                             <textarea name="bio" rows="4">{{ settings_page.bio }}</textarea>
                         </label>
                         <div class="profile-field profile-field--full">
+                            <span>Looking for Cofounder</span>
+                            <input type="hidden" name="looking_for_cofounder" value="{% if settings_page.cofounder_badge_available %}true{% else %}false{% endif %}">
+                            <div class="skills-options-grid cofounder-status-options" data-cofounder-status-group>
+                                <button class="selector-pill{% if settings_page.cofounder_badge_available %} is-active{% endif %}" type="button" data-cofounder-status-option="true" aria-pressed="{% if settings_page.cofounder_badge_available %}true{% else %}false{% endif %}">Yes, I am looking</button>
+                                <button class="selector-pill{% if not settings_page.cofounder_badge_available %} is-active{% endif %}" type="button" data-cofounder-status-option="false" aria-pressed="{% if not settings_page.cofounder_badge_available %}true{% else %}false{% endif %}">No, not right now</button>
+                            </div>
+                            <p class="profile-field-hint">Update whether your profile should show that you are currently looking for a cofounder.</p>
+                        </div>
+                        <div class="profile-field profile-field--full">
                             <span>Top Skills</span>
                             <div class="skills-control">
                                 <input type="hidden" name="skills" value="{{ settings_page.skills_selected|join:'|' }}">
@@ -196,6 +205,28 @@
                         <a class="primary-action cancel-btn" href="../">Cancel</a>
                     </div>
                 </form>
+                <div class="profile-photo-crop-modal" id="profilePhotoCropModal" hidden>
+                    <div class="profile-photo-crop-modal__backdrop" data-close-photo-crop></div>
+                    <div class="profile-photo-crop-modal__card" role="dialog" aria-modal="true" aria-labelledby="profilePhotoCropTitle">
+                        <div class="profile-photo-crop-modal__head">
+                            <div>
+                                <h3 id="profilePhotoCropTitle">Crop profile photo</h3>
+                                <p>Drag to reposition and zoom until the circle frames your photo the way you want.</p>
+                            </div>
+                            <button class="profile-photo-crop-modal__close" id="profilePhotoCropClose" type="button" aria-label="Close photo cropper">&times;</button>
+                        </div>
+                        <div class="profile-photo-cropper">
+                            <div class="profile-photo-cropper__viewport" id="profilePhotoCropViewport">
+                                <img id="profilePhotoCropImage" alt="Profile photo crop preview">
+                                <div class="profile-photo-cropper__mask" aria-hidden="true"></div>
+                            </div>
+                        </div>
+                        <div class="profile-photo-crop-modal__actions">
+                            <button class="modal-action-btn modal-action-btn--secondary" id="profilePhotoCropCancel" type="button">Cancel</button>
+                            <button class="modal-action-btn primary-btn save-btn" id="profilePhotoCropApply" type="button">Apply photo</button>
+                        </div>
+                    </div>
+                </div>
                 {% elif profile_section_key == "experience" %}
                 <div class="profile-section-stack">
                     {% for experience in experiences %}
@@ -525,13 +556,342 @@
     <script>
         (function () {
             var input = document.getElementById('profileSectionPhotoInput');
+            var modal = document.getElementById('profilePhotoCropModal');
+            var closeButton = document.getElementById('profilePhotoCropClose');
+            var cancelButton = document.getElementById('profilePhotoCropCancel');
+            var applyButton = document.getElementById('profilePhotoCropApply');
+            var viewport = document.getElementById('profilePhotoCropViewport');
+            var previewImage = document.getElementById('profilePhotoCropImage');
             if (!input || !input.form) return;
+            if (!modal || !viewport || !previewImage || !window.DataTransfer) {
+                input.addEventListener('change', function () {
+                    if (input.files && input.files.length) {
+                        input.form.requestSubmit();
+                    }
+                });
+                return;
+            }
+
+            var currentFile = null;
+            var objectUrl = '';
+            var naturalWidth = 0;
+            var naturalHeight = 0;
+            var baseScale = 1;
+            var zoomLevel = 1;
+            var offsetX = 0;
+            var offsetY = 0;
+            var dragPointerId = null;
+            var dragStartX = 0;
+            var dragStartY = 0;
+            var dragOriginX = 0;
+            var dragOriginY = 0;
+            var activePointers = new Map();
+            var pinchStartDistance = 0;
+            var pinchStartZoom = 1;
+
+            function currentScale() {
+                return baseScale * zoomLevel;
+            }
+
+            function cleanupObjectUrl() {
+                if (!objectUrl) return;
+                URL.revokeObjectURL(objectUrl);
+                objectUrl = '';
+            }
+
+            function viewportSize() {
+                return viewport.clientWidth || 320;
+            }
+
+            function clampOffsets() {
+                var cropSize = viewportSize();
+                var scale = currentScale();
+                var renderedWidth = naturalWidth * scale;
+                var renderedHeight = naturalHeight * scale;
+                var minOffsetX = cropSize - renderedWidth;
+                var minOffsetY = cropSize - renderedHeight;
+                offsetX = Math.min(0, Math.max(minOffsetX, offsetX));
+                offsetY = Math.min(0, Math.max(minOffsetY, offsetY));
+            }
+
+            function renderCrop() {
+                if (!naturalWidth || !naturalHeight) return;
+                clampOffsets();
+                var scale = currentScale();
+                previewImage.style.width = (naturalWidth * scale) + 'px';
+                previewImage.style.height = (naturalHeight * scale) + 'px';
+                previewImage.style.transform = 'translate(' + offsetX + 'px, ' + offsetY + 'px)';
+            }
+
+            function centerImage() {
+                var cropSize = viewportSize();
+                var scale = currentScale();
+                offsetX = (cropSize - naturalWidth * scale) / 2;
+                offsetY = (cropSize - naturalHeight * scale) / 2;
+                clampOffsets();
+            }
+
+            function setZoom(nextZoom, anchorX, anchorY) {
+                if (!naturalWidth || !naturalHeight) return;
+                var clampedZoom = Math.min(3, Math.max(1, nextZoom));
+                var previousScale = currentScale();
+                var cropSize = viewportSize();
+                var focusX = typeof anchorX === 'number' ? anchorX : cropSize / 2;
+                var focusY = typeof anchorY === 'number' ? anchorY : cropSize / 2;
+                var imageX = (focusX - offsetX) / previousScale;
+                var imageY = (focusY - offsetY) / previousScale;
+                zoomLevel = clampedZoom;
+                var nextScale = currentScale();
+                offsetX = focusX - (imageX * nextScale);
+                offsetY = focusY - (imageY * nextScale);
+                renderCrop();
+            }
+
+            function midpointOfPointers() {
+                var points = Array.from(activePointers.values());
+                if (points.length < 2) return null;
+                return {
+                    x: (points[0].x + points[1].x) / 2,
+                    y: (points[0].y + points[1].y) / 2
+                };
+            }
+
+            function distanceBetweenPointers() {
+                var points = Array.from(activePointers.values());
+                if (points.length < 2) return 0;
+                var dx = points[0].x - points[1].x;
+                var dy = points[0].y - points[1].y;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            function closeModal(resetInput) {
+                modal.hidden = true;
+                viewport.classList.remove('is-dragging');
+                dragPointerId = null;
+                activePointers.clear();
+                pinchStartDistance = 0;
+                previewImage.removeAttribute('src');
+                previewImage.removeAttribute('style');
+                naturalWidth = 0;
+                naturalHeight = 0;
+                baseScale = 1;
+                zoomLevel = 1;
+                if (resetInput) {
+                    input.value = '';
+                }
+                cleanupObjectUrl();
+            }
+
+            function openModal(file) {
+                currentFile = file;
+                zoomLevel = 1;
+                cleanupObjectUrl();
+                objectUrl = URL.createObjectURL(file);
+                previewImage.onload = function () {
+                    naturalWidth = previewImage.naturalWidth || 0;
+                    naturalHeight = previewImage.naturalHeight || 0;
+                    if (!naturalWidth || !naturalHeight) {
+                        closeModal(true);
+                        return;
+                    }
+                    baseScale = Math.max(viewportSize() / naturalWidth, viewportSize() / naturalHeight);
+                    centerImage();
+                    renderCrop();
+                    modal.hidden = false;
+                };
+                previewImage.src = objectUrl;
+            }
+
+            function submitCroppedImage() {
+                if (!currentFile || !naturalWidth || !naturalHeight) return;
+                var cropSize = viewportSize();
+                var scale = currentScale();
+                var sourceX = Math.max(0, -offsetX / scale);
+                var sourceY = Math.max(0, -offsetY / scale);
+                var sourceSize = cropSize / scale;
+                var canvas = document.createElement('canvas');
+                var outputSize = 900;
+                canvas.width = outputSize;
+                canvas.height = outputSize;
+                var context = canvas.getContext('2d');
+                if (!context) return;
+                context.drawImage(
+                    previewImage,
+                    sourceX,
+                    sourceY,
+                    sourceSize,
+                    sourceSize,
+                    0,
+                    0,
+                    outputSize,
+                    outputSize
+                );
+
+                var originalName = currentFile.name || 'profile-photo.jpg';
+                var stem = originalName.replace(/\.[^.]+$/, '') || 'profile-photo';
+                var mimeType = currentFile.type === 'image/png' ? 'image/png' : (currentFile.type === 'image/webp' ? 'image/webp' : 'image/jpeg');
+                var quality = mimeType === 'image/jpeg' ? 0.92 : 0.95;
+                canvas.toBlob(function (blob) {
+                    if (!blob) return;
+                    var extension = mimeType === 'image/png' ? 'png' : (mimeType === 'image/webp' ? 'webp' : 'jpg');
+                    var croppedFile = new File([blob], stem + '-cropped.' + extension, { type: mimeType });
+                    var dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(croppedFile);
+                    input.files = dataTransfer.files;
+                    closeModal(false);
+                    input.form.requestSubmit();
+                }, mimeType, quality);
+            }
 
             input.addEventListener('change', function () {
-                if (input.files && input.files.length) {
+                if (!input.files || !input.files.length) return;
+                var file = input.files[0];
+                if (!file.type || file.type.indexOf('image/') !== 0) {
                     input.form.requestSubmit();
+                    return;
+                }
+                openModal(file);
+            });
+
+            viewport.addEventListener('pointerdown', function (event) {
+                if (!naturalWidth || !naturalHeight) return;
+                activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+                if (activePointers.size === 1) {
+                    dragPointerId = event.pointerId;
+                    dragStartX = event.clientX;
+                    dragStartY = event.clientY;
+                    dragOriginX = offsetX;
+                    dragOriginY = offsetY;
+                    viewport.classList.add('is-dragging');
+                } else if (activePointers.size === 2) {
+                    dragPointerId = null;
+                    viewport.classList.remove('is-dragging');
+                    pinchStartDistance = distanceBetweenPointers();
+                    pinchStartZoom = zoomLevel;
+                }
+                if (viewport.setPointerCapture) {
+                    viewport.setPointerCapture(event.pointerId);
                 }
             });
+
+            viewport.addEventListener('pointermove', function (event) {
+                if (!activePointers.has(event.pointerId)) return;
+                activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+                if (activePointers.size >= 2) {
+                    var distance = distanceBetweenPointers();
+                    var midpoint = midpointOfPointers();
+                    if (distance > 0 && pinchStartDistance > 0 && midpoint) {
+                        var rect = viewport.getBoundingClientRect();
+                        setZoom(
+                            pinchStartZoom * (distance / pinchStartDistance),
+                            midpoint.x - rect.left,
+                            midpoint.y - rect.top
+                        );
+                    }
+                    return;
+                }
+                if (dragPointerId !== event.pointerId) return;
+                offsetX = dragOriginX + (event.clientX - dragStartX);
+                offsetY = dragOriginY + (event.clientY - dragStartY);
+                renderCrop();
+            });
+
+            function endDrag(event) {
+                if (event) {
+                    activePointers.delete(event.pointerId);
+                    if (dragPointerId !== null && dragPointerId === event.pointerId) {
+                        dragPointerId = null;
+                    }
+                } else {
+                    activePointers.clear();
+                    dragPointerId = null;
+                }
+                if (activePointers.size === 1) {
+                    var remaining = Array.from(activePointers.entries())[0];
+                    dragPointerId = remaining[0];
+                    dragStartX = remaining[1].x;
+                    dragStartY = remaining[1].y;
+                    dragOriginX = offsetX;
+                    dragOriginY = offsetY;
+                    viewport.classList.add('is-dragging');
+                } else {
+                    viewport.classList.remove('is-dragging');
+                }
+                if (activePointers.size < 2) {
+                    pinchStartDistance = 0;
+                }
+            }
+
+            viewport.addEventListener('pointerup', endDrag);
+            viewport.addEventListener('pointercancel', endDrag);
+            viewport.addEventListener('lostpointercapture', endDrag);
+            viewport.addEventListener('wheel', function (event) {
+                if (!naturalWidth || !naturalHeight) return;
+                event.preventDefault();
+                var rect = viewport.getBoundingClientRect();
+                var delta = event.deltaY < 0 ? 0.12 : -0.12;
+                setZoom(zoomLevel + delta, event.clientX - rect.left, event.clientY - rect.top);
+            }, { passive: false });
+
+            if (closeButton) {
+                closeButton.addEventListener('click', function () {
+                    closeModal(true);
+                });
+            }
+            if (cancelButton) {
+                cancelButton.addEventListener('click', function () {
+                    closeModal(true);
+                });
+            }
+            if (applyButton) {
+                applyButton.addEventListener('click', submitCroppedImage);
+            }
+
+            Array.prototype.slice.call(modal.querySelectorAll('[data-close-photo-crop]')).forEach(function (node) {
+                node.addEventListener('click', function () {
+                    closeModal(true);
+                });
+            });
+
+            window.addEventListener('resize', function () {
+                if (modal.hidden || !naturalWidth || !naturalHeight) return;
+                baseScale = Math.max(viewportSize() / naturalWidth, viewportSize() / naturalHeight);
+                centerImage();
+                renderCrop();
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && !modal.hidden) {
+                    closeModal(true);
+                }
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            var group = document.querySelector('[data-cofounder-status-group]');
+            if (!group) return;
+
+            var hiddenInput = group.parentElement ? group.parentElement.querySelector('input[type="hidden"][name="looking_for_cofounder"]') : null;
+            var options = Array.prototype.slice.call(group.querySelectorAll('[data-cofounder-status-option]'));
+            if (!hiddenInput || !options.length) return;
+
+            function syncSelection(nextValue) {
+                hiddenInput.value = nextValue;
+                options.forEach(function (option) {
+                    var isActive = option.getAttribute('data-cofounder-status-option') === nextValue;
+                    option.classList.toggle('is-active', isActive);
+                    option.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                });
+            }
+
+            options.forEach(function (option) {
+                option.addEventListener('click', function () {
+                    syncSelection(option.getAttribute('data-cofounder-status-option') || 'false');
+                });
+            });
+
+            syncSelection(hiddenInput.value === 'true' ? 'true' : 'false');
         })();
     </script>
     <script>

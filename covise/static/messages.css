@@ -1377,10 +1377,10 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
         padding: calc(var(--spacing) * 0.75);
     }
 
-    .conversation-panel { padding-bottom: 0px; margin-top: calc(var(--spacing) * 4); }
+    .conversation-panel { padding-bottom: 0px; margin-top: calc(var(--spacing) * 2); }
     .messages-app.mobile-chat-open .chat-panel {
         padding-bottom: var(--keyboard-offset, 0px);
-        margin-top: calc(var(--spacing) * 4);
+        padding-top: calc(var(--spacing) * 2);
     }
     .chat-panel {
     min-width: 0;
@@ -1412,6 +1412,12 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
 
 
     }  
+
+    .header-first{
+        display: flex;
+        gap: calc(var(--spacing)*2);
+
+    }
     
 
    

@@ -124,13 +124,13 @@
                 <div class="hero-body">
                     {% if profile_error_message %}
                     {% endif %}
-                        <a href="{% url 'Public Profile' viewed_user_id %}" class="unstyled-link" aria-label="View {{ ui_user.display_name }} profile">
                         {% if ui_user.avatar_url %}
-                        <img class="avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }}'s avatar">
+                        <button class="profile-avatar-trigger" type="button" aria-label="Open {{ ui_user.display_name }} profile photo" data-profile-avatar-trigger data-avatar-src="{{ ui_user.avatar_url }}" data-avatar-alt="{{ ui_user.display_name }} profile photo">
+                            <img class="avatar" src="{{ ui_user.avatar_url }}" alt="{{ ui_user.display_name }}'s avatar">
+                        </button>
                         {% else %}
                         <div class="avatar" data-rotating-avatar data-avatar-seed="{{ ui_user.avatar_initials }}">{{ ui_user.avatar_initials }}</div>
                         {% endif %}
-                        </a>
                     <div class="hero-main">
                         <div class="hero-title-row">
                             <h1>
@@ -470,6 +470,13 @@
                 {% endif %}
             {% endif %}
         </main>
+    </div>
+    <div class="profile-image-lightbox" id="profileImageLightbox" hidden>
+        <button class="profile-image-lightbox__close" id="profileImageLightboxClose" type="button" aria-label="Close profile photo viewer">&times;</button>
+        <div class="profile-image-lightbox__backdrop" data-close-profile-lightbox></div>
+        <div class="profile-image-lightbox__content">
+            <img id="profileImageLightboxImg" alt="Expanded profile photo">
+        </div>
     </div>
     {% if not is_own_profile %}
     <div class="profile-report-modal" id="profileReportModal" hidden>
@@ -1081,6 +1088,43 @@
                     event.preventDefault();
                     openPost(event);
                 });
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            var lightbox = document.getElementById('profileImageLightbox');
+            var lightboxImage = document.getElementById('profileImageLightboxImg');
+            var lightboxClose = document.getElementById('profileImageLightboxClose');
+            if (!lightbox || !lightboxImage) return;
+
+            function closeLightbox() {
+                lightbox.hidden = true;
+                lightboxImage.removeAttribute('src');
+            }
+
+            Array.prototype.slice.call(document.querySelectorAll('[data-profile-avatar-trigger]')).forEach(function (trigger) {
+                trigger.addEventListener('click', function () {
+                    var source = trigger.getAttribute('data-avatar-src') || '';
+                    if (!source) return;
+                    lightboxImage.src = source;
+                    lightboxImage.alt = trigger.getAttribute('data-avatar-alt') || 'Expanded profile photo';
+                    lightbox.hidden = false;
+                });
+            });
+
+            if (lightboxClose) {
+                lightboxClose.addEventListener('click', closeLightbox);
+            }
+
+            Array.prototype.slice.call(lightbox.querySelectorAll('[data-close-profile-lightbox]')).forEach(function (node) {
+                node.addEventListener('click', closeLightbox);
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && !lightbox.hidden) {
+                    closeLightbox();
+                }
             });
         })();
     </script>

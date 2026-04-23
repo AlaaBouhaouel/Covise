@@ -161,6 +161,34 @@
         return normalizeMessagingUrl(nextUrl || previousUrl || "");
     }
 
+    function conversationPreviewSender(conversation) {
+        if (!conversation) {
+            return "";
+        }
+        if (conversation.preview_sender_name) {
+            return conversation.preview_sender_name;
+        }
+        if (conversation.preview_sender_id && conversation.preview_sender_id === currentUserId) {
+            return "You";
+        }
+        if (conversation.conversation_type === "group" && Array.isArray(conversation.group_members)) {
+            const sender = conversation.group_members.find((member) => member.id === conversation.preview_sender_id);
+            if (sender && sender.display_name) {
+                return sender.display_name;
+            }
+        }
+        return conversation.preview_sender_id ? (conversation.name || "") : "";
+    }
+
+    function formatConversationPreview(conversation) {
+        const preview = (conversation && conversation.preview) || "Start the conversation";
+        if (!conversation || !preview || preview === "Start the conversation") {
+            return preview;
+        }
+        const senderLabel = conversationPreviewSender(conversation);
+        return senderLabel ? `${senderLabel}: ${preview}` : preview;
+    }
+
     function avatarInnerMarkup(initials, avatarUrl, name) {
         const normalizedAvatarUrl = normalizeMessagingUrl(avatarUrl);
         if (normalizedAvatarUrl) {
@@ -626,7 +654,7 @@
             timeElement.textContent = conversation.time || "New";
         }
         if (previewElement) {
-            previewElement.textContent = conversation.preview || "Start the conversation";
+            previewElement.textContent = formatConversationPreview(conversation);
         }
         if (footElement) {
             footElement.innerHTML = `
@@ -1414,6 +1442,10 @@
                     : message.message_type === "file"
                         ? `Shared ${message.attachment_name || "a file"}`
                         : "Start the conversation");
+        conversation.preview_sender_id = message.sender_id || "";
+        conversation.preview_sender_name = message.sender_id === currentUserId
+            ? "You"
+            : (message.sender_name || conversation.preview_sender_name || conversation.name || "");
         conversation.time = "Now";
         conversation.last_message_at = message.created_at || new Date().toISOString();
     }
@@ -2048,6 +2080,10 @@
                 activeConversationData.time = result.data.last_message_time || "New";
                 const latestMessage = activeConversationData.messages[activeConversationData.messages.length - 1];
                 activeConversationData.last_message_at = latestMessage ? latestMessage.created_at : "";
+                activeConversationData.preview_sender_id = latestMessage ? (latestMessage.sender_id || "") : "";
+                activeConversationData.preview_sender_name = latestMessage
+                    ? (latestMessage.sender_id === currentUserId ? "You" : (latestMessage.sender_name || ""))
+                    : "";
                 activeConversationData.has_older_messages = !!activeConversationData.oldest_loaded_message_id;
                 syncSummaryFromActiveConversation();
                 renderLists();
@@ -2322,8 +2358,15 @@
             mobileBackBtn.addEventListener("click", () => app.classList.remove("mobile-chat-open"));
         }
         const mobileCloseChat = document.getElementById("mobileCloseChat");
+
         if (mobileCloseChat) {
-            mobileCloseChat.addEventListener("click", () => app.classList.remove("mobile-chat-open"));
+            mobileCloseChat.addEventListener("click", () => {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = "/"; // fallback if no history
+                }
+            });
         }
         document.querySelectorAll(".details-tab").forEach((button) => {
             button.addEventListener("click", () => {
