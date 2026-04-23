@@ -1223,12 +1223,8 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
 }
 
 @media (max-width: 760px) {
-    .messages-app.mobile-chat-open ~ .app-mobile-nav {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transform: translateY(calc(100% + 24px));
-        transition: transform 0.22s ease, opacity 0.22s ease, visibility 0s linear 0.22s;
+    .messages-app ~ .app-mobile-nav {
+        display: none !important;
     }
 
     .messages-app.mobile-chat-open {
