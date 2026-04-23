@@ -4798,10 +4798,16 @@ def messaging_avatar(request, user_id):
     if not image:
         raise Http404("Avatar not found")
 
-    cache_key = f"messaging:avatar:{user.id}:{image.name}"
-    target_url = cache.get(cache_key)
+    cache_key = f"messaging:avatar:v2:{user.id}:{image.name}"
+    cached_payload = cache.get(cache_key)
     cache_ttl = MESSAGING_AVATAR_URL_CACHE_TTL
     is_public = True
+    target_url = ""
+    if isinstance(cached_payload, dict):
+        cache_ttl = int(cached_payload.get("cache_ttl") or MESSAGING_AVATAR_URL_CACHE_TTL)
+        is_public = bool(cached_payload.get("is_public", True))
+        target_url = cached_payload.get("target_url", "")
+
     if not target_url:
         target_url, cache_ttl, is_public = _field_file_redirect_target(
             image,
@@ -4816,10 +4822,6 @@ def messaging_avatar(request, user_id):
             "is_public": is_public,
         }
         cache.set(cache_key, cache_payload, cache_ttl)
-    elif isinstance(target_url, dict):
-        cache_ttl = int(target_url.get("cache_ttl") or MESSAGING_AVATAR_URL_CACHE_TTL)
-        is_public = bool(target_url.get("is_public", True))
-        target_url = target_url.get("target_url", "")
     if not target_url:
         raise Http404("Avatar not found")
     return _cacheable_redirect_response(

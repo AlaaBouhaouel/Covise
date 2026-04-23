@@ -90,6 +90,10 @@ REDIS_SOCKET_CONNECT_TIMEOUT = config('REDIS_SOCKET_CONNECT_TIMEOUT', default=5,
 REDIS_SOCKET_TIMEOUT = config('REDIS_SOCKET_TIMEOUT', default=5, cast=int)
 REDIS_HEALTH_CHECK_INTERVAL = config('REDIS_HEALTH_CHECK_INTERVAL', default=30, cast=int)
 REDIS_RETRY_ON_TIMEOUT = config('REDIS_RETRY_ON_TIMEOUT', default=True, cast=bool)
+CHANNEL_REDIS_SOCKET_CONNECT_TIMEOUT = config('CHANNEL_REDIS_SOCKET_CONNECT_TIMEOUT', default=REDIS_SOCKET_CONNECT_TIMEOUT, cast=int)
+CHANNEL_REDIS_SOCKET_TIMEOUT = config('CHANNEL_REDIS_SOCKET_TIMEOUT', default=30, cast=int)
+CHANNEL_REDIS_HEALTH_CHECK_INTERVAL = config('CHANNEL_REDIS_HEALTH_CHECK_INTERVAL', default=REDIS_HEALTH_CHECK_INTERVAL, cast=int)
+CHANNEL_REDIS_RETRY_ON_TIMEOUT = config('CHANNEL_REDIS_RETRY_ON_TIMEOUT', default=REDIS_RETRY_ON_TIMEOUT, cast=bool)
 REDIS_OPERATION_RETRY_ATTEMPTS = config('REDIS_OPERATION_RETRY_ATTEMPTS', default=3, cast=int)
 REDIS_OPERATION_RETRY_DELAY_MS = config('REDIS_OPERATION_RETRY_DELAY_MS', default=250, cast=int)
 MESSAGES_INITIAL_PAGE_SIZE = config('MESSAGES_INITIAL_PAGE_SIZE', default=50, cast=int)
@@ -104,10 +108,10 @@ CHANNEL_LAYERS = {
             "hosts": [
                 {
                     "address": CHANNEL_REDIS_URL,
-                    "socket_connect_timeout": REDIS_SOCKET_CONNECT_TIMEOUT,
-                    "socket_timeout": REDIS_SOCKET_TIMEOUT,
-                    "health_check_interval": REDIS_HEALTH_CHECK_INTERVAL,
-                    "retry_on_timeout": REDIS_RETRY_ON_TIMEOUT,
+                    "socket_connect_timeout": CHANNEL_REDIS_SOCKET_CONNECT_TIMEOUT,
+                    "socket_timeout": CHANNEL_REDIS_SOCKET_TIMEOUT,
+                    "health_check_interval": CHANNEL_REDIS_HEALTH_CHECK_INTERVAL,
+                    "retry_on_timeout": CHANNEL_REDIS_RETRY_ON_TIMEOUT,
                 }
             ],
             "expiry": 60,

@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 
 from django.core.management import call_command
 from django.core import mail
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.test import RequestFactory
@@ -2864,6 +2865,16 @@ class MessagingMediaEndpointTests(TestCase):
         self.assertEqual(response["Location"], "https://signed.example/profile_images/avatar.png?sig=abc")
         self.assertIn("private", response["Cache-Control"])
         self.assertIn("max-age=3540", response["Cache-Control"])
+
+    @patch("covise_app.views._public_media_url", return_value="https://cdn.example/profile_images/avatar-v2.png")
+    def test_messaging_avatar_endpoint_ignores_legacy_string_cache_entries(self, _mock_public_media_url):
+        legacy_cache_key = f"messaging:avatar:{self.user.id}:{self.user.profile.profile_image.name}"
+        cache.set(legacy_cache_key, "https://expired.example/profile_images/avatar.png?old=1", 86400)
+
+        response = self.client.get(reverse("Messaging Avatar", args=[self.user.id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "https://cdn.example/profile_images/avatar-v2.png")
 
     @patch("covise_app.views._safe_media_url", return_value="https://cdn.example/chat_media/notes.txt")
     def test_messaging_message_media_endpoint_redirects_for_participants_only(self, _mock_safe_media_url):
