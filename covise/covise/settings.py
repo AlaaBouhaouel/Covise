@@ -81,7 +81,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'covise.urls'
 CSRF_FAILURE_VIEW = 'covise_app.views.csrf_failure'
-REDIS_URL = config('REDIS_URL', default='redis://127.0.0.1:6379/0')
+DEFAULT_REDIS_URL = 'redis://127.0.0.1:6379/0'
+REDIS_URL = config('REDIS_URL', default=DEFAULT_REDIS_URL)
+CHANNEL_REDIS_URL = config('CHANNEL_REDIS_URL', default=REDIS_URL)
+CACHE_URL = config('CACHE_URL', default=REDIS_URL)
+HAS_REMOTE_CACHE_URL = bool(os.environ.get('CACHE_URL') or os.environ.get('REDIS_URL'))
 REDIS_SOCKET_CONNECT_TIMEOUT = config('REDIS_SOCKET_CONNECT_TIMEOUT', default=5, cast=int)
 REDIS_SOCKET_TIMEOUT = config('REDIS_SOCKET_TIMEOUT', default=5, cast=int)
 REDIS_HEALTH_CHECK_INTERVAL = config('REDIS_HEALTH_CHECK_INTERVAL', default=30, cast=int)
@@ -99,7 +103,7 @@ CHANNEL_LAYERS = {
         "CONFIG": {
             "hosts": [
                 {
-                    "address": REDIS_URL,
+                    "address": CHANNEL_REDIS_URL,
                     "socket_connect_timeout": REDIS_SOCKET_CONNECT_TIMEOUT,
                     "socket_timeout": REDIS_SOCKET_TIMEOUT,
                     "health_check_interval": REDIS_HEALTH_CHECK_INTERVAL,
@@ -113,11 +117,11 @@ CHANNEL_LAYERS = {
     },
 }
 
-if not DEBUG and os.environ.get('REDIS_URL'):
+if not DEBUG and HAS_REMOTE_CACHE_URL:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-            'LOCATION': os.environ['REDIS_URL'],
+            'LOCATION': CACHE_URL,
         }
     }
 else:

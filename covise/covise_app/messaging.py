@@ -94,6 +94,99 @@ def _conversation_recipients(conversation, sender):
     return [participant for participant in conversation.participants.all() if participant.pk != sender.pk]
 
 
+def _infer_private_conversation_partner(conversation, current_user):
+    if not conversation or conversation.conversation_type != Conversation.ConversationType.PRIVATE:
+        return None
+    if not current_user or not getattr(current_user, "id", None):
+        return None
+
+    request_records = list(
+        conversation.requests.select_related("requester", "recipient").order_by("-responded_at", "-created_at")
+    )
+    for request_record in request_records:
+        for candidate in (request_record.requester, request_record.recipient):
+            if candidate and candidate.id != current_user.id:
+                return candidate
+
+    latest_other_sender = (
+        Message.objects.filter(conversation=conversation)
+        .exclude(sender=current_user)
+        .select_related("sender")
+        .order_by("-created_at")
+        .first()
+    )
+    if latest_other_sender and latest_other_sender.sender_id != current_user.id:
+        return latest_other_sender.sender
+
+    created_by = getattr(conversation, "created_by", None)
+    if created_by and getattr(created_by, "id", None) != current_user.id:
+        return created_by
+
+    return None
+
+
+def ensure_private_conversation_integrity(conversation, *, current_user):
+    if not conversation or conversation.conversation_type != Conversation.ConversationType.PRIVATE:
+        return conversation
+    if not current_user or not getattr(current_user, "id", None):
+        return None
+
+    participant_ids = set(conversation.participants.values_list("id", flat=True))
+    if current_user.id not in participant_ids:
+        return None
+    if len(participant_ids) == 2:
+        return conversation
+
+    inferred_partner = _infer_private_conversation_partner(conversation, current_user)
+
+    with transaction.atomic():
+        locked = (
+            Conversation.objects.select_for_update()
+            .filter(
+                id=conversation.id,
+                conversation_type=Conversation.ConversationType.PRIVATE,
+                participants=current_user,
+            )
+            .distinct()
+            .first()
+        )
+        if not locked:
+            return None
+
+        locked_participant_ids = set(locked.participants.values_list("id", flat=True))
+        if current_user.id not in locked_participant_ids:
+            return None
+        if len(locked_participant_ids) == 2:
+            return locked
+
+        if inferred_partner and getattr(inferred_partner, "id", None) and inferred_partner.id != current_user.id:
+            if inferred_partner.id not in locked_participant_ids:
+                locked.participants.add(inferred_partner)
+                locked_participant_ids.add(inferred_partner.id)
+
+            unexpected_ids = [
+                participant_id
+                for participant_id in locked_participant_ids
+                if participant_id not in {current_user.id, inferred_partner.id}
+            ]
+            if unexpected_ids:
+                locked.participants.remove(*unexpected_ids)
+                locked_participant_ids = {current_user.id, inferred_partner.id}
+
+        if len(locked_participant_ids) != 2:
+            return None
+
+        if not locked.last_message_at:
+            latest_message_at = (
+                Message.objects.filter(conversation=locked).order_by("-created_at").values_list("created_at", flat=True).first()
+            )
+            if latest_message_at:
+                locked.last_message_at = latest_message_at
+                locked.save(update_fields=["last_message_at"])
+
+        return locked
+
+
 def _message_receipt_records(message):
     related = getattr(message, "receipts", None)
     if related is None:
@@ -192,6 +285,15 @@ def _validate_conversation_sender(*, conversation_id, sender):
     if not conversation:
         raise MessagingError(
             "conversation_not_found",
+            "This conversation is no longer available. Please refresh and try again.",
+            status_code=404,
+            details={"conversation_id": str(conversation_id)},
+        )
+
+    conversation = ensure_private_conversation_integrity(conversation, current_user=sender)
+    if not conversation:
+        raise MessagingError(
+            "conversation_invalid",
             "This conversation is no longer available. Please refresh and try again.",
             status_code=404,
             details={"conversation_id": str(conversation_id)},

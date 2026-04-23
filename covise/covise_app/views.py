@@ -39,6 +39,7 @@ from covise_app.messaging import (
     broadcast_message_receipts_seen,
     deliver_media_message,
     deliver_text_message,
+    ensure_private_conversation_integrity,
     mark_conversation_seen,
     message_receipt_state_for_viewer,
     send_messaging_failure_alert,
@@ -146,6 +147,15 @@ def _absolute_site_url(value):
     return f"{_site_url()}{value}"
 
 
+def _messaging_internal_url(value):
+    path = str(value or "").strip()
+    if not path:
+        return ""
+    if getattr(settings, "DEBUG", False):
+        return path if path.startswith("/") else f"/{path}"
+    return _absolute_site_url(path)
+
+
 def _safe_media_url(field_file):
     if not field_file:
         return ""
@@ -174,6 +184,27 @@ def _cacheable_redirect_response(target_url, *, max_age, is_public):
     visibility = "public" if is_public else "private"
     response["Cache-Control"] = f"{visibility}, max-age={max_age}"
     return response
+
+
+def _field_file_redirect_target(field_file, *, public_when_possible=False, default_ttl=3600):
+    if not field_file:
+        return "", max(60, int(default_ttl or 3600)), False
+
+    storage = getattr(field_file, "storage", None)
+    uses_s3 = bool(storage and hasattr(storage, "_use_s3") and storage._use_s3())
+    uses_signed_urls = bool(uses_s3 and hasattr(storage, "_use_signed_urls") and storage._use_signed_urls())
+
+    if public_when_possible and not uses_signed_urls:
+        return _public_media_url(field_file), max(60, int(default_ttl or 3600)), True
+
+    target_url = _safe_media_url(field_file)
+    ttl = max(60, int(default_ttl or 3600))
+    if uses_signed_urls and hasattr(storage, "_presigned_url_expiry"):
+        try:
+            ttl = max(60, min(ttl, int(storage._presigned_url_expiry()) - 60))
+        except Exception:
+            ttl = max(60, min(ttl, 3300))
+    return target_url, ttl, False
 
 
 def _display_name(user):
@@ -2895,13 +2926,13 @@ def _messaging_avatar_url(user):
         return ""
     if not profile or not getattr(profile, "profile_image", None):
         return ""
-    return reverse("Messaging Avatar", args=[user.id])
+    return _messaging_internal_url(reverse("Messaging Avatar", args=[user.id]))
 
 
 def _messaging_attachment_url(message):
     if not message or not getattr(message, "attachment_file", None):
         return ""
-    return reverse("Messaging Message Media", args=[message.id])
+    return _messaging_internal_url(reverse("Messaging Message Media", args=[message.id]))
 
 
 def _comment_avatar_url(comment):
@@ -4542,7 +4573,22 @@ def _messages_conversation_queryset(user):
         .values("total")
     )
     return (
-        Conversation.objects.filter(participants=user)
+        Conversation.objects.annotate(
+            participant_count=Count("participants", distinct=True),
+            includes_viewer=Count(
+                "participants",
+                filter=Q(participants=user),
+                distinct=True,
+            ),
+        )
+        .filter(includes_viewer=1)
+        .filter(
+            Q(conversation_type=Conversation.ConversationType.GROUP)
+            | Q(
+                conversation_type=Conversation.ConversationType.PRIVATE,
+                participant_count=2,
+            )
+        )
         .prefetch_related("participants__profile", "user_states")
         .annotate(
             last_message_body=Subquery(last_message_queryset.values("body")[:1], output_field=models.TextField()),
@@ -4563,6 +4609,38 @@ def _messages_conversation_queryset(user):
         .order_by("-last_message_at", "-updated_at")
         .distinct()
     )
+
+
+def _repair_invalid_private_conversations_for_user(user, *, limit=12):
+    if not user or not getattr(user, "is_authenticated", False):
+        return
+
+    invalid_conversations = list(
+        Conversation.objects.filter(
+            participants=user,
+            conversation_type=Conversation.ConversationType.PRIVATE,
+        )
+        .annotate(participant_count=Count("participants", distinct=True))
+        .exclude(participant_count=2)
+        .prefetch_related("participants", "requests")
+        .order_by("-updated_at")[:limit]
+    )
+    for conversation in invalid_conversations:
+        try:
+            ensure_private_conversation_integrity(conversation, current_user=user)
+        except Exception as exc:
+            logger.exception(
+                "Failed to repair invalid private conversation conversation=%s user=%s",
+                conversation.id,
+                user.id,
+            )
+            send_messaging_failure_alert(
+                action="repair_private_conversation",
+                reason="repair_failed",
+                actor=user,
+                conversation=conversation,
+                details={"exception": str(exc)},
+            )
 
 
 def _friend_options_for_messaging(user):
@@ -4601,6 +4679,7 @@ def _resolve_messages_active_conversation_id(
 
 
 def _load_messages_page_state(user, requested_conversation_id="", *, allow_requested_group=False):
+    _repair_invalid_private_conversations_for_user(user)
     conversations = list(_messages_conversation_queryset(user))
     conversation_summaries = []
     summary_by_id = {}
@@ -4721,15 +4800,32 @@ def messaging_avatar(request, user_id):
 
     cache_key = f"messaging:avatar:{user.id}:{image.name}"
     target_url = cache.get(cache_key)
+    cache_ttl = MESSAGING_AVATAR_URL_CACHE_TTL
+    is_public = True
     if not target_url:
-        target_url = _public_media_url(image)
+        target_url, cache_ttl, is_public = _field_file_redirect_target(
+            image,
+            public_when_possible=True,
+            default_ttl=MESSAGING_AVATAR_URL_CACHE_TTL,
+        )
         if not target_url:
             raise Http404("Avatar not found")
-        cache.set(cache_key, target_url, MESSAGING_AVATAR_URL_CACHE_TTL)
+        cache_payload = {
+            "target_url": target_url,
+            "cache_ttl": cache_ttl,
+            "is_public": is_public,
+        }
+        cache.set(cache_key, cache_payload, cache_ttl)
+    elif isinstance(target_url, dict):
+        cache_ttl = int(target_url.get("cache_ttl") or MESSAGING_AVATAR_URL_CACHE_TTL)
+        is_public = bool(target_url.get("is_public", True))
+        target_url = target_url.get("target_url", "")
+    if not target_url:
+        raise Http404("Avatar not found")
     return _cacheable_redirect_response(
         target_url,
-        max_age=MESSAGING_AVATAR_URL_CACHE_TTL,
-        is_public=True,
+        max_age=cache_ttl,
+        is_public=is_public,
     )
 
 

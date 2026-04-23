@@ -71,6 +71,8 @@
     let chatSocket = null;
     let reconnectTimer = null;
     let socketConversationId = "";
+    let socketReconnectAttempts = 0;
+    let shouldRecoverStateOnReconnect = false;
     let stateSyncInFlight = false;
     let mediaRecorder = null;
     let mediaRecorderStream = null;
@@ -564,6 +566,58 @@
             });
     }
 
+    function createConversationListItem() {
+        const element = document.createElement("button");
+        element.type = "button";
+        element.className = "conv-item";
+        element.innerHTML = `
+            <div class="conv-avatar-wrap">
+                <div class="avatar"></div>
+            </div>
+            <div class="conv-main">
+                <div class="conv-head"><h3></h3><span></span></div>
+                <p></p>
+                <div class="conv-foot"></div>
+            </div>
+        `;
+        element.addEventListener("click", () => {
+            loadConversation(element.dataset.conversationId || "", element.dataset.tabName || "direct", { stickToBottom: true });
+        });
+        return element;
+    }
+
+    function syncConversationListItem(element, conversation, tabName) {
+        if (!element || !conversation) {
+            return;
+        }
+        element.dataset.conversationId = conversation.id;
+        element.dataset.tabName = tabName;
+        element.className = `conv-item${conversation.id === activeConversationId ? " is-active" : ""}`;
+
+        const avatarElement = element.querySelector(".avatar");
+        const nameElement = element.querySelector(".conv-head h3");
+        const timeElement = element.querySelector(".conv-head span");
+        const previewElement = element.querySelector(".conv-main > p");
+        const footElement = element.querySelector(".conv-foot");
+
+        setAvatarElement(avatarElement, conversation.avatar, conversation.avatar_url, conversation.name);
+        if (nameElement) {
+            nameElement.textContent = conversation.name || "";
+        }
+        if (timeElement) {
+            timeElement.textContent = conversation.time || "New";
+        }
+        if (previewElement) {
+            previewElement.textContent = conversation.preview || "Start the conversation";
+        }
+        if (footElement) {
+            footElement.innerHTML = `
+                ${conversation.conversation_type === "group" ? `<span class="match-pill subtle">${escapeHtml(conversation.status || "Group conversation")}</span>` : ""}
+                ${conversation.unread ? `<span class="unread-badge">${conversation.unread}</span>` : ""}
+            `;
+        }
+    }
+
     function ensureActiveConversationSelection() {
         const summary = activeConversationSummary();
         if (summary && activeConversationId) {
@@ -592,7 +646,6 @@
             if (!container) {
                 return;
             }
-            container.innerHTML = "";
             const filtered = items.filter((conversation) => {
                 const haystack = [
                     conversation.name,
@@ -616,28 +669,19 @@
                 return;
             }
 
+            const existingItems = new Map(
+                Array.from(container.querySelectorAll(".conv-item[data-conversation-id]"))
+                    .map((element) => [element.dataset.conversationId, element])
+            );
+            const fragment = document.createDocumentFragment();
             filtered.forEach((conversation) => {
-                const element = document.createElement("button");
-                element.type = "button";
-                element.className = `conv-item${conversation.id === activeConversationId ? " is-active" : ""}`;
-                element.innerHTML = `
-                    <div class="conv-avatar-wrap">
-                        <div class="avatar">${avatarInnerMarkup(conversation.avatar, conversation.avatar_url, conversation.name)}</div>
-                    </div>
-                    <div class="conv-main">
-                        <div class="conv-head"><h3>${escapeHtml(conversation.name)}</h3><span>${escapeHtml(conversation.time || "New")}</span></div>
-                        <p>${escapeHtml(conversation.preview || "Start the conversation")}</p>
-                        <div class="conv-foot">
-                            ${conversation.conversation_type === "group" ? `<span class="match-pill subtle">${escapeHtml(conversation.status || "Group conversation")}</span>` : ""}
-                            ${conversation.unread ? `<span class="unread-badge">${conversation.unread}</span>` : ""}
-                        </div>
-                    </div>
-                `;
-                element.addEventListener("click", () => {
-                    loadConversation(conversation.id, tabName, { stickToBottom: true });
-                });
-                container.appendChild(element);
+                const conversationId = String(conversation.id || "");
+                const element = existingItems.get(conversationId) || createConversationListItem();
+                syncConversationListItem(element, conversation, tabName);
+                existingItems.delete(conversationId);
+                fragment.appendChild(element);
             });
+            container.replaceChildren(fragment);
         };
 
         renderCollection(
@@ -1430,6 +1474,10 @@
     }
 
     function disconnectSocket() {
+        if (reconnectTimer) {
+            window.clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
         if (chatSocket && chatSocket.readyState !== WebSocket.CLOSED) {
             chatSocket._manualClose = true;
             chatSocket.close();
@@ -1438,8 +1486,28 @@
         socketConversationId = "";
     }
 
+    function scheduleSocketReconnect(conversationId) {
+        if (!conversationId) {
+            return;
+        }
+        if (reconnectTimer) {
+            window.clearTimeout(reconnectTimer);
+        }
+        const attempt = Math.min(socketReconnectAttempts + 1, 6);
+        socketReconnectAttempts = attempt;
+        const delay = Math.min(1000 * (2 ** (attempt - 1)), 15000);
+        reconnectTimer = window.setTimeout(() => {
+            reconnectTimer = null;
+            if (activeConversationId === conversationId) {
+                connectSocket();
+            }
+        }, delay);
+    }
+
     function connectSocket() {
         if (!activeConversationId) {
+            shouldRecoverStateOnReconnect = false;
+            socketReconnectAttempts = 0;
             disconnectSocket();
             return;
         }
@@ -1451,6 +1519,11 @@
             return;
         }
 
+        const preserveRecovery = shouldRecoverStateOnReconnect && socketConversationId === activeConversationId;
+        if (!preserveRecovery) {
+            shouldRecoverStateOnReconnect = false;
+            socketReconnectAttempts = 0;
+        }
         disconnectSocket();
 
         const socketProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
@@ -1476,6 +1549,12 @@
         };
         socket.onopen = () => {
             if (chatSocket === socket && socketConversationId === activeConversationId) {
+                const shouldRecover = shouldRecoverStateOnReconnect;
+                shouldRecoverStateOnReconnect = false;
+                socketReconnectAttempts = 0;
+                if (shouldRecover) {
+                    syncMessagesState({ keepScroll: true });
+                }
                 markActiveConversationSeen();
             }
         };
@@ -1483,16 +1562,9 @@
             if (socket._manualClose || chatSocket !== socket || !activeConversationId) {
                 return;
             }
-            syncMessagesState({ keepScroll: true });
-            if (reconnectTimer) {
-                window.clearTimeout(reconnectTimer);
-            }
-            reconnectTimer = window.setTimeout(() => {
-                reconnectTimer = null;
-                if (activeConversationId) {
-                    connectSocket();
-                }
-            }, 1500);
+            chatSocket = null;
+            shouldRecoverStateOnReconnect = true;
+            scheduleSocketReconnect(socketConversationId || activeConversationId);
         };
         socket.onerror = () => {
             if (socket.readyState !== WebSocket.CLOSED) {

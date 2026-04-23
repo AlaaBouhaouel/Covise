@@ -2109,7 +2109,7 @@ class MessageAttachmentStorageTests(TestCase):
         serialized = _serialize_message(message, viewer=self.sender)
         self.assertEqual(
             serialized["attachment_url"],
-            reverse("Messaging Message Media", args=[message.id]),
+            "https://covise.net" + reverse("Messaging Message Media", args=[message.id]),
         )
         self.assertEqual(serialized["attachment_name"], "notes.txt")
 
@@ -2217,6 +2217,54 @@ class MessagingConversationNormalizationTests(TestCase):
         self.assertNotContains(response, "Leena Al-Sabah")
         self.assertNotContains(response, "Active now")
         self.assertNotContains(response, "conversation-data")
+
+    def test_messages_page_hides_private_conversation_without_recoverable_partner(self):
+        valid_conversation = self._create_private_conversation(created_by=self.user)
+        invalid_conversation = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            created_by=self.user,
+        )
+        invalid_conversation.participants.add(self.user)
+
+        now = timezone.now()
+        self._create_message_at(valid_conversation, self.other_user, "Healthy direct thread", now - timedelta(minutes=5))
+        invalid_conversation.last_message_at = now
+        invalid_conversation.save(update_fields=["last_message_at"])
+
+        response = self.client.get(reverse("Messages"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["active_conversation_id"], str(valid_conversation.id))
+        summary_ids = [item["id"] for item in response.context["conversation_summaries"]]
+        self.assertIn(str(valid_conversation.id), summary_ids)
+        self.assertNotIn(str(invalid_conversation.id), summary_ids)
+
+    def test_send_message_repairs_private_conversation_missing_partner_when_partner_is_inferable(self):
+        invalid_conversation = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            created_by=self.other_user,
+        )
+        invalid_conversation.participants.add(self.user)
+
+        response = self.client.post(
+            reverse("Send Message", args=[invalid_conversation.id]),
+            data=json.dumps({"message": "Recovered thread message"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["ok"])
+        invalid_conversation.refresh_from_db()
+        participant_ids = set(invalid_conversation.participants.values_list("id", flat=True))
+        self.assertEqual(participant_ids, {self.user.id, self.other_user.id})
+        self.assertTrue(
+            Message.objects.filter(
+                conversation=invalid_conversation,
+                sender=self.user,
+                body="Recovered thread message",
+            ).exists()
+        )
 
     def test_start_private_conversation_redirects_to_canonical_merged_thread(self):
         accepted_request = ConversationRequest.objects.create(
@@ -2776,6 +2824,23 @@ class MessagingMediaEndpointTests(TestCase):
         self.assertEqual(first_response["Location"], second_response["Location"])
         self.assertEqual(first_response["Location"], "https://cdn.example/profile_images/avatar.png")
         self.assertIn("public", first_response["Cache-Control"])
+
+    @patch("covise_app.views._safe_media_url", return_value="https://signed.example/profile_images/avatar.png?sig=abc")
+    def test_messaging_avatar_endpoint_uses_private_signed_redirect_when_storage_requires_signed_urls(self, _mock_safe_media_url):
+        url = reverse("Messaging Avatar", args=[self.user.id])
+        storage = self.user.profile.profile_image.storage
+
+        with patch.object(storage, "_use_s3", return_value=True), patch.object(
+            storage,
+            "_use_signed_urls",
+            return_value=True,
+        ), patch.object(storage, "_presigned_url_expiry", return_value=3600):
+            response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "https://signed.example/profile_images/avatar.png?sig=abc")
+        self.assertIn("private", response["Cache-Control"])
+        self.assertIn("max-age=3540", response["Cache-Control"])
 
     @patch("covise_app.views._safe_media_url", return_value="https://cdn.example/chat_media/notes.txt")
     def test_messaging_message_media_endpoint_redirects_for_participants_only(self, _mock_safe_media_url):
