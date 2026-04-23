@@ -56,7 +56,6 @@
         transform: translateY(calc(100% + var(--app-mobile-nav-gap) + env(safe-area-inset-bottom) + 12px));
     }
 
-    body.has-app-mobile-nav.app-mobile-nav-keyboard-open .messages-app,
     body.has-app-mobile-nav.app-mobile-nav-keyboard-open .workspace-app,
     body.has-app-mobile-nav.app-mobile-nav-keyboard-open .chatbot-app {
         height: 100vh;
@@ -131,16 +130,10 @@
         background: rgba(64, 110, 196, 0.38);
     }
 
-    .messages-app,
     .workspace-app,
     .chatbot-app {
         height: calc(100vh - var(--app-mobile-nav-height) - var(--app-mobile-nav-gap) - env(safe-area-inset-bottom));
         height: calc(100dvh - var(--app-mobile-nav-height) - var(--app-mobile-nav-gap) - env(safe-area-inset-bottom));
-    }
-
-    .messages-app,
-    .messages-app.details-open {
-        grid-template-columns: 340px minmax(0, 1fr) !important;
     }
 
     .chatbot-app {
@@ -161,13 +154,6 @@
     }
 }
 
-@media (max-width: 767px) {
-    .messages-app,
-    .messages-app.details-open {
-        grid-template-columns: 1fr !important;
-    }
-
-}
 
 @media (max-width: 480px) {
     .app-mobile-nav {

@@ -135,6 +135,23 @@ def _site_url():
     return str(getattr(settings, "SITE_URL", "https://covise.net") or "https://covise.net").rstrip("/")
 
 
+def _bulk_alert_recipients_payload(recipients):
+    normalized_recipients = []
+    seen = set()
+    for recipient in recipients or []:
+        email = _normalize_email(recipient)
+        if not email or email in seen:
+            continue
+        seen.add(email)
+        normalized_recipients.append(email)
+    if not normalized_recipients:
+        return {}
+    return {
+        "to": ["founders@covise.net"],
+        "bcc": normalized_recipients,
+    }
+
+
 def _absolute_site_url(value):
     if not value:
         return f"{_site_url()}/"
@@ -1199,7 +1216,7 @@ def _send_new_account_alert(user, waitlist_entry=None):
     timestamp = timezone.now().isoformat()
     payload = {
         "from": "CoVise Alerts <founders@covise.net>",
-        "to": list(recipients),
+        **_bulk_alert_recipients_payload(recipients),
         "subject": f"New CoVise account created: {full_name}",
         "html": (
             '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111827;">'
@@ -2798,6 +2815,7 @@ def _attach_post_feed_metadata(posts, current_user=None):
         post.is_founders_spotlight = _normalize_email(getattr(post.user, "email", "")) == HOME_PINNED_POST_EMAIL
         post.viewer_can_delete = bool(current_user and (current_user.id == post.user_id or _is_founders_admin(current_user)))
         post.viewer_can_edit = bool(current_user and current_user.id == post.user_id)
+        post.viewer_can_pin = bool(current_user and current_user.id == post.user_id)
     _attach_post_reaction_metadata(posts, current_user=current_user)
     return posts
 
@@ -3091,7 +3109,7 @@ def _send_post_alert_email(post):
     )
     payload = {
         "from": "CoVise Alerts <founders@covise.net>",
-        "to": list(recipients),
+        **_bulk_alert_recipients_payload(recipients),
         "subject": f"New CoVise post: {post.title}",
         "html": (
             '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 640px; margin: 0 auto; padding: 32px 24px; color: #111827;">'
@@ -3676,8 +3694,9 @@ def home(request):
     posts = _mark_saved_posts(
         Post.objects.select_related("user", "user__profile").prefetch_related("gallery_images", "mentions__mentioned_user").exclude(user_id__in=blocked_ids).order_by(
             Case(
-                When(user__email__iexact=HOME_PINNED_POST_EMAIL, then=0),
-                default=1,
+                When(is_pinned=True, then=0),
+                When(user__email__iexact=HOME_PINNED_POST_EMAIL, then=1),
+                default=2,
                 output_field=IntegerField(),
             ),
             "-created_at",
@@ -6634,6 +6653,19 @@ def toggle_comment_pin(request, comment_id):
     comment.is_pinned = not comment.is_pinned
     comment.save(update_fields=["is_pinned"])
     return JsonResponse({"ok": True, "is_pinned": comment.is_pinned})
+
+
+@login_required
+@require_POST
+def toggle_pin_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id, user=request.user)
+    if post.is_pinned:
+        post.is_pinned = False
+    else:
+        Post.objects.filter(user=request.user, is_pinned=True).update(is_pinned=False)
+        post.is_pinned = True
+    post.save(update_fields=["is_pinned"])
+    return JsonResponse({"ok": True, "is_pinned": post.is_pinned})
 
 
 @login_required

@@ -110,6 +110,53 @@
                                 </div>
                             </div>
                             </div>
+                                <details class="post-more-menu">
+                                    <summary class="menu-btn" aria-label="More actions" title="Open post actions">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </summary>
+                                    <div class="post-more-dropdown">
+                                        {% if post.user.id != request.user.id %}
+                                        <form method="post" action="{% url 'Start Private Conversation' post.user.id %}">
+                                            {% csrf_token %}
+                                            <button class="feed-post-menu-action feed-post-menu-action--request" type="submit">
+                                                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Request</span>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'Toggle Block User' post.user.id %}">
+                                            {% csrf_token %}
+                                            <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
+                                                <i class="fa-solid fa-ban" aria-hidden="true"></i><span>Block</span>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'Report User Profile' post.user.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="report_reason" value="Reported from post detail">
+                                            <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
+                                                <i class="fa-solid fa-flag" aria-hidden="true"></i><span>Report</span>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        {% if post.viewer_can_edit %}
+                                        <a class="feed-post-menu-action" href="{% url 'Edit Post' post.id %}">
+                                            <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span>Edit</span>
+                                        </a>
+                                        {% endif %}
+                                        {% if post.viewer_can_pin %}
+                                        <button class="feed-post-menu-action feed-post-pin-btn" type="button" data-post-id="{{ post.id }}" data-pinned="{% if post.is_pinned %}true{% else %}false{% endif %}">
+                                            <i class="fa-solid fa-thumbtack" aria-hidden="true"></i><span>{% if post.is_pinned %}Unpin{% else %}Pin{% endif %}</span>
+                                        </button>
+                                        {% endif %}
+                                        {% if post.viewer_can_delete %}
+                                        <form method="post" action="{% url 'Delete Post' post.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                            <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
+                                                <i class="fa-regular fa-trash-can" aria-hidden="true"></i><span>Delete</span>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </details>
                             </div>
                             <div class="post-detail-tools">
                                 {% for skill in post.feed_skills %}
@@ -235,6 +282,11 @@
                                                 <a class="feed-post-menu-action" href="{% url 'Edit Post' p.id %}">
                                                     <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span>Edit</span>
                                                 </a>
+                                                {% endif %}
+                                                {% if p.viewer_can_pin %}
+                                                <button class="feed-post-menu-action feed-post-pin-btn" type="button" data-post-id="{{ p.id }}" data-pinned="{% if p.is_pinned %}true{% else %}false{% endif %}">
+                                                    <i class="fa-solid fa-thumbtack" aria-hidden="true"></i><span>{% if p.is_pinned %}Unpin{% else %}Pin{% endif %}</span>
+                                                </button>
                                                 {% endif %}
                                                 {% if p.viewer_can_delete %}
                                                 <form method="post" action="{% url 'Delete Post' p.id %}">
@@ -406,6 +458,21 @@
             gap: 12px;
             min-width: 0;
         }
+        .post-detail-card .post-more-menu { position: relative; flex: 0 0 auto; }
+        .post-detail-card .post-more-menu summary { list-style: none; }
+        .post-detail-card .post-more-menu summary::-webkit-details-marker { display: none; }
+        .post-detail-card .menu-btn { width: 26px; height: 26px; border-radius: 999px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+        .post-detail-card .menu-btn:hover { color: var(--white); }
+        .post-detail-card .post-more-dropdown { position: absolute; top: calc(100% + 8px); right: 0; min-width: 172px; background: #0a101c; border: 1px solid rgba(120, 150, 255, 0.14); border-radius: 14px; box-shadow: 0 18px 44px rgba(0,0,0,0.35); padding: 6px; z-index: 20; display: grid; }
+        .post-detail-card .post-more-menu:not([open]) .post-more-dropdown { display: none; }
+        .post-detail-card .post-more-dropdown form { margin: 0; }
+        .post-detail-card .feed-post-menu-action { width: 100%; padding: 9px 10px; border: 0; background: transparent; color: var(--text); text-align: left; display: flex; align-items: center; gap: 10px; border-radius: 9px; font-size: 0.88rem; cursor: pointer; text-decoration: none; }
+        .post-detail-card .feed-post-menu-action:hover { background: rgba(120, 150, 255, 0.08); }
+        .post-detail-card .feed-post-menu-action i { width: 16px; text-align: center; font-size: 0.88rem; }
+        .post-detail-card .feed-post-menu-action--request { color: #cfe0ff; }
+        .post-detail-card .feed-post-menu-action--request:hover { color: #f4f8ff; }
+        .post-detail-card .feed-post-menu-action--danger { color: #ff8e96; }
+        .post-detail-card .feed-post-menu-action--danger:hover { color: #ffd2d6; }
         .post-detail-meta,
         .post-comment-user {
             display: flex;
@@ -720,8 +787,6 @@
             color: var(--white);
         }
         .post-comment-actions .action-btn {
-            min-height: 30px;
-            padding: 0 12px;
             font-size: 0.7rem;
         }
         .post-comment-actions .action-btn i {
@@ -734,7 +799,6 @@
             background: rgba(120, 150, 255, 0.14);
         }
         .comment-reaction-chip-main {
-            min-width: 72px;
             justify-content: center;
         }
         .comment-reaction-chip-main i {
@@ -921,7 +985,7 @@
             .post-detail-card {
                 position: static;
             }
-            .post-comment-list { padding: 0 16px 18px; }
+            .post-comment-list { padding: 0; }
             .post-comment { padding-left: calc(var(--thread-depth, 0) * 12px); }
             .post-comment-children { gap: 10px; }
             .post-inline-reply-form { margin-left: 0; }
@@ -939,7 +1003,8 @@
                         
             .post-detail-shell{
                 display: grid;
-                gap: calc(var(--spacing)*2);
+                gap: calc(var(--spacing)*4);
+                margin: 0;
             }
 
             .post-col{
@@ -1624,6 +1689,29 @@
                 if (sendReplyButton) {
                     sendReplyButton.click();
                 }
+            });
+        })();
+    </script>
+    <script>
+        (function() {
+            var csrftoken = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+            document.querySelectorAll('.feed-post-pin-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    var postId = btn.getAttribute('data-post-id');
+                    if (!postId) return;
+                    fetch('/posts/' + postId + '/pin/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' }
+                    }).then(function(r) { return r.ok ? r.json() : null; }).then(function(data) {
+                        if (!data) return;
+                        btn.setAttribute('data-pinned', data.is_pinned ? 'true' : 'false');
+                        var span = btn.querySelector('span');
+                        if (span) span.textContent = data.is_pinned ? 'Unpin' : 'Pin';
+                        var menu = btn.closest('.post-more-menu');
+                        if (menu) menu.removeAttribute('open');
+                    }).catch(function() {});
+                });
             });
         })();
     </script>

@@ -3,8 +3,10 @@ import shutil
 from unittest.mock import patch
 from tempfile import mkdtemp
 from datetime import timedelta
+from io import BytesIO
 
 from botocore.exceptions import ClientError
+from PIL import Image
 
 from django.core.management import call_command
 from django.core import mail
@@ -262,7 +264,8 @@ class AuthEmailNormalizationTests(TestCase):
         self.assertEqual(waitlist_entry.status, WaitlistEntry.Status.ACTIVATED)
         mock_resend.Emails.send.assert_called_once()
         payload = mock_resend.Emails.send.call_args.args[0]
-        self.assertEqual(payload["to"], ["ellabouhawel@gmail.com", "small345az@gmail.com"])
+        self.assertEqual(payload["to"], ["founders@covise.net"])
+        self.assertEqual(payload["bcc"], ["ellabouhawel@gmail.com", "small345az@gmail.com"])
         self.assertIn("New CoVise account created: Approved User", payload["subject"])
         dispatch_mock.assert_called_once()
 
@@ -1378,10 +1381,8 @@ class CreatePostAlertEmailTests(TestCase):
         payload = mock_resend.Emails.send.call_args.args[0]
         created_post = Post.objects.get()
 
-        self.assertEqual(
-            payload["to"],
-            ["ellabouhawel@gmail.com"],
-        )
+        self.assertEqual(payload["to"], ["founders@covise.net"])
+        self.assertEqual(payload["bcc"], ["poster@example.com"])
         self.assertEqual(payload["subject"], "New CoVise post: Founder update")
         self.assertIn("Poster User (poster@example.com)", payload["html"])
         self.assertIn("Founder update", payload["html"])
@@ -1870,6 +1871,12 @@ class PostImageStorageTests(TestCase):
     def _missing_s3_object(self, *args, **kwargs):
         raise ClientError({"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject")
 
+    def _png_bytes(self, width, height, color=(40, 90, 180)):
+        image = Image.new("RGB", (width, height), color)
+        buffer = BytesIO()
+        image.save(buffer, format="PNG")
+        return buffer.getvalue()
+
     @patch("covise_app.views.RESEND_API_KEY", "")
     @patch("covise_app.storage.boto3.client")
     def test_create_post_uploads_gallery_images_to_s3_and_keeps_s3_url_on_model(self, mock_boto_client):
@@ -1914,6 +1921,36 @@ class PostImageStorageTests(TestCase):
         self.assertEqual(upload_args[2], saved_image.image.name)
         self.assertEqual(upload_extra_args["ContentType"], "image/png")
         self.assertEqual(upload_extra_args["ServerSideEncryption"], "AES256")
+        self.assertEqual(upload_extra_args["CacheControl"], "public, max-age=604800, stale-while-revalidate=86400")
+
+    @patch("covise_app.storage.boto3.client")
+    def test_large_profile_image_is_resized_before_s3_upload(self, mock_boto_client):
+        mock_s3 = mock_boto_client.return_value
+        mock_s3.head_object.side_effect = self._missing_s3_object
+        mock_s3.generate_presigned_url.side_effect = (
+            lambda operation, Params=None, ExpiresIn=None: (
+                f"https://signed.example/{Params['Key']}?expires={ExpiresIn}"
+            )
+        )
+
+        original_bytes = self._png_bytes(2200, 2200)
+        self.user.profile.profile_image = SimpleUploadedFile(
+            "avatar-large.png",
+            original_bytes,
+            content_type="image/png",
+        )
+        self.user.profile.save(update_fields=["profile_image"])
+
+        upload_args = mock_s3.upload_fileobj.call_args.args
+        upload_extra_args = mock_s3.upload_fileobj.call_args.kwargs["ExtraArgs"]
+        uploaded_file = upload_args[0]
+        uploaded_file.seek(0)
+        optimized_bytes = uploaded_file.read()
+        optimized_image = Image.open(BytesIO(optimized_bytes))
+
+        self.assertLess(len(optimized_bytes), len(original_bytes))
+        self.assertLessEqual(max(optimized_image.size), 768)
+        self.assertEqual(upload_extra_args["CacheControl"], "public, max-age=604800, stale-while-revalidate=86400")
 
     @patch("covise_app.views.RESEND_API_KEY", "")
     @patch("covise_app.storage.boto3.client")
@@ -2120,6 +2157,7 @@ class MessageAttachmentStorageTests(TestCase):
         self.assertEqual(upload_args[2], message.attachment_file.name)
         self.assertEqual(upload_extra_args["ContentType"], "text/plain")
         self.assertEqual(upload_extra_args["ServerSideEncryption"], "AES256")
+        self.assertEqual(upload_extra_args["CacheControl"], "private, max-age=3600")
 
 
 @override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])

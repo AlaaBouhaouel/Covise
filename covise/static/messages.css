@@ -382,7 +382,8 @@ body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text
     color: var(--text);
 }
 
-.conv-list-wrap { min-height: 0; flex: 1; overflow: auto; }
+.conv-list-wrap { min-height: 0; flex: 1; overflow: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.conv-list-wrap::-webkit-scrollbar { display: none; }
 .conversation-list { min-height: 100%; overflow: auto; display: grid; gap: 10px; padding-right: 4px; align-content: start; }
 .conversation-list.is-hidden { display: none; }
 

@@ -663,6 +663,12 @@
                                               <span>Edit</span>
                                           </a>
                                         {% endif %}
+                                        {% if post.viewer_can_pin %}
+                                        <button class="feed-post-menu-action feed-post-pin-btn" type="button" data-post-id="{{ post.id }}" data-pinned="{% if post.is_pinned %}true{% else %}false{% endif %}">
+                                            <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
+                                            <span>{% if post.is_pinned %}Unpin{% else %}Pin{% endif %}</span>
+                                        </button>
+                                        {% endif %}
                                         {% if post.viewer_can_delete %}
                                         <form method="post" action="{% url 'Delete Post' post.id %}">
                                               {% csrf_token %}
@@ -898,6 +904,38 @@
                                     var icon = button.querySelector('i');
                                     if (icon) icon.className = (data.saved ? 'fa-solid' : 'fa-regular') + ' fa-bookmark';
                                 });
+                            });
+                        });
+                        feedSection.querySelectorAll('.feed-post-pin-btn').forEach(function(btn) {
+                            btn.addEventListener('click', function(event) {
+                                event.preventDefault();
+                                var postId = btn.getAttribute('data-post-id');
+                                if (!postId) return;
+                                fetch('/posts/' + postId + '/pin/', {
+                                    method: 'POST',
+                                    headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' }
+                                }).then(function(r) { return r.ok ? r.json() : null; }).then(function(data) {
+                                    if (!data) return;
+                                    var isPinned = data.is_pinned;
+                                    btn.setAttribute('data-pinned', isPinned ? 'true' : 'false');
+                                    var span = btn.querySelector('span');
+                                    if (span) span.textContent = isPinned ? 'Unpin' : 'Pin';
+                                    var menu = btn.closest('.post-more-menu');
+                                    if (menu) menu.removeAttribute('open');
+                                    var card = btn.closest('.structured-post');
+                                    var feed = feedSection.querySelector('.structured-feed');
+                                    if (card && feed) {
+                                        if (isPinned) {
+                                            feed.prepend(card);
+                                        } else {
+                                            var firstUnpinned = Array.prototype.find.call(feed.children, function(c) {
+                                                var pinBtn = c.querySelector('.feed-post-pin-btn');
+                                                return !pinBtn || pinBtn.getAttribute('data-pinned') !== 'true';
+                                            });
+                                            if (firstUnpinned) feed.insertBefore(card, firstUnpinned);
+                                        }
+                                    }
+                                }).catch(function() {});
                             });
                         });
                         feedSection.querySelectorAll('.post-more-menu').forEach(function(menu) {

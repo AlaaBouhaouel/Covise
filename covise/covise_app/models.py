@@ -733,6 +733,7 @@ class Post(models.Model):
     quote_color=models.CharField(max_length=20, blank=True, default="")
     likes_number=models.IntegerField(default=0)
     comments_number=models.IntegerField(default=0)
+    is_pinned=models.BooleanField(default=False)
     created_at=models.DateTimeField(auto_now_add=True)
 
     class Meta:
