@@ -5,6 +5,20 @@ body {
     overflow-y: auto;
 }
 
+:root {
+    --type-xs: 0.75rem;
+    --type-sm: 0.8125rem;
+    --type-md: 0.875rem;
+    --type-base: 1rem;
+    --type-lg: 1.125rem;
+    --type-xl: 1.25rem;
+    --control-sm: 40px;
+    --control-md: 44px;
+    --radius-card: 16px;
+    --radius-field: 14px;
+    --radius-pill: 999px;
+}
+
 .unstyled-link,
 .unstyled-link:hover,
 .unstyled-link:focus,
@@ -24,7 +38,7 @@ body {
 .post-detail-card,
 .post-comments-card {
     border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: var(--radius-card);
     padding: 14px 10px 12px;
     min-width: 0;
     background-color: var(--panel);
@@ -89,6 +103,7 @@ body {
     max-height: calc(100vh - var(--spacing) * 11 - 24px);
     position: sticky;
     top: calc(var(--spacing) * 11);
+    scrollbar-gutter: stable;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -311,6 +326,7 @@ body {
 .post-comment-avatar-image {
     width: 28px;
     height: 28px;
+    aspect-ratio: 1 / 1;
     border-radius: 50%;
 }
 
@@ -334,7 +350,7 @@ body {
 
 .post-detail-author,
 .post-comment-user h3 {
-    font-size: 0.82rem;
+    font-size: var(--type-sm);
     font-weight: 700;
     color: var(--white);
 }
@@ -349,14 +365,14 @@ body {
 .post-detail-sub,
 .post-comment-user p {
     margin-top: 2px;
-    font-size: 0.74rem;
+    font-size: var(--type-xs);
     color: var(--muted);
 }
 
 .post-detail-title {
     margin-top: 14px;
     font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-    font-size: 1.34rem;
+    font-size: var(--type-xl);
     font-weight: 600;
     color: var(--white);
     line-height: 1.16;
@@ -365,8 +381,8 @@ body {
 
 .post-detail-content {
     margin-top: 12px;
-    font-size: 0.8rem;
-    line-height: 1.5;
+    font-size: var(--type-sm);
+    line-height: 1.6;
     color: var(--text);
     white-space: pre-wrap;
 }
@@ -472,14 +488,14 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    min-height: 34px;
+    min-height: var(--control-md);
     padding: 0 13px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--border);
     background: rgba(255, 255, 255, 0.06);
     color: var(--text);
     font: inherit;
-    font-size: 0.78rem;
+    font-size: var(--type-sm);
     font-weight: 700;
     cursor: pointer;
 }
@@ -538,8 +554,8 @@ body {
 .post-comment-body,
 .post-comments-empty {
     padding-left: 40px;
-    font-size: 0.74rem;
-    line-height: 1.5;
+    font-size: var(--type-xs);
+    line-height: 1.55;
     color: var(--text);
 }
 
@@ -813,13 +829,13 @@ body {
 .post-comment-compose input {
     flex: 1;
     min-height: 42px;
-    border-radius: 12px;
+    border-radius: var(--radius-field);
     border: 1px solid var(--border);
     background: rgba(255, 255, 255, 0.04);
     color: var(--text);
     padding: 0 18px;
     font: inherit;
-    font-size: 0.74rem;
+    font-size: var(--type-sm);
 }
 
 .post-comment-compose button {
