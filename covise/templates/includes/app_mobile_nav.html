@@ -1,3 +1,4 @@
+{% load static %}
 <nav class="app-mobile-nav" aria-label="Mobile app navigation">
 
     <a class="app-mobile-nav__link{% if active_page == 'home' %} is-active{% endif %}" href="{% url 'Home' %}" aria-label="Home" title="Home">
@@ -140,3 +141,4 @@
         syncKeyboardState();
     })();
 </script>
+<script src="{% static 'sidebar_unread.js' %}"></script>

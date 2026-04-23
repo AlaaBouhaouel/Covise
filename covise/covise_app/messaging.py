@@ -4,6 +4,7 @@ import time
 
 from django.conf import settings
 from django.db import transaction
+from django.urls import reverse
 from django.utils import timezone
 
 try:
@@ -242,11 +243,8 @@ def _message_notification_body(message):
 
 def _attachment_payload(message):
     attachment_url = ""
-    if getattr(message, "attachment_file", None):
-        try:
-            attachment_url = message.attachment_file.url
-        except Exception:
-            attachment_url = ""
+    if getattr(message, "attachment_file", None) and getattr(message, "id", None):
+        attachment_url = reverse("Messaging Message Media", args=[message.id])
     return {
         "attachment_url": attachment_url,
         "attachment_name": message.attachment_name or "",
@@ -300,6 +298,7 @@ def _deliver_notification(*, conversation, sender, recipients, message):
                     title=title,
                     body=_message_notification_body(message),
                     target_url=f"/messages/?conversation={conversation.id}",
+                    send_email=False,
                 )
         except Exception as exc:
             send_messaging_failure_alert(

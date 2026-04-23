@@ -19,11 +19,18 @@ Sitemap: https://covise.net/sitemap.xml
     return HttpResponse(content, content_type='text/plain')
 
 
+def chrome_devtools_appspecific(request):
+    response = HttpResponse("{}", content_type="application/json")
+    response["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
 sitemaps = {
     'static': StaticViewSitemap,
 }
 
 urlpatterns = [
+    path('.well-known/appspecific/com.chrome.devtools.json', chrome_devtools_appspecific),
     path('robots.txt', robots_txt),
 
     path('', views.landing, name='Landing Page'),
@@ -39,6 +46,9 @@ urlpatterns = [
     path('projects/<slug:project_slug>/', views.project_detail, name='Project Detail'),
     path('messages/', views.messages, name='Messages'),
     path('messages/state/', views.messages_state, name='Messages State'),
+    path('messages/unread-count/', views.messages_unread_count, name='Messages Unread Count'),
+    path('messages/<uuid:conversation_id>/history/', views.messages_history, name='Messages History'),
+    path('messages/media/<uuid:message_id>/', views.messaging_message_media, name='Messaging Message Media'),
     path('requests/', views.requests_page, name='Requests'),
     path('messages/groups/create/', views.create_group_conversation, name='Create Group Conversation'),
     path('messages/<uuid:conversation_id>/send/', views.send_message, name='Send Message'),
@@ -56,6 +66,7 @@ urlpatterns = [
     path('notifications/', views.notifications_list, name='Notifications List'),
     path('notifications/<int:notification_id>/read/', views.notifications_mark_read, name='Notifications Mark Read'),
     path('notifications/read-all/', views.notifications_mark_all_read, name='Notifications Mark All Read'),
+    path('users/<uuid:user_id>/avatar/', views.messaging_avatar, name='Messaging Avatar'),
     path('users/<uuid:user_id>/block/', views.toggle_block_user, name='Toggle Block User'),
     path('users/<uuid:user_id>/delete/', views.founders_delete_account, name='Founders Delete Account'),
     path('map/', views.map_view, name='Map'),

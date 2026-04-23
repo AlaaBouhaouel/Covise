@@ -73,7 +73,7 @@
                 </div>
             </header>
 
-            <section class="create-post-shell feed-shell" aria-label="Create post">
+            <section class="create-post-shell feed-shell " aria-label="Create post">
                 <form class="structured-post create-post-form-card" action="{{ post_form_action|default:'' }}" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input id="post-type" name="post_type" type="hidden" value="{{ form_data.post_type|default:'update' }}">

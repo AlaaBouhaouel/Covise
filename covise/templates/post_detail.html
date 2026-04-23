@@ -82,98 +82,214 @@
             </header>
 
             <section class="post-detail-shell">
-                <article class="post-detail-card {{ post.theme_class }}">
-                    <div class="post-detail-head">
-                        <div class="post-detail-head-main">
-                    <div class="post-detail-meta">
-                        <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.owner_display_name }} profile">
-                            {% if post.avatar_url %}
-                            <img class="post-detail-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.owner_display_name }} avatar">
-                            {% else %}
-                            <div class="post-detail-avatar">{{ post.user.avatar_initials }}</div>
-                            {% endif %}
-                        </a>
-                        <div class="post-detail-meta-copy">
-                            <div class="post-detail-author">
-                                <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.owner_display_name }}</a>
-                                {% if post.show_cofounder_badge %}
-                                <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
-                                    <i class="fa-solid fa-user-group" aria-hidden="true"></i>
-                                </span>
+                <div class="post-col">
+                    <article class="post-detail-card {{ post.theme_class }}">
+                        <div class="post-detail-head">
+                            <div class="post-detail-head-main">
+                        <div class="post-detail-meta">
+                            <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link" aria-label="View {{ post.owner_display_name }} profile">
+                                {% if post.avatar_url %}
+                                <img class="post-detail-avatar-image" src="{{ post.avatar_url }}" alt="{{ post.owner_display_name }} avatar">
+                                {% else %}
+                                <div class="post-detail-avatar">{{ post.user.avatar_initials }}</div>
                                 {% endif %}
+                            </a>
+                            <div class="post-detail-meta-copy">
+                                <div class="post-detail-author">
+                                    <a href="{% url 'Public Profile' post.user.id %}" class="unstyled-link">{{ post.owner_display_name }}</a>
+                                    {% if post.show_cofounder_badge %}
+                                    <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder" data-tooltip="Looking for Cofounder">
+                                        <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="post-detail-sub">
+                                    {{ post.feed_post_type_label }}
+                                    {% if post.feed_country %} · {{ post.feed_country }}{% endif %}
+                                    · {{ post.relative_time }}
+                                </div>
                             </div>
-                            <div class="post-detail-sub">
-                                {{ post.feed_post_type_label }}
-                                {% if post.feed_country %} · {{ post.feed_country }}{% endif %}
-                                · {{ post.relative_time }}
+                            </div>
+                            </div>
+                            <div class="post-detail-tools">
+                                {% for skill in post.feed_skills %}
+                                <span class="post-detail-skill-badge post-detail-skill-badge--{{ skill.tone }}" data-tone="{{ skill.tone }}">{{ skill.label }}</span>
+                                {% endfor %}
                             </div>
                         </div>
+                        <h1 class="post-detail-title">{{ post.feed_title_html|safe }}</h1>
+                        <div class="post-detail-content">{{ post.content_html|safe }}</div>
+                        {% if post.quote_content %}
+                        <div class="post-quote-block" data-qc="{{ post.quote_color|default:'#1e3a5f' }}">
+                            <p class="post-quote-text">{{ post.quote_content }}</p>
                         </div>
+                        {% endif %}
+                        {% if post.feed_images %}
+                        <div class="post-gallery post-gallery-detail post-gallery-count-{{ post.feed_image_count }}">
+                            {% for image in post.feed_images %}
+                            <div class="post-gallery-item">
+                                <img src="{{ image.url }}" alt="{{ image.alt }}" class="post-detail-gallery-image" data-full-image="{{ image.url }}">
+                            </div>
+                            {% endfor %}
                         </div>
-                        <div class="post-detail-tools">
-                            {% for skill in post.feed_skills %}
-                            <span class="post-detail-skill-badge post-detail-skill-badge--{{ skill.tone }}" data-tone="{{ skill.tone }}">{{ skill.label }}</span>
+                        {% endif %}
+                        <div class="post-detail-actions">
+                            <button class="action-btn like-btn{% if post.viewer_liked %} is-active{% endif %}" type="button" title="Like this post" data-post-id="{{ post.id }}" data-count="{{ post.likes_number }}" data-liked="{% if post.viewer_liked %}true{% else %}false{% endif %}">
+                                <i class="{% if post.viewer_liked %}fa-solid{% else %}fa-regular{% endif %} fa-thumbs-up"></i>
+                                <span class="count">{{ post.likes_number }}</span>
+                            </button>
+                            <button class="action-btn dislike-btn{% if post.viewer_disliked %} is-active{% endif %}" type="button" title="Dislike this post" data-post-id="{{ post.id }}" data-count="{{ post.dislikes_number }}" data-disliked="{% if post.viewer_disliked %}true{% else %}false{% endif %}">
+                                <i class="{% if post.viewer_disliked %}fa-solid{% else %}fa-regular{% endif %} fa-thumbs-down"></i>
+                                <span class="dislike-count">{{ post.dislikes_number }}</span>
+                            </button>
+                            <button class="action-btn comment-jump-btn" type="button" aria-label="Jump to comments" title="Jump to comments">
+                                <i class="fa-regular fa-comment"></i>
+                                <span>{{ post.comments.count }}</span>
+                            </button>
+                            <button class="action-btn bookmark-btn{% if post.is_saved %} is-active{% endif %}" type="button" aria-label="Save post" title="Save this post" data-post-id="{{ post.id }}" data-saved="{% if post.is_saved %}true{% else %}false{% endif %}">
+                                <i class="{% if post.is_saved %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i>
+                            </button>
+                        </div>
+                    </article>
+
+                    <div class="post-comment-compose-shell">
+                        <form class="post-comment-compose" id="postCommentForm" data-author-name="{{ request.user.full_name|default:request.user.email }}" data-author-url="{% url 'Public Profile' request.user.id %}" data-avatar-initials="{{ ui_user.avatar_initials }}" data-avatar-url="{{ ui_user.avatar_url }}">
+                            <div class="post-comment-compose-row">
+                                <input id="postCommentInput" type="text" placeholder="Write a comment..." data-post-id="{{ post.id }}">
+                                <button id="postCommentSend" type="submit" aria-label="Send comment" title="Send your comment">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <section class="post-comments-card" id="postComments">
+                        <div class="post-comment-list">
+                            {% for comment in post.comment_threads %}
+                            {% include "includes/post_detail_comment.html" with comment=comment %}
+                            {% empty %}
+                            <div class="post-comments-empty">No comments yet.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="post-suggestions-col">
+                    {% if posts %}
+                    <h2 class="suggestions-header">More posts</h2>
+                    <div class="feed-shell">
+                        <div class="structured-feed">
+                            {% for p in posts %}
+                            <article class="structured-post" data-post-url="{% url 'Post Detail' p.id %}?from={{ post.id }}">
+                                <div class="structured-post-head">
+                                    <div class="structured-post-head-main">
+                                        <div class="structured-post-meta">
+                                            <a href="{% url 'Public Profile' p.user.id %}" class="unstyled-link" aria-label="View {{ p.owner_display_name }} profile">
+                                                {% if p.avatar_url %}
+                                                <img class="structured-avatar-image" src="{{ p.avatar_url }}" alt="{{ p.owner_display_name }} avatar">
+                                                {% else %}
+                                                <div class="structured-avatar a">{{ p.user.avatar_initials }}</div>
+                                                {% endif %}
+                                            </a>
+                                            <div class="structured-post-meta-copy">
+                                                <div class="structured-post-title">
+                                                    <a href="{% url 'Public Profile' p.user.id %}" class="unstyled-link">{{ p.owner_display_name }}</a>
+                                                    {% if p.show_cofounder_badge %}
+                                                    <span class="cofounder-badge" title="Looking for Cofounder" aria-label="Looking for Cofounder">
+                                                        <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="structured-post-subtitle">{{ p.feed_post_type_label }}{% if p.feed_country %} · {{ p.feed_country }}{% endif %} · {{ p.relative_time }}</div>
+                                            </div>
+                                        </div>
+                                        <details class="post-more-menu">
+                                            <summary class="menu-btn" aria-label="More actions" title="Open post actions">
+                                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                            </summary>
+                                            <div class="post-more-dropdown">
+                                                {% if p.user.id != request.user.id %}
+                                                <form method="post" action="{% url 'Start Private Conversation' p.user.id %}">
+                                                    {% csrf_token %}
+                                                    <button class="feed-post-menu-action feed-post-menu-action--request" type="submit">
+                                                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Request</span>
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'Toggle Block User' p.user.id %}">
+                                                    {% csrf_token %}
+                                                    <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
+                                                        <i class="fa-solid fa-ban" aria-hidden="true"></i><span>Block</span>
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'Report User Profile' p.user.id %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="report_reason" value="Reported from post detail suggestions">
+                                                    <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
+                                                        <i class="fa-solid fa-flag" aria-hidden="true"></i><span>Report</span>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                                {% if p.viewer_can_edit %}
+                                                <a class="feed-post-menu-action" href="{% url 'Edit Post' p.id %}">
+                                                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span>Edit</span>
+                                                </a>
+                                                {% endif %}
+                                                {% if p.viewer_can_delete %}
+                                                <form method="post" action="{% url 'Delete Post' p.id %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                                    <button class="feed-post-menu-action feed-post-menu-action--danger" type="submit">
+                                                        <i class="fa-regular fa-trash-can" aria-hidden="true"></i><span>Delete</span>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                        </details>
+                                    </div>
+                                    <div class="structured-post-tools">
+                                        <div class="structured-badges">
+                                            {% for skill in p.feed_skills %}
+                                            <span class="home-skill-badge home-skill-badge--{{ skill.tone }}" data-tone="{{ skill.tone }}">{{ skill.label }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="structured-post-link">
+                                    <a class="unstyled-link" href="{% url 'Post Detail' p.id %}?from={{ post.id }}">
+                                        <div class="structured-post-heading">{{ p.feed_title_html|safe }}</div>
+                                    </a>
+                                    <div class="structured-post-body-wrap">
+                                        <div class="structured-post-body is-clamped" data-post-body>{{ p.content_html|safe }}</div>
+                                    </div>
+                                    {% if p.feed_images %}
+                                    <a class="unstyled-link" href="{% url 'Post Detail' p.id %}?from={{ post.id }}">
+                                        <div class="post-gallery post-gallery-count-{% if p.feed_image_count > 4 %}4{% else %}{{ p.feed_image_count }}{% endif %}">
+                                            {% for image in p.feed_images|slice:":4" %}
+                                            <div class="post-gallery-item{% if forloop.counter == 4 and p.feed_image_count > 4 %} post-gallery-item-more{% endif %}">
+                                                <img src="{{ image.url }}" alt="{{ image.alt }}">
+                                                {% if forloop.counter == 4 and p.feed_image_count > 4 %}
+                                                <span class="post-gallery-more-label">See all</span>
+                                                {% endif %}
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                <div class="structured-post-footer">
+                                    <button class="action-btn like-btn{% if p.viewer_liked %} is-active{% endif %}" type="button" data-post-id="{{ p.id }}" data-count="{{ p.likes_number }}" data-liked="{% if p.viewer_liked %}true{% else %}false{% endif %}"><i class="{% if p.viewer_liked %}fa-solid{% else %}fa-regular{% endif %} fa-thumbs-up"></i><span class="count">{{ p.likes_number }}</span></button>
+                                    <button class="action-btn dislike-btn{% if p.viewer_disliked %} is-active{% endif %}" type="button" data-post-id="{{ p.id }}" data-count="{{ p.dislikes_number }}" data-disliked="{% if p.viewer_disliked %}true{% else %}false{% endif %}"><i class="{% if p.viewer_disliked %}fa-solid{% else %}fa-regular{% endif %} fa-thumbs-down"></i><span class="dislike-count">{{ p.dislikes_number }}</span></button>
+                                    <a class="action-btn" href="{% url 'Post Detail' p.id %}?from={{ post.id }}"><i class="fa-regular fa-comment"></i><span>{{ p.comments.count }}</span></a>
+                                    <button class="action-btn bookmark-btn{% if p.is_saved %} is-active{% endif %}" type="button" data-post-id="{{ p.id }}" data-saved="{% if p.is_saved %}true{% else %}false{% endif %}"><i class="{% if p.is_saved %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i></button>
+                                </div>
+                            </article>
                             {% endfor %}
                         </div>
                     </div>
-                    <h1 class="post-detail-title">{{ post.feed_title_html|safe }}</h1>
-                    <div class="post-detail-content">{{ post.content_html|safe }}</div>
-                    {% if post.quote_content %}
-                    <div class="post-quote-block" data-qc="{{ post.quote_color|default:'#1e3a5f' }}">
-                        <p class="post-quote-text">{{ post.quote_content }}</p>
-                    </div>
                     {% endif %}
-                    {% if post.feed_images %}
-                    <div class="post-gallery post-gallery-detail post-gallery-count-{{ post.feed_image_count }}">
-                        {% for image in post.feed_images %}
-                        <div class="post-gallery-item">
-                            <img src="{{ image.url }}" alt="{{ image.alt }}" class="post-detail-gallery-image" data-full-image="{{ image.url }}">
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                    <div class="post-detail-actions">
-                        <button class="action-btn like-btn{% if post.viewer_liked %} is-active{% endif %}" type="button" title="Like this post" data-post-id="{{ post.id }}" data-count="{{ post.likes_number }}" data-liked="{% if post.viewer_liked %}true{% else %}false{% endif %}">
-                            <i class="{% if post.viewer_liked %}fa-solid{% else %}fa-regular{% endif %} fa-thumbs-up"></i>
-                            <span class="count">{{ post.likes_number }}</span>
-                        </button>
-                        <button class="action-btn dislike-btn{% if post.viewer_disliked %} is-active{% endif %}" type="button" title="Dislike this post" data-post-id="{{ post.id }}" data-count="{{ post.dislikes_number }}" data-disliked="{% if post.viewer_disliked %}true{% else %}false{% endif %}">
-                            <i class="{% if post.viewer_disliked %}fa-solid{% else %}fa-regular{% endif %} fa-thumbs-down"></i>
-                            <span class="dislike-count">{{ post.dislikes_number }}</span>
-                        </button>
-                        <button class="action-btn comment-jump-btn" type="button" aria-label="Jump to comments" title="Jump to comments">
-                            <i class="fa-regular fa-comment"></i>
-                            <span>{{ post.comments.count }}</span>
-                        </button>
-                        <button class="action-btn bookmark-btn{% if post.is_saved %} is-active{% endif %}" type="button" aria-label="Save post" title="Save this post" data-post-id="{{ post.id }}" data-saved="{% if post.is_saved %}true{% else %}false{% endif %}">
-                            <i class="{% if post.is_saved %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i>
-                        </button>
-                    </div>
-                </article>
-
-                <div class="post-comment-compose-shell">
-                    <form class="post-comment-compose" id="postCommentForm" data-author-name="{{ request.user.full_name|default:request.user.email }}" data-author-url="{% url 'Public Profile' request.user.id %}" data-avatar-initials="{{ ui_user.avatar_initials }}" data-avatar-url="{{ ui_user.avatar_url }}">
-                        <div class="post-comment-compose-row">
-                            <input id="postCommentInput" type="text" placeholder="Write a comment..." data-post-id="{{ post.id }}">
-                            <button id="postCommentSend" type="submit" aria-label="Send comment" title="Send your comment">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                </svg>
-                            </button>
-                        </div>
-                    </form>
                 </div>
-
-                <section class="post-comments-card" id="postComments">
-                    <div class="post-comment-list">
-                        {% for comment in post.comment_threads %}
-                        {% include "includes/post_detail_comment.html" with comment=comment %}
-                        {% empty %}
-                        <div class="post-comments-empty">No comments yet.</div>
-                        {% endfor %}
-                    </div>
-                </section>
             </section>
         </main>
     </div>
@@ -200,11 +316,9 @@
             text-decoration: none;
         }
         .post-detail-shell {
-            width: min(820px, 100%);
             min-width: 0;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: minmax(0, 1fr);
+            margin: 0 calc(var(--spacing)*3);
+            display: flex;
             gap: 18px;
             align-content: start;
         }
@@ -253,6 +367,30 @@
             border-color: rgba(51, 86, 184, 0.12);
             color: rgba(26, 33, 64, 0.94);
         }
+
+        .post-col{
+            width: 60%;
+            gap: 18px;
+            display: grid;
+            align-content: start;
+        }
+        .post-suggestions-col {
+            width: 40%;
+            gap: 8px;
+            display: grid;
+            align-content: start;
+            overflow-x: hidden;
+            overflow-y: auto;
+            max-height: calc(100vh - var(--spacing) * 11 - 24px);
+            position: sticky;
+            top: calc(var(--spacing) * 11);
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .post-suggestions-col::-webkit-scrollbar {
+            display: none;
+        }
+        
         .post-comments-card {
             background: var(--panel);
             overflow: visible;
@@ -764,15 +902,22 @@
             place-items: center;
             cursor: pointer;
         }
+        .suggestions-header {
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin: 0 0 4px 2px;
+        }
+
         @media (max-width: 1100px) {
             html,
             body {
                 height: auto;
                 overflow: auto;
             }
-            .post-detail-shell {
-                width: 100%;
-            }
+
             .post-detail-card {
                 position: static;
             }
@@ -789,6 +934,25 @@
             .post-detail-title {
                 font-size: 1.18rem;
             }
+        }
+        @media (max-width: 600px) {
+                        
+            .post-detail-shell{
+                display: grid;
+                gap: calc(var(--spacing)*2);
+            }
+
+            .post-col{
+                width: 100%;
+            }
+            .post-suggestions-col {
+                width: 100%;
+                overflow: visible;
+                max-height: none;
+                position: static;
+                top: auto;
+            }
+            
         }
     </style>
 
@@ -1326,8 +1490,19 @@
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({ content: nextContent })
-                        }).then(function(response) { return response.json(); }).then(function() {
-                            window.location.reload();
+                        }).then(function(response) { return response.json(); }).then(function(data) {
+                            if (!data.ok) return;
+                            var commentCard = document.querySelector('.post-comment[data-comment-id="' + actionCommentId + '"]');
+                            if (!commentCard) return;
+                            var bodyEl = commentCard.querySelector('.post-comment-body');
+                            if (bodyEl) bodyEl.textContent = data.content;
+                            commentCard.querySelectorAll('[data-comment-action="edit"]').forEach(function(btn) {
+                                btn.setAttribute('data-comment-content', data.content);
+                            });
+                            var metaP = commentCard.querySelector('.post-comment-user p');
+                            if (metaP && !metaP.querySelector('.comment-state-badge:not(.comment-state-badge-pinned)')) {
+                                metaP.insertAdjacentHTML('beforeend', '<span class="comment-state-badge">edited</span>');
+                            }
                         });
                         return;
                     }
@@ -1338,8 +1513,14 @@
                             headers: {
                                 'X-CSRFToken': getCookie('csrftoken')
                             }
-                        }).then(function(response) { return response.json(); }).then(function() {
-                            window.location.reload();
+                        }).then(function(response) { return response.json(); }).then(function(data) {
+                            if (!data.ok) return;
+                            var commentCard = document.querySelector('.post-comment[data-comment-id="' + actionCommentId + '"]');
+                            if (commentCard) commentCard.remove();
+                            var countNode = document.querySelector('.comment-jump-btn span');
+                            if (countNode && typeof data.comments_count !== 'undefined') {
+                                countNode.textContent = String(data.comments_count);
+                            }
                         });
                         return;
                     }
@@ -1349,8 +1530,22 @@
                             headers: {
                                 'X-CSRFToken': getCookie('csrftoken')
                             }
-                        }).then(function(response) { return response.json(); }).then(function() {
-                            window.location.reload();
+                        }).then(function(response) { return response.json(); }).then(function(data) {
+                            if (!data.ok) return;
+                            var commentCard = document.querySelector('.post-comment[data-comment-id="' + actionCommentId + '"]');
+                            if (!commentCard) return;
+                            var metaP = commentCard.querySelector('.post-comment-user p');
+                            if (metaP) {
+                                var pinBadge = metaP.querySelector('.comment-state-badge-pinned');
+                                if (data.is_pinned && !pinBadge) {
+                                    metaP.insertAdjacentHTML('beforeend', '<span class="comment-state-badge comment-state-badge-pinned">Pinned</span>');
+                                } else if (!data.is_pinned && pinBadge) {
+                                    pinBadge.remove();
+                                }
+                            }
+                            commentCard.querySelectorAll('[data-comment-action="pin"] span').forEach(function(span) {
+                                span.textContent = data.is_pinned ? 'Unpin' : 'Pin';
+                            });
                         });
                         return;
                     }
@@ -1382,7 +1577,39 @@
                     if (!replyPostId || !replyParentId || !replyContent) return;
                     submitComment(replyPostId, replyContent, replyParentId).then(function(data) {
                         if (data.error || !data.comment) throw new Error(data.error || 'Unable to add reply');
-                        window.location.reload();
+                        var parentCard = document.querySelector('.post-comment[data-comment-id="' + replyParentId + '"]');
+                        if (!parentCard) return;
+                        var childrenContainer = parentCard.querySelector('.post-comment-children');
+                        if (!childrenContainer) {
+                            parentCard.insertAdjacentHTML('beforeend', '<div class="post-comment-children"></div>');
+                            childrenContainer = parentCard.querySelector('.post-comment-children');
+                        }
+                        var avatarMarkup = postCommentForm.getAttribute('data-avatar-url')
+                            ? '<img class="post-comment-avatar-image" src="' + escapeHtml(postCommentForm.getAttribute('data-avatar-url')) + '" alt="avatar">'
+                            : '<div class="post-comment-avatar">' + escapeHtml(postCommentForm.getAttribute('data-avatar-initials') || '') + '</div>';
+                        var authorUrl = postCommentForm.getAttribute('data-author-url') || '';
+                        var authorName = postCommentForm.getAttribute('data-author-name') || data.comment.author;
+                        var replyMarkup = '<article class="post-comment post-comment-depth-1" data-comment-id="' + data.comment.id + '" style="--thread-depth: 1;">' +
+                            '<div class="post-comment-head"><div class="post-comment-user">' +
+                            '<a href="' + escapeHtml(authorUrl) + '" class="unstyled-link">' + avatarMarkup + '</a>' +
+                            '<div><h3><a href="' + escapeHtml(authorUrl) + '" class="unstyled-link">' + escapeHtml(authorName) + '</a></h3><p>just now</p></div>' +
+                            '</div></div>' +
+                            '<div class="post-comment-body">' + escapeHtml(data.comment.content) + '</div>' +
+                            '<div class="post-comment-actions"></div>' +
+                            '<div class="post-inline-reply-form" hidden data-parent-id="' + data.comment.id + '">' +
+                            '<input class="post-inline-reply-input" type="text" placeholder="Write a reply..." data-post-id="' + replyPostId + '" data-parent-id="' + data.comment.id + '">' +
+                            '<button class="post-inline-reply-send" type="button" data-post-id="' + replyPostId + '" data-parent-id="' + data.comment.id + '">' +
+                            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>' +
+                            '</button></div></article>';
+                        childrenContainer.insertAdjacentHTML('beforeend', replyMarkup);
+                        var insertedReply = childrenContainer.lastElementChild;
+                        if (insertedReply) upgradeInsertedCommentCard(insertedReply);
+                        if (replyInputNode) replyInputNode.value = '';
+                        if (replyFormNode) replyFormNode.hidden = true;
+                        var countNode = document.querySelector('.comment-jump-btn span');
+                        if (countNode && typeof data.comments_count !== 'undefined') {
+                            countNode.textContent = String(data.comments_count);
+                        }
                     });
                 }
             });
@@ -1396,6 +1623,119 @@
                 var sendReplyButton = replyForm ? replyForm.querySelector('.post-inline-reply-send') : null;
                 if (sendReplyButton) {
                     sendReplyButton.click();
+                }
+            });
+        })();
+    </script>
+    <script>
+        (function() {
+            document.querySelectorAll('.post-suggestions-col .structured-post').forEach(function(card) {
+                card.addEventListener('click', function(event) {
+                    if (event.target.closest('a, button, input, textarea, label, summary, details, form')) return;
+                    var url = card.getAttribute('data-post-url');
+                    if (url) window.location.href = url;
+                });
+            });
+        })();
+    </script>
+    <script>
+        (function() {
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            function applyReactionState(footer, data) {
+                if (!footer || !data) return;
+                var counts = data.reaction_counts || {};
+                var userReaction = data.user_reaction || '';
+                var likeBtn = footer.querySelector('.like-btn');
+                var dislikeBtn = footer.querySelector('.dislike-btn');
+                if (likeBtn) {
+                    likeBtn.setAttribute('data-count', String(counts.thumbs_up || 0));
+                    likeBtn.setAttribute('data-liked', userReaction === 'thumbs_up' ? 'true' : 'false');
+                    likeBtn.classList.toggle('is-active', userReaction === 'thumbs_up');
+                    var likeIcon = likeBtn.querySelector('i');
+                    var likeCount = likeBtn.querySelector('.count');
+                    if (likeIcon) likeIcon.className = (userReaction === 'thumbs_up' ? 'fa-solid' : 'fa-regular') + ' fa-thumbs-up';
+                    if (likeCount) likeCount.textContent = String(counts.thumbs_up || 0);
+                }
+                if (dislikeBtn) {
+                    dislikeBtn.setAttribute('data-count', String(counts.thumbs_down || 0));
+                    dislikeBtn.setAttribute('data-disliked', userReaction === 'thumbs_down' ? 'true' : 'false');
+                    dislikeBtn.classList.toggle('is-active', userReaction === 'thumbs_down');
+                    var dislikeIcon = dislikeBtn.querySelector('i');
+                    var dislikeCount = dislikeBtn.querySelector('.dislike-count');
+                    if (dislikeIcon) dislikeIcon.className = (userReaction === 'thumbs_down' ? 'fa-solid' : 'fa-regular') + ' fa-thumbs-down';
+                    if (dislikeCount) dislikeCount.textContent = String(counts.thumbs_down || 0);
+                }
+            }
+
+            function sendReaction(button, reaction) {
+                var postId = button.getAttribute('data-post-id');
+                var footer = button.closest('.structured-post-footer');
+                if (!postId || !footer || button.dataset.loading === 'true') return Promise.resolve(null);
+                button.dataset.loading = 'true';
+                return fetch('/posts/' + postId + '/react/' + reaction + '/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(function(r) {
+                    return r.json().then(function(data) {
+                        if (!r.ok || !data.ok) throw new Error((data && data.error) || 'Error');
+                        applyReactionState(footer, data);
+                        return data;
+                    });
+                }).catch(function(e) { console.error(e); return null; })
+                  .finally(function() { delete button.dataset.loading; });
+            }
+
+            var col = document.querySelector('.post-suggestions-col');
+            if (!col) return;
+
+            col.addEventListener('click', function(event) {
+                var likeBtn = event.target.closest('.like-btn');
+                if (likeBtn && likeBtn.closest('.structured-post-footer')) {
+                    event.preventDefault();
+                    sendReaction(likeBtn, 'thumbs_up');
+                    return;
+                }
+
+                var dislikeBtn = event.target.closest('.dislike-btn');
+                if (dislikeBtn && dislikeBtn.closest('.structured-post-footer')) {
+                    event.preventDefault();
+                    sendReaction(dislikeBtn, 'thumbs_down');
+                    return;
+                }
+
+                var bookmarkBtn = event.target.closest('.bookmark-btn');
+                if (bookmarkBtn && bookmarkBtn.closest('.structured-post-footer')) {
+                    event.preventDefault();
+                    var postId = bookmarkBtn.getAttribute('data-post-id');
+                    if (!postId) return;
+                    fetch('/posts/' + postId + '/save/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' }
+                    }).then(function(r) {
+                        if (!r.ok) throw new Error('Failed');
+                        return r.json();
+                    }).then(function(data) {
+                        if (typeof data.saved === 'undefined') return;
+                        bookmarkBtn.setAttribute('data-saved', data.saved ? 'true' : 'false');
+                        bookmarkBtn.classList.toggle('is-active', !!data.saved);
+                        var icon = bookmarkBtn.querySelector('i');
+                        if (icon) icon.className = (data.saved ? 'fa-solid' : 'fa-regular') + ' fa-bookmark';
+                    }).catch(function(e) { console.error(e); });
+                    return;
                 }
             });
         })();

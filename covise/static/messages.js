@@ -1,19 +1,21 @@
 (function () {
-    let conversations = JSON.parse(
-        document.getElementById("conversation-data").textContent
-    );
-    let friendOptions = JSON.parse(
-        document.getElementById("friend-options").textContent
-    );
-    const activeConversationValue = JSON.parse(
-        document.getElementById("active-conversation-id").textContent
-    );
-    const initialMessageError = JSON.parse(
-        document.getElementById("message-error").textContent
-    );
-    const currentUserId = JSON.parse(
-        document.getElementById("current-user-id").textContent
-    );
+    const conversationSummariesScript = document.getElementById("conversation-summaries");
+    const activeConversationScript = document.getElementById("active-conversation");
+    const friendOptionsScript = document.getElementById("friend-options");
+    const activeConversationIdScript = document.getElementById("active-conversation-id");
+    const messageErrorScript = document.getElementById("message-error");
+    const currentUserIdScript = document.getElementById("current-user-id");
+
+    if (!conversationSummariesScript || !friendOptionsScript || !activeConversationIdScript || !currentUserIdScript) {
+        return;
+    }
+
+    let conversationSummaries = JSON.parse(conversationSummariesScript.textContent || "[]");
+    let activeConversationData = activeConversationScript ? JSON.parse(activeConversationScript.textContent || "null") : null;
+    let friendOptions = JSON.parse(friendOptionsScript.textContent || "[]");
+    let activeConversationId = JSON.parse(activeConversationIdScript.textContent || "\"\"");
+    const initialMessageError = messageErrorScript ? JSON.parse(messageErrorScript.textContent || "\"\"") : "";
+    const currentUserId = JSON.parse(currentUserIdScript.textContent || "\"\"");
 
     const app = document.getElementById("messagesApp");
     const directList = document.getElementById("directList");
@@ -25,32 +27,14 @@
     const panelMoreMenuBtn = document.getElementById("panelMoreMenuBtn");
     const panelMoreMenu = document.getElementById("panelMoreMenu");
     const messagesStream = document.getElementById("messagesStream");
-    const sendBtn = document.getElementById("sendBtn");
+    const pinnedText = document.getElementById("pinnedText");
     const chatName = document.getElementById("chatName");
     const chatNameLink = document.getElementById("chatNameLink");
     const chatStatus = document.getElementById("chatStatus");
     const chatAvatar = document.getElementById("chatAvatar");
-    const chatMatchPill = document.getElementById("chatMatchPill");
-    const pinnedText = document.getElementById("pinnedText");
-    const detailsName = document.getElementById("detailsName");
-    const detailsPersonName = document.getElementById("detailsPersonName");
-    const detailsPersonLink = document.getElementById("detailsPersonLink");
-    const detailsAvatar = document.getElementById("detailsAvatar");
-    const detailsMatchPill = document.getElementById("detailsMatchPill");
-    const detailsMatchedOn = document.getElementById("detailsMatchedOn");
-    const detailsUserType = document.getElementById("detailsUserType");
-    const detailsIndustry = document.getElementById("detailsIndustry");
-    const detailsStage = document.getElementById("detailsStage");
-    const detailsMutual = document.getElementById("detailsMutual");
-    const convictionFill = document.getElementById("convictionFill");
-    const convictionValue = document.getElementById("convictionValue");
-    const viewFullProfileBtn = document.getElementById("viewFullProfileBtn");
-    const modalBackdrop = document.getElementById("modalBackdrop");
-    const modalTitle = document.getElementById("modalTitle");
-    const modalBody = document.getElementById("modalBody");
-    const modalFoot = document.getElementById("modalFoot");
+    const chatInputBar = document.getElementById("chatInputBar");
+    const sendBtn = document.getElementById("sendBtn");
     const chatInput = document.getElementById("chatInput");
-    const searchInChatBtn = document.getElementById("searchInChatBtn");
     const inputAttachBtn = document.getElementById("inputAttachBtn");
     const chatFileInput = document.getElementById("chatFileInput");
     const voiceRecordBtn = document.getElementById("voiceRecordBtn");
@@ -60,28 +44,54 @@
     const emojiFacesGrid = document.getElementById("emojiFacesGrid");
     const emojiHandsGrid = document.getElementById("emojiHandsGrid");
     const emojiIdeasGrid = document.getElementById("emojiIdeasGrid");
+    const composerLockOverlay = document.getElementById("composerLockOverlay");
+    const composerLockTitle = document.getElementById("composerLockTitle");
+    const composerLockMessage = document.getElementById("composerLockMessage");
+    const composerReportBtn = document.getElementById("composerReportBtn");
+    const composerBlockToggleBtn = document.getElementById("composerBlockToggleBtn");
     const muteNotificationsToggle = document.getElementById("muteNotificationsToggle");
     const recordingModeToggle = document.getElementById("recordingModeToggle");
     const sharedFilesList = document.getElementById("sharedFilesList");
-    const notifBell = document.getElementById("notifBell");
-    const notifPanel = document.getElementById("notifPanel");
+    const detailsName = document.getElementById("detailsName");
+    const detailsAvatar = document.getElementById("detailsAvatar");
+    const detailsPersonName = document.getElementById("detailsPersonName");
+    const detailsPersonLink = document.getElementById("detailsPersonLink");
+    const detailsMatchedOn = document.getElementById("detailsMatchedOn");
+    const detailsUserType = document.getElementById("detailsUserType");
+    const detailsIndustry = document.getElementById("detailsIndustry");
+    const detailsStage = document.getElementById("detailsStage");
+    const detailsMutual = document.getElementById("detailsMutual");
+    const viewFullProfileBtn = document.getElementById("viewFullProfileBtn");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    const modalFoot = document.getElementById("modalFoot");
 
     let activeTab = "direct";
-    let activeConversationId = activeConversationValue || (conversations[0] ? conversations[0].id : "");
     let chatSocket = null;
     let reconnectTimer = null;
     let socketConversationId = "";
+    let stateSyncInFlight = false;
     let mediaRecorder = null;
     let mediaRecorderStream = null;
     let mediaChunks = [];
-    let messagesSyncTimer = null;
-    let messagesSyncInFlight = false;
-    const MESSAGES_SYNC_INTERVAL_MS = 4000;
+    let renderedConversationId = "";
+    const messageRowMap = new Map();
+
     const emojiSets = {
         faces: ["😀", "😂", "😊", "😍", "🤔", "😭", "😎", "🥳", "😴", "😅", "🤯", "🥹", "😇", "🤝"],
         hands: ["👍", "👎", "👏", "🙌", "🙏", "👌", "🤌", "✌️", "🤞", "💪", "👋", "🤙", "🫶", "✍️"],
         ideas: ["🔥", "🚀", "💡", "✅", "📌", "🎯", "💼", "📈", "🌍", "⚡", "🎉", "💬", "🧠", "🤖"],
     };
+    const reactionChoices = [
+        { key: "thumbs_up", label: "👍" },
+        { key: "fire", label: "🔥" },
+    ];
+
+    function parseIsoDate(value) {
+        const time = Date.parse(value || "");
+        return Number.isNaN(time) ? 0 : time;
+    }
 
     function getCookie(name) {
         let cookieValue = null;
@@ -89,7 +99,7 @@
             const cookies = document.cookie.split(";");
             for (let index = 0; index < cookies.length; index += 1) {
                 const cookie = cookies[index].trim();
-                if (cookie.substring(0, name.length + 1) === name + "=") {
+                if (cookie.substring(0, name.length + 1) === `${name}=`) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
                 }
@@ -100,27 +110,13 @@
 
     const csrftoken = getCookie("csrftoken");
 
-    function receiptHTML(receipt) {
-        if (receipt === "sent") return '<span class="receipt">✓</span>';
-        if (receipt === "delivered") return '<span class="receipt">✓✓</span>';
-        if (receipt === "seen") return '<span class="receipt seen">✓✓</span>';
-        return "";
-    }
-
     function escapeHtml(value) {
         return String(value || "")
             .replaceAll("&", "&amp;")
             .replaceAll("<", "&lt;")
             .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
+            .replaceAll("\"", "&quot;")
             .replaceAll("'", "&#39;");
-    }
-
-    function avatarInnerMarkup(initials, avatarUrl, name) {
-        if (avatarUrl) {
-            return `<img class="avatar-image" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml((name || "CoVise member"))} avatar">`;
-        }
-        return escapeHtml(initials || "CV");
     }
 
     function avatarIdentity(avatarUrl) {
@@ -145,6 +141,13 @@
         return nextUrl || previousUrl || "";
     }
 
+    function avatarInnerMarkup(initials, avatarUrl, name) {
+        if (avatarUrl) {
+            return `<img class="avatar-image" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(name || "CoVise member")} avatar" loading="lazy" decoding="async">`;
+        }
+        return escapeHtml(initials || "CV");
+    }
+
     function setAvatarElement(element, initials, avatarUrl, name) {
         if (!element) {
             return;
@@ -153,22 +156,116 @@
             const nextIdentity = avatarIdentity(avatarUrl);
             const existingImage = element.querySelector(".avatar-image");
             if (existingImage && element.dataset.avatarIdentity === nextIdentity) {
+                if (existingImage.alt !== `${name || "CoVise member"} avatar`) {
+                    existingImage.alt = `${name || "CoVise member"} avatar`;
+                }
                 return;
             }
             element.dataset.avatarIdentity = nextIdentity;
             element.innerHTML = avatarInnerMarkup(initials, avatarUrl, name);
-        } else {
-            delete element.dataset.avatarIdentity;
-            element.textContent = initials || "CV";
+            return;
         }
+        delete element.dataset.avatarIdentity;
+        element.textContent = initials || "CV";
+    }
+
+    function receiptHTML(receipt) {
+        if (receipt === "sent") {
+            return '<span class="receipt">✓</span>';
+        }
+        if (receipt === "delivered") {
+            return '<span class="receipt">✓✓</span>';
+        }
+        if (receipt === "seen") {
+            return '<span class="receipt seen">✓✓</span>';
+        }
+        return "";
+    }
+
+    function formatMessageTime(value) {
+        if (!value) {
+            return "";
+        }
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) {
+            return value;
+        }
+        return parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     }
 
     function formatFileSize(value) {
         const size = Number(value || 0);
-        if (!size) return "";
-        if (size < 1024) return `${size} B`;
-        if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+        if (!size) {
+            return "";
+        }
+        if (size < 1024) {
+            return `${size} B`;
+        }
+        if (size < 1024 * 1024) {
+            return `${(size / 1024).toFixed(1)} KB`;
+        }
         return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function scrollMessagesToBottom() {
+        if (!messagesStream) {
+            return;
+        }
+        const snapToBottom = () => {
+            messagesStream.scrollTop = messagesStream.scrollHeight;
+            const lastChild = messagesStream.lastElementChild;
+            if (lastChild && typeof lastChild.scrollIntoView === "function") {
+                lastChild.scrollIntoView({ block: "end" });
+            }
+        };
+        snapToBottom();
+        window.requestAnimationFrame(() => {
+            snapToBottom();
+            window.requestAnimationFrame(snapToBottom);
+        });
+    }
+
+    function conversationLockState(conversation) {
+        if (!conversation || conversation.conversation_type === "group") {
+            return {
+                locked: false,
+                title: "",
+                message: "",
+                blockActionLabel: "Block User",
+            };
+        }
+        const blockedByCurrentUser = !!conversation.blocked_by_current_user;
+        const blockedByPartner = !!conversation.blocked_by_partner;
+        const locked = !!(conversation.messaging_blocked || blockedByCurrentUser || blockedByPartner);
+        let title = "Conversation locked";
+        let message = conversation.messaging_lock_reason || "Messaging is unavailable in this conversation.";
+        if (blockedByCurrentUser && blockedByPartner) {
+            title = "Conversation locked";
+            message = "Messaging is locked because one of you has blocked the other.";
+        } else if (blockedByCurrentUser) {
+            title = "You blocked this user";
+            message = "Unblock them to send messages again.";
+        } else if (blockedByPartner) {
+            title = "This user blocked you";
+            message = "You can no longer send messages in this conversation.";
+        }
+        return {
+            locked,
+            title,
+            message,
+            blockActionLabel: blockedByCurrentUser ? "Unblock User" : "Block User",
+        };
+    }
+
+    function applyConversationBlockState(conversation, overrides) {
+        if (!conversation) {
+            return;
+        }
+        Object.assign(conversation, overrides || {});
+        const lockState = conversationLockState(conversation);
+        conversation.messaging_blocked = lockState.locked;
+        conversation.messaging_lock_reason = lockState.locked ? lockState.message : "";
+        syncSummaryFromActiveConversation();
     }
 
     function closeEmojiPicker() {
@@ -181,7 +278,6 @@
         if (!chatInput) {
             return;
         }
-
         const start = chatInput.selectionStart ?? chatInput.value.length;
         const end = chatInput.selectionEnd ?? chatInput.value.length;
         const currentValue = chatInput.value || "";
@@ -189,7 +285,7 @@
         const nextCaret = start + emoji.length;
         chatInput.focus();
         chatInput.setSelectionRange(nextCaret, nextCaret);
-        sendBtn.disabled = chatInput.value.trim().length === 0;
+        updateComposerState();
     }
 
     function renderEmojiPicker() {
@@ -198,7 +294,6 @@
             hands: emojiHandsGrid,
             ideas: emojiIdeasGrid,
         };
-
         Object.entries(gridByKey).forEach(([key, grid]) => {
             if (!grid) {
                 return;
@@ -219,71 +314,201 @@
         });
     }
 
-    function activeConversation() {
-        return conversations.find((conversation) => conversation.id === activeConversationId) || null;
+    function sortByRecent(left, right) {
+        const rightTime = parseIsoDate(right.last_message_at);
+        const leftTime = parseIsoDate(left.last_message_at);
+        if (rightTime !== leftTime) {
+            return rightTime - leftTime;
+        }
+        return String(left.name || "").localeCompare(String(right.name || ""));
     }
 
-    function replaceItems(nextConversations, nextFriendOptions) {
-        const previousConversationsById = new Map(
-            (Array.isArray(conversations) ? conversations : []).map((conversation) => [conversation.id, conversation])
-        );
-        const previousFriendsById = new Map(
-            (Array.isArray(friendOptions) ? friendOptions : []).map((friend) => [friend.id, friend])
-        );
+    function directConversations() {
+        return conversationSummaries
+            .filter((conversation) => conversation.conversation_type !== "group")
+            .slice()
+            .sort(sortByRecent);
+    }
 
-        conversations = (Array.isArray(nextConversations) ? nextConversations : []).map((conversation) => {
-            const previousConversation = previousConversationsById.get(conversation.id);
-            return previousConversation
-                ? { ...conversation, avatar_url: preserveAvatarUrl(previousConversation.avatar_url, conversation.avatar_url) }
+    function groupConversations() {
+        return conversationSummaries
+            .filter((conversation) => conversation.conversation_type === "group")
+            .slice()
+            .sort(sortByRecent);
+    }
+
+    function findConversationSummary(conversationId) {
+        return conversationSummaries.find((conversation) => conversation.id === conversationId) || null;
+    }
+
+    function activeConversationSummary() {
+        return findConversationSummary(activeConversationId);
+    }
+
+    function activeConversation() {
+        if (activeConversationData && activeConversationData.id === activeConversationId) {
+            return activeConversationData;
+        }
+        return null;
+    }
+
+    function conversationProfileUrl(conversation) {
+        if (!conversation) {
+            return "#";
+        }
+        if (conversation.partner_id) {
+            return `/profile/user/${conversation.partner_id}/`;
+        }
+        return "#";
+    }
+
+    function buildChatStatusLine(conversation) {
+        if (!conversation) {
+            return "Select a direct conversation to start messaging.";
+        }
+        if (conversation.conversation_type === "group") {
+            return conversation.status || `${(conversation.group_members || []).length} members`;
+        }
+        const parts = [conversation.status, conversation.country].filter(Boolean);
+        return parts.join(" - ") || "Private conversation";
+    }
+
+    function replaceStateCollections(nextConversationSummaries, nextFriendOptions) {
+        const previousConversationsById = new Map(conversationSummaries.map((conversation) => [conversation.id, conversation]));
+        const previousFriendsById = new Map(friendOptions.map((friend) => [friend.id, friend]));
+
+        conversationSummaries = (Array.isArray(nextConversationSummaries) ? nextConversationSummaries : []).map((conversation) => {
+            const previous = previousConversationsById.get(conversation.id);
+            return previous
+                ? { ...conversation, avatar_url: preserveAvatarUrl(previous.avatar_url, conversation.avatar_url) }
                 : conversation;
         });
         friendOptions = (Array.isArray(nextFriendOptions) ? nextFriendOptions : []).map((friend) => {
-            const previousFriend = previousFriendsById.get(friend.id);
-            return previousFriend
-                ? { ...friend, avatar_url: preserveAvatarUrl(previousFriend.avatar_url, friend.avatar_url) }
+            const previous = previousFriendsById.get(friend.id);
+            return previous
+                ? { ...friend, avatar_url: preserveAvatarUrl(previous.avatar_url, friend.avatar_url) }
                 : friend;
         });
     }
 
-    function applyMessagesState(statePayload, options) {
-        replaceItems(statePayload.conversation_data, statePayload.friend_options);
-
-        if (activeConversationId && conversations.some((conversation) => conversation.id === activeConversationId)) {
-            renderAll(options);
-            connectSocket();
-            if (activeConversation() && activeConversation().unread) {
-                markActiveConversationSeen();
-            }
+    function upsertConversationSummary(summary) {
+        if (!summary || !summary.id) {
             return;
         }
+        const index = conversationSummaries.findIndex((conversation) => conversation.id === summary.id);
+        if (index >= 0) {
+            const previous = conversationSummaries[index];
+            conversationSummaries[index] = {
+                ...previous,
+                ...summary,
+                avatar_url: preserveAvatarUrl(previous.avatar_url, summary.avatar_url),
+            };
+            return;
+        }
+        conversationSummaries.push(summary);
+    }
 
-        activeConversationId = statePayload.active_conversation_id || (conversations[0] ? conversations[0].id : "");
-        renderAll(
-            options && typeof options === "object"
-                ? { ...options, stickToBottom: true }
-                : { stickToBottom: true }
-        );
+    function syncSummaryFromActiveConversation() {
+        const conversation = activeConversation();
+        if (!conversation) {
+            return;
+        }
+        const summary = { ...conversation };
+        delete summary.messages;
+        delete summary.shared_files;
+        delete summary.has_older_messages;
+        delete summary.oldest_loaded_message_id;
+        upsertConversationSummary(summary);
+    }
+
+    function setActiveConversationData(nextConversation) {
+        if (!nextConversation) {
+            activeConversationData = null;
+            return;
+        }
+        const previousConversation = activeConversationData && activeConversationData.id === nextConversation.id
+            ? activeConversationData
+            : null;
+        const nextMessages = Array.isArray(nextConversation.messages) ? nextConversation.messages.slice() : [];
+        const nextSharedFiles = Array.isArray(nextConversation.shared_files) ? nextConversation.shared_files.slice() : [];
+        activeConversationData = {
+            ...(previousConversation || {}),
+            ...nextConversation,
+            avatar_url: preserveAvatarUrl(previousConversation ? previousConversation.avatar_url : "", nextConversation.avatar_url),
+            messages: nextMessages,
+            shared_files: nextSharedFiles,
+        };
+        syncSummaryFromActiveConversation();
+    }
+
+    function setActiveConversationId(nextConversationId, nextTab) {
+        activeConversationId = nextConversationId || "";
+        if (nextTab) {
+            activeTab = nextTab;
+        } else {
+            const summary = activeConversationSummary();
+            if (summary) {
+                activeTab = summary.conversation_type === "group" ? "groups" : "direct";
+            }
+        }
+        const url = new URL(window.location.href);
+        if (activeConversationId) {
+            url.searchParams.set("conversation", activeConversationId);
+        } else {
+            url.searchParams.delete("conversation");
+        }
+        window.history.replaceState({}, "", url.toString());
+    }
+
+    function applyMessagesState(statePayload, options) {
+        replaceStateCollections(statePayload.conversation_summaries, statePayload.friend_options);
+        setActiveConversationId(statePayload.active_conversation_id || "", options && options.tab);
+        setActiveConversationData(statePayload.active_conversation || null);
+        renderAll(options);
         connectSocket();
-        if (activeConversation() && activeConversation().unread) {
+        if (activeConversation() && activeConversationSummary() && activeConversationSummary().unread) {
             markActiveConversationSeen();
         }
     }
 
     function syncMessagesState(options) {
-        if (messagesSyncInFlight) {
+        if (stateSyncInFlight) {
             return Promise.resolve();
         }
-
-        messagesSyncInFlight = true;
+        stateSyncInFlight = true;
         const syncUrl = new URL("/messages/state/", window.location.origin);
         if (activeConversationId) {
             syncUrl.searchParams.set("conversation", activeConversationId);
         }
-
         return fetch(syncUrl.toString(), {
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-            },
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+        })
+            .then(async (response) => {
+                const data = await response.json();
+                return { ok: response.ok, data };
+            })
+            .then((result) => {
+                if (result.ok && result.data && result.data.ok) {
+                    applyMessagesState(result.data, options || {});
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                stateSyncInFlight = false;
+            });
+    }
+
+    function loadConversation(conversationId, nextTab, options) {
+        if (!conversationId) {
+            setActiveConversationId("", nextTab || "direct");
+            setActiveConversationData(null);
+            renderAll(options);
+            return Promise.resolve();
+        }
+        const stateUrl = new URL("/messages/state/", window.location.origin);
+        stateUrl.searchParams.set("conversation", conversationId);
+        return fetch(stateUrl.toString(), {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
         })
             .then(async (response) => {
                 const data = await response.json();
@@ -291,149 +516,855 @@
             })
             .then((result) => {
                 if (!result.ok || !result.data || !result.data.ok) {
+                    showMessagingError((result.data && result.data.error) || "We could not open that conversation right now.");
                     return;
                 }
-                applyMessagesState(result.data, options);
+                applyMessagesState(result.data, { ...(options || {}), tab: nextTab });
+                app.classList.add("mobile-chat-open");
             })
-            .catch(() => {})
-            .finally(() => {
-                messagesSyncInFlight = false;
+            .catch(() => {
+                showMessagingError("We could not open that conversation right now.");
             });
     }
 
-    function scheduleMessagesSync() {
-        if (messagesSyncTimer) {
-            window.clearTimeout(messagesSyncTimer);
+    function ensureActiveConversationSelection() {
+        const summary = activeConversationSummary();
+        if (summary && activeConversationId) {
+            activeTab = summary.conversation_type === "group" ? "groups" : "direct";
+            return;
         }
-        messagesSyncTimer = window.setTimeout(() => {
-            messagesSyncTimer = null;
-            if (document.hidden) {
-                scheduleMessagesSync();
+        const firstDirect = directConversations()[0];
+        if (firstDirect) {
+            setActiveConversationId(firstDirect.id, "direct");
+            return;
+        }
+        const firstGroup = groupConversations()[0];
+        if (!activeConversationId && firstGroup) {
+            activeTab = "direct";
+        }
+        setActiveConversationId("", "direct");
+    }
+
+    function closeMessageMenus() {
+        document.querySelectorAll(".msg-menu.is-open").forEach((menu) => menu.classList.remove("is-open"));
+    }
+
+    function renderLists() {
+        const query = (searchInput && searchInput.value ? searchInput.value : "").trim().toLowerCase();
+        const renderCollection = (container, items, tabName, emptyTitle, emptyText) => {
+            if (!container) {
                 return;
             }
-            syncMessagesState()
-                .finally(() => {
-                    scheduleMessagesSync();
-                });
-        }, MESSAGES_SYNC_INTERVAL_MS);
-    }
+            container.innerHTML = "";
+            const filtered = items.filter((conversation) => {
+                const haystack = [
+                    conversation.name,
+                    conversation.preview,
+                    conversation.status,
+                    conversation.country,
+                    conversation.skills,
+                ].join(" ").toLowerCase();
+                return haystack.includes(query);
+            });
 
-    function conversationSortTimestamp(conversation) {
-        const lastMessage = Array.isArray(conversation.messages) && conversation.messages.length
-            ? conversation.messages[conversation.messages.length - 1]
-            : null;
-        const lastMessageTime = lastMessage && lastMessage.created_at ? Date.parse(lastMessage.created_at) : NaN;
-        if (!Number.isNaN(lastMessageTime)) {
-            return lastMessageTime;
-        }
-        return -1;
-    }
-
-    function sortConversationsByRecent(items) {
-        return [...items].sort((left, right) => {
-            const rightTime = conversationSortTimestamp(right);
-            const leftTime = conversationSortTimestamp(left);
-            if (rightTime !== leftTime) {
-                return rightTime - leftTime;
+            if (!filtered.length) {
+                container.innerHTML = `
+                    <div class="request-item request-empty">
+                        <div>
+                            <h3>${escapeHtml(emptyTitle)}</h3>
+                            <p>${escapeHtml(emptyText)}</p>
+                        </div>
+                    </div>
+                `;
+                return;
             }
-            return String(left.name || "").localeCompare(String(right.name || ""));
+
+            filtered.forEach((conversation) => {
+                const element = document.createElement("button");
+                element.type = "button";
+                element.className = `conv-item${conversation.id === activeConversationId ? " is-active" : ""}`;
+                element.innerHTML = `
+                    <div class="conv-avatar-wrap">
+                        <div class="avatar">${avatarInnerMarkup(conversation.avatar, conversation.avatar_url, conversation.name)}</div>
+                    </div>
+                    <div class="conv-main">
+                        <div class="conv-head"><h3>${escapeHtml(conversation.name)}</h3><span>${escapeHtml(conversation.time || "New")}</span></div>
+                        <p>${escapeHtml(conversation.preview || "Start the conversation")}</p>
+                        <div class="conv-foot">
+                            ${conversation.conversation_type === "group" ? `<span class="match-pill subtle">${escapeHtml(conversation.status || "Group conversation")}</span>` : ""}
+                            ${conversation.unread ? `<span class="unread-badge">${conversation.unread}</span>` : ""}
+                        </div>
+                    </div>
+                `;
+                element.addEventListener("click", () => {
+                    loadConversation(conversation.id, tabName, { stickToBottom: true });
+                });
+                container.appendChild(element);
+            });
+        };
+
+        renderCollection(
+            directList,
+            directConversations(),
+            "direct",
+            query ? "No direct messages found" : "No direct messages yet",
+            query ? "Try another search term." : "Accepted private chats will appear here."
+        );
+        renderCollection(
+            groupsList,
+            groupConversations(),
+            "groups",
+            query ? "No groups found" : "No groups yet",
+            query ? "Try another search term." : "Create a group to start a shared conversation."
+        );
+
+        if (directList) {
+            directList.classList.toggle("is-hidden", activeTab !== "direct");
+        }
+        if (groupsList) {
+            groupsList.classList.toggle("is-hidden", activeTab !== "groups");
+        }
+        if (directTabBtn) {
+            directTabBtn.classList.toggle("is-active", activeTab === "direct");
+        }
+        if (groupsTabBtn) {
+            groupsTabBtn.classList.toggle("is-active", activeTab === "groups");
+        }
+    }
+
+    function renderSharedFiles(conversation) {
+        if (!sharedFilesList) {
+            return;
+        }
+        sharedFilesList.innerHTML = "";
+        const items = (conversation && conversation.shared_files) || [];
+        if (!items.length) {
+            sharedFilesList.innerHTML = '<p class="muted-note">No shared files yet.</p>';
+            return;
+        }
+        items.forEach((item) => {
+            const row = document.createElement("article");
+            row.className = "file-item";
+            row.innerHTML = `
+                <a class="file-item-link" href="${escapeHtml(item.url || "#")}" target="_blank" rel="noopener">
+                    <i class="fa-solid ${item.message_type === "image" ? "fa-image" : item.message_type === "voice" ? "fa-wave-square" : "fa-file"}"></i>
+                    <div class="file-item-meta">
+                        <strong>${escapeHtml(item.name || "Attachment")}</strong>
+                        <span>${escapeHtml(item.sender_name || "CoVise member")} - ${escapeHtml(formatFileSize(item.attachment_size) || "Shared file")}</span>
+                    </div>
+                </a>
+                <a class="file-item-open" href="${escapeHtml(item.url || "#")}" target="_blank" rel="noopener">Open</a>
+            `;
+            sharedFilesList.appendChild(row);
         });
     }
 
-    function directConversations() {
-        return sortConversationsByRecent(
-            conversations.filter((conversation) => conversation.conversation_type !== "group")
-        );
+    function clearMessagesRenderState() {
+        renderedConversationId = "";
+        messageRowMap.clear();
+        if (messagesStream) {
+            messagesStream.innerHTML = "";
+        }
     }
 
-    function groupConversations() {
-        return sortConversationsByRecent(
-            conversations.filter((conversation) => conversation.conversation_type === "group")
-        );
+    function renderEmptyConversationState() {
+        clearMessagesRenderState();
+        if (!messagesStream) {
+            return;
+        }
+        messagesStream.innerHTML = `
+            <div class="request-item request-empty">
+                <div>
+                    <h3>No direct conversation selected</h3>
+                    <p>Open a direct thread from the left panel to start messaging instantly.</p>
+                </div>
+            </div>
+        `;
     }
 
-    function showMessagingError(message, title) {
-        openModal(title || "Message not sent", `<p>${message}</p>`);
-    }
-
-    function applyIncomingMessage(data) {
-        const conversation = conversations.find((item) => item.id === data.conversation_id);
+    function syncPinnedBanner(conversation) {
+        if (!pinnedText || !pinnedText.parentElement) {
+            return;
+        }
+        const banner = pinnedText.parentElement;
         if (!conversation) {
+            pinnedText.textContent = "";
+            banner.classList.add("is-hidden");
+            banner.classList.remove("is-ephemeral");
+            return;
+        }
+        const isEphemeral = conversation.recording_mode === "ephemeral";
+        const bannerText = conversation.pinned || (isEphemeral ? "Messages in this conversation are currently ephemeral and will not be saved." : "");
+        pinnedText.textContent = bannerText;
+        banner.classList.toggle("is-ephemeral", isEphemeral);
+        banner.classList.toggle("is-hidden", !bannerText);
+    }
+
+    function renderChatHeaderAndDetails(conversation) {
+        if (!conversation) {
+            if (chatName) {
+                chatName.textContent = "Messages";
+            }
+            if (chatStatus) {
+                chatStatus.textContent = "Select a direct conversation to start messaging.";
+            }
+            if (chatNameLink) {
+                chatNameLink.setAttribute("href", "#");
+            }
+            setAvatarElement(chatAvatar, "CV", "", "Messages");
+            if (detailsName) {
+                detailsName.textContent = "No direct conversation selected";
+            }
+            if (detailsPersonName) {
+                detailsPersonName.textContent = "No direct conversation selected";
+            }
+            if (detailsPersonLink) {
+                detailsPersonLink.setAttribute("href", "#");
+            }
+            if (viewFullProfileBtn) {
+                viewFullProfileBtn.setAttribute("href", "#");
+            }
+            setAvatarElement(detailsAvatar, "CV", "", "Messages");
+            if (detailsMatchedOn) {
+                detailsMatchedOn.textContent = "No conversation selected";
+            }
+            if (detailsUserType) {
+                detailsUserType.textContent = "No conversation selected";
+            }
+            if (detailsIndustry) {
+                detailsIndustry.textContent = "No conversation selected";
+            }
+            if (detailsStage) {
+                detailsStage.textContent = "No conversation selected";
+            }
+            if (detailsMutual) {
+                detailsMutual.textContent = "0";
+            }
+            if (muteNotificationsToggle) {
+                muteNotificationsToggle.checked = false;
+                muteNotificationsToggle.disabled = true;
+            }
+            if (recordingModeToggle) {
+                recordingModeToggle.checked = true;
+                recordingModeToggle.disabled = true;
+            }
+            const blockButton = document.getElementById("blockUserBtn");
+            if (blockButton) {
+                blockButton.style.display = "block";
+                blockButton.disabled = true;
+                blockButton.textContent = "Block User";
+            }
+            const reportButton = document.getElementById("reportUserBtn");
+            if (reportButton) {
+                reportButton.style.display = "block";
+                reportButton.disabled = true;
+            }
+            const deleteButton = document.getElementById("deleteConversationBtn");
+            if (deleteButton) {
+                deleteButton.style.display = "block";
+                deleteButton.disabled = true;
+            }
+            renderSharedFiles(null);
+            syncPinnedBanner(null);
             return;
         }
 
-        const alreadyExists = conversation.messages.some((item) => item.id === data.message_id);
-        if (!alreadyExists) {
-            conversation.messages.push({
-                id: data.message_id,
-                sender_id: data.sender_id,
-                sender_name: data.sender_name,
-                text: data.message,
-                created_at: data.created_at,
-                receipt: data.receipt || "sent",
-                message_type: data.message_type || "text",
-                attachment_url: data.attachment_url || "",
-                attachment_name: data.attachment_name || "",
-                attachment_content_type: data.attachment_content_type || "",
-                attachment_size: data.attachment_size || null,
-                is_ephemeral: !!data.is_ephemeral,
-                reaction_counts: data.reaction_counts || { thumbs_up: 0, fire: 0 },
-                viewer_reactions: data.viewer_reactions || [],
-            });
+        if (chatName) {
+            chatName.textContent = conversation.name || "Messages";
+        }
+        if (chatStatus) {
+            chatStatus.textContent = buildChatStatusLine(conversation);
+        }
+        if (chatNameLink) {
+            chatNameLink.setAttribute("href", conversationProfileUrl(conversation));
+        }
+        setAvatarElement(chatAvatar, conversation.avatar, conversation.avatar_url, conversation.name);
+
+        if (detailsName) {
+            detailsName.textContent = conversation.name || "Conversation";
+        }
+        if (detailsPersonName) {
+            detailsPersonName.textContent = conversation.name || "Conversation";
+        }
+        if (detailsPersonLink) {
+            detailsPersonLink.setAttribute("href", conversationProfileUrl(conversation));
+        }
+        if (viewFullProfileBtn) {
+            viewFullProfileBtn.setAttribute("href", conversationProfileUrl(conversation));
+            viewFullProfileBtn.style.visibility = conversation.conversation_type === "group" ? "hidden" : "visible";
+        }
+        setAvatarElement(detailsAvatar, conversation.avatar, conversation.avatar_url, conversation.name);
+        if (detailsMatchedOn) {
+            detailsMatchedOn.textContent = conversation.matchedOn || "Not available";
+        }
+        if (detailsUserType) {
+            detailsUserType.textContent = conversation.conversation_type === "group" ? "Group conversation" : (conversation.userType || "CoVise member");
+        }
+        if (detailsIndustry) {
+            detailsIndustry.textContent = conversation.conversation_type === "group"
+                ? `${(conversation.group_members || []).length} members`
+                : (conversation.industry || "Not added yet");
+        }
+        if (detailsStage) {
+            detailsStage.textContent = conversation.conversation_type === "group"
+                ? ((conversation.group_members || []).map((member) => member.display_name).join(", ") || "Group participants")
+                : (conversation.stage || "Not added yet");
+        }
+        if (detailsMutual) {
+            detailsMutual.textContent = String(conversation.mutual || 0);
+        }
+        if (muteNotificationsToggle) {
+            muteNotificationsToggle.disabled = false;
+            muteNotificationsToggle.checked = !!conversation.mute_notifications;
+        }
+        if (recordingModeToggle) {
+            recordingModeToggle.disabled = false;
+            recordingModeToggle.checked = conversation.recording_mode !== "ephemeral";
+        }
+        const blockButton = document.getElementById("blockUserBtn");
+        if (blockButton) {
+            const isPrivateConversation = conversation.conversation_type !== "group";
+            blockButton.style.display = isPrivateConversation ? "block" : "none";
+            blockButton.disabled = !isPrivateConversation;
+            blockButton.textContent = conversationLockState(conversation).blockActionLabel;
+        }
+        const reportButton = document.getElementById("reportUserBtn");
+        if (reportButton) {
+            const isPrivateConversation = conversation.conversation_type !== "group";
+            reportButton.style.display = isPrivateConversation ? "block" : "none";
+            reportButton.disabled = !isPrivateConversation;
+        }
+        const deleteButton = document.getElementById("deleteConversationBtn");
+        if (deleteButton) {
+            const isPrivateConversation = conversation.conversation_type !== "group";
+            deleteButton.style.display = isPrivateConversation ? "block" : "none";
+            deleteButton.disabled = !isPrivateConversation;
+        }
+        renderSharedFiles(conversation);
+        syncPinnedBanner(conversation);
+    }
+
+    function createMessageMenu(message, isMine) {
+        if (message.is_ephemeral) {
+            return null;
+        }
+        const wrap = document.createElement("div");
+        wrap.className = `msg-menu-wrap${isMine ? " is-own" : " is-other"}`;
+        wrap.innerHTML = `
+            <button class="msg-menu-trigger" type="button" aria-label="Message actions" data-message-menu-toggle="${escapeHtml(message.id)}">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
+            <div class="msg-menu" data-message-menu="${escapeHtml(message.id)}">
+                <button type="button" data-message-action="react" data-message-id="${escapeHtml(message.id)}">
+                    <i class="fa-regular fa-face-smile"></i>
+                    <span>React</span>
+                </button>
+                <button type="button" data-message-action="report" data-message-id="${escapeHtml(message.id)}">
+                    <i class="fa-regular fa-flag"></i>
+                    <span>Report</span>
+                </button>
+                ${isMine ? `
+                <button type="button" data-message-action="delete" data-message-id="${escapeHtml(message.id)}">
+                    <i class="fa-regular fa-trash-can"></i>
+                    <span>Delete message</span>
+                </button>` : ""}
+            </div>
+        `;
+        return wrap;
+    }
+
+    function syncMediaBubbleBody(container, message) {
+        const messageType = message.message_type || "text";
+        const attachmentUrl = message.attachment_url || "";
+        const text = message.text || "";
+        const attachmentName = message.attachment_name || "Attachment";
+
+        if (messageType === "image" && attachmentUrl) {
+            container.className = `msg-body bubble media-bubble${text ? " has-caption" : ""}`;
+            let link = container.querySelector("a[data-role='image-link']");
+            let image = container.querySelector("img.bubble-image");
+            if (!link) {
+                container.innerHTML = "";
+                link = document.createElement("a");
+                link.dataset.role = "image-link";
+                link.target = "_blank";
+                link.rel = "noopener";
+                image = document.createElement("img");
+                image.className = "bubble-image";
+                image.loading = "lazy";
+                image.decoding = "async";
+                link.appendChild(image);
+                container.appendChild(link);
+            }
+            link.href = attachmentUrl;
+            if (image.dataset.attachmentIdentity !== attachmentUrl) {
+                image.src = attachmentUrl;
+                image.dataset.attachmentIdentity = attachmentUrl;
+            }
+            image.alt = attachmentName;
+            let caption = container.querySelector(".bubble-caption");
+            if (text) {
+                if (!caption) {
+                    caption = document.createElement("div");
+                    caption.className = "bubble-caption";
+                    container.appendChild(caption);
+                }
+                caption.textContent = text;
+            } else if (caption) {
+                caption.remove();
+            }
+            return;
         }
 
-        if (data.message_type === "image") {
-            conversation.preview = data.message || "Sent an image";
-        } else if (data.message_type === "voice") {
-            conversation.preview = data.message || "Sent a voice message";
-        } else if (data.message_type === "file") {
-            conversation.preview = data.message || `Shared ${data.attachment_name || "a file"}`;
-        } else {
-            conversation.preview = data.message;
+        if (messageType === "voice" && attachmentUrl) {
+            container.className = `msg-body bubble media-bubble${text ? " has-caption" : ""}`;
+            let audio = container.querySelector("audio.bubble-audio");
+            if (!audio) {
+                container.innerHTML = "";
+                audio = document.createElement("audio");
+                audio.className = "bubble-audio";
+                audio.controls = true;
+                audio.preload = "metadata";
+                container.appendChild(audio);
+            }
+            if (audio.dataset.attachmentIdentity !== attachmentUrl) {
+                audio.src = attachmentUrl;
+                audio.dataset.attachmentIdentity = attachmentUrl;
+            }
+            let caption = container.querySelector(".bubble-caption");
+            if (text) {
+                if (!caption) {
+                    caption = document.createElement("div");
+                    caption.className = "bubble-caption";
+                    container.appendChild(caption);
+                }
+                caption.textContent = text;
+            } else if (caption) {
+                caption.remove();
+            }
+            return;
         }
-        conversation.time = "Now";
-        if (data.attachment_url) {
-            conversation.shared_files = conversation.shared_files || [];
-            const alreadyListed = conversation.shared_files.some((item) => item.id === data.message_id);
-            if (!alreadyListed) {
-                conversation.shared_files.unshift({
-                    id: data.message_id,
-                    message_type: data.message_type || "file",
-                    name: data.attachment_name || "Attachment",
-                    url: data.attachment_url || "",
-                    created_at: data.created_at,
-                    sender_name: data.sender_name,
-                    attachment_size: data.attachment_size || null,
-                });
+
+        if (messageType === "file" && attachmentUrl) {
+            container.className = `msg-body bubble media-bubble${text ? " has-caption" : ""}`;
+            let link = container.querySelector("a.bubble-file");
+            if (!link) {
+                container.innerHTML = "";
+                link = document.createElement("a");
+                link.className = "bubble-file";
+                link.target = "_blank";
+                link.rel = "noopener";
+                link.innerHTML = `
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <div class="bubble-file-meta">
+                        <strong></strong>
+                        <span></span>
+                    </div>
+                `;
+                container.appendChild(link);
+            }
+            link.href = attachmentUrl;
+            const title = link.querySelector("strong");
+            const meta = link.querySelector("span");
+            if (title) {
+                title.textContent = attachmentName;
+            }
+            if (meta) {
+                meta.textContent = formatFileSize(message.attachment_size) || "Open file";
+            }
+            let caption = container.querySelector(".bubble-caption");
+            if (text) {
+                if (!caption) {
+                    caption = document.createElement("div");
+                    caption.className = "bubble-caption";
+                    container.appendChild(caption);
+                }
+                caption.textContent = text;
+            } else if (caption) {
+                caption.remove();
+            }
+            return;
+        }
+
+        container.className = "msg-body bubble";
+        container.textContent = text;
+    }
+
+    function syncReactionChips(row, message) {
+        let reactions = row.querySelector(".msg-reactions");
+        if (!reactions) {
+            reactions = document.createElement("div");
+            reactions.className = "msg-reactions";
+            row.appendChild(reactions);
+        }
+        reactions.innerHTML = "";
+        const counts = message.reaction_counts || {};
+        const viewerReactions = Array.isArray(message.viewer_reactions) ? message.viewer_reactions : [];
+        reactionChoices.forEach((choice) => {
+            const count = Number(counts[choice.key] || 0);
+            if (!count && !viewerReactions.includes(choice.key)) {
+                return;
+            }
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = `msg-reaction-chip${viewerReactions.includes(choice.key) ? " is-active" : ""}`;
+            chip.dataset.reactionToggle = choice.key;
+            chip.dataset.messageId = message.id;
+            chip.innerHTML = `<span>${choice.label}</span><span>${count}</span>`;
+            reactions.appendChild(chip);
+        });
+        reactions.hidden = !reactions.childElementCount;
+    }
+
+    function createMessageRow(message, conversation) {
+        const row = document.createElement("article");
+        row.dataset.messageId = message.id;
+        row.innerHTML = `
+            <div class="msg-sender"></div>
+            <div class="msg-shell">
+                <div class="msg-content">
+                    <div class="msg-body bubble"></div>
+                </div>
+            </div>
+            <div class="msg-meta"><span class="msg-time"></span><span class="msg-receipt"></span></div>
+        `;
+        syncMessageRow(row, message, conversation);
+        return row;
+    }
+
+    function syncMessageRow(row, message, conversation) {
+        const isMine = message.sender_id === currentUserId;
+        row.className = `msg ${isMine ? "outgoing" : "incoming"}`;
+        row.dataset.messageId = message.id;
+
+        const sender = row.querySelector(".msg-sender");
+        const showSender = conversation && conversation.conversation_type === "group" && !isMine;
+        if (sender) {
+            sender.textContent = showSender ? (message.sender_name || "CoVise member") : "";
+            sender.hidden = !showSender;
+        }
+
+        const shell = row.querySelector(".msg-shell");
+        if (shell) {
+            shell.className = `msg-shell ${isMine ? "is-own" : "is-other"}`;
+            let menuWrap = shell.querySelector(".msg-menu-wrap");
+            if (message.is_ephemeral) {
+                if (menuWrap) {
+                    menuWrap.remove();
+                }
+            } else if (!menuWrap) {
+                menuWrap = createMessageMenu(message, isMine);
+                if (isMine) {
+                    shell.insertBefore(menuWrap, shell.firstChild);
+                } else {
+                    shell.appendChild(menuWrap);
+                }
+            } else {
+                menuWrap.className = `msg-menu-wrap${isMine ? " is-own" : " is-other"}`;
+                const deleteButton = menuWrap.querySelector("[data-message-action='delete']");
+                if (deleteButton) {
+                    deleteButton.style.display = isMine ? "flex" : "none";
+                }
             }
         }
-        if (conversation.id === activeConversationId || data.sender_id === currentUserId) {
-            conversation.unread = 0;
-        } else {
-            conversation.unread += 1;
+
+        let contentWrap = row.querySelector(".msg-content");
+        if (!contentWrap) {
+            contentWrap = document.createElement("div");
+            contentWrap.className = "msg-content";
+            row.querySelector(".msg-shell").appendChild(contentWrap);
+        }
+        let contentBody = contentWrap.querySelector(".msg-body");
+        if (!contentBody) {
+            contentBody = document.createElement("div");
+            contentBody.className = "msg-body bubble";
+            contentWrap.replaceChildren(contentBody);
+        }
+        syncMediaBubbleBody(contentBody, message);
+        syncReactionChips(row, message);
+
+        const timeElement = row.querySelector(".msg-time");
+        if (timeElement) {
+            timeElement.textContent = formatMessageTime(message.created_at);
+        }
+        const receiptElement = row.querySelector(".msg-receipt");
+        if (receiptElement) {
+            receiptElement.innerHTML = isMine ? receiptHTML(message.receipt || "sent") : "";
+        }
+    }
+
+    function renderHistoryLoader(conversation, fragment) {
+        if (!conversation || !conversation.has_older_messages || !conversation.oldest_loaded_message_id) {
+            return;
+        }
+        const wrapper = document.createElement("div");
+        wrapper.className = "date-separator";
+        wrapper.innerHTML = `<button class="panel-btn ghost" type="button" data-load-older="1">Load older messages</button>`;
+        fragment.appendChild(wrapper);
+    }
+
+    function renderChatMessages(conversation, options) {
+        if (!messagesStream) {
+            return;
+        }
+        const query = (searchInput && searchInput.value ? searchInput.value : "").trim().toLowerCase();
+        const stickToBottom = options && Object.prototype.hasOwnProperty.call(options, "stickToBottom")
+            ? !!options.stickToBottom
+            : ((messagesStream.scrollHeight - messagesStream.scrollTop - messagesStream.clientHeight) < 96);
+        if (!conversation) {
+            renderEmptyConversationState();
+            return;
         }
 
-        renderAll();
+        const allMessages = Array.isArray(conversation.messages) ? conversation.messages : [];
+        const messages = query
+            ? allMessages.filter((message) => (
+                `${message.sender_name || ""} ${message.text || ""} ${message.attachment_name || ""}`.toLowerCase().includes(query)
+            ))
+            : allMessages;
+        if (renderedConversationId !== conversation.id) {
+            clearMessagesRenderState();
+            renderedConversationId = conversation.id;
+        }
 
-        if (conversation.id === activeConversationId && data.sender_id !== currentUserId && !data.is_ephemeral) {
+        const fragment = document.createDocumentFragment();
+        if (!query) {
+            renderHistoryLoader(conversation, fragment);
+        }
+
+        const nextIds = new Set();
+        messages.forEach((message) => {
+            const messageId = String(message.id);
+            nextIds.add(messageId);
+            let row = messageRowMap.get(messageId);
+            if (!row) {
+                row = createMessageRow(message, conversation);
+                messageRowMap.set(messageId, row);
+            } else {
+                syncMessageRow(row, message, conversation);
+            }
+            fragment.appendChild(row);
+        });
+
+        Array.from(messageRowMap.keys()).forEach((messageId) => {
+            if (!nextIds.has(messageId)) {
+                const row = messageRowMap.get(messageId);
+                if (row) {
+                    row.remove();
+                }
+                messageRowMap.delete(messageId);
+            }
+        });
+
+        messagesStream.replaceChildren(fragment);
+        if (query && !messages.length) {
+            messagesStream.innerHTML = `
+                <div class="request-item request-empty">
+                    <div>
+                        <h3>No messages found</h3>
+                        <p>Try another search term for this conversation or your contacts.</p>
+                    </div>
+                </div>
+            `;
+        } else if (!messages.length) {
+            messagesStream.innerHTML = `
+                <div class="request-item request-empty">
+                    <div>
+                        <h3>No messages yet</h3>
+                        <p>Send the first message to get this conversation started.</p>
+                    </div>
+                </div>
+            `;
+        } else if (stickToBottom) {
+            scrollMessagesToBottom();
+        }
+    }
+
+    function renderChat() {
+        const conversation = activeConversation();
+        renderChatHeaderAndDetails(conversation);
+        renderChatMessages(conversation, { stickToBottom: true });
+        updateComposerState();
+    }
+
+    function renderAll(options) {
+        ensureActiveConversationSelection();
+        renderLists();
+        renderChatHeaderAndDetails(activeConversation());
+        renderChatMessages(activeConversation(), options || { stickToBottom: true });
+        updateComposerState();
+    }
+
+    function openModal(title, body, footer) {
+        if (!modalBackdrop || !modalTitle || !modalBody || !modalFoot) {
+            return;
+        }
+        modalTitle.textContent = title;
+        modalBody.innerHTML = body;
+        modalFoot.innerHTML = footer || '<button class="panel-btn" id="modalOkBtn" type="button">Close</button>';
+        modalBackdrop.classList.add("is-open");
+        const ok = document.getElementById("modalOkBtn");
+        if (ok) {
+            ok.addEventListener("click", closeModal);
+        }
+    }
+
+    function closeModal() {
+        if (modalBackdrop) {
+            modalBackdrop.classList.remove("is-open");
+        }
+    }
+
+    function showMessagingError(message, title) {
+        openModal(title || "Messaging", `<p>${escapeHtml(message || "Something went wrong.")}</p>`);
+    }
+
+    function updateComposerState() {
+        const conversation = activeConversation();
+        const lockState = conversationLockState(conversation);
+        const isDisabled = !conversation || lockState.locked;
+        if (chatInput) {
+            chatInput.disabled = isDisabled;
+            chatInput.placeholder = lockState.locked ? lockState.message : "Type a message...";
+        }
+        if (sendBtn) {
+            sendBtn.disabled = isDisabled || !(chatInput && chatInput.value.trim());
+        }
+        if (inputAttachBtn) {
+            inputAttachBtn.disabled = isDisabled;
+        }
+        if (voiceRecordBtn) {
+            voiceRecordBtn.disabled = isDisabled;
+        }
+        if (emojiPickerBtn) {
+            emojiPickerBtn.disabled = isDisabled;
+        }
+        if (chatInputBar) {
+            chatInputBar.classList.toggle("is-locked", !!(conversation && lockState.locked));
+        }
+        if (composerLockOverlay) {
+            const showLockOverlay = !!(conversation && lockState.locked);
+            composerLockOverlay.hidden = !showLockOverlay;
+            if (composerLockTitle) {
+                composerLockTitle.textContent = lockState.title;
+            }
+            if (composerLockMessage) {
+                composerLockMessage.textContent = lockState.message;
+            }
+        }
+        if (composerBlockToggleBtn) {
+            composerBlockToggleBtn.textContent = lockState.blockActionLabel;
+            composerBlockToggleBtn.hidden = !(conversation && conversation.conversation_type !== "group");
+        }
+        if (composerReportBtn) {
+            composerReportBtn.hidden = !(conversation && conversation.conversation_type !== "group");
+        }
+    }
+
+    function updateSummaryForNewMessage(conversation, message) {
+        conversation.preview = message.text
+            || (message.message_type === "image"
+                ? "Sent an image"
+                : message.message_type === "voice"
+                    ? "Sent a voice message"
+                    : message.message_type === "file"
+                        ? `Shared ${message.attachment_name || "a file"}`
+                        : "Start the conversation");
+        conversation.time = "Now";
+        conversation.last_message_at = message.created_at || new Date().toISOString();
+    }
+
+    function appendSharedFileFromMessage(conversation, message) {
+        if (!conversation || !message.attachment_url) {
+            return;
+        }
+        const files = Array.isArray(conversation.shared_files) ? conversation.shared_files : [];
+        if (files.some((item) => item.id === message.id)) {
+            return;
+        }
+        files.unshift({
+            id: message.id,
+            message_type: message.message_type || "file",
+            name: message.attachment_name || "Attachment",
+            url: message.attachment_url || "",
+            created_at: message.created_at,
+            sender_name: message.sender_name || "CoVise member",
+            attachment_size: message.attachment_size || null,
+        });
+        conversation.shared_files = files;
+    }
+
+    function applyIncomingMessage(data) {
+        const conversationId = data.conversation_id;
+        let summary = findConversationSummary(conversationId);
+        if (!summary) {
+            syncMessagesState({ stickToBottom: true });
+            return;
+        }
+
+        const incomingMessage = {
+            id: data.message_id,
+            sender_id: data.sender_id,
+            sender_name: data.sender_name,
+            text: data.message,
+            created_at: data.created_at,
+            receipt: data.receipt || "sent",
+            message_type: data.message_type || "text",
+            attachment_url: data.attachment_url || "",
+            attachment_name: data.attachment_name || "",
+            attachment_content_type: data.attachment_content_type || "",
+            attachment_size: data.attachment_size || null,
+            is_ephemeral: !!data.is_ephemeral,
+            reaction_counts: data.reaction_counts || { thumbs_up: 0, fire: 0 },
+            viewer_reactions: Array.isArray(data.viewer_reactions) ? data.viewer_reactions : [],
+        };
+
+        if (activeConversationData && activeConversationData.id === conversationId) {
+            const existingIndex = activeConversationData.messages.findIndex((message) => message.id === incomingMessage.id);
+            if (existingIndex >= 0) {
+                activeConversationData.messages[existingIndex] = {
+                    ...activeConversationData.messages[existingIndex],
+                    ...incomingMessage,
+                };
+            } else {
+                activeConversationData.messages.push(incomingMessage);
+            }
+            activeConversationData.messages.sort((left, right) => parseIsoDate(left.created_at) - parseIsoDate(right.created_at));
+            updateSummaryForNewMessage(activeConversationData, incomingMessage);
+            appendSharedFileFromMessage(activeConversationData, incomingMessage);
+            if (incomingMessage.sender_id === currentUserId) {
+                activeConversationData.unread = 0;
+            }
+            syncSummaryFromActiveConversation();
+            renderLists();
+            renderChatMessages(activeConversationData, { stickToBottom: true });
+            renderSharedFiles(activeConversationData);
+        } else {
+            updateSummaryForNewMessage(summary, incomingMessage);
+            summary.unread = Number(summary.unread || 0) + (incomingMessage.sender_id === currentUserId ? 0 : 1);
+            upsertConversationSummary(summary);
+            renderLists();
+        }
+
+        if (conversationId === activeConversationId && incomingMessage.sender_id !== currentUserId && !incomingMessage.is_ephemeral) {
             markActiveConversationSeen();
         }
     }
 
     function updateMessageReceipts(conversationId, updates) {
-        const conversation = conversations.find((item) => item.id === conversationId);
-        if (!conversation || !Array.isArray(updates) || !updates.length) {
+        if (!activeConversationData || activeConversationData.id !== conversationId || !Array.isArray(updates) || !updates.length) {
             return;
         }
-
         updates.forEach((update) => {
-            const message = conversation.messages.find((item) => item.id === update.message_id);
+            const message = activeConversationData.messages.find((item) => item.id === update.message_id);
             if (message) {
                 message.receipt = update.receipt || message.receipt || "sent";
+                const row = messageRowMap.get(String(message.id));
+                if (row) {
+                    syncMessageRow(row, message, activeConversationData);
+                }
             }
         });
-
-        renderAll();
     }
 
     function markActiveConversationSeen() {
@@ -441,79 +1372,56 @@
         if (!conversation || !activeConversationId) {
             return;
         }
-
         fetch(`/messages/${activeConversationId}/seen/`, {
             method: "POST",
-            headers: {
-                "X-CSRFToken": csrftoken,
-            },
+            headers: { "X-CSRFToken": csrftoken },
         })
             .then(async (response) => {
                 const data = await response.json();
                 return { ok: response.ok, data };
             })
             .then((result) => {
-                if (!result.ok || !result.data.ok || !result.data.updates) {
+                if (!result.ok || !result.data.ok) {
                     return;
                 }
                 conversation.unread = 0;
-                updateMessageReceipts(activeConversationId, result.data.updates);
+                syncSummaryFromActiveConversation();
+                renderLists();
+                updateMessageReceipts(activeConversationId, result.data.updates || []);
             })
             .catch(() => {});
     }
 
-    function ensureActiveConversation() {
-        const listForTab = activeTab === "groups" ? groupConversations() : directConversations();
-        const current = activeConversation();
-
-        if (current) {
-            const currentTab = current.conversation_type === "group" ? "groups" : "direct";
-            if (currentTab === activeTab) {
-                return;
-            }
-        }
-
-        if (listForTab.length) {
-            activeConversationId = listForTab[0].id;
-            return;
-        }
-
-        if (!activeConversationId && conversations[0]) {
-            activeConversationId = conversations[0].id;
-            return;
-        }
-
-        if (!activeConversation()) {
-            activeConversationId = conversations[0] ? conversations[0].id : "";
-        }
-    }
-
-    function connectSocket() {
-        if (!activeConversationId) {
-            return;
-        }
-
-        if (
-            chatSocket &&
-            socketConversationId === activeConversationId &&
-            (chatSocket.readyState === WebSocket.OPEN || chatSocket.readyState === WebSocket.CONNECTING)
-        ) {
-            return;
-        }
-
+    function disconnectSocket() {
         if (chatSocket && chatSocket.readyState !== WebSocket.CLOSED) {
             chatSocket._manualClose = true;
             chatSocket.close();
         }
+        chatSocket = null;
+        socketConversationId = "";
+    }
+
+    function connectSocket() {
+        if (!activeConversationId) {
+            disconnectSocket();
+            return;
+        }
+        if (
+            chatSocket
+            && socketConversationId === activeConversationId
+            && (chatSocket.readyState === WebSocket.OPEN || chatSocket.readyState === WebSocket.CONNECTING)
+        ) {
+            return;
+        }
+
+        disconnectSocket();
 
         const socketProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-        const socket = new WebSocket(
-            socketProtocol + window.location.host + "/ws/messages/" + activeConversationId + "/"
-        );
+        const socket = new WebSocket(`${socketProtocol}${window.location.host}/ws/messages/${activeConversationId}/`);
         chatSocket = socket;
         socketConversationId = activeConversationId;
 
-        socket.onmessage = function (event) {
+        socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.type === "chat_error") {
                 showMessagingError(data.error, "Messaging error");
@@ -529,432 +1437,57 @@
             }
             applyIncomingMessage(data);
         };
-        socket.onopen = function () {
+        socket.onopen = () => {
             if (chatSocket === socket && socketConversationId === activeConversationId) {
                 markActiveConversationSeen();
             }
         };
-        socket.onclose = function () {
+        socket.onclose = () => {
             if (socket._manualClose || chatSocket !== socket || !activeConversationId) {
                 return;
             }
-            syncMessagesState();
+            syncMessagesState({ keepScroll: true });
             if (reconnectTimer) {
                 window.clearTimeout(reconnectTimer);
             }
-            reconnectTimer = window.setTimeout(function () {
+            reconnectTimer = window.setTimeout(() => {
                 reconnectTimer = null;
                 if (activeConversationId) {
                     connectSocket();
                 }
             }, 1500);
         };
-        socket.onerror = function () {
+        socket.onerror = () => {
             if (socket.readyState !== WebSocket.CLOSED) {
                 socket.close();
             }
         };
     }
 
-    function formatMessageTime(value) {
-        if (!value) {
-            return "";
-        }
-
-        const parsed = new Date(value);
-        if (Number.isNaN(parsed.getTime())) {
-            return value;
-        }
-
-        return parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    }
-
-    function buildChatStatusLine(conversation) {
-        if (!conversation) {
-            return "";
-        }
-        if (conversation.conversation_type === "group") {
-            return conversation.status || "";
-        }
-        return conversation.country || "";
-    }
-
-    function conversationProfileUrl(conversation) {
-        if (!conversation || !conversation.partner_id || conversation.conversation_type === "group") {
-            return "#";
-        }
-        return `/profile/user/${conversation.partner_id}/`;
-    }
-
-    function renderLists() {
-        const query = searchInput.value.trim().toLowerCase();
-        directList.innerHTML = "";
-        groupsList.innerHTML = "";
-
-        directConversations()
-            .filter((conversation) => (
-                conversation.name + " " + conversation.preview + " " + conversation.match
-            ).toLowerCase().includes(query))
-            .forEach((conversation) => {
-                const element = document.createElement("button");
-                element.type = "button";
-                element.className = "conv-item" + (
-                    activeTab === "direct" && conversation.id === activeConversationId ? " is-active" : ""
-                );
-                element.innerHTML = `
-                    <div class="conv-avatar-wrap">
-                        <div class="avatar">${avatarInnerMarkup(conversation.avatar, conversation.avatar_url, conversation.name)}</div>
-                    </div>
-                    <div class="conv-main">
-                        <div class="conv-head"><h3>${conversation.name}</h3><span>${conversation.time}</span></div>
-                        <p>${conversation.preview}</p>
-                    <div class="conv-foot">
-                        ${conversation.unread ? `<span class="unread-badge">${conversation.unread}</span>` : ""}
-                    </div>
-                </div>`;
-                element.addEventListener("click", () => {
-                    activeConversationId = conversation.id;
-                    conversation.unread = 0;
-                    activeTab = "direct";
-                    connectSocket();
-                    renderAll({ stickToBottom: true });
-                    app.classList.add("mobile-chat-open");
-                });
-                directList.appendChild(element);
-            });
-
-        if (!directConversations().length) {
-            directList.innerHTML = '<div class="request-item"><div><h3>No conversations yet</h3></div></div>';
-        }
-
-        groupConversations()
-            .filter((conversation) => (
-                conversation.name + " " + conversation.preview + " " + conversation.match
-            ).toLowerCase().includes(query))
-            .forEach((group) => {
-            const element = document.createElement("button");
-            element.type = "button";
-            element.className = "conv-item group-item" + (
-                activeTab === "groups" && group.id === activeConversationId ? " is-active" : ""
-            );
-            element.innerHTML = `
-                <div class="avatar">${avatarInnerMarkup(group.avatar, group.avatar_url, group.name)}</div>
-                <div class="conv-main">
-                    <div class="conv-head"><h3>${group.name}</h3><span>${group.time}</span></div>
-                    <p>${group.preview}</p>
-                    <div class="conv-foot"><span class="match-pill subtle">${group.status}</span>${group.unread ? `<span class="unread-badge">${group.unread}</span>` : ""}</div>
-                </div>`;
-            element.addEventListener("click", () => {
-                activeConversationId = group.id;
-                group.unread = 0;
-                activeTab = "groups";
-                connectSocket();
-                renderAll({ stickToBottom: true });
-                app.classList.add("mobile-chat-open");
-            });
-            groupsList.appendChild(element);
-        });
-
-        if (!groupConversations().length) {
-            groupsList.innerHTML = '<div class="request-item request-empty"><div><h3>No groups yet</h3></div></div>';
-        }
-
-        directList.classList.toggle("is-hidden", activeTab !== "direct");
-        groupsList.classList.toggle("is-hidden", activeTab !== "groups");
-        directTabBtn.classList.toggle("is-active", activeTab === "direct");
-        groupsTabBtn.classList.toggle("is-active", activeTab === "groups");
-    }
-
-    function renderSharedFiles(conversation) {
-        if (!sharedFilesList) {
-            return;
-        }
-        sharedFilesList.innerHTML = "";
-        const items = (conversation && conversation.shared_files) || [];
-        if (!items.length) {
-            sharedFilesList.innerHTML = '<p class="muted-note">No shared files yet.</p>';
-            return;
-        }
-
-        items.forEach((item) => {
-            const row = document.createElement("article");
-            row.className = "file-item";
-            row.innerHTML = `
-                <a class="file-item-link" href="${escapeHtml(item.url || "#")}" target="_blank" rel="noopener">
-                    <i class="fa-solid ${item.message_type === "image" ? "fa-image" : item.message_type === "voice" ? "fa-wave-square" : "fa-file"}"></i>
-                    <div class="file-item-meta">
-                        <strong>${escapeHtml(item.name || "Attachment")}</strong>
-                        <span>${escapeHtml(item.sender_name || "CoVise member")} · ${escapeHtml(formatFileSize(item.attachment_size) || "Shared file")}</span>
-                    </div>
-                </a>
-                <a class="file-item-open" href="${escapeHtml(item.url || "#")}" target="_blank" rel="noopener">Open</a>
-            `;
-            sharedFilesList.appendChild(row);
-        });
-    }
-
-    function renderMessageBody(message) {
-        const messageType = message.message_type || "text";
-        const text = escapeHtml(message.text || "");
-        const attachmentUrl = escapeHtml(message.attachment_url || "");
-        const attachmentName = escapeHtml(message.attachment_name || "Attachment");
-        const attachmentSize = escapeHtml(formatFileSize(message.attachment_size) || "");
-
-        if (messageType === "image" && attachmentUrl) {
-            return `
-                <div class="bubble media-bubble${text ? " has-caption" : ""}">
-                    <a href="${attachmentUrl}" target="_blank" rel="noopener">
-                        <img class="bubble-image" src="${attachmentUrl}" alt="${attachmentName}">
-                    </a>
-                    ${text ? `<div class="bubble-caption">${text}</div>` : ""}
-                </div>
-            `;
-        }
-
-        if (messageType === "voice" && attachmentUrl) {
-            return `
-                <div class="bubble media-bubble${text ? " has-caption" : ""}">
-                    <audio class="bubble-audio" controls preload="metadata" src="${attachmentUrl}"></audio>
-                    ${text ? `<div class="bubble-caption">${text}</div>` : ""}
-                </div>
-            `;
-        }
-
-        if (messageType === "file" && attachmentUrl) {
-            return `
-                <div class="bubble media-bubble${text ? " has-caption" : ""}">
-                    <a class="bubble-file" href="${attachmentUrl}" target="_blank" rel="noopener">
-                        <i class="fa-solid fa-file-arrow-down"></i>
-                        <div class="bubble-file-meta">
-                            <strong>${attachmentName}</strong>
-                            <span>${attachmentSize || "Open file"}</span>
-                        </div>
-                    </a>
-                    ${text ? `<div class="bubble-caption">${text}</div>` : ""}
-                </div>
-            `;
-        }
-
-        return `<div class="bubble">${text}</div>`;
-    }
-
-    function closeMessageMenus() {
-        document.querySelectorAll(".msg-menu.is-open").forEach((menu) => menu.classList.remove("is-open"));
-    }
-
-    function renderMessageMenu(message, isMine) {
-        if (!message || message.is_ephemeral) {
-            return "";
-        }
-        const messageId = escapeHtml(message.id);
-        return `
-            <div class="msg-menu-wrap${isMine ? " is-own" : " is-other"}">
-                <button class="msg-menu-trigger" type="button" aria-label="Message actions" data-message-menu-toggle="${messageId}">
-                    <i class="fa-solid fa-ellipsis-vertical"></i>
-                </button>
-                <div class="msg-menu" data-message-menu="${messageId}">
-                    <button type="button" data-message-action="react" data-message-id="${messageId}">
-                        <i class="fa-regular fa-face-smile"></i>
-                        <span>React</span>
-                    </button>
-                    <button type="button" data-message-action="report" data-message-id="${messageId}">
-                        <i class="fa-regular fa-flag"></i>
-                        <span>Report</span>
-                    </button>
-                    ${isMine ? `
-                    <button type="button" data-message-action="delete" data-message-id="${messageId}">
-                        <i class="fa-regular fa-trash-can"></i>
-                        <span>Delete message</span>
-                    </button>` : ""}
-                </div>
-            </div>
-        `;
-    }
-
-    function renderMessageShell(message, isMine) {
-        if (isMine) {
-            return `<div class="msg-shell is-own">${renderMessageMenu(message, isMine)}${renderMessageBody(message)}</div>`;
-        }
-        return `<div class="msg-shell is-other">${renderMessageBody(message)}${renderMessageMenu(message, isMine)}</div>`;
-    }
-
-    function renderMessageReactions(message) {
-        if (!message || message.is_ephemeral) {
-            return "";
-        }
-        const counts = message.reaction_counts || {};
-        const viewerReactions = Array.isArray(message.viewer_reactions) ? message.viewer_reactions : [];
-        return `
-            <div class="msg-reactions">
-                <button class="msg-reaction-chip${viewerReactions.includes("thumbs_up") ? " is-active" : ""}" type="button" data-message-reaction="thumbs_up" data-message-id="${escapeHtml(message.id)}">
-                    <span>👍</span>
-                    <span>${escapeHtml(counts.thumbs_up || 0)}</span>
-                </button>
-                <button class="msg-reaction-chip${viewerReactions.includes("fire") ? " is-active" : ""}" type="button" data-message-reaction="fire" data-message-id="${escapeHtml(message.id)}">
-                    <span>🔥</span>
-                    <span>${escapeHtml(counts.fire || 0)}</span>
-                </button>
-            </div>
-        `;
-    }
-
-    function renderGroupSenderLabel(message, conversation, isMine) {
-        if (!conversation || conversation.conversation_type !== "group" || isMine) {
-            return "";
-        }
-        return `<div class="msg-sender">${escapeHtml(message.sender_name || "CoVise member")}</div>`;
-    }
-
-    function renderChat(options) {
-        const conversation = activeConversation();
-        const query = searchInput.value.trim().toLowerCase();
-        const stickToBottom = options && Object.prototype.hasOwnProperty.call(options, "stickToBottom")
-            ? !!options.stickToBottom
-            : (
-                !messagesStream
-                || (messagesStream.scrollHeight - messagesStream.scrollTop - messagesStream.clientHeight) < 96
-            );
-        messagesStream.innerHTML = "";
-
-        if (!conversation) {
-            chatName.textContent = "Messages";
-            chatStatus.textContent = "";
-            setAvatarElement(chatAvatar, "C", "", "CoVise");
-            if (chatNameLink) chatNameLink.setAttribute("href", "#");
-            if (chatMatchPill) chatMatchPill.textContent = "Private conversation";
-            pinnedText.textContent = "Start a private chat from a public profile.";
-            if (pinnedText.parentElement) {
-                pinnedText.parentElement.classList.remove("is-ephemeral");
-                pinnedText.parentElement.classList.remove("is-hidden");
-            }
-            detailsName.textContent = "No conversation selected";
-            detailsPersonName.textContent = "No conversation selected";
-            if (detailsPersonLink) detailsPersonLink.setAttribute("href", "#");
-            if (viewFullProfileBtn) viewFullProfileBtn.setAttribute("href", "#");
-            setAvatarElement(detailsAvatar, "C", "", "CoVise");
-            if (detailsMatchPill) detailsMatchPill.textContent = "Private conversation";
-            detailsMatchedOn.textContent = "";
-            detailsUserType.textContent = "";
-            detailsIndustry.textContent = "";
-            detailsStage.textContent = "";
-            detailsMutual.textContent = "0";
-            if (convictionFill) convictionFill.style.width = "0%";
-            if (convictionValue) convictionValue.textContent = "0/100";
-            if (muteNotificationsToggle) muteNotificationsToggle.checked = false;
-            if (recordingModeToggle) recordingModeToggle.checked = true;
-            renderSharedFiles(null);
-            return;
-        }
-
-        chatName.textContent = conversation.name;
-        if (chatNameLink) chatNameLink.setAttribute("href", conversationProfileUrl(conversation));
-        chatStatus.textContent = buildChatStatusLine(conversation);
-        setAvatarElement(chatAvatar, conversation.avatar, conversation.avatar_url, conversation.name);
-        if (chatMatchPill) chatMatchPill.textContent = conversation.match;
-        pinnedText.textContent = conversation.pinned || "Private chat with this member.";
-        if (pinnedText.parentElement) {
-            const isEphemeralConversation = conversation.recording_mode === "ephemeral";
-            pinnedText.parentElement.classList.toggle("is-ephemeral", isEphemeralConversation);
-            pinnedText.parentElement.classList.toggle("is-hidden", !conversation.pinned && !isEphemeralConversation);
-        }
-
-        detailsName.textContent = conversation.name;
-        detailsPersonName.textContent = conversation.name;
-        if (detailsPersonLink) detailsPersonLink.setAttribute("href", conversationProfileUrl(conversation));
-        if (viewFullProfileBtn) viewFullProfileBtn.setAttribute("href", conversationProfileUrl(conversation));
-        setAvatarElement(detailsAvatar, conversation.avatar, conversation.avatar_url, conversation.name);
-        if (detailsMatchPill) detailsMatchPill.textContent = conversation.match;
-        detailsMatchedOn.textContent = conversation.matchedOn;
-        detailsUserType.textContent = conversation.conversation_type === "group" ? "Group conversation" : conversation.userType;
-        detailsIndustry.textContent = conversation.conversation_type === "group" ? `${(conversation.group_members || []).length} members` : conversation.industry;
-        detailsStage.textContent = conversation.conversation_type === "group"
-            ? (conversation.group_members || []).map((member) => member.display_name).join(", ")
-            : conversation.stage;
-        detailsMutual.textContent = conversation.mutual;
-        if (convictionFill) convictionFill.style.width = "0%";
-        if (convictionValue) convictionValue.textContent = "N/A";
-        const blockButton = document.getElementById("blockUserBtn");
-        if (blockButton) {
-            blockButton.textContent = conversation.blocked_by_current_user ? "Unblock User" : "Block User";
-            blockButton.style.display = conversation.conversation_type === "group" ? "none" : "block";
-        }
-        const reportButton = document.getElementById("reportUserBtn");
-        if (reportButton) reportButton.style.display = conversation.conversation_type === "group" ? "none" : "block";
-        const deleteButton = document.getElementById("deleteConversationBtn");
-        if (deleteButton) deleteButton.style.display = conversation.conversation_type === "group" ? "none" : "block";
-        if (muteNotificationsToggle) {
-            muteNotificationsToggle.checked = !!conversation.mute_notifications;
-        }
-        if (recordingModeToggle) {
-            recordingModeToggle.checked = conversation.recording_mode !== "ephemeral";
-        }
-        renderSharedFiles(conversation);
-
-        const visibleMessages = query
-            ? conversation.messages.filter((message) => (
-                `${message.sender_name || ""} ${message.text || ""} ${message.attachment_name || ""}`.toLowerCase().includes(query)
-            ))
-            : conversation.messages;
-
-        if (query && !visibleMessages.length) {
-            messagesStream.innerHTML = '<div class="request-item"><div><h3>No messages found</h3><p>Try another search term for this conversation or your contacts.</p></div></div>';
-            return;
-        }
-
-        visibleMessages.forEach((message) => {
-            const row = document.createElement("article");
-            const isMine = message.sender_id === currentUserId;
-            row.className = "msg " + (isMine ? "outgoing" : "incoming");
-            row.innerHTML = `${renderGroupSenderLabel(message, conversation, isMine)}${renderMessageShell(message, isMine)}<div class="msg-meta"><span>${formatMessageTime(message.created_at)}</span>${isMine ? receiptHTML(message.receipt || "sent") : ""}</div>`;
-            messagesStream.appendChild(row);
-        });
-        if (stickToBottom) {
-            messagesStream.scrollTop = messagesStream.scrollHeight;
-        }
-    }
-
-    function renderAll(options) {
-        ensureActiveConversation();
-        renderLists();
-        renderChat(options);
-    }
-
-    function openModal(title, body, footer) {
-        modalTitle.textContent = title;
-        modalBody.innerHTML = body;
-        modalFoot.innerHTML = footer || '<button class="panel-btn" id="modalOkBtn" type="button">Close</button>';
-        modalBackdrop.classList.add("is-open");
-        const ok = document.getElementById("modalOkBtn");
-        if (ok) ok.addEventListener("click", closeModal);
-    }
-
-    function closeModal() {
-        modalBackdrop.classList.remove("is-open");
-    }
-
     function handleConversationDeleted(data) {
         const deletedId = data.conversation_id;
-        const deletedIndex = conversations.findIndex((item) => item.id === deletedId);
-        if (deletedIndex === -1) {
-            return;
-        }
-        const wasActive = activeConversationId === deletedId;
-        conversations.splice(deletedIndex, 1);
-        if (wasActive) {
-            activeConversationId = conversations[0] ? conversations[0].id : "";
-            if (chatSocket && chatSocket.readyState !== WebSocket.CLOSED) {
-                chatSocket._manualClose = true;
-                chatSocket.close();
+        conversationSummaries = conversationSummaries.filter((conversation) => conversation.id !== deletedId);
+        if (activeConversationId === deletedId) {
+            activeConversationData = null;
+            const nextDirect = directConversations()[0];
+            if (nextDirect) {
+                setActiveConversationId(nextDirect.id, "direct");
+                loadConversation(nextDirect.id, "direct", { stickToBottom: true });
+            } else {
+                setActiveConversationId("", "direct");
+                disconnectSocket();
+                renderAll({ stickToBottom: true });
             }
-            if (activeConversationId) {
-                connectSocket();
-            }
+        } else {
+            renderAll({ stickToBottom: true });
         }
-        renderAll();
         openModal("Conversation deleted", "<p>This conversation was removed.</p>");
     }
 
     function applySentMessage(result) {
+        if (!result || !result.data || !result.data.message) {
+            return;
+        }
         applyIncomingMessage({
             conversation_id: result.data.conversation_id,
             message_id: result.data.message.id,
@@ -969,7 +1502,22 @@
             attachment_content_type: result.data.message.attachment_content_type,
             attachment_size: result.data.message.attachment_size,
             is_ephemeral: result.data.message.is_ephemeral,
+            reaction_counts: result.data.message.reaction_counts,
+            viewer_reactions: result.data.message.viewer_reactions,
         });
+    }
+
+    function inferMessageTypeFromFile(file) {
+        if (!file || !file.type) {
+            return "";
+        }
+        if (file.type.startsWith("image/")) {
+            return "image";
+        }
+        if (file.type.startsWith("audio/")) {
+            return "voice";
+        }
+        return "file";
     }
 
     function sendMediaMessage(file, messageType) {
@@ -978,20 +1526,22 @@
             showMessagingError("Select a conversation first.");
             return;
         }
+        if (conversationLockState(conversation).locked) {
+            updateComposerState();
+            showMessagingError(conversationLockState(conversation).message, "Conversation locked");
+            return;
+        }
         if (!file) {
             return;
         }
-
         const formData = new FormData();
         formData.append("attachment", file);
         formData.append("message_type", messageType || "");
-        formData.append("caption", chatInput.value.trim());
+        formData.append("caption", chatInput ? chatInput.value.trim() : "");
 
         fetch(`/messages/${conversation.id}/media/`, {
             method: "POST",
-            headers: {
-                "X-CSRFToken": csrftoken,
-            },
+            headers: { "X-CSRFToken": csrftoken },
             body: formData,
         })
             .then(async (response) => {
@@ -1000,16 +1550,20 @@
             })
             .then((result) => {
                 if (!result.ok || !result.data.ok) {
+                    if (result.data && result.data.code === "messaging_blocked") {
+                        syncMessagesState({ keepScroll: true });
+                    }
                     showMessagingError((result.data && result.data.error) || "We could not send that attachment right now.");
                     return;
                 }
                 applySentMessage(result);
-                chatInput.value = "";
-                sendBtn.disabled = true;
+                if (chatInput) {
+                    chatInput.value = "";
+                }
                 if (chatFileInput) {
                     chatFileInput.value = "";
                 }
-                syncMessagesState({ stickToBottom: true });
+                updateComposerState();
             })
             .catch(() => {
                 showMessagingError("We could not send that attachment right now.");
@@ -1017,18 +1571,24 @@
     }
 
     function handleSend() {
-        const text = chatInput.value.trim();
+        const text = chatInput ? chatInput.value.trim() : "";
         const conversation = activeConversation();
-
         if (!conversation) {
             showMessagingError("Select a conversation first.");
+            return;
+        }
+        if (conversationLockState(conversation).locked) {
+            updateComposerState();
+            showMessagingError(conversationLockState(conversation).message, "Conversation locked");
             return;
         }
         if (!text) {
             return;
         }
         closeEmojiPicker();
-        sendBtn.disabled = true;
+        if (sendBtn) {
+            sendBtn.disabled = true;
+        }
         fetch(`/messages/${conversation.id}/send/`, {
             method: "POST",
             headers: {
@@ -1043,23 +1603,23 @@
             })
             .then((result) => {
                 if (!result.ok || !result.data.ok) {
-                    sendBtn.disabled = chatInput.value.trim().length === 0;
+                    if (result.data && result.data.code === "messaging_blocked") {
+                        syncMessagesState({ keepScroll: true });
+                    }
+                    updateComposerState();
                     showMessagingError((result.data && result.data.error) || "We could not send your message right now.");
                     return;
                 }
                 applySentMessage(result);
-                chatInput.value = "";
-                sendBtn.disabled = true;
-                syncMessagesState({ stickToBottom: true });
+                if (chatInput) {
+                    chatInput.value = "";
+                }
+                updateComposerState();
             })
             .catch(() => {
-                sendBtn.disabled = chatInput.value.trim().length === 0;
+                updateComposerState();
                 showMessagingError("We could not send your message right now.");
             });
-    }
-
-    function openComingSoonModal(title, body) {
-        openModal(title, `<p>${body}</p>`);
     }
 
     function stopVoiceRecordingUi() {
@@ -1085,17 +1645,14 @@
             showMessagingError("Select a conversation first.", "Voice message");
             return;
         }
-
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === "undefined") {
             showMessagingError("Voice recording is not supported in this browser.", "Voice message");
             return;
         }
-
         if (mediaRecorder && mediaRecorder.state === "recording") {
             mediaRecorder.stop();
             return;
         }
-
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then((stream) => {
                 mediaRecorderStream = stream;
@@ -1139,399 +1696,271 @@
             });
     }
 
-    directTabBtn.addEventListener("click", () => {
-        activeTab = "direct";
-        renderAll();
-    });
-    groupsTabBtn.addEventListener("click", () => {
-        activeTab = "groups";
-        renderAll();
-    });
-    searchInput.addEventListener("input", renderAll);
-
-    document.getElementById("toggleDetailsBtn").addEventListener("click", (event) => { event.stopPropagation(); app.classList.toggle("details-open"); });
-    document.getElementById("closeDetailsBtn").addEventListener("click", () => app.classList.remove("details-open"));
-    document.getElementById("mobileBackBtn").addEventListener("click", () => app.classList.remove("mobile-chat-open"));
-    document.getElementById("mobileCloseChat").addEventListener("click", () => app.classList.remove("mobile-chat-open"));
-
-    document.querySelectorAll(".details-tab").forEach((button) => {
-        button.addEventListener("click", () => {
-            const tab = button.dataset.detailsTab;
-            document.querySelectorAll(".details-tab").forEach((item) => item.classList.remove("is-active"));
-            document.querySelectorAll(".details-pane").forEach((pane) => pane.classList.remove("is-active"));
-            button.classList.add("is-active");
-            document.querySelector('.details-pane[data-pane="' + tab + '"]').classList.add("is-active");
-        });
-    });
-
-    if (panelMoreMenuBtn && panelMoreMenu) {
-        panelMoreMenuBtn.addEventListener("click", (event) => {
-            event.stopPropagation();
-            panelMoreMenu.classList.toggle("is-open");
-        });
-    }
-    document.addEventListener("click", (event) => {
-        if (panelMoreMenu && !event.target.closest(".panel-menu-wrap")) {
-            panelMoreMenu.classList.remove("is-open");
-        }
-        if (!event.target.closest(".msg-menu-wrap")) {
-            closeMessageMenus();
-        }
-        if (
-            emojiPickerPanel &&
-            !emojiPickerPanel.hidden &&
-            !emojiPickerPanel.contains(event.target) &&
-            !emojiPickerBtn.contains(event.target)
-        ) {
-            closeEmojiPicker();
-        }
-    });
-    if (searchInChatBtn) {
-        searchInChatBtn.addEventListener("click", () => {
-            openComingSoonModal("Search In Chat", "In-chat search is not wired yet, but the button is now active and ready for the real search flow.");
-        });
-    }
-    if (inputAttachBtn) {
-        inputAttachBtn.addEventListener("click", () => {
-            if (chatFileInput) {
-                chatFileInput.click();
-            }
-        });
-    }
-    if (emojiPickerBtn) {
-        emojiPickerBtn.addEventListener("click", (event) => {
-            event.stopPropagation();
-            if (!emojiPickerPanel) {
-                return;
-            }
-            emojiPickerPanel.hidden = !emojiPickerPanel.hidden;
-            if (!emojiPickerPanel.hidden) {
-                chatInput.focus();
-            }
-        });
-    }
-    if (chatFileInput) {
-        chatFileInput.addEventListener("change", () => {
-            const [file] = chatFileInput.files || [];
-            if (!file) {
-                return;
-            }
-            const messageType = (file.type || "").startsWith("image/") ? "image" : "file";
-            sendMediaMessage(file, messageType);
-        });
-    }
-    if (messagesStream) {
-        messagesStream.addEventListener("click", (event) => {
-            const toggleButton = event.target.closest("[data-message-menu-toggle]");
-            if (toggleButton) {
-                const menuId = toggleButton.dataset.messageMenuToggle;
-                const menu = messagesStream.querySelector(`[data-message-menu="${menuId}"]`);
-                const shouldOpen = menu && !menu.classList.contains("is-open");
-                closeMessageMenus();
-                if (menu && shouldOpen) {
-                    menu.classList.add("is-open");
-                }
-                return;
-            }
-
-            const actionButton = event.target.closest("[data-message-action]");
-            if (!actionButton) {
-                return;
-            }
-
-            const messageId = actionButton.dataset.messageId;
-            const action = actionButton.dataset.messageAction;
-            const conversation = activeConversation();
-            if (!messageId || !action || !conversation) {
-                return;
-            }
-
-            const message = conversation.messages.find((item) => item.id === messageId);
-            if (!message) {
-                return;
-            }
-
-            closeMessageMenus();
-
-            if (action === "react") {
-                openModal(
-                    "React to message",
-                    `
-                        <div class="message-react-picker">
-                            <button class="message-react-option" type="button" data-picker-reaction="thumbs_up" data-message-id="${escapeHtml(messageId)}">👍</button>
-                            <button class="message-react-option" type="button" data-picker-reaction="fire" data-message-id="${escapeHtml(messageId)}">🔥</button>
-                        </div>
-                    `
-                );
-                modalBody.querySelectorAll("[data-picker-reaction]").forEach((button) => {
-                    button.addEventListener("click", () => {
-                        const reaction = button.dataset.pickerReaction;
-                        fetch(`/messages/reactions/${messageId}/${reaction}/`, {
-                            method: "POST",
-                            headers: {
-                                "X-CSRFToken": csrftoken,
-                            },
-                        })
-                            .then(async (response) => {
-                                const data = await response.json();
-                                return { ok: response.ok, data };
-                            })
-                            .then((result) => {
-                                if (!result.ok || !result.data.ok) {
-                                    showMessagingError((result.data && result.data.error) || "We could not react to this message right now.", "Reaction error");
-                                    return;
-                                }
-                                message.reaction_counts = result.data.reaction_counts || { thumbs_up: 0, fire: 0 };
-                                message.viewer_reactions = result.data.viewer_reactions || [];
-                                closeModal();
-                            })
-                            .catch(() => {
-                                showMessagingError("We could not react to this message right now.", "Reaction error");
-                            });
-                    });
-                });
-                return;
-            }
-
-            if (action === "delete") {
-                openModal(
-                    "Delete message",
-                    "<p>This will remove this message from the conversation.</p>",
-                    `
-                        <button class="panel-btn ghost" id="cancelDeleteMessageBtn" type="button">Cancel</button>
-                        <button class="panel-btn danger" id="confirmDeleteMessageBtn" type="button">Delete Message</button>
-                    `
-                );
-                const cancelDeleteMessage = document.getElementById("cancelDeleteMessageBtn");
-                const confirmDeleteMessage = document.getElementById("confirmDeleteMessageBtn");
-                if (cancelDeleteMessage) cancelDeleteMessage.addEventListener("click", closeModal);
-                if (confirmDeleteMessage) {
-                    confirmDeleteMessage.addEventListener("click", () => {
-                        fetch(`/messages/${messageId}/delete-message/`, {
-                            method: "POST",
-                            headers: {
-                                "X-CSRFToken": csrftoken,
-                            },
-                        })
-                            .then(async (response) => {
-                                const data = await response.json();
-                                return { ok: response.ok, data };
-                            })
-                            .then((result) => {
-                                if (!result.ok || !result.data.ok) {
-                                    showMessagingError((result.data && result.data.error) || "We could not delete this message right now.", "Delete message");
-                                    return;
-                                }
-                                conversation.messages = conversation.messages.filter((item) => item.id !== result.data.message_id);
-                                conversation.shared_files = (conversation.shared_files || []).filter((item) => item.id !== result.data.message_id);
-                                conversation.preview = result.data.last_message_preview || "Start the conversation";
-                                conversation.time = result.data.last_message_time || "New";
-                                closeModal();
-                                renderAll();
-                            })
-                            .catch(() => {
-                                showMessagingError("We could not delete this message right now.", "Delete message");
-                            });
-                    });
-                }
-                return;
-            }
-
-            if (action === "report") {
-                openModal(
-                    "Report message",
-                    `
-                        <label class="modal-label" for="reportMessageReasonSelect">Reason</label>
-                        <select class="modal-select" id="reportMessageReasonSelect">
-                            <option value="">Select a reason</option>
-                            <option value="Spam or scam">Spam or scam</option>
-                            <option value="Harassment or abuse">Harassment or abuse</option>
-                            <option value="Fake or misleading content">Fake or misleading content</option>
-                            <option value="Inappropriate content">Inappropriate content</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <div id="reportMessageOtherWrap" hidden>
-                            <label class="modal-label" for="reportMessageOther">Tell us more</label>
-                            <textarea class="modal-select modal-textarea" id="reportMessageOther" rows="4" placeholder="What went wrong?"></textarea>
-                        </div>
-                    `,
-                    `
-                        <button class="panel-btn ghost" id="cancelReportMessageBtn" type="button">Cancel</button>
-                        <button class="panel-btn" id="submitReportMessageBtn" type="button">Send Report</button>
-                    `
-                );
-                const cancelReportMessage = document.getElementById("cancelReportMessageBtn");
-                const reasonSelect = document.getElementById("reportMessageReasonSelect");
-                const otherWrap = document.getElementById("reportMessageOtherWrap");
-                const submitReportMessage = document.getElementById("submitReportMessageBtn");
-                if (cancelReportMessage) cancelReportMessage.addEventListener("click", closeModal);
-                if (reasonSelect && otherWrap) {
-                    reasonSelect.addEventListener("change", () => {
-                        otherWrap.hidden = reasonSelect.value !== "Other";
-                    });
-                }
-                if (submitReportMessage) {
-                    submitReportMessage.addEventListener("click", () => {
-                        const reason = reasonSelect ? reasonSelect.value : "";
-                        const otherReason = document.getElementById("reportMessageOther");
-                        const body = new URLSearchParams();
-                        body.append("report_reason", reason);
-                        body.append("report_reason_other", otherReason ? otherReason.value.trim() : "");
-                        fetch(`/messages/${messageId}/report-message/`, {
-                            method: "POST",
-                            headers: {
-                                "X-CSRFToken": csrftoken,
-                                "Content-Type": "application/x-www-form-urlencoded",
-                            },
-                            body: body.toString(),
-                        })
-                            .then(async (response) => {
-                                const data = await response.json();
-                                return { ok: response.ok, data };
-                            })
-                            .then((result) => {
-                                if (!result.ok || !result.data.ok) {
-                                    showMessagingError((result.data && result.data.error) || "We could not send your report right now.", "Report message");
-                                    return;
-                                }
-                                openModal("Report sent", `<p>${result.data.message}</p>`);
-                            })
-                            .catch(() => {
-                                showMessagingError("We could not send your report right now.", "Report message");
-                            });
-                    });
-                }
-            }
-        });
-    }
-    if (voiceRecordBtn) {
-        voiceRecordBtn.addEventListener("click", toggleVoiceRecording);
-    }
-    document.getElementById("videoCallBtn").addEventListener("click", () => openModal("Video Call", "<p>Video calling is not wired yet, but the control is now active for the future call flow.</p>"));
-    document.getElementById("createAgreementBtn").addEventListener("click", () => openModal("Contract Maker", "<p>Contract Maker is still coming soon for private chats.</p>"));
-    const railContactsBtn = document.getElementById("railContactsBtn");
-    const railGroupsBtn = document.getElementById("railGroupsBtn");
-    if (railContactsBtn) {
-        railContactsBtn.addEventListener("click", () => openModal("Contacts", "<p>Contacts directory will be available in the next release.</p>"));
-    }
-    if (railGroupsBtn) {
-        railGroupsBtn.addEventListener("click", () => {
-            activeTab = "groups";
-            renderAll();
-        });
-    }
-    if (createGroupBtn) {
-        createGroupBtn.addEventListener("click", () => {
-            if (!friendOptions.length) {
-                openModal("Create Group", "<p>You can only create a group with friends who already accepted a chat request.</p>");
-                return;
-            }
-            openModal(
-                "Create Group",
-                `
-                    <label class="modal-label" for="groupNameInput">Group name</label>
-                    <input class="modal-input" id="groupNameInput" type="text" placeholder="Founders sprint">
-                    <label class="modal-label" for="groupFriendPicker">Choose friends</label>
-                    <div class="friend-picker-grid" id="groupFriendPicker">
-                        ${friendOptions.map((friend) => `
-                            <label class="friend-option">
-                                <input type="checkbox" value="${friend.id}">
-                                <div class="avatar">${avatarInnerMarkup(friend.avatar_initials, friend.avatar_url, friend.display_name)}</div>
-                                <div class="friend-option-copy">
-                                    <strong>${escapeHtml(friend.display_name)}</strong>
-                                    <span>Friend</span>
-                                </div>
-                            </label>
-                        `).join("")}
-                    </div>
-                `,
-                `
-                    <button class="panel-btn ghost" id="cancelCreateGroupBtn" type="button">Cancel</button>
-                    <button class="panel-btn" id="confirmCreateGroupBtn" type="button">Create Group</button>
-                `
-            );
-            const cancelButton = document.getElementById("cancelCreateGroupBtn");
-            const confirmButton = document.getElementById("confirmCreateGroupBtn");
-            if (cancelButton) cancelButton.addEventListener("click", closeModal);
-            if (confirmButton) {
-                confirmButton.addEventListener("click", () => {
-                    const groupNameInput = document.getElementById("groupNameInput");
-                    const selectedParticipantIds = Array.from(
-                        document.querySelectorAll("#groupFriendPicker input[type='checkbox']:checked")
-                    ).map((input) => input.value);
-                    fetch("/messages/groups/create/", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRFToken": csrftoken,
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            group_name: groupNameInput ? groupNameInput.value.trim() : "",
-                            participant_ids: selectedParticipantIds,
-                        }),
-                    })
-                        .then(async (response) => {
-                            const data = await response.json();
-                            return { ok: response.ok, data };
-                        })
-                        .then((result) => {
-                            if (!result.ok || !result.data.ok) {
-                                showMessagingError((result.data && result.data.error) || "We could not create that group right now.", "Create Group");
-                                return;
-                            }
-                            window.location.href = `/messages/?conversation=${result.data.conversation_id}`;
-                        })
-                        .catch(() => {
-                            showMessagingError("We could not create that group right now.", "Create Group");
-                        });
-                });
-            }
-        });
-    }
-
-    document.getElementById("blockUserBtn").addEventListener("click", () => {
+    function loadOlderMessages() {
         const conversation = activeConversation();
-        if (!conversation || !conversation.partner_id) {
-            openModal("Block User", "<p>Select a conversation first.</p>");
+        if (!conversation || !conversation.has_older_messages || !conversation.oldest_loaded_message_id) {
             return;
         }
-        const shouldBlock = !conversation.blocked_by_current_user;
-        fetch(`/users/${conversation.partner_id}/block/`, {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": csrftoken,
-                "X-Requested-With": "XMLHttpRequest",
-            },
+        const url = new URL(`/messages/${conversation.id}/history/`, window.location.origin);
+        url.searchParams.set("before", conversation.oldest_loaded_message_id);
+        fetch(url.toString(), {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
         })
-            .then((response) => response.json())
-            .then((data) => {
-                if (!data.ok) {
-                    openModal("Block User", `<p>${data.error || "Unable to update block status right now."}</p>`);
+            .then(async (response) => {
+                const data = await response.json();
+                return { ok: response.ok, data };
+            })
+            .then((result) => {
+                if (!result.ok || !result.data.ok) {
+                    showMessagingError((result.data && result.data.error) || "We could not load older messages right now.");
                     return;
                 }
-                conversation.blocked_by_current_user = data.blocked;
-                renderChat();
-                openModal(
-                    data.blocked ? "User blocked" : "User unblocked",
-                    `<p>${data.message}</p>`
-                );
-                if (shouldBlock) {
-                    chatInput.value = "";
-                    sendBtn.disabled = true;
+                const incomingMessages = Array.isArray(result.data.messages) ? result.data.messages : [];
+                const seenMessageIds = new Set((conversation.messages || []).map((message) => message.id));
+                conversation.messages = [
+                    ...incomingMessages.filter((message) => !seenMessageIds.has(message.id)),
+                    ...(conversation.messages || []),
+                ];
+                conversation.has_older_messages = !!result.data.has_older_messages;
+                conversation.oldest_loaded_message_id = result.data.oldest_loaded_message_id || "";
+                renderChatMessages(conversation, { stickToBottom: false });
+            })
+            .catch(() => {
+                showMessagingError("We could not load older messages right now.");
+            });
+    }
+
+    function openReactionPicker(messageId) {
+        openModal(
+            "React to message",
+            `
+                <div class="message-react-picker">
+                    ${reactionChoices.map((choice) => `
+                        <button class="message-react-option" type="button" data-react-choice="${choice.key}" data-message-id="${escapeHtml(messageId)}">
+                            ${choice.label}
+                        </button>
+                    `).join("")}
+                </div>
+            `
+        );
+        document.querySelectorAll("[data-react-choice]").forEach((button) => {
+            button.addEventListener("click", () => {
+                toggleMessageReaction(messageId, button.dataset.reactChoice || "");
+                closeModal();
+            });
+        });
+    }
+
+    function toggleMessageReaction(messageId, reactionKey) {
+        if (!messageId || !reactionKey || !activeConversationData) {
+            return;
+        }
+        fetch(`/messages/reactions/${messageId}/${reactionKey}/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": csrftoken },
+        })
+            .then(async (response) => {
+                const data = await response.json();
+                return { ok: response.ok, data };
+            })
+            .then((result) => {
+                if (!result.ok || !result.data.ok) {
+                    showMessagingError((result.data && result.data.error) || "We could not update the reaction right now.");
+                    return;
+                }
+                const message = activeConversationData.messages.find((item) => item.id === messageId);
+                if (!message) {
+                    return;
+                }
+                message.reaction_counts = result.data.reaction_counts || message.reaction_counts || {};
+                message.viewer_reactions = result.data.viewer_reactions || [];
+                const row = messageRowMap.get(String(message.id));
+                if (row) {
+                    syncMessageRow(row, message, activeConversationData);
                 }
             })
             .catch(() => {
-                openModal("Block User", "<p>Unable to update block status right now.</p>");
+                showMessagingError("We could not update the reaction right now.");
             });
-    });
+    }
 
-    document.getElementById("reportUserBtn").addEventListener("click", () => {
-        const conversation = activeConversation();
-        if (!conversation) {
-            openModal("Report User", "<p>Select a conversation first.</p>");
+    function promptReportMessage(messageId) {
+        openModal(
+            "Report message",
+            `
+                <label class="modal-label" for="reportMessageReason">Reason</label>
+                <select class="modal-select" id="reportMessageReason">
+                    <option value="">Select a reason</option>
+                    <option value="Spam or scam">Spam or scam</option>
+                    <option value="Harassment or abuse">Harassment or abuse</option>
+                    <option value="Inappropriate content">Inappropriate content</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div id="reportMessageOtherWrap" hidden>
+                    <label class="modal-label" for="reportMessageOther">Tell us more</label>
+                    <textarea class="modal-select modal-textarea" id="reportMessageOther" rows="4"></textarea>
+                </div>
+            `,
+            `
+                <button class="panel-btn ghost" id="cancelReportMessageBtn" type="button">Cancel</button>
+                <button class="panel-btn" id="submitReportMessageBtn" type="button">Send Report</button>
+            `
+        );
+        const reasonSelect = document.getElementById("reportMessageReason");
+        const otherWrap = document.getElementById("reportMessageOtherWrap");
+        const cancelButton = document.getElementById("cancelReportMessageBtn");
+        const submitButton = document.getElementById("submitReportMessageBtn");
+        if (cancelButton) {
+            cancelButton.addEventListener("click", closeModal);
+        }
+        if (reasonSelect && otherWrap) {
+            reasonSelect.addEventListener("change", () => {
+                otherWrap.hidden = reasonSelect.value !== "Other";
+            });
+        }
+        if (submitButton) {
+            submitButton.addEventListener("click", () => {
+                const body = new URLSearchParams();
+                body.append("report_reason", reasonSelect ? reasonSelect.value : "");
+                const other = document.getElementById("reportMessageOther");
+                body.append("report_reason_other", other ? other.value.trim() : "");
+                fetch(`/messages/${messageId}/report-message/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrftoken,
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: body.toString(),
+                })
+                    .then(async (response) => {
+                        const data = await response.json();
+                        return { ok: response.ok, data };
+                    })
+                    .then((result) => {
+                        if (!result.ok || !result.data.ok) {
+                            showMessagingError((result.data && result.data.error) || "We could not send your report right now.", "Report message");
+                            return;
+                        }
+                        openModal("Report sent", `<p>${escapeHtml(result.data.message)}</p>`);
+                    })
+                    .catch(() => {
+                        showMessagingError("We could not send your report right now.", "Report message");
+                    });
+            });
+        }
+    }
+
+    function deleteMessage(messageId) {
+        if (!activeConversationData) {
             return;
         }
+        fetch(`/messages/${messageId}/delete-message/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": csrftoken },
+        })
+            .then(async (response) => {
+                const data = await response.json();
+                return { ok: response.ok, data };
+            })
+            .then((result) => {
+                if (!result.ok || !result.data.ok) {
+                    showMessagingError((result.data && result.data.error) || "We could not delete this message right now.", "Delete message");
+                    return;
+                }
+                activeConversationData.messages = activeConversationData.messages.filter((message) => message.id !== messageId);
+                if (result.data.had_attachment) {
+                    activeConversationData.shared_files = (activeConversationData.shared_files || []).filter((item) => item.id !== messageId);
+                    renderSharedFiles(activeConversationData);
+                }
+                activeConversationData.preview = result.data.last_message_preview || "Start the conversation";
+                activeConversationData.time = result.data.last_message_time || "New";
+                const latestMessage = activeConversationData.messages[activeConversationData.messages.length - 1];
+                activeConversationData.last_message_at = latestMessage ? latestMessage.created_at : "";
+                activeConversationData.has_older_messages = !!activeConversationData.oldest_loaded_message_id;
+                syncSummaryFromActiveConversation();
+                renderLists();
+                renderChatMessages(activeConversationData, { stickToBottom: false });
+            })
+            .catch(() => {
+                showMessagingError("We could not delete this message right now.", "Delete message");
+            });
+    }
 
+    function openCreateGroupModal() {
+        if (!friendOptions.length) {
+            openModal("Create Group", "<p>You can only create a group with friends who already accepted a chat request.</p>");
+            return;
+        }
+        openModal(
+            "Create Group",
+            `
+                <label class="modal-label" for="groupNameInput">Group name</label>
+                <input class="modal-input" id="groupNameInput" type="text" placeholder="Founders sprint">
+                <label class="modal-label" for="groupFriendPicker">Choose friends</label>
+                <div class="friend-picker-grid" id="groupFriendPicker">
+                    ${friendOptions.map((friend) => `
+                        <label class="friend-option">
+                            <input type="checkbox" value="${escapeHtml(friend.id)}">
+                            <div class="avatar">${avatarInnerMarkup(friend.avatar_initials, friend.avatar_url, friend.display_name)}</div>
+                            <div class="friend-option-copy">
+                                <strong>${escapeHtml(friend.display_name)}</strong>
+                                <span>Friend</span>
+                            </div>
+                        </label>
+                    `).join("")}
+                </div>
+            `,
+            `
+                <button class="panel-btn ghost" id="cancelCreateGroupBtn" type="button">Cancel</button>
+                <button class="panel-btn" id="confirmCreateGroupBtn" type="button">Create Group</button>
+            `
+        );
+        const cancelButton = document.getElementById("cancelCreateGroupBtn");
+        const confirmButton = document.getElementById("confirmCreateGroupBtn");
+        if (cancelButton) {
+            cancelButton.addEventListener("click", closeModal);
+        }
+        if (confirmButton) {
+            confirmButton.addEventListener("click", () => {
+                const groupNameInput = document.getElementById("groupNameInput");
+                const selectedParticipantIds = Array.from(document.querySelectorAll("#groupFriendPicker input[type='checkbox']:checked"))
+                    .map((input) => input.value);
+                fetch("/messages/groups/create/", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrftoken,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        group_name: groupNameInput ? groupNameInput.value.trim() : "",
+                        participant_ids: selectedParticipantIds,
+                    }),
+                })
+                    .then(async (response) => {
+                        const data = await response.json();
+                        return { ok: response.ok, data };
+                    })
+                    .then((result) => {
+                        if (!result.ok || !result.data.ok) {
+                            showMessagingError((result.data && result.data.error) || "We could not create that group right now.", "Create Group");
+                            return;
+                        }
+                        closeModal();
+                        loadConversation(result.data.conversation_id, "groups", { stickToBottom: true });
+                    })
+                    .catch(() => {
+                        showMessagingError("We could not create that group right now.", "Create Group");
+                    });
+            });
+        }
+    }
+
+    function promptReportConversation() {
+        const conversation = activeConversation();
+        if (!conversation) {
+            showMessagingError("Select a conversation first.", "Report User");
+            return;
+        }
         openModal(
             "Report User",
             `
@@ -1546,7 +1975,7 @@
                 </select>
                 <div id="reportReasonOtherWrap" hidden>
                     <label class="modal-label" for="reportReasonOther">Tell us more</label>
-                    <textarea class="modal-select modal-textarea" id="reportReasonOther" rows="4" placeholder="What went wrong?"></textarea>
+                    <textarea class="modal-select modal-textarea" id="reportReasonOther" rows="4"></textarea>
                 </div>
                 <label class="toggle-row">
                     <span>Also block this user</span>
@@ -1559,12 +1988,13 @@
                 <button class="panel-btn" id="submitConversationReportBtn" type="button">Send Report</button>
             `
         );
-
         const cancelButton = document.getElementById("modalCancelBtn");
         const reasonSelect = document.getElementById("reportReasonSelect");
         const otherWrap = document.getElementById("reportReasonOtherWrap");
         const submitButton = document.getElementById("submitConversationReportBtn");
-        if (cancelButton) cancelButton.addEventListener("click", closeModal);
+        if (cancelButton) {
+            cancelButton.addEventListener("click", closeModal);
+        }
         if (reasonSelect && otherWrap) {
             reasonSelect.addEventListener("change", () => {
                 otherWrap.hidden = reasonSelect.value !== "Other";
@@ -1572,12 +2002,11 @@
         }
         if (submitButton) {
             submitButton.addEventListener("click", () => {
-                const reason = reasonSelect ? reasonSelect.value : "";
-                const otherReason = document.getElementById("reportReasonOther");
-                const blockToggle = document.getElementById("reportBlockToggle");
                 const body = new URLSearchParams();
-                body.append("report_reason", reason);
+                body.append("report_reason", reasonSelect ? reasonSelect.value : "");
+                const otherReason = document.getElementById("reportReasonOther");
                 body.append("report_reason_other", otherReason ? otherReason.value.trim() : "");
+                const blockToggle = document.getElementById("reportBlockToggle");
                 if (blockToggle && blockToggle.checked) {
                     body.append("block_user", "1");
                 }
@@ -1599,33 +2028,56 @@
                             return;
                         }
                         if (blockToggle && blockToggle.checked) {
-                            conversation.blocked_by_current_user = true;
+                            applyConversationBlockState(conversation, { blocked_by_current_user: true });
+                            updateComposerState();
                         }
-                        renderChat();
-                        openModal("Report sent", `<p>${result.data.message}</p>`);
+                        renderChatHeaderAndDetails(conversation);
+                        openModal("Report sent", `<p>${escapeHtml(result.data.message)}</p>`);
                     })
                     .catch(() => {
                         showMessagingError("We could not send your report right now.", "Report User");
                     });
             });
         }
-    });
-    if (panelMoreMenu) {
-        panelMoreMenu.addEventListener("click", (event) => {
-            event.stopPropagation();
-            const button = event.target.closest("button");
-            if (!button) return;
-            panelMoreMenu.classList.remove("is-open");
-            if (button.dataset.action === "create-group" && createGroupBtn) {
-                createGroupBtn.click();
-            }
-        });
     }
 
-    document.getElementById("deleteConversationBtn").addEventListener("click", () => {
+    function toggleBlockedUser() {
+        const conversation = activeConversation();
+        if (!conversation || !conversation.partner_id) {
+            showMessagingError("Select a private conversation first.", "Block User");
+            return;
+        }
+        fetch(`/users/${conversation.partner_id}/block/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrftoken,
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        })
+            .then(async (response) => {
+                const data = await response.json();
+                return { ok: response.ok, data };
+            })
+            .then((result) => {
+                if (!result.ok || !result.data.ok) {
+                    showMessagingError((result.data && result.data.error) || "Unable to update block status right now.", "Block User");
+                    return;
+                }
+                applyConversationBlockState(conversation, { blocked_by_current_user: !!result.data.blocked });
+                renderChatHeaderAndDetails(conversation);
+                renderLists();
+                updateComposerState();
+                openModal(result.data.blocked ? "User blocked" : "User unblocked", `<p>${escapeHtml(result.data.message)}</p>`);
+            })
+            .catch(() => {
+                showMessagingError("Unable to update block status right now.", "Block User");
+            });
+    }
+
+    function deleteConversation() {
         const conversation = activeConversation();
         if (!conversation) {
-            openModal("Delete Conversation", "<p>Select a conversation first.</p>");
+            showMessagingError("Select a conversation first.", "Delete Conversation");
             return;
         }
         openModal(
@@ -1636,16 +2088,16 @@
                 <button class="panel-btn danger" id="confirmDeleteConversationBtn" type="button">Delete Conversation</button>
             `
         );
-        const cancelDelete = document.getElementById("cancelDeleteConversationBtn");
-        const confirmDelete = document.getElementById("confirmDeleteConversationBtn");
-        if (cancelDelete) cancelDelete.addEventListener("click", closeModal);
-        if (confirmDelete) {
-            confirmDelete.addEventListener("click", () => {
+        const cancelButton = document.getElementById("cancelDeleteConversationBtn");
+        const confirmButton = document.getElementById("confirmDeleteConversationBtn");
+        if (cancelButton) {
+            cancelButton.addEventListener("click", closeModal);
+        }
+        if (confirmButton) {
+            confirmButton.addEventListener("click", () => {
                 fetch(`/messages/${conversation.id}/delete/`, {
                     method: "POST",
-                    headers: {
-                        "X-CSRFToken": csrftoken,
-                    },
+                    headers: { "X-CSRFToken": csrftoken },
                 })
                     .then(async (response) => {
                         const data = await response.json();
@@ -1656,6 +2108,7 @@
                             showMessagingError((result.data && result.data.error) || "We could not delete this conversation right now.", "Delete Conversation");
                             return;
                         }
+                        closeModal();
                         handleConversationDeleted({ conversation_id: conversation.id });
                     })
                     .catch(() => {
@@ -1663,114 +2116,273 @@
                     });
             });
         }
-    });
-
-    document.getElementById("closeModalBtn").addEventListener("click", closeModal);
-    modalBackdrop.addEventListener("click", (event) => {
-        if (event.target === modalBackdrop) {
-            closeModal();
-        }
-    });
-
-    chatInput.addEventListener("input", () => {
-        sendBtn.disabled = chatInput.value.trim().length === 0;
-    });
-    sendBtn.addEventListener("click", handleSend);
-    chatInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            handleSend();
-        }
-    });
-    if (muteNotificationsToggle) {
-        muteNotificationsToggle.addEventListener("change", () => {
-            const conversation = activeConversation();
-            if (!conversation) {
-                muteNotificationsToggle.checked = false;
-                return;
-            }
-            fetch(`/messages/${conversation.id}/mute/`, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrftoken,
-                },
-            })
-                .then(async (response) => {
-                    const data = await response.json();
-                    return { ok: response.ok, data };
-                })
-                .then((result) => {
-                    if (!result.ok || !result.data.ok) {
-                        muteNotificationsToggle.checked = !muteNotificationsToggle.checked;
-                        showMessagingError((result.data && result.data.error) || "We could not update notification settings right now.", "Mute notifications");
-                        return;
-                    }
-                    conversation.mute_notifications = !!result.data.mute_notifications;
-                    muteNotificationsToggle.checked = !!result.data.mute_notifications;
-                })
-                .catch(() => {
-                    muteNotificationsToggle.checked = !muteNotificationsToggle.checked;
-                    showMessagingError("We could not update notification settings right now.", "Mute notifications");
-                });
-        });
     }
-    if (recordingModeToggle) {
-        recordingModeToggle.addEventListener("change", () => {
-            const conversation = activeConversation();
-            if (!conversation) {
-                recordingModeToggle.checked = true;
-                return;
-            }
-            fetch(`/messages/${conversation.id}/recording/`, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrftoken,
-                },
-            })
-                .then(async (response) => {
-                    const data = await response.json();
-                    return { ok: response.ok, data };
-                })
-                .then((result) => {
-                    if (!result.ok || !result.data.ok) {
-                        recordingModeToggle.checked = !recordingModeToggle.checked;
-                        showMessagingError((result.data && result.data.error) || "We could not update recording settings right now.", "Record chat history");
-                        return;
-                    }
-                    conversation.recording_mode = result.data.recording_mode;
-                    conversation.pinned = result.data.recording_mode === "ephemeral" ? result.data.banner : "";
-                    recordingModeToggle.checked = result.data.recording_mode !== "ephemeral";
-                    renderChat();
-                })
-                .catch(() => {
-                    recordingModeToggle.checked = !recordingModeToggle.checked;
-                    showMessagingError("We could not update recording settings right now.", "Record chat history");
-                });
+
+    function bindStaticControls() {
+        if (directTabBtn) {
+            directTabBtn.addEventListener("click", () => {
+                activeTab = "direct";
+                renderLists();
+            });
+        }
+        if (groupsTabBtn) {
+            groupsTabBtn.addEventListener("click", () => {
+                activeTab = "groups";
+                renderLists();
+            });
+        }
+        if (searchInput) {
+            searchInput.addEventListener("input", () => renderAll({ stickToBottom: false }));
+        }
+        const toggleDetailsBtn = document.getElementById("toggleDetailsBtn");
+        if (toggleDetailsBtn) {
+            toggleDetailsBtn.addEventListener("click", (event) => {
+                event.stopPropagation();
+                app.classList.toggle("details-open");
+            });
+        }
+        const closeDetailsBtn = document.getElementById("closeDetailsBtn");
+        if (closeDetailsBtn) {
+            closeDetailsBtn.addEventListener("click", () => app.classList.remove("details-open"));
+        }
+        const mobileBackBtn = document.getElementById("mobileBackBtn");
+        if (mobileBackBtn) {
+            mobileBackBtn.addEventListener("click", () => app.classList.remove("mobile-chat-open"));
+        }
+        const mobileCloseChat = document.getElementById("mobileCloseChat");
+        if (mobileCloseChat) {
+            mobileCloseChat.addEventListener("click", () => app.classList.remove("mobile-chat-open"));
+        }
+        document.querySelectorAll(".details-tab").forEach((button) => {
+            button.addEventListener("click", () => {
+                const tab = button.dataset.detailsTab;
+                document.querySelectorAll(".details-tab").forEach((item) => item.classList.remove("is-active"));
+                document.querySelectorAll(".details-pane").forEach((pane) => pane.classList.remove("is-active"));
+                button.classList.add("is-active");
+                const pane = document.querySelector(`.details-pane[data-pane="${tab}"]`);
+                if (pane) {
+                    pane.classList.add("is-active");
+                }
+            });
         });
-    }
-    if (notifBell && notifPanel) {
-        notifBell.addEventListener("click", (event) => {
-            event.stopPropagation();
-            notifPanel.classList.toggle("is-open");
-        });
+        if (panelMoreMenuBtn && panelMoreMenu) {
+            panelMoreMenuBtn.addEventListener("click", (event) => {
+                event.stopPropagation();
+                panelMoreMenu.classList.toggle("is-open");
+            });
+            panelMoreMenu.addEventListener("click", (event) => {
+                event.stopPropagation();
+                const button = event.target.closest("button");
+                if (!button) {
+                    return;
+                }
+                panelMoreMenu.classList.remove("is-open");
+                if (button.dataset.action === "create-group") {
+                    openCreateGroupModal();
+                }
+            });
+        }
         document.addEventListener("click", (event) => {
-            if (!notifPanel.contains(event.target) && !notifBell.contains(event.target)) {
-                notifPanel.classList.remove("is-open");
+            if (panelMoreMenu && panelMoreMenuBtn && !panelMoreMenu.contains(event.target) && !panelMoreMenuBtn.contains(event.target)) {
+                panelMoreMenu.classList.remove("is-open");
+            }
+            if (emojiPickerPanel && emojiPickerBtn && !emojiPickerPanel.contains(event.target) && !emojiPickerBtn.contains(event.target)) {
+                closeEmojiPicker();
+            }
+            if (!event.target.closest(".msg-menu-wrap")) {
+                closeMessageMenus();
+            }
+        });
+        if (chatInput) {
+            chatInput.addEventListener("input", updateComposerState);
+            chatInput.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    handleSend();
+                }
+            });
+        }
+        if (sendBtn) {
+            sendBtn.addEventListener("click", handleSend);
+        }
+        if (inputAttachBtn && chatFileInput) {
+            inputAttachBtn.addEventListener("click", () => chatFileInput.click());
+            chatFileInput.addEventListener("change", () => {
+                const file = chatFileInput.files && chatFileInput.files[0];
+                if (file) {
+                    sendMediaMessage(file, inferMessageTypeFromFile(file));
+                }
+            });
+        }
+        if (voiceRecordBtn) {
+            voiceRecordBtn.addEventListener("click", toggleVoiceRecording);
+        }
+        if (emojiPickerBtn && emojiPickerPanel) {
+            emojiPickerBtn.addEventListener("click", (event) => {
+                event.stopPropagation();
+                emojiPickerPanel.hidden = !emojiPickerPanel.hidden;
+            });
+        }
+        const searchInChatBtn = document.getElementById("searchInChatBtn");
+        if (searchInChatBtn && searchInput) {
+            searchInChatBtn.addEventListener("click", () => searchInput.focus());
+        }
+        if (createGroupBtn) {
+            createGroupBtn.addEventListener("click", openCreateGroupModal);
+        }
+        if (muteNotificationsToggle) {
+            muteNotificationsToggle.addEventListener("change", () => {
+                const conversation = activeConversation();
+                if (!conversation) {
+                    muteNotificationsToggle.checked = false;
+                    return;
+                }
+                fetch(`/messages/${conversation.id}/mute/`, {
+                    method: "POST",
+                    headers: { "X-CSRFToken": csrftoken },
+                })
+                    .then(async (response) => {
+                        const data = await response.json();
+                        return { ok: response.ok, data };
+                    })
+                    .then((result) => {
+                        if (!result.ok || !result.data.ok) {
+                            muteNotificationsToggle.checked = !muteNotificationsToggle.checked;
+                            showMessagingError((result.data && result.data.error) || "We could not update notification settings right now.", "Mute notifications");
+                            return;
+                        }
+                        conversation.mute_notifications = !!result.data.mute_notifications;
+                        syncSummaryFromActiveConversation();
+                    })
+                    .catch(() => {
+                        muteNotificationsToggle.checked = !muteNotificationsToggle.checked;
+                        showMessagingError("We could not update notification settings right now.", "Mute notifications");
+                    });
+            });
+        }
+        if (recordingModeToggle) {
+            recordingModeToggle.addEventListener("change", () => {
+                const conversation = activeConversation();
+                if (!conversation) {
+                    recordingModeToggle.checked = true;
+                    return;
+                }
+                fetch(`/messages/${conversation.id}/recording/`, {
+                    method: "POST",
+                    headers: { "X-CSRFToken": csrftoken },
+                })
+                    .then(async (response) => {
+                        const data = await response.json();
+                        return { ok: response.ok, data };
+                    })
+                    .then((result) => {
+                        if (!result.ok || !result.data.ok) {
+                            recordingModeToggle.checked = !recordingModeToggle.checked;
+                            showMessagingError((result.data && result.data.error) || "We could not update recording settings right now.", "Record chat history");
+                            return;
+                        }
+                        conversation.recording_mode = result.data.recording_mode;
+                        conversation.pinned = result.data.banner || "";
+                        syncSummaryFromActiveConversation();
+                        renderChatHeaderAndDetails(conversation);
+                    })
+                    .catch(() => {
+                        recordingModeToggle.checked = !recordingModeToggle.checked;
+                        showMessagingError("We could not update recording settings right now.", "Record chat history");
+                    });
+            });
+        }
+        const blockUserBtn = document.getElementById("blockUserBtn");
+        if (blockUserBtn) {
+            blockUserBtn.addEventListener("click", toggleBlockedUser);
+        }
+        const reportUserBtn = document.getElementById("reportUserBtn");
+        if (reportUserBtn) {
+            reportUserBtn.addEventListener("click", promptReportConversation);
+        }
+        if (composerReportBtn) {
+            composerReportBtn.addEventListener("click", promptReportConversation);
+        }
+        if (composerBlockToggleBtn) {
+            composerBlockToggleBtn.addEventListener("click", toggleBlockedUser);
+        }
+        const deleteConversationBtn = document.getElementById("deleteConversationBtn");
+        if (deleteConversationBtn) {
+            deleteConversationBtn.addEventListener("click", deleteConversation);
+        }
+        const createAgreementBtn = document.getElementById("createAgreementBtn");
+        if (createAgreementBtn) {
+            createAgreementBtn.addEventListener("click", () => {
+                openModal("Contract Maker", "<p>Contract Maker is still coming soon for private chats.</p>");
+            });
+        }
+        if (modalBackdrop) {
+            modalBackdrop.addEventListener("click", (event) => {
+                if (event.target === modalBackdrop) {
+                    closeModal();
+                }
+            });
+        }
+        const closeModalBtn = document.getElementById("closeModalBtn");
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener("click", closeModal);
+        }
+        if (messagesStream) {
+            messagesStream.addEventListener("click", (event) => {
+                const historyButton = event.target.closest("[data-load-older]");
+                if (historyButton) {
+                    loadOlderMessages();
+                    return;
+                }
+                const menuToggle = event.target.closest("[data-message-menu-toggle]");
+                if (menuToggle) {
+                    const menu = document.querySelector(`[data-message-menu="${menuToggle.dataset.messageMenuToggle}"]`);
+                    if (menu) {
+                        const isOpen = menu.classList.contains("is-open");
+                        closeMessageMenus();
+                        menu.classList.toggle("is-open", !isOpen);
+                    }
+                    return;
+                }
+                const actionButton = event.target.closest("[data-message-action]");
+                if (actionButton) {
+                    closeMessageMenus();
+                    const messageId = actionButton.dataset.messageId || "";
+                    if (actionButton.dataset.messageAction === "react") {
+                        openReactionPicker(messageId);
+                    } else if (actionButton.dataset.messageAction === "report") {
+                        promptReportMessage(messageId);
+                    } else if (actionButton.dataset.messageAction === "delete") {
+                        deleteMessage(messageId);
+                    }
+                    return;
+                }
+                const reactionChip = event.target.closest("[data-reaction-toggle]");
+                if (reactionChip) {
+                    toggleMessageReaction(reactionChip.dataset.messageId || "", reactionChip.dataset.reactionToggle || "");
+                }
+            });
+        }
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                syncMessagesState({ keepScroll: true });
+                connectSocket();
             }
         });
     }
 
-    document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) {
-            syncMessagesState();
-        }
-    });
-
-    connectSocket();
     renderEmojiPicker();
+    bindStaticControls();
+    ensureActiveConversationSelection();
+    if (activeConversationData && activeConversationData.id !== activeConversationId) {
+        activeConversationData = null;
+    }
     renderAll({ stickToBottom: true });
-    scheduleMessagesSync();
+    connectSocket();
+    if (activeConversation() && activeConversationSummary() && activeConversationSummary().unread) {
+        markActiveConversationSeen();
+    }
     if (initialMessageError) {
-        openModal("Messaging blocked", `<p>${initialMessageError}</p>`);
+        openModal("Messaging blocked", `<p>${escapeHtml(initialMessageError)}</p>`);
     }
 })();

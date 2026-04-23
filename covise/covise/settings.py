@@ -88,6 +88,10 @@ REDIS_HEALTH_CHECK_INTERVAL = config('REDIS_HEALTH_CHECK_INTERVAL', default=30, 
 REDIS_RETRY_ON_TIMEOUT = config('REDIS_RETRY_ON_TIMEOUT', default=True, cast=bool)
 REDIS_OPERATION_RETRY_ATTEMPTS = config('REDIS_OPERATION_RETRY_ATTEMPTS', default=3, cast=int)
 REDIS_OPERATION_RETRY_DELAY_MS = config('REDIS_OPERATION_RETRY_DELAY_MS', default=250, cast=int)
+MESSAGES_INITIAL_PAGE_SIZE = config('MESSAGES_INITIAL_PAGE_SIZE', default=50, cast=int)
+MESSAGES_HISTORY_PAGE_SIZE = config('MESSAGES_HISTORY_PAGE_SIZE', default=50, cast=int)
+MESSAGING_ATTACHMENT_URL_CACHE_TTL = config('MESSAGING_ATTACHMENT_URL_CACHE_TTL', default=3300, cast=int)
+MESSAGING_AVATAR_URL_CACHE_TTL = config('MESSAGING_AVATAR_URL_CACHE_TTL', default=86400, cast=int)
 
 CHANNEL_LAYERS = {
     "default": {
@@ -108,6 +112,21 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+if not DEBUG and os.environ.get('REDIS_URL'):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.environ['REDIS_URL'],
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'covise-default-cache',
+        }
+    }
 
 TEMPLATES = [
     {

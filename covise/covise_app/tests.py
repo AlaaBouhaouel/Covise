@@ -2,19 +2,21 @@ import json
 import shutil
 from unittest.mock import patch
 from tempfile import mkdtemp
+from datetime import timedelta
 
 from botocore.exceptions import ClientError
 
+from django.core.management import call_command
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.test import RequestFactory
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from .messaging import deliver_media_message
-from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Experiences, Message, MessageReceipt, OnboardingResponse, Post, PostImage, PostReaction, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
+from .models import AccountDeletionRequest, AccountPauseRequest, BlockedUser, Conversation, ConversationRequest, ConversationUserState, DataDeletionRequest, DataExportRequest, Experiences, Message, MessageReceipt, Notification, OnboardingResponse, Post, PostImage, PostReaction, Profile, Project, SavedPost, SignInEvent, TwoFactorChallenge, User, UserPreference, WaitlistEmailVerification, WaitlistEntry
 from .context_processors import user_ui_context
 from .user_context import build_profile_context, build_ui_user_context, get_onboarding_skill_config
 from .views import _attach_post_feed_metadata, _has_profile_completion, _home_sidebar_metrics, _render_post_content_html, _render_post_title_html, _safe_media_url, _searchable_users_for_home, _serialize_message, _waitlist_to_onboarding_initial_answers
@@ -2074,7 +2076,7 @@ class MessageAttachmentStorageTests(TestCase):
 
     @patch("covise_app.messaging.dispatch_notification")
     @patch("covise_app.storage.boto3.client")
-    def test_message_attachment_uploads_to_s3_and_serializes_bucket_url(self, mock_boto_client, _mock_dispatch_notification):
+    def test_message_attachment_uploads_to_s3_and_serializes_stable_media_path(self, mock_boto_client, _mock_dispatch_notification):
         mock_s3 = mock_boto_client.return_value
         mock_s3.head_object.side_effect = self._missing_s3_object
         mock_s3.generate_presigned_url.side_effect = (
@@ -2105,7 +2107,10 @@ class MessageAttachmentStorageTests(TestCase):
         self.assertEqual(message.attachment_file.url, expected_url)
 
         serialized = _serialize_message(message, viewer=self.sender)
-        self.assertEqual(serialized["attachment_url"], expected_url)
+        self.assertEqual(
+            serialized["attachment_url"],
+            reverse("Messaging Message Media", args=[message.id]),
+        )
         self.assertEqual(serialized["attachment_name"], "notes.txt")
 
         upload_args = mock_s3.upload_fileobj.call_args.args
@@ -2133,11 +2138,19 @@ class MessagingConversationNormalizationTests(TestCase):
             user=self.user,
             full_name="Messages Owner",
             has_accepted_platform_agreement=True,
+            onboarding_answers={
+                "one_liner": "Building the next venture stack",
+                "looking_for_type": "cofounder",
+            },
         )
         Profile.objects.create(
             user=self.other_user,
             full_name="Messages Partner",
             has_accepted_platform_agreement=True,
+            onboarding_answers={
+                "one_liner": "Looking for strong operators",
+                "looking_for_type": "partner",
+            },
         )
         self.client.force_login(self.user)
 
@@ -2149,73 +2162,61 @@ class MessagingConversationNormalizationTests(TestCase):
         conversation.participants.add(self.user, self.other_user)
         return conversation
 
-    def test_messages_page_merges_duplicate_private_conversations_for_same_pair(self):
-        older_conversation = self._create_private_conversation(created_by=self.user)
-        newer_conversation = self._create_private_conversation(created_by=self.other_user)
+    def _create_group_conversation(self, *, created_by, participant):
+        conversation = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.GROUP,
+            created_by=created_by,
+            group_name="Founder Circle",
+        )
+        conversation.participants.add(self.user, participant)
+        return conversation
 
-        older_message = Message.objects.create(
-            conversation=older_conversation,
-            sender=self.user,
-            body="First thread message",
+    def _create_message_at(self, conversation, sender, body, created_at):
+        message = Message.objects.create(
+            conversation=conversation,
+            sender=sender,
+            body=body,
         )
-        newer_message = Message.objects.create(
-            conversation=newer_conversation,
-            sender=self.other_user,
-            body="Most recent thread message",
-        )
-        older_conversation.last_message_at = older_message.created_at
-        older_conversation.save(update_fields=["last_message_at"])
-        newer_conversation.last_message_at = newer_message.created_at
-        newer_conversation.save(update_fields=["last_message_at"])
+        Message.objects.filter(id=message.id).update(created_at=created_at)
+        message.created_at = created_at
+        conversation.last_message_at = created_at
+        conversation.save(update_fields=["last_message_at"])
+        return message
 
-        accepted_request = ConversationRequest.objects.create(
-            requester=self.user,
-            recipient=self.other_user,
-            status=ConversationRequest.Status.ACCEPTED,
-            conversation=older_conversation,
-            responded_at=timezone.now(),
+    def test_messages_page_defaults_to_newest_direct_conversation_and_removes_fake_placeholder_content(self):
+        third_user = User.objects.create_user(
+            email="messages-third@example.com",
+            password="safe-password-123",
+            full_name="Messages Third",
         )
-        ConversationUserState.objects.create(
-            conversation=older_conversation,
-            user=self.user,
-            mute_notifications=True,
+        Profile.objects.create(
+            user=third_user,
+            full_name="Messages Third",
+            has_accepted_platform_agreement=True,
         )
+
+        older_direct = self._create_private_conversation(created_by=self.user)
+        newer_direct = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            created_by=self.user,
+        )
+        newer_direct.participants.add(self.user, third_user)
+        group_conversation = self._create_group_conversation(created_by=self.user, participant=self.other_user)
+
+        now = timezone.now()
+        self._create_message_at(older_direct, self.other_user, "Older direct thread", now - timedelta(hours=3))
+        self._create_message_at(newer_direct, third_user, "Newest direct thread", now - timedelta(hours=2))
+        self._create_message_at(group_conversation, self.other_user, "Newest group thread", now - timedelta(hours=1))
 
         response = self.client.get(reverse("Messages"))
 
         self.assertEqual(response.status_code, 200)
-        merged_conversations = (
-            Conversation.objects.filter(
-                conversation_type=Conversation.ConversationType.PRIVATE,
-                participants=self.user,
-            )
-            .filter(participants=self.other_user)
-            .distinct()
-        )
-        self.assertEqual(merged_conversations.count(), 1)
-
-        canonical = merged_conversations.first()
-        self.assertIsNotNone(canonical)
-        self.assertEqual(Message.objects.filter(conversation=canonical).count(), 2)
-        self.assertTrue(
-            ConversationRequest.objects.filter(id=accepted_request.id, conversation=canonical).exists()
-        )
-        self.assertTrue(
-            ConversationUserState.objects.filter(
-                conversation=canonical,
-                user=self.user,
-                mute_notifications=True,
-            ).exists()
-        )
-
-        serialized = [
-            item
-            for item in response.context["conversation_data"]
-            if item["conversation_type"] == Conversation.ConversationType.PRIVATE
-            and item["partner_id"] == str(self.other_user.id)
-        ]
-        self.assertEqual(len(serialized), 1)
-        self.assertEqual(serialized[0]["preview"], "Most recent thread message")
+        self.assertEqual(response.context["active_conversation_id"], str(newer_direct.id))
+        self.assertEqual(response.context["active_conversation"]["id"], str(newer_direct.id))
+        self.assertContains(response, "Messages")
+        self.assertNotContains(response, "Leena Al-Sabah")
+        self.assertNotContains(response, "Active now")
+        self.assertNotContains(response, "conversation-data")
 
     def test_start_private_conversation_redirects_to_canonical_merged_thread(self):
         accepted_request = ConversationRequest.objects.create(
@@ -2264,7 +2265,8 @@ class MessagingConversationNormalizationTests(TestCase):
             ConversationRequest.objects.filter(id=accepted_request.id, conversation=canonical).exists()
         )
 
-    def test_start_private_conversation_creates_pending_request_and_redirects_to_requests_page(self):
+    @patch("covise_app.views.dispatch_notification")
+    def test_start_private_conversation_creates_pending_request_and_redirects_to_requests_page(self, dispatch_mock):
         response = self.client.post(reverse("Start Private Conversation", args=[self.other_user.id]))
 
         self.assertEqual(response.status_code, 302)
@@ -2276,6 +2278,8 @@ class MessagingConversationNormalizationTests(TestCase):
                 status=ConversationRequest.Status.PENDING,
             ).exists()
         )
+        dispatch_mock.assert_called_once()
+        self.assertFalse(dispatch_mock.call_args.kwargs["send_email"])
 
     @patch("covise_app.views._merge_private_conversations")
     def test_start_private_conversation_still_creates_request_when_merge_fails_for_non_friend(self, merge_mock):
@@ -2377,18 +2381,44 @@ class MessagingConversationNormalizationTests(TestCase):
             ).exists()
         )
 
-    @patch("covise_app.views.send_messaging_failure_alert")
     @patch("covise_app.views._normalize_visible_private_conversations")
-    def test_messages_page_still_renders_when_normalization_fails(self, normalize_mock, alert_mock):
-        normalize_mock.side_effect = RuntimeError("normalization exploded")
+    def test_messages_page_does_not_run_request_time_normalization(self, normalize_mock):
+        conversation = self._create_private_conversation(created_by=self.user)
+        self._create_message_at(conversation, self.other_user, "Fresh direct thread", timezone.now())
 
         response = self.client.get(reverse("Messages"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["conversation_data"], [])
-        self.assertEqual(response.context["friend_options"], [])
-        alert_mock.assert_called_once()
-        self.assertEqual(alert_mock.call_args.kwargs["reason"], "normalization_failed")
+        normalize_mock.assert_not_called()
+        self.assertEqual(response.context["active_conversation_id"], str(conversation.id))
+
+    def test_messages_page_shows_truthful_empty_state_when_only_group_conversations_exist(self):
+        group_conversation = self._create_group_conversation(created_by=self.user, participant=self.other_user)
+        self._create_message_at(group_conversation, self.other_user, "Group hello", timezone.now())
+
+        response = self.client.get(reverse("Messages"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["active_conversation_id"], "")
+        self.assertIsNone(response.context["active_conversation"])
+        self.assertContains(response, "No direct conversation selected")
+        self.assertNotContains(response, "Leena Al-Sabah")
+
+    def test_messages_page_ignores_requested_group_thread_and_still_prefers_newest_direct_conversation(self):
+        direct_conversation = self._create_private_conversation(created_by=self.user)
+        group_conversation = self._create_group_conversation(created_by=self.user, participant=self.other_user)
+        now = timezone.now()
+        self._create_message_at(direct_conversation, self.other_user, "Direct hello", now)
+        self._create_message_at(group_conversation, self.other_user, "Group hello", now + timedelta(minutes=1))
+
+        response = self.client.get(
+            reverse("Messages"),
+            {"conversation": str(group_conversation.id)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["active_conversation_id"], str(direct_conversation.id))
+        self.assertEqual(response.context["active_conversation"]["id"], str(direct_conversation.id))
 
     def test_messages_page_maps_conversation_unavailable_error_code_to_friendly_message(self):
         response = self.client.get(f"{reverse('Messages')}?error=conversation_unavailable")
@@ -2399,17 +2429,87 @@ class MessagingConversationNormalizationTests(TestCase):
             "We couldn't open this conversation right now. Please try again.",
         )
 
-    def test_messages_state_endpoint_returns_latest_saved_message_snapshot(self):
-        conversation = self._create_private_conversation(created_by=self.user)
+    def test_messages_page_sets_csrf_cookie_for_send_actions(self):
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(self.user)
 
-        send_response = self.client.post(
-            reverse("Send Message", args=[conversation.id]),
-            data=json.dumps({"message": "Fresh sync message"}),
-            content_type="application/json",
+        response = csrf_client.get(reverse("Messages"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("csrftoken", csrf_client.cookies)
+
+    def test_messages_page_renders_safety_controls_and_locked_composer_shell(self):
+        conversation = self._create_private_conversation(created_by=self.user)
+        self._create_message_at(conversation, self.other_user, "Fresh direct thread", timezone.now())
+
+        response = self.client.get(reverse("Messages"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'id="chatSafetyMenuBtn"')
+        self.assertContains(response, 'id="blockUserBtn"')
+        self.assertContains(response, 'id="reportUserBtn"')
+        self.assertContains(response, 'id="composerLockOverlay"')
+        self.assertContains(response, 'id="composerReportBtn"')
+        self.assertContains(response, 'id="composerBlockToggleBtn"')
+
+    @patch("covise_app.views._normalize_visible_private_conversations")
+    def test_messages_state_endpoint_returns_split_payload_without_non_active_histories(self, normalize_mock):
+        older_conversation = self._create_private_conversation(created_by=self.user)
+        newer_conversation = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            created_by=self.user,
+        )
+        newer_conversation.participants.add(self.user, self.other_user)
+
+        now = timezone.now()
+        self._create_message_at(older_conversation, self.other_user, "Older conversation", now - timedelta(minutes=10))
+        latest_message = self._create_message_at(newer_conversation, self.other_user, "Fresh sync message", now)
+
+        state_response = self.client.get(
+            reverse("Messages State"),
+            {"conversation": str(newer_conversation.id)},
         )
 
-        self.assertEqual(send_response.status_code, 200)
-        self.assertTrue(send_response.json()["ok"])
+        self.assertEqual(state_response.status_code, 200)
+        payload = state_response.json()
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["active_conversation_id"], str(newer_conversation.id))
+        self.assertEqual(len(payload["conversation_summaries"]), 2)
+        self.assertEqual(payload["active_conversation"]["id"], str(newer_conversation.id))
+        self.assertEqual(payload["active_conversation"]["messages"][-1]["text"], latest_message.body)
+        self.assertNotIn("messages", payload["conversation_summaries"][0])
+        normalize_mock.assert_not_called()
+
+    def test_messages_state_honors_requested_group_conversation_for_in_app_switching(self):
+        direct_conversation = self._create_private_conversation(created_by=self.user)
+        group_conversation = self._create_group_conversation(created_by=self.user, participant=self.other_user)
+        now = timezone.now()
+        self._create_message_at(direct_conversation, self.other_user, "Direct hello", now)
+        self._create_message_at(group_conversation, self.other_user, "Group hello", now + timedelta(minutes=1))
+
+        state_response = self.client.get(
+            reverse("Messages State"),
+            {"conversation": str(group_conversation.id)},
+        )
+
+        self.assertEqual(state_response.status_code, 200)
+        payload = state_response.json()
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["active_conversation_id"], str(group_conversation.id))
+        self.assertEqual(payload["active_conversation"]["id"], str(group_conversation.id))
+        self.assertEqual(payload["active_conversation"]["conversation_type"], Conversation.ConversationType.GROUP)
+
+    def test_messages_history_endpoint_returns_older_messages_in_oldest_to_newest_order(self):
+        conversation = self._create_private_conversation(created_by=self.user)
+        start = timezone.now() - timedelta(hours=2)
+        for index in range(60):
+            sender = self.user if index % 2 == 0 else self.other_user
+            self._create_message_at(
+                conversation,
+                sender,
+                f"Message {index}",
+                start + timedelta(minutes=index),
+            )
 
         state_response = self.client.get(
             reverse("Messages State"),
@@ -2417,12 +2517,88 @@ class MessagingConversationNormalizationTests(TestCase):
         )
 
         self.assertEqual(state_response.status_code, 200)
-        payload = state_response.json()
-        self.assertTrue(payload["ok"])
-        self.assertEqual(payload["active_conversation_id"], str(conversation.id))
-        self.assertEqual(len(payload["conversation_data"]), 1)
-        self.assertEqual(payload["conversation_data"][0]["preview"], "Fresh sync message")
-        self.assertEqual(payload["conversation_data"][0]["messages"][-1]["text"], "Fresh sync message")
+        active_conversation = state_response.json()["active_conversation"]
+        self.assertEqual(len(active_conversation["messages"]), 50)
+        self.assertTrue(active_conversation["has_older_messages"])
+
+        history_response = self.client.get(
+            reverse("Messages History", args=[conversation.id]),
+            {"before": active_conversation["oldest_loaded_message_id"]},
+        )
+
+        self.assertEqual(history_response.status_code, 200)
+        history_payload = history_response.json()
+        self.assertTrue(history_payload["ok"])
+        self.assertEqual([item["text"] for item in history_payload["messages"]], [f"Message {index}" for index in range(10)])
+        self.assertFalse(history_payload["has_older_messages"])
+
+    def test_messages_state_marks_conversation_locked_when_current_user_blocked_partner(self):
+        conversation = self._create_private_conversation(created_by=self.user)
+        BlockedUser.objects.create(blocker=self.user, blocked=self.other_user)
+
+        state_response = self.client.get(
+            reverse("Messages State"),
+            {"conversation": str(conversation.id)},
+        )
+
+        self.assertEqual(state_response.status_code, 200)
+        active_conversation = state_response.json()["active_conversation"]
+        self.assertTrue(active_conversation["blocked_by_current_user"])
+        self.assertFalse(active_conversation["blocked_by_partner"])
+        self.assertTrue(active_conversation["messaging_blocked"])
+        self.assertIn("You blocked this user", active_conversation["messaging_lock_reason"])
+
+    def test_messages_state_marks_conversation_locked_when_partner_blocked_current_user(self):
+        conversation = self._create_private_conversation(created_by=self.user)
+        BlockedUser.objects.create(blocker=self.other_user, blocked=self.user)
+
+        state_response = self.client.get(
+            reverse("Messages State"),
+            {"conversation": str(conversation.id)},
+        )
+
+        self.assertEqual(state_response.status_code, 200)
+        active_conversation = state_response.json()["active_conversation"]
+        self.assertFalse(active_conversation["blocked_by_current_user"])
+        self.assertTrue(active_conversation["blocked_by_partner"])
+        self.assertTrue(active_conversation["messaging_blocked"])
+        self.assertIn("blocked you", active_conversation["messaging_lock_reason"])
+
+    @patch("covise_app.notifications.send_notification_email")
+    def test_send_message_creates_pending_notification_without_inline_email_send(self, send_email_mock):
+        conversation = self._create_private_conversation(created_by=self.user)
+
+        response = self.client.post(
+            reverse("Send Message", args=[conversation.id]),
+            data=json.dumps({"message": "Fresh sync message"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["ok"])
+        notification = Notification.objects.get(
+            recipient=self.other_user,
+            notification_type=Notification.NotificationType.NEW_MESSAGE,
+        )
+        self.assertEqual(notification.target_url, f"/messages/?conversation={conversation.id}")
+        self.assertIsNone(notification.emailed_at)
+        send_email_mock.assert_not_called()
+
+    def test_send_notification_emails_command_marks_pending_notifications_processed(self):
+        notification = Notification.objects.create(
+            recipient=self.other_user,
+            actor=self.user,
+            notification_type=Notification.NotificationType.NEW_MESSAGE,
+            title="New message",
+            body="You have a new message.",
+            target_url="/messages/",
+        )
+
+        with patch("covise_app.notifications.RESEND_API_KEY", ""):
+            call_command("send_notification_emails")
+
+        notification.refresh_from_db()
+        self.assertIsNotNone(notification.emailed_at)
 
     def test_accept_request_succeeds_with_duplicate_private_threads_present(self):
         incoming_request = ConversationRequest.objects.create(
@@ -2518,3 +2694,97 @@ class MessagingConversationNormalizationTests(TestCase):
         )
         broadcast_mock.assert_called_once()
         accept_dispatch_mock.assert_called_once()
+        self.assertFalse(accept_dispatch_mock.call_args.kwargs["send_email"])
+
+
+@override_settings(DEBUG=True, SECURE_SSL_REDIRECT=False, ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class MessagingMediaEndpointTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="media-owner@example.com",
+            password="safe-password-123",
+            full_name="Media Owner",
+        )
+        self.other_user = User.objects.create_user(
+            email="media-partner@example.com",
+            password="safe-password-123",
+            full_name="Media Partner",
+        )
+        self.outsider = User.objects.create_user(
+            email="media-outsider@example.com",
+            password="safe-password-123",
+            full_name="Media Outsider",
+        )
+        onboarding_answers = {
+            "one_liner": "Building faster founder messaging.",
+            "looking_for_type": "partner",
+        }
+        Profile.objects.create(
+            user=self.user,
+            full_name="Media Owner",
+            has_accepted_platform_agreement=True,
+            onboarding_answers=onboarding_answers,
+        )
+        Profile.objects.create(
+            user=self.other_user,
+            full_name="Media Partner",
+            has_accepted_platform_agreement=True,
+            onboarding_answers=onboarding_answers,
+        )
+        Profile.objects.create(
+            user=self.outsider,
+            full_name="Media Outsider",
+            has_accepted_platform_agreement=True,
+            onboarding_answers=onboarding_answers,
+        )
+        UserPreference.objects.create(user=self.user)
+        UserPreference.objects.create(user=self.other_user)
+        UserPreference.objects.create(user=self.outsider)
+
+        Profile.objects.filter(user=self.user).update(profile_image="profile_images/avatar.png")
+        self.user.profile.refresh_from_db()
+
+        self.conversation = Conversation.objects.create(
+            conversation_type=Conversation.ConversationType.PRIVATE,
+            created_by=self.user,
+        )
+        self.conversation.participants.add(self.user, self.other_user)
+        self.message = Message.objects.create(
+            conversation=self.conversation,
+            sender=self.user,
+            body="Attachment",
+            message_type=Message.MessageType.FILE,
+            attachment_file="chat_media/notes.txt",
+            attachment_name="notes.txt",
+            attachment_content_type="text/plain",
+            attachment_size=23,
+        )
+
+        self.client.force_login(self.user)
+        self.outsider_client = Client()
+        self.outsider_client.force_login(self.outsider)
+
+    @patch("covise_app.views._public_media_url", return_value="https://cdn.example/profile_images/avatar.png")
+    def test_messaging_avatar_endpoint_redirects_with_public_cache_headers(self, _mock_public_media_url):
+        url = reverse("Messaging Avatar", args=[self.user.id])
+
+        first_response = self.client.get(url)
+        second_response = self.client.get(url)
+
+        self.assertEqual(first_response.status_code, 302)
+        self.assertEqual(second_response.status_code, 302)
+        self.assertEqual(first_response["Location"], second_response["Location"])
+        self.assertEqual(first_response["Location"], "https://cdn.example/profile_images/avatar.png")
+        self.assertIn("public", first_response["Cache-Control"])
+
+    @patch("covise_app.views._safe_media_url", return_value="https://cdn.example/chat_media/notes.txt")
+    def test_messaging_message_media_endpoint_redirects_for_participants_only(self, _mock_safe_media_url):
+        url = reverse("Messaging Message Media", args=[self.message.id])
+
+        participant_response = self.client.get(url)
+        outsider_response = self.outsider_client.get(url)
+
+        self.assertEqual(participant_response.status_code, 302)
+        self.assertEqual(participant_response["Location"], "https://cdn.example/chat_media/notes.txt")
+        self.assertIn("private", participant_response["Cache-Control"])
+        self.assertEqual(outsider_response.status_code, 404)

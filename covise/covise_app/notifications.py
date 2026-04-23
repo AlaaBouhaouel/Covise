@@ -78,6 +78,14 @@ def create_notification(*, recipient, actor=None, notification_type, title, body
     )
 
 
+def mark_notification_email_processed(notification):
+    if not notification or notification.emailed_at:
+        return notification
+    notification.emailed_at = timezone.now()
+    notification.save(update_fields=["emailed_at"])
+    return notification
+
+
 def _absolute_target_url(target_url):
     if not target_url:
         return f"{SITE_URL}/"
@@ -114,10 +122,14 @@ def _notification_email_html(notification):
     )
 
 
-def send_notification_email(notification):
+def send_notification_email(notification, *, mark_skipped=False):
     if resend is None or not RESEND_API_KEY:
+        if mark_skipped:
+            mark_notification_email_processed(notification)
         return False
     if not email_notification_enabled(notification.recipient, notification.notification_type):
+        if mark_skipped:
+            mark_notification_email_processed(notification)
         return False
 
     resend.api_key = RESEND_API_KEY
@@ -137,12 +149,11 @@ def send_notification_email(notification):
         )
         return False
 
-    notification.emailed_at = timezone.now()
-    notification.save(update_fields=["emailed_at"])
+    mark_notification_email_processed(notification)
     return True
 
 
-def dispatch_notification(*, recipient, actor=None, notification_type, title, body, target_url=""):
+def dispatch_notification(*, recipient, actor=None, notification_type, title, body, target_url="", send_email=True):
     notification = create_notification(
         recipient=recipient,
         actor=actor,
@@ -151,7 +162,8 @@ def dispatch_notification(*, recipient, actor=None, notification_type, title, bo
         body=body,
         target_url=target_url,
     )
-    send_notification_email(notification)
+    if send_email:
+        send_notification_email(notification)
     return notification
 
 

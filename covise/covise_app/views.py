@@ -9,13 +9,15 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 from django.conf import settings
+from django.core.cache import cache
 from django.core.mail import EmailMessage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, validate_email
 from django.http import Http404, HttpResponsePermanentRedirect, JsonResponse
 from django.db import models, IntegrityError, OperationalError, close_old_connections, transaction
-from django.db.models import Case, Count, IntegerField, Q, When
+from django.db.models import Case, Count, IntegerField, OuterRef, Q, Subquery, When
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -69,6 +71,10 @@ FOUNDERS_TEAM_WELCOME_MESSAGE = (
     "this is your direct chat with the CoVise team.\n\n"
     "If you have any questions, run into any issues, or need help with anything, feel free to message here anytime."
 )
+MESSAGES_INITIAL_PAGE_SIZE = max(1, int(getattr(settings, "MESSAGES_INITIAL_PAGE_SIZE", 50)))
+MESSAGES_HISTORY_PAGE_SIZE = max(1, int(getattr(settings, "MESSAGES_HISTORY_PAGE_SIZE", 50)))
+MESSAGING_ATTACHMENT_URL_CACHE_TTL = max(60, int(getattr(settings, "MESSAGING_ATTACHMENT_URL_CACHE_TTL", 3300)))
+MESSAGING_AVATAR_URL_CACHE_TTL = max(60, int(getattr(settings, "MESSAGING_AVATAR_URL_CACHE_TTL", 86400)))
 
 
 def _normalize_email(value):
@@ -148,6 +154,26 @@ def _safe_media_url(field_file):
     except Exception:
         return ""
     return url
+
+
+def _public_media_url(field_file):
+    if not field_file:
+        return ""
+    storage = getattr(field_file, "storage", None)
+    name = getattr(field_file, "name", "")
+    if storage is not None and hasattr(storage, "_use_s3") and hasattr(storage, "_s3_url") and storage._use_s3():
+        try:
+            return storage._s3_url(name)
+        except Exception:
+            return ""
+    return _safe_media_url(field_file)
+
+
+def _cacheable_redirect_response(target_url, *, max_age, is_public):
+    response = redirect(target_url)
+    visibility = "public" if is_public else "private"
+    response["Cache-Control"] = f"{visibility}, max-age={max_age}"
+    return response
 
 
 def _display_name(user):
@@ -584,6 +610,35 @@ def _is_blocked_pair(user_a, user_b):
         BlockedUser.objects.filter(blocker=user_a, blocked=user_b).exists()
         or BlockedUser.objects.filter(blocker=user_b, blocked=user_a).exists()
     )
+
+
+def _conversation_block_state(current_user, partner):
+    if not current_user or not partner:
+        return {
+            "blocked_by_current_user": False,
+            "blocked_by_partner": False,
+            "messaging_blocked": False,
+            "messaging_lock_reason": "",
+        }
+
+    blocked_by_current_user = _has_user_blocked(current_user, partner)
+    blocked_by_partner = _has_user_blocked(partner, current_user)
+    messaging_blocked = blocked_by_current_user or blocked_by_partner
+    if blocked_by_current_user and blocked_by_partner:
+        lock_reason = "Messaging is locked because one of you has blocked the other."
+    elif blocked_by_current_user:
+        lock_reason = "You blocked this user. Unblock them to send messages again."
+    elif blocked_by_partner:
+        lock_reason = "This user has blocked you, so this conversation is locked."
+    else:
+        lock_reason = ""
+
+    return {
+        "blocked_by_current_user": blocked_by_current_user,
+        "blocked_by_partner": blocked_by_partner,
+        "messaging_blocked": messaging_blocked,
+        "messaging_lock_reason": lock_reason,
+    }
 
 
 def _blocked_user_items(user):
@@ -1170,6 +1225,7 @@ def _ensure_founders_team_request(user):
         title=f"{_display_name(founders_user)} wants to start a private chat",
         body="Open Messages to review the request and decide whether to accept it.",
         target_url=reverse("Messages"),
+        send_email=False,
     )
     return request_item
 
@@ -2830,6 +2886,24 @@ def _user_avatar_url(user):
     return _profile_avatar_url(profile)
 
 
+def _messaging_avatar_url(user):
+    if not user:
+        return ""
+    try:
+        profile = getattr(user, "profile", None)
+    except Profile.DoesNotExist:
+        return ""
+    if not profile or not getattr(profile, "profile_image", None):
+        return ""
+    return reverse("Messaging Avatar", args=[user.id])
+
+
+def _messaging_attachment_url(message):
+    if not message or not getattr(message, "attachment_file", None):
+        return ""
+    return reverse("Messaging Message Media", args=[message.id])
+
+
 def _comment_avatar_url(comment):
     return _user_avatar_url(getattr(comment, "user", None))
 
@@ -3256,9 +3330,13 @@ def _get_or_create_private_conversation(user_a, user_b):
     return _merge_private_conversations(user_a, user_b) or conversation
 
 
-def _serialize_message(message, *, viewer=None, is_ephemeral=False):
+def _serialize_message(message, *, viewer=None, is_ephemeral=False, stable_media_urls=True):
     sender_name = _display_name(message.sender)
-    attachment_url = _safe_media_url(getattr(message, "attachment_file", None))
+    attachment_url = (
+        _messaging_attachment_url(message)
+        if stable_media_urls
+        else _safe_media_url(getattr(message, "attachment_file", None))
+    )
     reaction_counts, viewer_reactions = _message_reaction_payload(message, viewer=viewer)
     return {
         "id": (
@@ -3286,29 +3364,56 @@ def _messaging_error_response(message, *, code, status):
     return JsonResponse({"ok": False, "error": message, "code": code}, status=status)
 
 
-def _serialize_conversation(conversation, current_user):
-    is_group = conversation.conversation_type == Conversation.ConversationType.GROUP
-    partner = _conversation_partner(conversation, current_user)
-    partner_profile = getattr(partner, "profile", None) if not is_group else None
-    messages = list(
-        conversation.messages.select_related("sender").prefetch_related("receipts", "reactions").order_by("created_at")
-    )
-    last_message = messages[-1] if messages else None
-    muted_state = next(
+def _message_preview_value(message_type, body, attachment_name=""):
+    text = str(body or "").strip()
+    if message_type == Message.MessageType.IMAGE:
+        return text or "Sent an image"
+    if message_type == Message.MessageType.VOICE:
+        return text or "Sent a voice message"
+    if message_type == Message.MessageType.FILE:
+        return text or f"Shared {attachment_name or 'a file'}"
+    return text or "Start the conversation"
+
+
+def _conversation_muted_state(conversation, current_user):
+    if not hasattr(conversation, "user_states"):
+        return None
+    return next(
         (state for state in conversation.user_states.all() if state.user_id == current_user.id),
         None,
-    ) if hasattr(conversation, "user_states") else None
-    group_participants = []
-    if is_group:
-        for participant in conversation.participants.all():
-            group_participants.append(
-                    {
-                        "id": str(participant.id),
-                        "display_name": _display_name(participant),
-                        "avatar_initials": participant.avatar_initials,
-                        "avatar_url": _user_avatar_url(participant),
-                    }
-            )
+    )
+
+
+def _serialize_group_members(conversation):
+    if conversation.conversation_type != Conversation.ConversationType.GROUP:
+        return []
+    return [
+        {
+            "id": str(participant.id),
+            "display_name": _display_name(participant),
+            "avatar_initials": participant.avatar_initials,
+            "avatar_url": _messaging_avatar_url(participant),
+        }
+        for participant in conversation.participants.all()
+    ]
+
+
+def _conversation_payload_base(conversation, current_user):
+    is_group = conversation.conversation_type == Conversation.ConversationType.GROUP
+    partner = _conversation_partner(conversation, current_user)
+    block_state = (
+        _conversation_block_state(current_user, partner)
+        if not is_group and partner
+        else {
+            "blocked_by_current_user": False,
+            "blocked_by_partner": False,
+            "messaging_blocked": False,
+            "messaging_lock_reason": "",
+        }
+    )
+    partner_profile = getattr(partner, "profile", None) if not is_group else None
+    group_participants = _serialize_group_members(conversation)
+    muted_state = _conversation_muted_state(conversation, current_user)
     status = (
         f"{len(group_participants)} members"
         if is_group
@@ -3325,46 +3430,27 @@ def _serialize_conversation(conversation, current_user):
             or _display_value(getattr(partner_profile, "home_country", None), "")
             or _display_value(getattr(partner_profile, "custom_country", None), "")
         )
-    preview = "Start the conversation"
-    if last_message:
-        if last_message.message_type == Message.MessageType.IMAGE:
-            preview = last_message.body or "Sent an image"
-        elif last_message.message_type == Message.MessageType.VOICE:
-            preview = last_message.body or "Sent a voice message"
-        elif last_message.message_type == Message.MessageType.FILE:
-            preview = last_message.body or f"Shared {last_message.attachment_name or 'a file'}"
-        else:
-            preview = last_message.body
-    shared_files = [
-        {
-            "id": str(message.id),
-            "message_type": message.message_type,
-            "name": message.attachment_name or "Attachment",
-            "url": _serialize_message(message, viewer=current_user).get("attachment_url", ""),
-            "created_at": message.created_at.isoformat(),
-            "sender_name": _display_name(message.sender),
-            "attachment_size": message.attachment_size,
-        }
-        for message in messages
-        if getattr(message, "attachment_file", None)
-    ]
-    unread_count = sum(
-        1
-        for message in messages
-        for receipt in message.receipts.all()
-        if receipt.user_id == current_user.id and receipt.status == "delivered"
+    last_message_created_at = getattr(conversation, "last_message_created_at", None) or conversation.last_message_at
+    preview = _message_preview_value(
+        getattr(conversation, "last_message_type", Message.MessageType.TEXT),
+        getattr(conversation, "last_message_body", ""),
+        getattr(conversation, "last_message_attachment_name", ""),
     )
     return {
         "id": str(conversation.id),
         "conversation_type": conversation.conversation_type,
-        "partner_id": str(partner.id) if not is_group else "",
-        "blocked_by_current_user": _has_user_blocked(current_user, partner) if not is_group else False,
+        "partner_id": str(partner.id) if not is_group and partner else "",
+        "blocked_by_current_user": block_state["blocked_by_current_user"],
+        "blocked_by_partner": block_state["blocked_by_partner"],
+        "messaging_blocked": block_state["messaging_blocked"],
+        "messaging_lock_reason": block_state["messaging_lock_reason"],
         "name": conversation.group_name if is_group else _display_name(partner),
         "avatar": _group_avatar_initials(conversation.group_name) if is_group else partner.avatar_initials,
-        "avatar_url": "" if is_group else _user_avatar_url(partner),
+        "avatar_url": "" if is_group else _messaging_avatar_url(partner),
         "preview": preview,
-        "time": _relative_time_label(last_message.created_at) if last_message else "New",
-        "unread": unread_count,
+        "time": _relative_time_label(last_message_created_at) if last_message_created_at else "New",
+        "last_message_at": last_message_created_at.isoformat() if last_message_created_at else "",
+        "unread": int(getattr(conversation, "unread_count", 0) or 0),
         "online": False,
         "match": "Group conversation" if is_group else "Private conversation",
         "status": status,
@@ -3383,9 +3469,49 @@ def _serialize_conversation(conversation, current_user):
         ),
         "recording_mode": conversation.recording_mode,
         "mute_notifications": bool(muted_state and muted_state.mute_notifications),
-        "shared_files": shared_files,
-        "messages": [_serialize_message(message, viewer=current_user) for message in messages],
     }
+
+
+def _serialize_conversation_summary(conversation, current_user):
+    return _conversation_payload_base(conversation, current_user)
+
+
+def _serialize_shared_files(conversation, current_user, *, limit=20):
+    attachments = list(
+        conversation.messages.exclude(attachment_file="").exclude(attachment_file__isnull=True)
+        .select_related("sender")
+        .order_by("-created_at")[:limit]
+    )
+    return [
+        {
+            "id": str(message.id),
+            "message_type": message.message_type,
+            "name": message.attachment_name or "Attachment",
+            "url": _messaging_attachment_url(message),
+            "created_at": message.created_at.isoformat(),
+            "sender_name": _display_name(message.sender),
+            "attachment_size": message.attachment_size,
+        }
+        for message in attachments
+    ]
+
+
+def _serialize_active_conversation(conversation, current_user):
+    base_payload = _conversation_payload_base(conversation, current_user)
+    recent_messages = list(
+        conversation.messages.select_related("sender").prefetch_related("receipts", "reactions").order_by("-created_at")[:MESSAGES_INITIAL_PAGE_SIZE]
+    )
+    recent_messages.reverse()
+    total_messages = conversation.messages.count()
+    base_payload.update(
+        {
+            "messages": [_serialize_message(message, viewer=current_user) for message in recent_messages],
+            "shared_files": _serialize_shared_files(conversation, current_user),
+            "has_older_messages": total_messages > len(recent_messages),
+            "oldest_loaded_message_id": str(recent_messages[0].id) if recent_messages else "",
+        }
+    )
+    return base_payload
 
 
 def _serialize_conversation_request(request_item, current_user):
@@ -3552,19 +3678,39 @@ def home(request):
 
 @login_required
 def post_detail(request, post_id):
-    post = get_object_or_404(
+    own_post = get_object_or_404(
         Post.objects.select_related("user", "user__profile").prefetch_related("gallery_images", "mentions__mentioned_user"),
         id=post_id,
     )
-    if post.user_id in _blocked_user_ids(request.user):
+    blocked_ids = _blocked_user_ids(request.user)
+    if own_post.user_id in blocked_ids:
         raise Http404("Post not available")
-    _attach_post_feed_metadata([post], current_user=request.user)
-    post.comment_threads = _build_comment_tree(
-        Comment.objects.filter(post=post).select_related("user", "user__profile", "parent", "post").prefetch_related("reactions").order_by("created_at"),
+    _attach_post_feed_metadata([own_post], current_user=request.user)
+    own_post.comment_threads = _build_comment_tree(
+        Comment.objects.filter(post=own_post).select_related("user", "user__profile", "parent", "post").prefetch_related("reactions").order_by("created_at"),
         current_user=request.user,
     )
-    post.is_saved = SavedPost.objects.filter(user=request.user, post=post).exists()
-    response = render(request, "post_detail.html", {"post": post})
+    own_post.is_saved = SavedPost.objects.filter(user=request.user, post=own_post).exists()
+
+    excluded_ids = {own_post.id}
+    try:
+        from_id = int(request.GET.get("from", 0))
+        if from_id:
+            excluded_ids.add(from_id)
+    except (ValueError, TypeError):
+        pass
+
+    posts = _mark_saved_posts(
+        Post.objects.select_related("user", "user__profile")
+            .prefetch_related("gallery_images", "mentions__mentioned_user")
+            .exclude(id__in=excluded_ids)
+            .exclude(user_id__in=blocked_ids)
+            .order_by("-created_at")[:12],
+        request.user,
+    )
+    _attach_post_feed_metadata(posts, current_user=request.user)
+
+    response = render(request, "post_detail.html", {"post": own_post, "posts": posts})
     response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     return response
 
@@ -4383,49 +4529,117 @@ def edit_post(request, post_id):
         return JsonResponse({"error": "Forbidden"}, status=403)
     return _save_post_from_editor(request, post=post)
 
-def _load_messages_page_state(user):
-    try:
-        _normalize_visible_private_conversations(user)
-        _normalize_friend_contacts(user)
-    except Exception as exc:
-        logger.exception("Messages page normalization failed for user=%s", user.id)
-        send_messaging_failure_alert(
-            action="load_messages_page",
-            reason="normalization_failed",
-            actor=user,
-            details={"exception": str(exc)},
+def _messages_conversation_queryset(user):
+    last_message_queryset = Message.objects.filter(conversation=OuterRef("pk")).order_by("-created_at")
+    unread_count_queryset = (
+        MessageReceipt.objects.filter(
+            message__conversation=OuterRef("pk"),
+            user=user,
+            status=MessageReceipt.Status.DELIVERED,
         )
-
-    conversations = list(
+        .values("message__conversation")
+        .annotate(total=Count("id"))
+        .values("total")
+    )
+    return (
         Conversation.objects.filter(participants=user)
-        .prefetch_related("participants__profile", "messages__sender", "messages__reactions", "messages__receipts", "user_states")
+        .prefetch_related("participants__profile", "user_states")
+        .annotate(
+            last_message_body=Subquery(last_message_queryset.values("body")[:1], output_field=models.TextField()),
+            last_message_type=Subquery(last_message_queryset.values("message_type")[:1], output_field=models.CharField()),
+            last_message_attachment_name=Subquery(
+                last_message_queryset.values("attachment_name")[:1],
+                output_field=models.CharField(),
+            ),
+            last_message_created_at=Subquery(
+                last_message_queryset.values("created_at")[:1],
+                output_field=models.DateTimeField(),
+            ),
+            unread_count=Coalesce(
+                Subquery(unread_count_queryset[:1], output_field=IntegerField()),
+                0,
+            ),
+        )
         .order_by("-last_message_at", "-updated_at")
         .distinct()
     )
-    serialized_conversations = []
+
+
+def _friend_options_for_messaging(user):
+    return [
+        {
+            "id": str(friend.id),
+            "display_name": _display_name(friend),
+            "avatar_initials": friend.avatar_initials,
+            "avatar_url": _messaging_avatar_url(friend),
+        }
+        for friend in _friend_queryset(user)
+        if not _has_user_blocked(user, friend)
+    ]
+
+
+def _resolve_messages_active_conversation_id(
+    requested_conversation_id,
+    conversation_summaries,
+    *,
+    allow_requested_group=False,
+):
+    summary_by_id = {item["id"]: item for item in conversation_summaries}
+    requested_summary = summary_by_id.get(requested_conversation_id)
+    if (
+        requested_summary
+        and (
+            allow_requested_group
+            or requested_summary["conversation_type"] != Conversation.ConversationType.GROUP
+        )
+    ):
+        return requested_conversation_id
+    for summary in conversation_summaries:
+        if summary["conversation_type"] != Conversation.ConversationType.GROUP:
+            return summary["id"]
+    return ""
+
+
+def _load_messages_page_state(user, requested_conversation_id="", *, allow_requested_group=False):
+    conversations = list(_messages_conversation_queryset(user))
+    conversation_summaries = []
+    summary_by_id = {}
     for conversation in conversations:
         try:
-            serialized_conversations.append(_serialize_conversation(conversation, user))
+            summary = _serialize_conversation_summary(conversation, user)
+            conversation_summaries.append(summary)
+            summary_by_id[summary["id"]] = conversation
         except Exception as exc:
             send_messaging_failure_alert(
-                action="load_conversation",
+                action="load_conversation_summary",
                 reason="serialization_failed",
                 actor=user,
                 conversation=conversation,
                 details={"exception": str(exc)},
             )
 
+    active_conversation_id = _resolve_messages_active_conversation_id(
+        requested_conversation_id,
+        conversation_summaries,
+        allow_requested_group=allow_requested_group,
+    )
+    active_conversation = None
+    active_conversation_model = summary_by_id.get(active_conversation_id)
+    if active_conversation_model is not None:
+        try:
+            active_conversation = _serialize_active_conversation(active_conversation_model, user)
+        except Exception as exc:
+            send_messaging_failure_alert(
+                action="load_active_conversation",
+                reason="serialization_failed",
+                actor=user,
+                conversation=active_conversation_model,
+                details={"exception": str(exc)},
+            )
+            active_conversation_id = ""
+
     try:
-        friend_options = [
-            {
-                "id": str(friend.id),
-                "display_name": _display_name(friend),
-                "avatar_initials": friend.avatar_initials,
-                "avatar_url": _user_avatar_url(friend),
-            }
-            for friend in _friend_queryset(user)
-            if not _has_user_blocked(user, friend)
-        ]
+        friend_options = _friend_options_for_messaging(user)
     except Exception as exc:
         logger.exception("Messages page friend options failed for user=%s", user.id)
         send_messaging_failure_alert(
@@ -4437,17 +4651,11 @@ def _load_messages_page_state(user):
         friend_options = []
 
     return {
-        "conversation_data": serialized_conversations,
+        "conversation_summaries": conversation_summaries,
+        "active_conversation": active_conversation,
+        "active_conversation_id": active_conversation_id,
         "friend_options": friend_options,
     }
-
-
-def _resolve_messages_active_conversation_id(requested_conversation_id, serialized_conversations):
-    if requested_conversation_id and any(item["id"] == requested_conversation_id for item in serialized_conversations):
-        return requested_conversation_id
-    if serialized_conversations:
-        return serialized_conversations[0]["id"]
-    return ""
 
 
 def _messages_error_message(error_code):
@@ -4457,41 +4665,164 @@ def _messages_error_message(error_code):
 
 
 @login_required
+@ensure_csrf_cookie
 def messages(request):
-    state = _load_messages_page_state(request.user)
     requested_conversation_id = request.GET.get("conversation", "").strip()
-    active_conversation_id = _resolve_messages_active_conversation_id(
-        requested_conversation_id,
-        state["conversation_data"],
-    )
+    state = _load_messages_page_state(request.user, requested_conversation_id)
     message_error = _messages_error_message(request.GET.get("error", "").strip())
 
     return render(
         request,
         'messages.html',
         {
-            "conversation_data": state["conversation_data"],
+            "conversation_summaries": state["conversation_summaries"],
+            "active_conversation": state["active_conversation"],
             "friend_options": state["friend_options"],
-            "active_conversation_id": active_conversation_id,
+            "active_conversation_id": state["active_conversation_id"],
             "message_error": message_error,
         },
     )
 
 
 @login_required
+def messages_unread_count(request):
+    count = MessageReceipt.objects.filter(
+        user=request.user,
+        status=MessageReceipt.Status.DELIVERED,
+    ).count()
+    return JsonResponse({"count": count})
+
+
+@login_required
 def messages_state(request):
-    state = _load_messages_page_state(request.user)
     requested_conversation_id = request.GET.get("conversation", "").strip()
-    active_conversation_id = _resolve_messages_active_conversation_id(
+    state = _load_messages_page_state(
+        request.user,
         requested_conversation_id,
-        state["conversation_data"],
+        allow_requested_group=True,
     )
     return JsonResponse(
         {
             "ok": True,
-            "conversation_data": state["conversation_data"],
+            "conversation_summaries": state["conversation_summaries"],
+            "active_conversation": state["active_conversation"],
             "friend_options": state["friend_options"],
-            "active_conversation_id": active_conversation_id,
+            "active_conversation_id": state["active_conversation_id"],
+        }
+    )
+
+
+def messaging_avatar(request, user_id):
+    user = get_object_or_404(User.objects.select_related("profile"), id=user_id)
+    profile = getattr(user, "profile", None)
+    image = getattr(profile, "profile_image", None) if profile else None
+    if not image:
+        raise Http404("Avatar not found")
+
+    cache_key = f"messaging:avatar:{user.id}:{image.name}"
+    target_url = cache.get(cache_key)
+    if not target_url:
+        target_url = _public_media_url(image)
+        if not target_url:
+            raise Http404("Avatar not found")
+        cache.set(cache_key, target_url, MESSAGING_AVATAR_URL_CACHE_TTL)
+    return _cacheable_redirect_response(
+        target_url,
+        max_age=MESSAGING_AVATAR_URL_CACHE_TTL,
+        is_public=True,
+    )
+
+
+@login_required
+def messaging_message_media(request, message_id):
+    message = (
+        Message.objects.filter(
+            id=message_id,
+            conversation__participants=request.user,
+        )
+        .select_related("conversation")
+        .distinct()
+        .first()
+    )
+    if not message or not getattr(message, "attachment_file", None):
+        raise Http404("Attachment not found")
+
+    cache_key = f"messaging:attachment:{message.id}:{message.attachment_file.name}"
+    target_url = cache.get(cache_key)
+    if not target_url:
+        target_url = _safe_media_url(message.attachment_file)
+        if not target_url:
+            raise Http404("Attachment not found")
+        cache.set(cache_key, target_url, MESSAGING_ATTACHMENT_URL_CACHE_TTL)
+    return _cacheable_redirect_response(
+        target_url,
+        max_age=MESSAGING_ATTACHMENT_URL_CACHE_TTL,
+        is_public=False,
+    )
+
+
+@login_required
+def messages_history(request, conversation_id):
+    conversation = (
+        Conversation.objects.filter(
+            id=conversation_id,
+            participants=request.user,
+        )
+        .prefetch_related("participants__profile", "user_states")
+        .distinct()
+        .first()
+    )
+    if not conversation:
+        return _messaging_error_response(
+            "This conversation is no longer available.",
+            code="conversation_not_found",
+            status=404,
+        )
+
+    before_message_id = request.GET.get("before", "").strip()
+    if not before_message_id:
+        return _messaging_error_response(
+            "Choose a message anchor before loading older history.",
+            code="missing_before_message",
+            status=400,
+        )
+
+    anchor_message = (
+        Message.objects.filter(
+            id=before_message_id,
+            conversation=conversation,
+        )
+        .only("id", "created_at")
+        .first()
+    )
+    if not anchor_message:
+        return _messaging_error_response(
+            "We could not find the message to load history from.",
+            code="before_message_not_found",
+            status=404,
+        )
+
+    older_messages = list(
+        conversation.messages.filter(created_at__lt=anchor_message.created_at)
+        .select_related("sender")
+        .prefetch_related("receipts", "reactions")
+        .order_by("-created_at")[:MESSAGES_HISTORY_PAGE_SIZE]
+    )
+    older_messages.reverse()
+
+    has_older_messages = False
+    oldest_loaded_message_id = ""
+    if older_messages:
+        oldest_loaded_message_id = str(older_messages[0].id)
+        has_older_messages = conversation.messages.filter(created_at__lt=older_messages[0].created_at).exists()
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "conversation_id": str(conversation.id),
+            "messages": [_serialize_message(message, viewer=request.user) for message in older_messages],
+            "has_older_messages": has_older_messages,
+            "oldest_loaded_message_id": oldest_loaded_message_id,
         }
     )
 
@@ -4622,6 +4953,7 @@ def start_private_conversation(request, user_id):
             title=f"{_display_name(request.user)} wants to start a private chat",
             body="Open Messages to review the request and decide whether to accept it.",
             target_url=reverse("Messages"),
+            send_email=False,
         )
     except Exception as exc:
         logger.exception(
@@ -4756,6 +5088,7 @@ def respond_to_conversation_request(request, request_id, action):
                 title=f"{_display_name(request.user)} accepted your chat request",
                 body="Your private conversation is ready. Open Messages to continue.",
                 target_url=f"{reverse('Messages')}?conversation={conversation.id}",
+                send_email=False,
             )
             try:
                 _send_founders_team_welcome_message(

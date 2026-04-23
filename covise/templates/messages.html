@@ -110,15 +110,15 @@
             <header class="chat-header">
                 <button class="mobile-back-btn" id="mobileBackBtn" type="button"><i class="fa-solid fa-arrow-left"></i></button>
                 <div class="chat-contact">
-                    <div class="avatar avatar-lg" id="chatAvatar">L</div>
+                    <div class="avatar avatar-lg" id="chatAvatar">CV</div>
                     <div class="chat-contact-copy">
-                        <a id="chatNameLink" class="chat-name-link" href="#"><h2 id="chatName">Leena Al-Sabah</h2></a>
-                        <p id="chatStatus">Active now</p>
+                        <a id="chatNameLink" class="chat-name-link" href="#"><h2 id="chatName">Messages</h2></a>
+                        <p id="chatStatus">Select a direct conversation to start messaging.</p>
                     </div>
                 </div>
                 <div class="chat-actions">
-                    <button class="icon-btn" id="searchInChatBtn" type="button" data-tooltip="Search in chat"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    <button class="icon-btn" id="toggleDetailsBtn" type="button" data-tooltip="Details"><i class="fa-solid fa-circle-info"></i></button>
+                    <button class="icon-btn" id="searchInChatBtn" type="button" aria-label="Search in chat"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <button class="icon-btn" id="toggleDetailsBtn" type="button" aria-label="Details"><i class="fa-solid fa-circle-info"></i></button>
                 </div>
             </header>
             <div class="chat-body">
@@ -129,6 +129,16 @@
             </div>
             <form class="chat-input-bar" id="chatInputBar" onsubmit="return false;">
                 <input id="chatFileInput" type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,application/zip,application/x-zip-compressed,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,audio/webm,audio/mp4,audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/x-wav">
+                <div class="composer-lock-overlay" id="composerLockOverlay" hidden>
+                    <div class="composer-lock-overlay__copy">
+                        <strong id="composerLockTitle">Conversation locked</strong>
+                        <span id="composerLockMessage">Messaging is unavailable in this conversation.</span>
+                    </div>
+                    <div class="composer-lock-overlay__actions">
+                        <button class="panel-btn ghost" id="composerReportBtn" type="button">Report</button>
+                        <button class="panel-btn danger" id="composerBlockToggleBtn" type="button">Unblock User</button>
+                    </div>
+                </div>
                 <button class="input-icon-btn" id="inputAttachBtn" type="button"><i class="fa-solid fa-paperclip"></i></button>
                 <button class="input-icon-btn" id="voiceRecordBtn" type="button" aria-label="Record voice message"><i class="fa-solid fa-microphone"></i></button>
                 <span class="recording-indicator" id="recordingIndicator" hidden><i class="fa-solid fa-circle"></i> Recording</span>
@@ -158,33 +168,32 @@
 
         <aside class="details-panel" id="detailsPanel">
             <div class="details-header">
-                <h3 id="detailsName">Leena Al-Sabah</h3>
+                <h3 id="detailsName">No direct conversation selected</h3>
                 <button class="icon-btn" id="closeDetailsBtn" type="button"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="details-tabs-shell">
                 <div class="details-tabs">
                     <button class="details-tab is-active" data-details-tab="info">Info</button>
                     <button class="details-tab" data-details-tab="files">Files</button>
-                    <button class="details-tab" data-details-tab="agreements">Agreements</button>
                     <button class="details-tab" data-details-tab="settings">Settings</button>
                 </div>
             </div>
             <div class="details-content">
                 <section class="details-pane is-active" data-pane="info">
                     <div class="details-profile">
-                        <div class="avatar avatar-xl" id="detailsAvatar">L</div>
-                        <a id="detailsPersonLink" class="details-person-link" href="#"><h4 id="detailsPersonName">Leena Al-Sabah</h4></a>
+                        <div class="avatar avatar-xl" id="detailsAvatar">CV</div>
+                        <a id="detailsPersonLink" class="details-person-link" href="#"><h4 id="detailsPersonName">No direct conversation selected</h4></a>
                         <div class="details-meta-stack">
-                            <p class="meta-row"><strong>Matched on:</strong> <span id="detailsMatchedOn">-</span></p>
-                            <p class="meta-row"><strong>User type:</strong> <span id="detailsUserType">-</span></p>
-                            <p class="meta-row"><strong>Industry:</strong> <span id="detailsIndustry">-</span></p>
-                            <p class="meta-row"><strong>Venture stage:</strong> <span id="detailsStage">-</span></p>
+                            <p class="meta-row"><strong>Matched on:</strong> <span id="detailsMatchedOn">No conversation selected</span></p>
+                            <p class="meta-row"><strong>User type:</strong> <span id="detailsUserType">No conversation selected</span></p>
+                            <p class="meta-row"><strong>Industry:</strong> <span id="detailsIndustry">No conversation selected</span></p>
+                            <p class="meta-row"><strong>Venture stage:</strong> <span id="detailsStage">No conversation selected</span></p>
                         </div>
                         <!--<div class="score-wrap">
                             <div class="score-head"><span>Founder Conviction Score</span><span id="convictionValue">-</span></div>
                             <div class="score-track"><div class="score-fill" id="convictionFill"></div></div>
                         </div>-->
-                        <p class="meta-row"><strong>Mutual connections:</strong> <span id="detailsMutual">-</span></p>
+                        <p class="meta-row"><strong>Mutual connections:</strong> <span id="detailsMutual">0</span></p>
                         <a class="panel-btn details-primary-btn" id="viewFullProfileBtn" href="#">View Full Profile</a>
                     </div>
                 </section>
@@ -192,10 +201,6 @@
                     <div id="sharedFilesList" class="shared-files-list">
                         <p class="muted-note">No shared files yet.</p>
                     </div>
-                </section>
-                <section class="details-pane" data-pane="agreements">
-                    <p class="muted-note">No agreements yet.</p>
-                    <button class="panel-btn details-primary-btn" id="createAgreementBtn" type="button">Create New Agreement</button>
                 </section>
                 <section class="details-pane" data-pane="settings">
                     <label class="toggle-row"><span>Mute notifications</span><input id="muteNotificationsToggle" type="checkbox"><span class="toggle-slider"></span></label>
@@ -220,7 +225,8 @@
     </div>
     {{ request.user.username|json_script:"current-username" }}
     {{ request.user.id|json_script:"current-user-id" }}
-    {{ conversation_data|json_script:"conversation-data" }}
+    {{ conversation_summaries|json_script:"conversation-summaries" }}
+    {{ active_conversation|json_script:"active-conversation" }}
     {{ friend_options|json_script:"friend-options" }}
     {{ active_conversation_id|json_script:"active-conversation-id" }}
     {{ message_error|json_script:"message-error" }}
