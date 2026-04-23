@@ -78,6 +78,7 @@
     let mediaRecorderStream = null;
     let mediaChunks = [];
     let renderedConversationId = "";
+    let historyLoaderNode = null;
     const messageRowMap = new Map();
 
     const emojiSets = {
@@ -232,18 +233,35 @@
         if (!messagesStream) {
             return;
         }
-        const snapToBottom = () => {
-            messagesStream.scrollTop = messagesStream.scrollHeight;
-            const lastChild = messagesStream.lastElementChild;
-            if (lastChild && typeof lastChild.scrollIntoView === "function") {
-                lastChild.scrollIntoView({ block: "end" });
-            }
-        };
-        snapToBottom();
-        window.requestAnimationFrame(() => {
-            snapToBottom();
-            window.requestAnimationFrame(snapToBottom);
-        });
+        messagesStream.scrollTop = messagesStream.scrollHeight;
+    }
+
+    function updateMobileKeyboardInset() {
+        if (!app) {
+            return;
+        }
+        if (!window.visualViewport || !window.matchMedia("(max-width: 760px)").matches) {
+            app.style.setProperty("--keyboard-offset", "0px");
+            app.classList.remove("keyboard-open");
+            return;
+        }
+
+        const activeElement = document.activeElement;
+        const composerFocused = !!(chatInputBar && activeElement && chatInputBar.contains(activeElement));
+        if (!composerFocused) {
+            app.style.setProperty("--keyboard-offset", "0px");
+            app.classList.remove("keyboard-open");
+            return;
+        }
+
+        const viewport = window.visualViewport;
+        const keyboardOffset = Math.max(
+            0,
+            Math.round(window.innerHeight - viewport.height - viewport.offsetTop)
+        );
+        const appliedOffset = keyboardOffset > 120 ? Math.min(keyboardOffset, 320) : 0;
+        app.style.setProperty("--keyboard-offset", `${appliedOffset}px`);
+        app.classList.toggle("keyboard-open", appliedOffset > 0);
     }
 
     function conversationLockState(conversation) {
@@ -743,24 +761,47 @@
     function clearMessagesRenderState() {
         renderedConversationId = "";
         messageRowMap.clear();
+        historyLoaderNode = null;
         if (messagesStream) {
             messagesStream.innerHTML = "";
         }
     }
 
-    function renderEmptyConversationState() {
-        clearMessagesRenderState();
+    function clearEmptyMessageState() {
         if (!messagesStream) {
             return;
         }
-        messagesStream.innerHTML = `
-            <div class="request-item request-empty">
-                <div>
-                    <h3>No direct conversation selected</h3>
-                    <p>Open a direct thread from the left panel to start messaging instantly.</p>
-                </div>
+        messagesStream.querySelectorAll("[data-empty-state='true']").forEach((node) => node.remove());
+    }
+
+    function renderMessageListEmptyState(title, text) {
+        if (!messagesStream) {
+            return;
+        }
+        messageRowMap.forEach((row) => row.remove());
+        if (historyLoaderNode) {
+            historyLoaderNode.remove();
+            historyLoaderNode = null;
+        }
+        clearEmptyMessageState();
+        const wrapper = document.createElement("div");
+        wrapper.className = "request-item request-empty";
+        wrapper.dataset.emptyState = "true";
+        wrapper.innerHTML = `
+            <div>
+                <h3>${escapeHtml(title)}</h3>
+                <p>${escapeHtml(text)}</p>
             </div>
         `;
+        messagesStream.appendChild(wrapper);
+    }
+
+    function renderEmptyConversationState() {
+        clearMessagesRenderState();
+        renderMessageListEmptyState(
+            "No direct conversation selected",
+            "Open a direct thread from the left panel to start messaging instantly."
+        );
     }
 
     function syncPinnedBanner(conversation) {
@@ -1100,6 +1141,7 @@
     function createMessageRow(message, conversation) {
         const row = document.createElement("article");
         row.dataset.messageId = message.id;
+        row.setAttribute("role", "article");
         row.innerHTML = `
             <div class="msg-sender"></div>
             <div class="msg-shell">
@@ -1117,6 +1159,10 @@
         const isMine = message.sender_id === currentUserId;
         row.className = `msg ${isMine ? "outgoing" : "incoming"}`;
         row.dataset.messageId = message.id;
+        row.setAttribute(
+            "aria-label",
+            `${isMine ? "You" : (message.sender_name || "CoVise member")}, ${formatMessageTime(message.created_at) || "just now"}`
+        );
 
         const sender = row.querySelector(".msg-sender");
         const showSender = conversation && conversation.conversation_type === "group" && !isMine;
@@ -1174,14 +1220,45 @@
         }
     }
 
-    function renderHistoryLoader(conversation, fragment) {
+    function renderHistoryLoader(conversation, nodes) {
         if (!conversation || !conversation.has_older_messages || !conversation.oldest_loaded_message_id) {
             return;
         }
-        const wrapper = document.createElement("div");
-        wrapper.className = "date-separator";
-        wrapper.innerHTML = `<button class="panel-btn ghost" type="button" data-load-older="1">Load older messages</button>`;
-        fragment.appendChild(wrapper);
+        if (!historyLoaderNode) {
+            historyLoaderNode = document.createElement("div");
+            historyLoaderNode.className = "date-separator";
+            historyLoaderNode.innerHTML = `<button class="panel-btn ghost" type="button" data-load-older="1">Load older messages</button>`;
+        }
+        nodes.push(historyLoaderNode);
+    }
+
+    function pruneDetachedMessageRows(allMessages) {
+        const validIds = new Set((Array.isArray(allMessages) ? allMessages : []).map((message) => String(message.id)));
+        Array.from(messageRowMap.keys()).forEach((messageId) => {
+            if (!validIds.has(messageId)) {
+                const row = messageRowMap.get(messageId);
+                if (row) {
+                    row.remove();
+                }
+                messageRowMap.delete(messageId);
+            }
+        });
+    }
+
+    function syncRenderedMessageNodes(desiredNodes) {
+        if (!messagesStream) {
+            return;
+        }
+        clearEmptyMessageState();
+        desiredNodes.forEach((node, index) => {
+            const currentNode = messagesStream.children[index];
+            if (currentNode !== node) {
+                messagesStream.insertBefore(node, currentNode || null);
+            }
+        });
+        while (messagesStream.children.length > desiredNodes.length) {
+            messagesStream.lastElementChild.remove();
+        }
     }
 
     function renderChatMessages(conversation, options) {
@@ -1208,15 +1285,16 @@
             renderedConversationId = conversation.id;
         }
 
-        const fragment = document.createDocumentFragment();
+        pruneDetachedMessageRows(allMessages);
+        const desiredNodes = [];
         if (!query) {
-            renderHistoryLoader(conversation, fragment);
+            renderHistoryLoader(conversation, desiredNodes);
+        } else if (historyLoaderNode) {
+            historyLoaderNode.remove();
         }
 
-        const nextIds = new Set();
         messages.forEach((message) => {
             const messageId = String(message.id);
-            nextIds.add(messageId);
             let row = messageRowMap.get(messageId);
             if (!row) {
                 row = createMessageRow(message, conversation);
@@ -1224,40 +1302,25 @@
             } else {
                 syncMessageRow(row, message, conversation);
             }
-            fragment.appendChild(row);
+            desiredNodes.push(row);
         });
 
-        Array.from(messageRowMap.keys()).forEach((messageId) => {
-            if (!nextIds.has(messageId)) {
-                const row = messageRowMap.get(messageId);
-                if (row) {
-                    row.remove();
-                }
-                messageRowMap.delete(messageId);
-            }
-        });
-
-        messagesStream.replaceChildren(fragment);
         if (query && !messages.length) {
-            messagesStream.innerHTML = `
-                <div class="request-item request-empty">
-                    <div>
-                        <h3>No messages found</h3>
-                        <p>Try another search term for this conversation or your contacts.</p>
-                    </div>
-                </div>
-            `;
+            renderMessageListEmptyState(
+                "No messages found",
+                "Try another search term for this conversation or your contacts."
+            );
         } else if (!messages.length) {
-            messagesStream.innerHTML = `
-                <div class="request-item request-empty">
-                    <div>
-                        <h3>No messages yet</h3>
-                        <p>Send the first message to get this conversation started.</p>
-                    </div>
-                </div>
-            `;
-        } else if (stickToBottom) {
-            scrollMessagesToBottom();
+            syncRenderedMessageNodes(desiredNodes);
+            renderMessageListEmptyState(
+                "No messages yet",
+                "Send the first message to get this conversation started."
+            );
+        } else {
+            syncRenderedMessageNodes(desiredNodes);
+            if (stickToBottom) {
+                scrollMessagesToBottom();
+            }
         }
     }
 
@@ -2310,6 +2373,13 @@
                     handleSend();
                 }
             });
+            chatInput.addEventListener("focus", () => {
+                updateMobileKeyboardInset();
+                window.setTimeout(updateMobileKeyboardInset, 80);
+            });
+            chatInput.addEventListener("blur", () => {
+                window.setTimeout(updateMobileKeyboardInset, 0);
+            });
         }
         if (sendBtn) {
             sendBtn.addEventListener("click", handleSend);
@@ -2336,6 +2406,13 @@
         if (searchInChatBtn && searchInput) {
             searchInChatBtn.addEventListener("click", () => searchInput.focus());
         }
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener("resize", updateMobileKeyboardInset);
+            window.visualViewport.addEventListener("scroll", updateMobileKeyboardInset);
+        }
+        window.addEventListener("orientationchange", () => {
+            window.setTimeout(updateMobileKeyboardInset, 120);
+        });
         if (createGroupBtn) {
             createGroupBtn.addEventListener("click", openCreateGroupModal);
         }

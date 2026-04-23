@@ -733,7 +733,6 @@ class Post(models.Model):
     quote_color=models.CharField(max_length=20, blank=True, default="")
     likes_number=models.IntegerField(default=0)
     comments_number=models.IntegerField(default=0)
-    is_pinned=models.BooleanField(default=False)
     created_at=models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -931,3 +930,14 @@ class Project(models.Model):
         if not self.team_size_target:
             return 0
         return round((self.team_members_filled / self.team_size_target) * 100)
+
+
+class UserPinnedPost(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="pinned_post")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="pinned_by_users")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user"], name="one_pin_per_user"),
+        ]

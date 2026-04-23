@@ -142,8 +142,8 @@
                                         </a>
                                         {% endif %}
                                         {% if post.viewer_can_pin %}
-                                        <button class="feed-post-menu-action feed-post-pin-btn" type="button" data-post-id="{{ post.id }}" data-pinned="{% if post.is_pinned %}true{% else %}false{% endif %}">
-                                            <i class="fa-solid fa-thumbtack" aria-hidden="true"></i><span>{% if post.is_pinned %}Unpin{% else %}Pin{% endif %}</span>
+                                        <button class="feed-post-menu-action feed-post-pin-btn" type="button" data-post-id="{{ post.id }}" data-pinned="{% if post.viewer_has_pinned %}true{% else %}false{% endif %}">
+                                            <i class="fa-solid fa-thumbtack" aria-hidden="true"></i><span>{% if post.viewer_has_pinned %}Unpin{% else %}Pin{% endif %}</span>
                                         </button>
                                         {% endif %}
                                         {% if post.viewer_can_delete %}
@@ -284,8 +284,8 @@
                                                 </a>
                                                 {% endif %}
                                                 {% if p.viewer_can_pin %}
-                                                <button class="feed-post-menu-action feed-post-pin-btn" type="button" data-post-id="{{ p.id }}" data-pinned="{% if p.is_pinned %}true{% else %}false{% endif %}">
-                                                    <i class="fa-solid fa-thumbtack" aria-hidden="true"></i><span>{% if p.is_pinned %}Unpin{% else %}Pin{% endif %}</span>
+                                                <button class="feed-post-menu-action feed-post-pin-btn" type="button" data-post-id="{{ p.id }}" data-pinned="{% if p.viewer_has_pinned %}true{% else %}false{% endif %}">
+                                                    <i class="fa-solid fa-thumbtack" aria-hidden="true"></i><span>{% if p.viewer_has_pinned %}Unpin{% else %}Pin{% endif %}</span>
                                                 </button>
                                                 {% endif %}
                                                 {% if p.viewer_can_delete %}

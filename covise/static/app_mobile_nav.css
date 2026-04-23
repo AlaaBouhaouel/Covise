@@ -70,13 +70,15 @@
 
     .app-mobile-nav__link,
     .app-mobile-nav__button {
-        flex: 1 1 0;
-        width: auto;
+        flex: 0 0 44px;
+        width: 44px;
+        min-width: 44px;
         max-width: 44px;
         height: 44px;
+        min-height: 44px;
         padding: 0;
         border: 0;
-        border-radius: 0;
+        border-radius: 14px;
         background: transparent;
         color: currentColor;
         opacity: 0.58;
@@ -85,7 +87,7 @@
         justify-content: center;
         text-decoration: none;
         cursor: pointer;
-        transition: opacity 0.18s ease, color 0.18s ease;
+        transition: opacity 0.18s ease, color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
         -webkit-tap-highlight-color: transparent;
     }
 
@@ -94,9 +96,24 @@
     .app-mobile-nav__link:focus-visible,
     .app-mobile-nav__button:focus-visible,
     .app-mobile-nav__link.is-active,
-    .app-mobile-nav__button.is-active {
+    .app-mobile-nav__button.is-active,
+    .app-mobile-nav__link[aria-current="page"] {
         opacity: 1;
         outline: none;
+    }
+
+    .app-mobile-nav__link:hover,
+    .app-mobile-nav__button:hover,
+    .app-mobile-nav__link.is-active,
+    .app-mobile-nav__button.is-active,
+    .app-mobile-nav__link[aria-current="page"] {
+        background: rgba(120, 150, 255, 0.12);
+    }
+
+    .app-mobile-nav__link:focus-visible,
+    .app-mobile-nav__button:focus-visible {
+        background: rgba(120, 150, 255, 0.1);
+        box-shadow: 0 0 0 3px rgba(120, 150, 255, 0.22);
     }
 
     .app-mobile-nav svg {
@@ -166,8 +183,12 @@
 
     .app-mobile-nav__link,
     .app-mobile-nav__button {
-        max-width: 40px;
-        height: 40px;
+        flex-basis: 44px;
+        width: 44px;
+        min-width: 44px;
+        max-width: 44px;
+        height: 44px;
+        min-height: 44px;
     }
 
     .app-mobile-nav svg {

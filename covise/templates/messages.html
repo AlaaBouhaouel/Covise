@@ -107,7 +107,7 @@
 
         <main class="chat-panel">
             <header class="chat-header">
-                <button class="mobile-back-btn" id="mobileBackBtn" type="button"><i class="fa-solid fa-arrow-left"></i></button>
+                <button class="mobile-back-btn" id="mobileBackBtn" type="button" aria-label="Back to conversations"><i class="fa-solid fa-arrow-left"></i></button>
                 <div class="chat-contact">
                     <div class="avatar avatar-lg" id="chatAvatar">CV</div>
                     <div class="chat-contact-copy">
@@ -116,13 +116,13 @@
                     </div>
                 </div>
                 <div class="chat-actions">
-                    <button class="icon-btn" id="searchInChatBtn" type="button" aria-label="Search in chat"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <button class="icon-btn" id="searchInChatBtn" type="button" aria-label="Search this conversation"><i class="fa-solid fa-magnifying-glass"></i></button>
                     <button class="icon-btn" id="toggleDetailsBtn" type="button" aria-label="Details"><i class="fa-solid fa-circle-info"></i></button>
                 </div>
             </header>
             <div class="chat-body">
                 <div class="pinned-banner"><i class="fa-solid fa-thumbtack"></i><span id="pinnedText"></span></div>
-                <div class="messages-stream" id="messagesStream">
+                <div class="messages-stream" id="messagesStream" role="log" aria-live="polite" aria-relevant="additions text" aria-atomic="false" aria-label="Conversation messages">
 
                 </div>
             </div>
@@ -138,12 +138,12 @@
                         <button class="panel-btn danger" id="composerBlockToggleBtn" type="button">Unblock User</button>
                     </div>
                 </div>
-                <button class="input-icon-btn" id="inputAttachBtn" type="button"><i class="fa-solid fa-paperclip"></i></button>
+                <button class="input-icon-btn" id="inputAttachBtn" type="button" aria-label="Attach a file"><i class="fa-solid fa-paperclip"></i></button>
                 <button class="input-icon-btn" id="voiceRecordBtn" type="button" aria-label="Record voice message"><i class="fa-solid fa-microphone"></i></button>
                 <span class="recording-indicator" id="recordingIndicator" hidden><i class="fa-solid fa-circle"></i> Recording</span>
-                <input id="chatInput" type="text" placeholder="Type a message...">
-                <button class="input-icon-btn" id="emojiPickerBtn" type="button"><i class="fa-regular fa-face-smile"></i></button>
-                <button class="send-btn" id="sendBtn" type="submit" disabled><i class="fa-solid fa-paper-plane"></i></button>
+                <input id="chatInput" type="text" placeholder="Type a message..." aria-label="Message input">
+                <button class="input-icon-btn" id="emojiPickerBtn" type="button" aria-label="Open emoji picker"><i class="fa-regular fa-face-smile"></i></button>
+                <button class="send-btn" id="sendBtn" type="submit" disabled aria-label="Send message"><i class="fa-solid fa-paper-plane"></i></button>
             </form>
             <div class="emoji-picker-panel" id="emojiPickerPanel" hidden>
                 <div class="emoji-picker-head">

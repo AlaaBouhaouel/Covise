@@ -16,7 +16,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, validate_email
 from django.http import Http404, HttpResponsePermanentRedirect, JsonResponse
 from django.db import models, IntegrityError, OperationalError, close_old_connections, transaction
-from django.db.models import Case, Count, IntegerField, OuterRef, Q, Subquery, When
+from django.db.models import Case, Count, Exists, IntegerField, OuterRef, Q, Subquery, When
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -26,7 +26,7 @@ from django.utils import timezone
 from django.utils.html import escape
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.timesince import timesince
-from .models import OnboardingResponse, Profile, User, UserPreference, WaitlistEmailVerification, WaitlistEntry, Post, PostImage, PostMention, PostReaction, Comment, CommentReaction, SavedPost, BlockedUser, Notification, ConversationUserState, Experiences, Active_projects, Project, Conversation, Message, MessageReceipt, MessageReaction, ConversationRequest, AccountDeletionRequest, AccountPauseRequest, DataDeletionRequest, DataExportRequest, SignInEvent, TwoFactorChallenge
+from .models import OnboardingResponse, Profile, User, UserPreference, WaitlistEmailVerification, WaitlistEntry, Post, PostImage, PostMention, PostReaction, Comment, CommentReaction, SavedPost, BlockedUser, Notification, ConversationUserState, Experiences, Active_projects, Project, Conversation, Message, MessageReceipt, MessageReaction, ConversationRequest, AccountDeletionRequest, AccountPauseRequest, DataDeletionRequest, DataExportRequest, SignInEvent, TwoFactorChallenge, UserPinnedPost
 from covise_app.utils import delete_s3_object, generate_referral_code, upload_cv_to_s3
 from covise_app.user_context import build_profile_card_context, build_profile_context, build_saved_post_items, build_settings_context, build_ui_user_context, get_onboarding_skill_config
 from covise_app.profile_sync import PROFILE_ONBOARDING_FIELD_IDS, sync_profile_for_user
@@ -2795,6 +2795,10 @@ def _post_gallery_items(post, limit=6):
 
 
 def _attach_post_feed_metadata(posts, current_user=None):
+    pinned_post_id = None
+    if current_user:
+        pin = UserPinnedPost.objects.filter(user=current_user).values_list("post_id", flat=True).first()
+        pinned_post_id = pin
     for post in posts:
         profile = getattr(post.user, "profile", None)
         post.avatar_url = _profile_avatar_url(profile)
@@ -2815,7 +2819,8 @@ def _attach_post_feed_metadata(posts, current_user=None):
         post.is_founders_spotlight = _normalize_email(getattr(post.user, "email", "")) == HOME_PINNED_POST_EMAIL
         post.viewer_can_delete = bool(current_user and (current_user.id == post.user_id or _is_founders_admin(current_user)))
         post.viewer_can_edit = bool(current_user and current_user.id == post.user_id)
-        post.viewer_can_pin = bool(current_user and current_user.id == post.user_id)
+        post.viewer_can_pin = bool(current_user)
+        post.viewer_has_pinned = bool(current_user and post.id == pinned_post_id)
     _attach_post_reaction_metadata(posts, current_user=current_user)
     return posts
 
@@ -3691,10 +3696,11 @@ def home(request):
         return redirect(f"{reverse('Agreement')}?next={quote(reverse('Home'))}")
 
     blocked_ids = _blocked_user_ids(request.user)
+    viewer_pin_subquery = UserPinnedPost.objects.filter(user=request.user, post=OuterRef("pk"))
     posts = _mark_saved_posts(
-        Post.objects.select_related("user", "user__profile").prefetch_related("gallery_images", "mentions__mentioned_user").exclude(user_id__in=blocked_ids).order_by(
+        Post.objects.select_related("user", "user__profile").prefetch_related("gallery_images", "mentions__mentioned_user").exclude(user_id__in=blocked_ids).annotate(is_viewer_pinned=Exists(viewer_pin_subquery)).order_by(
             Case(
-                When(is_pinned=True, then=0),
+                When(is_viewer_pinned=True, then=0),
                 When(user__email__iexact=HOME_PINNED_POST_EMAIL, then=1),
                 default=2,
                 output_field=IntegerField(),
@@ -6658,14 +6664,13 @@ def toggle_comment_pin(request, comment_id):
 @login_required
 @require_POST
 def toggle_pin_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id, user=request.user)
-    if post.is_pinned:
-        post.is_pinned = False
-    else:
-        Post.objects.filter(user=request.user, is_pinned=True).update(is_pinned=False)
-        post.is_pinned = True
-    post.save(update_fields=["is_pinned"])
-    return JsonResponse({"ok": True, "is_pinned": post.is_pinned})
+    post = get_object_or_404(Post, id=post_id)
+    deleted, _ = UserPinnedPost.objects.filter(user=request.user, post=post).delete()
+    if deleted:
+        return JsonResponse({"ok": True, "is_pinned": False})
+    UserPinnedPost.objects.filter(user=request.user).delete()
+    UserPinnedPost.objects.create(user=request.user, post=post)
+    return JsonResponse({"ok": True, "is_pinned": True})
 
 
 @login_required

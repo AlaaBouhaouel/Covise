@@ -3977,9 +3977,9 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
 
     .feed-shell .structured-post--founders-spotlight {
         box-shadow: none;
-        border: 0;
-        border-top: 1px solid rgba(246, 212, 126, 0.62);
-        border-bottom: 1px solid rgba(232, 193, 97, 0.28);
+        border-radius: 16px !important;
+        border: 1px solid rgba(246, 212, 126, 0.62);
+        background: rgba(232, 193, 97, 0.18);
         border-radius: 0;
         overflow: visible;
         padding: 8px 10px;
