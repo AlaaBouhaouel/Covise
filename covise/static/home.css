@@ -1177,59 +1177,21 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
 .feed-shell .structured-post { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 14px; padding: 14px 10px 12px; display: grid; gap: 20px; transition: background 0.18s ease; cursor: pointer; margin: 0; }
 .feed-shell .structured-post:hover { background: var(--feed-hover-bg); }
 .feed-shell .structured-post--founders-spotlight {
-    position: relative;
-    overflow: hidden;
     border: 1px solid rgba(232, 193, 97, 0.34);
     border-radius: 24px;
-    background:
-        linear-gradient(180deg, rgba(139, 98, 17, 0.2), rgba(38, 26, 7, 0.92)),
-        rgba(255, 255, 255, 0.04);
-    box-shadow: 0 18px 38px rgba(66, 45, 8, 0.22);
-    isolation: isolate;
 }
 
 .feed-shell .structured-post--founders-spotlight::before {
-    content: "";
-    position: absolute;
-    inset: -28% -24%;
-    border-radius: 40%;
-    background: linear-gradient(118deg, rgba(255, 216, 120, 0) 30%, rgba(255, 233, 171, 0.12) 42%, rgba(255, 233, 171, 0.34) 50%, rgba(255, 247, 216, 0.502) 54%, rgba(255, 228, 141, 0.18) 60%, rgba(255, 216, 120, 0) 72%);
-    transform: translate3d(-74%, 0, 0);
-    animation: postShineWave 8.2s linear infinite;
-    pointer-events: none;
-    opacity: 0.68;
-    filter: blur(10px);
-    z-index: 0;
+    display: none;
 }
 
 .feed-shell .structured-post--founders-spotlight:hover {
-    background:
-        linear-gradient(180deg, rgba(154, 108, 18, 0.24), rgba(43, 30, 8, 0.94)),
-        rgba(255, 255, 255, 0.05);
+    background: var(--feed-hover-bg);
 }
 
 .feed-shell .structured-post--founders-spotlight > * {
     position: relative;
     z-index: 1;
-}
-
-.feed-shell .structured-post--founders-spotlight .structured-post-subtitle {
-    color: rgba(255, 231, 180, 0.82);
-}
-
-.feed-shell .structured-post--founders-spotlight .structured-post-body,
-.feed-shell .structured-post--founders-spotlight .post-read-more {
-    color: rgba(255, 244, 220, 0.92);
-}
-
-.feed-shell .structured-post--founders-spotlight .action-btn {
-    border-color: rgba(232, 193, 97, 0.22);
-    background: rgba(255, 221, 146, 0.08);
-}
-
-.feed-shell .structured-post--founders-spotlight .action-btn:hover {
-    border-color: rgba(246, 212, 126, 0.38);
-    background: rgba(255, 227, 157, 0.14);
 }
 
 .feed-shell .structured-post--founders-spotlight .home-skill-badge {
@@ -3103,43 +3065,6 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
 
 [data-theme="light"] .feed-shell .structured-post--founders-spotlight {
     border-color: rgba(211, 165, 52, 0.32);
-    background:
-        linear-gradient(180deg, rgba(255, 232, 182, 0.84), rgba(255, 249, 235, 0.95)),
-        rgba(255, 255, 255, 0.92);
-    box-shadow: 0 18px 38px rgba(171, 128, 38, 0.16);
-}
-
-[data-theme="light"] .feed-shell .structured-post--founders-spotlight::before {
-    background: linear-gradient(118deg, rgba(255, 216, 120, 0) 30%, rgba(255, 238, 186, 0.18) 42%, rgba(255, 233, 171, 0.42) 50%, rgba(255, 255, 248, 0.78) 54%, rgba(255, 229, 145, 0.22) 60%, rgba(255, 216, 120, 0) 72%);
-    opacity: 0.56;
-}
-
-[data-theme="light"] .feed-shell .structured-post--founders-spotlight:hover {
-    background:
-        linear-gradient(180deg, rgba(255, 236, 192, 0.92), rgba(255, 250, 239, 0.98)),
-        rgba(255, 255, 255, 0.96);
-}
-
-[data-theme="light"] .feed-shell .structured-post--founders-spotlight .structured-post-title,
-[data-theme="light"] .feed-shell .structured-post--founders-spotlight .structured-post-heading,
-[data-theme="light"] .feed-shell .structured-post--founders-spotlight .structured-post-body {
-    color: #6f4c0f;
-}
-
-[data-theme="light"] .feed-shell .structured-post--founders-spotlight .structured-post-subtitle {
-    color: #9c721d;
-}
-
-[data-theme="light"] .feed-shell .structured-post--founders-spotlight .action-btn {
-    border-color: rgba(211, 165, 52, 0.2);
-    background: rgba(255, 226, 157, 0.22);
-    color: #7e590f;
-}
-
-[data-theme="light"] .feed-shell .structured-post--founders-spotlight .action-btn:hover {
-    border-color: rgba(211, 165, 52, 0.34);
-    background: rgba(255, 220, 136, 0.3);
-    color: #6f4c0f;
 }
 
 [data-theme="light"] .feed-shell .structured-post-title {
@@ -4013,10 +3938,6 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
     }
 
     .feed-shell .structured-post--founders-spotlight {
-        background:
-            linear-gradient(90deg, rgba(11, 14, 24, 0.04) 0%, rgba(78, 54, 12, 0.16) 12%, rgba(96, 67, 14, 0.24) 20%, rgba(96, 67, 14, 0.24) 80%, rgba(78, 54, 12, 0.16) 88%, rgba(11, 14, 24, 0.04) 100%),
-            linear-gradient(180deg, rgba(139, 98, 17, 0.2), rgba(38, 26, 7, 0.92)),
-            rgba(255, 255, 255, 0.04);
         box-shadow: none;
         border: 0;
         border-top: 1px solid rgba(246, 212, 126, 0.62);
@@ -4026,72 +3947,9 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
         padding: 8px 10px;
     }
 
-    .feed-shell .structured-post--founders-spotlight:hover {
-        background:
-            linear-gradient(90deg, rgba(11, 14, 24, 0.05) 0%, rgba(88, 61, 13, 0.2) 12%, rgba(109, 76, 16, 0.28) 20%, rgba(109, 76, 16, 0.28) 80%, rgba(88, 61, 13, 0.2) 88%, rgba(11, 14, 24, 0.05) 100%),
-            linear-gradient(180deg, rgba(154, 108, 18, 0.24), rgba(43, 30, 8, 0.94)),
-            rgba(255, 255, 255, 0.05);
-    }
-
-    .feed-shell .structured-post--founders-spotlight::before {
-        display: none;
-    }
-
-    .feed-shell .structured-post--founders-spotlight .structured-post-subtitle {
-        color: rgba(255, 231, 180, 0.82);
-    }
-
-    .feed-shell .structured-post--founders-spotlight .structured-post-body,
-    .feed-shell .structured-post--founders-spotlight .post-read-more {
-        color: rgba(255, 244, 220, 0.92);
-    }
-
-    .feed-shell .structured-post--founders-spotlight .action-btn {
-        border-color: rgba(232, 193, 97, 0.22);
-        background: rgba(255, 221, 146, 0.08);
-    }
-
-    .feed-shell .structured-post--founders-spotlight .action-btn:hover {
-        border-color: rgba(246, 212, 126, 0.38);
-        background: rgba(255, 227, 157, 0.14);
-        color: var(--white);
-    }
-
     [data-theme="light"] .feed-shell .structured-post--founders-spotlight {
-        background:
-            linear-gradient(90deg, rgba(255, 248, 236, 0.22) 0%, rgba(255, 225, 160, 0.28) 12%, rgba(255, 216, 132, 0.38) 20%, rgba(255, 216, 132, 0.38) 80%, rgba(255, 225, 160, 0.28) 88%, rgba(255, 248, 236, 0.22) 100%),
-            linear-gradient(180deg, rgba(255, 232, 182, 0.84), rgba(255, 249, 235, 0.95)),
-            rgba(255, 255, 255, 0.92);
         border-top-color: rgba(211, 165, 52, 0.56);
         border-bottom-color: rgba(211, 165, 52, 0.24);
-    }
-
-    [data-theme="light"] .feed-shell .structured-post--founders-spotlight:hover {
-        background:
-            linear-gradient(90deg, rgba(255, 248, 236, 0.24) 0%, rgba(255, 224, 154, 0.34) 12%, rgba(255, 213, 120, 0.42) 20%, rgba(255, 213, 120, 0.42) 80%, rgba(255, 224, 154, 0.34) 88%, rgba(255, 248, 236, 0.24) 100%),
-            linear-gradient(180deg, rgba(255, 236, 192, 0.92), rgba(255, 250, 239, 0.98)),
-            rgba(255, 255, 255, 0.96);
-    }
-
-    [data-theme="light"] .feed-shell .structured-post--founders-spotlight .structured-post-subtitle {
-        color: #9c721d;
-    }
-
-    [data-theme="light"] .feed-shell .structured-post--founders-spotlight .structured-post-body,
-    [data-theme="light"] .feed-shell .structured-post--founders-spotlight .post-read-more {
-        color: #6f4c0f;
-    }
-
-    [data-theme="light"] .feed-shell .structured-post--founders-spotlight .action-btn {
-        border-color: rgba(211, 165, 52, 0.2);
-        background: rgba(255, 226, 157, 0.22);
-        color: #7e590f;
-    }
-
-    [data-theme="light"] .feed-shell .structured-post--founders-spotlight .action-btn:hover {
-        border-color: rgba(211, 165, 52, 0.34);
-        background: rgba(255, 220, 136, 0.3);
-        color: #6f4c0f;
     }
 
     .feed-shell .structured-post:last-child {
