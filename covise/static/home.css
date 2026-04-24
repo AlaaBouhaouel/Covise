@@ -1866,9 +1866,6 @@ body.demo-mode [data-demo-pos="side"] .demo-tip {
     grid-template-columns: minmax(0, 1fr);
 }
 
-.post-gallery.post-gallery-count-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
 
 .post-gallery.post-gallery-count-5,
 .post-gallery.post-gallery-count-6 {
